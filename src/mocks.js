@@ -1965,273 +1965,6 @@ export const contexts = [
       brand: null,
     },
   },
-  // A consumer brand, deliberately unlike the three B2B Playbooks above: it
-  // gives the Topics feed a market where listening has something vivid to say
-  // (a crowded hardware category whose buyers talk in feelings, not specs), and
-  // its competitors are the real names the seeded dossiers cite.
-  {
-    id: "ctx-pawtrack",
-    name: "Pawtrack · always-on",
-    color: "purple",
-    isDefault: false,
-    brandName: "Pawtrack",
-    brandLogo: "assets/logos/brands/pawtrack.svg",
-    websiteUrl: "https://pawtrack.example.com",
-    audience: ["Dog and cat owners who have already had one scare and never want another"],
-    businessSummary:
-      "Sell the Pawtrack collar on relief, not on radios. Owners don't buy LTE-M and IP68 — they buy knowing where their animal is at 2am. Lead with the moment the tracker mattered.",
-    briefSummary:
-      "Sell the Pawtrack collar on relief, not on radios. Owners don't buy LTE-M and IP68 — they buy knowing where their animal is at 2am. Lead with the moment the tracker mattered.",
-    tones: ["Warm", "Reassuring"],
-    voiceProfile: {
-      headline: "Warm · plain-spoken · never alarmist",
-      writingStyle:
-        "Story-first and close to the ground. Opens on a real moment — a gate left open, a cat that didn't come in — then says what happened next. Specs appear only once they've earned it, and always in service of the moment.",
-      vocabulary:
-        "The words owners use: 'she got out', 'he bolted', 'found her'. Never 'asset', 'device', 'solution' or 'pet parent'. Coverage and range are described as what they let you do, not as numbers.",
-      sentenceStructure:
-        "Short sentences. One idea each. The turn in the story gets its own line. Lists only for practical instructions, never for features.",
-      formality:
-        "Informal but never cute. 'You' and 'your dog', never the third person. Contractions throughout. Reads like a message from someone who's been there.",
-      personality:
-        "Steady and kind. Takes the fear seriously without dramatising it, and never implies the owner was careless.",
-      rhetoricalDevices:
-        "Open on the moment, not the product. Before / after in time, not in metrics. Resolve every story — the animal always comes home in ours, and we don't post the ones that don't.",
-      emotionalTone: "Relief, mostly. Warm, a little wry about animals being animals. Never panic-selling.",
-      contentPatterns:
-        "Moment → what we did → how it ended → the one thing that made it possible. Around 80 words, one animal per post.",
-      uniqueTraits:
-        "Names the animal, always. Real owner photos over studio product shots. No fear-based statistics about lost pets — the story carries the stakes on its own.",
-    },
-    contentStyle: ["Story-driven", "Warm and human"],
-    objective: ["Brand awareness", "Community building"],
-    contentAction: ["Shop the collar", "Read owner stories"],
-    signatureHooks: [
-      "She was gone eleven minutes.",
-      "The gate was open. Nobody knows how long.",
-      "Here's the part nobody tells you about a cat that goes out:",
-    ],
-    closingPatterns: ["Home in forty minutes. That's the whole point.", "Tell us about yours — we read all of them."],
-    formattingStyle:
-      "Opens on a one-line moment. Two or three short paragraphs, a single idea each. The turn in the story sits on its own line. Around 80 words. Emoji sparingly, and only ones an owner would actually use.",
-    visualStyle:
-      "Real owner photos, daylight, animals mid-motion — never a studio product shot as the hero. Sentence case. Distances in the local unit ('6km from camp'). The collar visible but not centred.",
-    brandPersonality:
-      "Steady and kind. Takes the fear seriously without dramatising it, is a little wry about animals being animals, and never makes an owner feel careless.",
-    brandTypography: { headingFont: "Poppins", bodyFont: "Inter" },
-    brandColors: [
-      { name: "Primary", hex: "#2F1B54" },
-      { name: "Accent", hex: "#7C4DFF" },
-      { name: "Warm", hex: "#FFB86B" },
-      { name: "Background", hex: "#FFFFFF" },
-      { name: "Text", hex: "#241537" },
-    ],
-    referenceImages: [
-      {
-        id: "pawtrack-ref-1",
-        label: "Owner + dog, daylight",
-        url: "https://picsum.photos/seed/pawtrack-owner-dog/480/480",
-        note: "The default hero for reunion stories. Real light, animal mid-motion, collar visible but not the subject.",
-        networks: ["instagram", "facebook"],
-      },
-      {
-        id: "pawtrack-ref-2",
-        label: "Collar detail",
-        url: "https://picsum.photos/seed/pawtrack-collar/480/480",
-        note: "Only for posts that genuinely need the hardware. Never the lead image on a story post.",
-        networks: ["instagram"],
-      },
-    ],
-    competitors: [
-      {
-        id: "pawtrack-cmp-1",
-        name: "Fi",
-        description:
-          "The design-led challenger. Leads on module specs and battery, and owns the running-club end of the market.",
-        websiteUrl: "https://tryfi.com",
-        socials: [
-          { network: "instagram", url: "https://instagram.com/fi.collars" },
-          { network: "facebook", url: "https://facebook.com/tryfi" },
-        ],
-      },
-      {
-        id: "pawtrack-cmp-2",
-        name: "Whistle",
-        description:
-          "The incumbent with retail shelf space. Bundles health monitoring, and speaks to vets as much as to owners.",
-        websiteUrl: "https://whistle.com",
-        socials: [
-          { network: "facebook", url: "https://facebook.com/whistle" },
-          { network: "instagram", url: "https://instagram.com/whistle" },
-        ],
-      },
-      {
-        id: "pawtrack-cmp-3",
-        name: "Jiobit",
-        description:
-          "Smallest tracker in the category, sold on being unnoticeable. Strong with cats and small breeds, priced high.",
-        websiteUrl: "https://jiobit.com",
-        socials: [{ network: "instagram", url: "https://instagram.com/jiobit" }],
-      },
-      {
-        id: "pawtrack-cmp-4",
-        name: "Tractive",
-        description:
-          "The volume player in Europe. Unlimited range on a cheap subscription, and by far the best at owner stories.",
-        websiteUrl: "https://tractive.com",
-        socials: [
-          { network: "instagram", url: "https://instagram.com/tractive" },
-          { network: "tiktok", url: "https://tiktok.com/@tractive" },
-        ],
-        suggested: true,
-      },
-      {
-        id: "pawtrack-cmp-5",
-        name: "Garmin",
-        description:
-          "Comes from hunting-dog GPS, not from pets. Wins on range and durability, loses on anything a city owner cares about.",
-        websiteUrl: "https://garmin.com",
-        socials: [{ network: "youtube", url: "https://youtube.com/@garmin" }],
-        suggested: true,
-      },
-    ],
-    // Five of the six sources on — Global trends stays off, so the Playbook's
-    // Topics section shows a real mix rather than an all-green wall.
-    topics: {
-      enabledSourceIds: [
-        "competitor-posts",
-        "influencer-posts",
-        "brand-feedback",
-        "competitor-monitoring",
-        "industry-trends",
-      ],
-      cadence: "weekly",
-    },
-    ctaLinks: [
-      { label: "Shop the collar", url: "pawtrack.example.com/shop", checked: true, suggested: false },
-      { label: "Read owner stories", url: "pawtrack.example.com/stories", checked: true, suggested: false },
-    ],
-    language: "English",
-    imageVoice: {
-      websites: [
-        {
-          domain: "pawtrack.example.com",
-          url: "https://pawtrack.example.com",
-          colors: {
-            primary: "#2F1B54",
-            accent: "#7C4DFF",
-            background: "#FFFFFF",
-            textPrimary: "#241537",
-            link: "#7C4DFF",
-          },
-          typography: {
-            primaryFont: "Inter",
-            headingFont: "Poppins",
-            h1Size: "52px",
-            h2Size: "26px",
-            bodySize: "17px",
-            fontStack: ["Inter", "system-ui", "sans-serif"],
-          },
-          images: {
-            logo: { label: "Logo", url: "" },
-            favicon: { label: "Favicon", url: "" },
-            ogImage: { label: "OgImage", url: "" },
-          },
-          buttons: {
-            primary: { bg: "#7C4DFF", color: "#FFFFFF", label: "Primary" },
-            secondary: { bg: "#FFFFFF", color: "#2F1B54", border: "#2F1B54", label: "Secondary" },
-          },
-          personality: {
-            tone: "warm",
-            energy: "calm",
-            audience: "dog and cat owners",
-          },
-        },
-      ],
-    },
-    doRules: ["Name the animal, always", "Open on the moment, not the product", "Resolve the story — say how it ended"],
-    dontRules: [
-      "No fear statistics about lost pets",
-      'Never say "pet parent"',
-      "No studio product shot as the hero image",
-    ],
-    cta: "Home in forty minutes. That's the whole point.",
-    usedIn: 2,
-    updatedAt: "yesterday",
-    strategy: {
-      approach:
-        "Lead on the moment the tracker mattered, not on the hardware. A post earns the specs only after it has earned the relief — and the relief is always someone's actual animal, named.",
-      pillars: [
-        {
-          id: "pt-pil-1",
-          icon: "ap-icon-heart",
-          title: "Recovery stories",
-          description: "She was gone eleven minutes. Told as it happened, with the owner's own words kept in.",
-        },
-        {
-          id: "pt-pil-2",
-          icon: "ap-icon-target",
-          title: "The two-minute setup",
-          description: "What you do on day one. Removes the fear that the thing will sit in a drawer.",
-        },
-        {
-          id: "pt-pil-3",
-          icon: "ap-icon-antenna",
-          title: "Coverage, in plain words",
-          description: "What range means when it matters, never as a published number on its own.",
-        },
-        {
-          id: "pt-pil-4",
-          icon: "ap-icon-note",
-          title: "Cat territory",
-          description: "Indoor-outdoor cats and where they actually go. Underserved and travels on saves.",
-        },
-        {
-          id: "pt-pil-5",
-          icon: "ap-icon-double-chat-bubbles",
-          title: "Answering the collar question",
-          description: "The one owners ask and nobody answers: what happens if the plan lapses.",
-        },
-      ],
-    },
-    // The handoff's seeded creators, kept verbatim — they are pet-account
-    // accurate and transfer to Pawtrack unchanged.
-    influencers: [
-      {
-        id: "pt-inf-1",
-        name: "The Dogist",
-        reach: "9.5M",
-        description: "Portrait-led and enormous. One feature moves more trust than a quarter of paid.",
-        socials: [{ network: "instagram", url: "https://instagram.com/thedogist" }],
-      },
-      {
-        id: "pt-inf-2",
-        name: "Tucker Budzyn",
-        reach: "4.2M",
-        description: "Golden retriever, comedic register. Huge reach, low fit for a safety message.",
-        socials: [{ network: "instagram", url: "https://instagram.com/tuckerbudzyn" }],
-      },
-      {
-        id: "pt-inf-3",
-        name: "Doug the Pug",
-        reach: "3.8M",
-        description: "Costume and culture posts. Broad, mainstream, works for seasonal moments only.",
-        socials: [{ network: "instagram", url: "https://instagram.com/itsdougthepug" }],
-      },
-      {
-        id: "pt-inf-4",
-        name: "Loki the Wolfdog",
-        reach: "2.0M",
-        description: "Backcountry and off-lead. The closest fit we have — his audience already worries about range.",
-        socials: [{ network: "instagram", url: "https://instagram.com/loki" }],
-      },
-    ],
-    analysis: {
-      voice: null,
-      brief: null,
-      brand: null,
-    },
-  },
   // ── Alliance Jiu Jitsu Carlsbad ──────────────────────────────────────────
   //
   // Added to back the Content Research lane built from the real Agorapulse
@@ -2612,6 +2345,219 @@ export const contexts = [
   // Social, Sprinklr and Sprout Social. Both sets are listed, tagged for which
   // is which — a competitor the brand names and a competitor the scan keeps
   // finding are different facts and neither should overwrite the other.
+  // Built from a real Agorapulse listening export — search `dwelling`, scope
+  // 16 Jun → 16 Jul 2026, Instagram only, 45 items. Every field below the
+  // audience comes from the export's own brand brief; the website, the MEP and
+  // factory figures, the energy standards and the contact routes are from
+  // thedwellingcompany.com.
+  //
+  // ── The one thing worth knowing before demoing this Playbook ──────────────
+  // The brand is a US developer and its brand brief names US competitors
+  // (Factory_OS, Autovol, Module, Vessel). The 45 posts the scan actually
+  // returned are from BELGIAN and Luxembourgish regional homebuilders —
+  // Sibomat, Stabilame, Thomas & Piron, Maisons Blavier, Naturhome, Mi Casa.
+  // None of the four named competitors appears once.
+  //
+  // That mismatch is kept rather than tidied away, because it is the most
+  // instructive thing in the export: the search matched a WORD, not a market,
+  // and the topics Archie produced are consequently about timber and on-site
+  // customisation — the opposite of steel and factory completion. A demo that
+  // silently repointed the accounts would hide the failure mode this lane is
+  // the best example of.
+  {
+    id: "ctx-dwelling",
+    name: "The Dwelling Company",
+    color: "green",
+    isDefault: false,
+    brandName: "The Dwelling Company",
+    brandLogo: null,
+    websiteUrl: "https://www.thedwellingcompany.com/",
+    audience: [
+      "Cost-burdened middle-income renters — households on $20k–$75k paying more than 30% of income in rent",
+      "Eco-conscious apartment seekers who weigh how a building was made, not just what it costs",
+      "Municipalities, landowners and capital partners looking for attainable housing that actually pencils",
+    ],
+    businessSummary:
+      "The Dwelling Company manufactures, develops and operates attainable, sustainable, connected apartments built " +
+      "on a steel skeleton. Up to 90% of the building is assembled in a centralised factory — including about 95% of " +
+      "the MEP systems, against roughly 10% for panelised construction — which is where the cost saving comes from. " +
+      "The market it is built for is the 9.7 million cost-burdened US rental households, 21.4 million of whom earn " +
+      "between $20k and $75k.",
+    briefSummary:
+      "Steel-skeleton modular apartments, up to 90% factory-assembled, for the 9.7m US renters paying more than 30% " +
+      "of their income in rent. Attainable, sustainable, connected.",
+    tones: ["Direct", "Evidence-led"],
+    voiceProfile: {
+      headline: "Attainable · sustainable · connected",
+      writingStyle:
+        "States the problem with a number, then the structural reason it exists, then what the factory changes about " +
+        "it. Never sells the building without saying what it costs to run. Reads like an engineer explaining a " +
+        "constraint, not a developer selling a unit.",
+      vocabulary:
+        "Cost-burdened, attainable, steel skeleton, modular, MEP, factory completion, Energy Star, DOE ZERH, " +
+        "operating cost. Attainable, never 'affordable housing' — the distinction is the whole positioning. Never " +
+        "'luxury', never 'dream home'.",
+      sentenceStructure: null,
+      examples: [],
+    },
+    contentStyle: ["Data-driven with structural insights", "Problem-solution oriented"],
+    objective: ["Brand awareness", "Lead generation"],
+    contentAction: ["Contact us for inquiries", "Follow our LinkedIn page"],
+    signatureHooks: [],
+    closingPatterns: [],
+    formattingStyle: null,
+    visualStyle: null,
+    brandPersonality: "engineering-led, plain-spoken, socially serious",
+    brandTypography: null,
+    brandColors: [],
+    referenceImages: [],
+    competitors: [
+      {
+        id: "dw-cmp-1",
+        name: "Factory_OS",
+        description:
+          "Named in the brand brief. Vallejo, CA — factory-built multifamily at volume, the closest US analogue to " +
+          "this model. The scan returned no posts from this account in the window.",
+        websiteUrl: "https://factoryos.com/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-2",
+        name: "Vessel Technologies",
+        description:
+          "Named in the brand brief. Panelised apartment buildings pitched on operating cost rather than sticker " +
+          "price. The scan returned no posts from this account in the window.",
+        websiteUrl: "https://www.vesseltechnologies.com/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-3",
+        name: "Autovol",
+        description:
+          "Named in the brand brief. Nampa, ID — robotic modular assembly, the automation end of the same argument. " +
+          "The scan returned no posts from this account in the window.",
+        websiteUrl: "https://autovol.com/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-4",
+        name: "Module",
+        description:
+          "Named in the brand brief. Pittsburgh — incremental, expandable modular homes. The scan returned no posts " +
+          "from this account in the window.",
+        websiteUrl: "https://modulehousing.com/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-5",
+        name: "Sibomat",
+        description:
+          "Not in the brand brief — surfaced by the scan, and not a competitor. A Belgian timber-frame housebuilder " +
+          "and the loudest account in the window: material performance, showroom visits, a 35-year repeat customer.",
+        websiteUrl: "https://www.sibomat.be/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-6",
+        name: "Stabilame",
+        description:
+          "Not in the brand brief — surfaced by the scan. Walloon mass-timber and CLT builder; the only account in " +
+          "the window doing public-amenity work — a marina capitainerie built over water, visitor infrastructure.",
+        websiteUrl: "https://www.stabilame.be/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-7",
+        name: "Thomas & Piron",
+        description:
+          "Not in the brand brief — surfaced by the scan. Large Belgian developer, 50 years old this year. Most of " +
+          "its posts in the window are anniversary, recruitment and sponsorship — the noise the scan flagged.",
+        websiteUrl: "https://www.thomas-piron.eu/",
+        socials: [],
+      },
+      {
+        id: "dw-cmp-8",
+        name: "Maisons Blavier",
+        description:
+          "Not in the brand brief — surfaced by the scan. Bilingual FR/NL housebuilder running an open-house and " +
+          "show-home programme, plus a behind-the-scenes build series.",
+        websiteUrl: "https://www.blavier.be/",
+        socials: [],
+      },
+    ],
+    topics: {
+      enabledSourceIds: ["competitor-posts"],
+      cadence: "monthly",
+    },
+    ctaLinks: [
+      { label: "Contact us", url: "https://www.thedwellingcompany.com/contact" },
+      { label: "Follow on LinkedIn", url: "https://www.linkedin.com/company/the-dwelling-company/" },
+    ],
+    language: "English",
+    imageVoice: null,
+    doRules: [
+      "Lead with the number. 9.7 million cost-burdened households, 30% of income, 90% factory completion — the " +
+        "argument is arithmetic before it is anything else.",
+      "Say what it costs to LIVE in, not only what it costs to build. Energy Star and DOE ZERH are the half of the " +
+        "story a renter actually pays for.",
+    ],
+    dontRules: [
+      "Don't say 'affordable housing'. This is attainable, market-rate, unsubsidised — collapsing the two loses the " +
+        "whole position.",
+      "Don't borrow the timber-sustainability argument the scan is full of. Steel and factory completion is a " +
+        "different claim, and echoing a competitor's material story concedes the point.",
+    ],
+    cta: "Contact us for inquiries",
+    usedIn: 0,
+    updatedAt: "just now",
+    strategy: {
+      approach:
+        "The category sells materials and craftsmanship. This brand sells arithmetic: what 90% factory completion " +
+        "does to a rent cheque, and what Energy Star does to the bill after. Every post should end somewhere a " +
+        "cost-burdened renter or a landowner can act.",
+      pillars: [
+        {
+          id: "dw-pil-1",
+          icon: "ap-icon-line-graph",
+          title: "The maths of a rent cheque",
+          description:
+            "9.7m households over the 30% threshold. Start from the number, not the building — it is the one claim " +
+            "no competitor in this window makes at all.",
+          sources: [],
+          notes: "",
+          assets: [],
+        },
+        {
+          id: "dw-pil-2",
+          icon: "ap-icon-target",
+          title: "What the factory actually removes",
+          description:
+            "95% of MEP installed indoors against roughly 10% panelised. The scan is full of accounts arguing about " +
+            "where assembly happens; this is the version with a figure attached.",
+          sources: [],
+          notes: "",
+          assets: [],
+        },
+        {
+          id: "dw-pil-3",
+          icon: "ap-icon-web",
+          title: "Cheap to live in, not just to build",
+          description:
+            "Energy Star and DOE ZERH as an operating-cost argument. Timber accounts in this window own 'sustainable " +
+            "material'; nobody owns 'lower bill'.",
+          sources: [],
+          notes: "",
+          assets: [],
+        },
+      ],
+    },
+    influencers: [],
+    analysis: {
+      voice: null,
+      brief: null,
+      brand: null,
+    },
+  },
   {
     id: "ctx-agorapulse",
     name: "Agorapulse",
@@ -2799,299 +2745,6 @@ for (const ctx of contexts) {
 
 export const topics = [
   {
-    id: "topic-pt-1",
-    contextId: "ctx-pawtrack",
-    sourceId: "competitor-posts",
-    headline: "Rivals lead with hardware specs while owners talk about peace of mind",
-    analysisTitle: "Rivals sell hardware; owners are buying peace of mind",
-    summary:
-      "Fi, Whistle, Jiobit and Garmin all open on chipsets and IP ratings. The posts that actually travel in this category are the ones about an animal coming home — and almost nobody is writing them.",
-    analysis: [
-      "A scan of Fi, Whistle, Jiobit and Garmin's recent pages shows a consistent pattern: their top posts lead with hardware — chipsets, waterproof ratings, band types, and acronym-dense feature lists. Engagement on these spec-led posts is modest and technical, drawing comments that argue over numbers rather than express relief or trust.",
-      "By contrast, the posts that travel furthest in this category are the human ones — a dog found, a cat home safe, a range that held when it mattered. Rivals largely under-use this register, leaving the emotional high ground open. Coverage and range show up in these stories as lived relief rather than as a published number.",
-      "The gap surfacing from the sources is one of framing, not capability. Where competitors present coverage as a spec, owners in the comments experience it as the difference between panic and relief — describing the same underlying attribute in entirely human terms.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-1-p1",
-        network: "instagram",
-        publishedOn: "3 days ago",
-        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
-        text: "New Series 3 module: upgraded LTE-M chipset, IP68 waterproofing, and 3-month battery. Specs that speak for themselves. 📶",
-        likes: 210,
-        comments: 18,
-        reposts: 6,
-      },
-      {
-        id: "topic-pt-1-p2",
-        network: "facebook",
-        publishedOn: "5 days ago",
-        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
-        text: "Health + location in one device. AT&T network coverage, Bluetooth proximity, and 20-day battery on a single charge.",
-        likes: 64,
-        comments: 22,
-        reposts: 4,
-      },
-      {
-        id: "topic-pt-1-p3",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Tractive", handle: "@tractive", initials: "TR", accent: "red" },
-        text: "Luna slipped her lead 6km from camp. Worldwide coverage, unlimited range — reunited in 40 minutes. This is why we build. 🐾❤️",
-        likes: 1400,
-        comments: 96,
-        reposts: 140,
-      },
-    ],
-    ageDays: 1,
-    unseen: true,
-    dismissed: false,
-  },
-  {
-    id: "topic-pt-2",
-    contextId: "ctx-pawtrack",
-    sourceId: "influencer-posts",
-    headline: "Trainers are the ones selling trackers, and none of them are being paid to",
-    analysisTitle: "The recall trainers already do your selling",
-    summary:
-      "Six mid-size dog-training creators mentioned a tracker unprompted in the last month, always as a safety net for off-lead work. None of the posts were sponsored, and none named Pawtrack.",
-    analysis: [
-      "The creators with the most engaged audiences in this space aren't reviewers — they're trainers teaching recall. Their off-lead videos consistently draw the same comment: some version of \"I'd never risk it\". A tracker answers that objection, and six of them raised one unprompted in the last month.",
-      "Where a tracker does appear, it's framed as permission rather than as a product: the thing that let them try off-lead work at all. That framing is worth more than a feature list, and it's coming free.",
-      "None of these posts were sponsored, and none named Pawtrack. The partnership angle here isn't a discount code on a review channel — it's underwriting the recall content that already makes the argument.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-2-p1",
-        network: "tiktok",
-        publishedOn: "4 days ago",
-        author: { name: "Ren Alvarez", handle: "@renandrue", initials: "RA", accent: "purple" },
-        text: "Week 6 of off-lead recall. I'll be honest — I would not be doing any of this without a tracker on her. That's not a sponsorship, that's just the truth.",
-        likes: 24800,
-        comments: 612,
-        reposts: 1900,
-      },
-      {
-        id: "topic-pt-2-p2",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Priya Raman", handle: "@thescentwork", initials: "PR", accent: "orange" },
-        text: "Scent work in woodland means letting them get out of sight. Every single question I get is \"aren't you scared\". Yes. That's what the collar is for.",
-        likes: 3100,
-        comments: 188,
-        reposts: 74,
-      },
-      {
-        id: "topic-pt-2-p3",
-        network: "youtube",
-        publishedOn: "2 weeks ago",
-        author: { name: "Gundog Basics", handle: "Gundog Basics", initials: "GB", accent: "green" },
-        text: "People ask what kit a beginner actually needs for field work. Long line, a whistle, and something that tells you where the dog is. In that order.",
-        likes: 9400,
-        comments: 341,
-        reposts: 210,
-      },
-    ],
-    ageDays: 2,
-    unseen: true,
-    dismissed: false,
-  },
-  {
-    id: "topic-pt-3",
-    contextId: "ctx-pawtrack",
-    sourceId: "competitor-monitoring",
-    headline: "Battery anxiety is the complaint every rival is failing to answer",
-    analysisTitle: "Nobody trusts the battery number on the box",
-    summary:
-      "Across Fi, Whistle and Jiobit's own comment sections, the recurring grievance isn't range or accuracy — it's that a tracker was flat on the day it was needed.",
-    analysis: [
-      "The pattern in rivals' comment sections is remarkably consistent: owners aren't disputing accuracy or coverage, they're describing a collar that had died. \"Two weeks, not two months\" appears in some form under most spec-led battery posts.",
-      "What makes it worse is the failure mode. A flat tracker is silent — the owner finds out at the exact moment they needed it, which turns a hardware shortfall into a betrayal. Several commenters describe checking the app obsessively as a result.",
-      "That's an opening on messaging rather than on hardware. The honest number, plus a warning the owner actually receives in time, answers a fear the category has decided to ignore.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-3-p1",
-        network: "facebook",
-        publishedOn: "6 days ago",
-        author: { name: "Dawn Whitfield", handle: "Dawn Whitfield", initials: "DW", accent: "electric-blue" },
-        text: "Says three months on the box. I get about eleven days if he's actually out doing anything. Found out the hard way on Saturday.",
-        likes: 340,
-        comments: 91,
-        reposts: 12,
-      },
-      {
-        id: "topic-pt-3-p2",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Marcus Bell", handle: "@marcusandmabel", initials: "MB", accent: "yellow" },
-        text: "Genuine question to anyone with one of these — do you also check the battery six times a day or is that just me now",
-        likes: 880,
-        comments: 204,
-        reposts: 31,
-      },
-    ],
-    ageDays: 4,
-    unseen: false,
-    dismissed: false,
-  },
-  {
-    id: "topic-pt-4",
-    contextId: "ctx-pawtrack",
-    sourceId: "brand-feedback",
-    headline: "Multi-pet households keep asking for one subscription, not three",
-    analysisTitle: "Three animals, three bills, one complaint",
-    summary:
-      "Fourteen owners raised per-collar pricing in the last month. It isn't a discount request — they're describing a household plan the category doesn't offer.",
-    analysis: [
-      "Fourteen separate owners raised per-collar subscription pricing across our own comments, DMs and reviews in the last month — comfortably over the ten-voice bar, and consistent enough to read as one request rather than fourteen grumbles.",
-      "The framing matters. Almost nobody asks for a cheaper collar; they ask why a second animal costs the same as the first when it's the same app, the same map and the same household. Several mention cancelling on the second animal rather than the first.",
-      "That's a churn signal wearing a pricing complaint's clothes, and it's the households with the most to lose from a missing animal.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-4-p1",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Nour Haddad", handle: "@threecatsnour", initials: "NH", accent: "purple" },
-        text: "Love the app. Three cats though. Three subscriptions for one map on one phone is a lot to justify to my partner every month.",
-        likes: 156,
-        comments: 43,
-        reposts: 3,
-      },
-      {
-        id: "topic-pt-4-p2",
-        network: "facebook",
-        publishedOn: "2 weeks ago",
-        author: { name: "Gemma Rowntree", handle: "Gemma Rowntree", initials: "GR", accent: "menthol" },
-        text: "Kept the collar on the escape artist, cancelled the other two. Would happily pay a household price for all of them instead.",
-        likes: 210,
-        comments: 67,
-        reposts: 8,
-      },
-    ],
-    ageDays: 6,
-    unseen: false,
-    dismissed: false,
-  },
-  {
-    id: "topic-pt-5",
-    contextId: "ctx-pawtrack",
-    sourceId: "industry-trends",
-    headline: "Vets have started asking owners for the tracker's activity data",
-    analysisTitle: "The collar is turning into a clinical record",
-    summary:
-      "Veterinary conversation about wearable activity data has roughly doubled over the last 30 days, driven by lameness and weight consultations rather than by location.",
-    analysis: [
-      "Discussion of wearable activity data in veterinary circles has roughly doubled over the last 30 days. The driver isn't location at all — it's consultations where the owner can't answer \"has she been moving less?\" and the collar can.",
-      "Lameness and weight management come up most. A four-week activity trend turns a subjective question into a chart, and several vets describe asking owners to bring it to the appointment.",
-      "This reframes the product from an emergency device to something used every day, which is a materially different reason to keep paying for it.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-5-p1",
-        network: "linkedin",
-        publishedOn: "1 week ago",
-        author: { name: "Dr. Aisha Kone", handle: "Dr. Aisha Kone MRCVS", initials: "AK", accent: "electric-blue" },
-        text: "Increasingly I open a lameness consult by asking for the collar data. Four weeks of activity tells me more than the owner's best guess, through no fault of theirs.",
-        likes: 2100,
-        comments: 143,
-        reposts: 288,
-      },
-      {
-        id: "topic-pt-5-p2",
-        network: "x",
-        publishedOn: "3 weeks ago",
-        author: { name: "Small Animal Weekly", handle: "@smallanimalwk", initials: "SA", accent: "green" },
-        text: "Poll of 400 practices: 38% now reference owner-supplied wearable data in at least one consult a week. Up from 19% last year.",
-        likes: 640,
-        comments: 52,
-        reposts: 197,
-      },
-    ],
-    ageDays: 11,
-    unseen: false,
-    dismissed: false,
-  },
-  {
-    id: "topic-pt-6",
-    contextId: "ctx-pawtrack",
-    sourceId: "competitor-posts",
-    headline: "Every rival discounted the hardware and quietly raised the subscription",
-    analysisTitle: "The collar is cheap now; the plan isn't",
-    summary:
-      "Three competitors ran hardware discounts in the same fortnight while lengthening the minimum plan. Owners noticed, and the comments are doing the maths in public.",
-    analysis: [
-      "Fi, Whistle and Tractive all ran hardware promotions inside the same fortnight, each pairing the discount with a longer minimum plan. The headline price fell; the two-year cost didn't.",
-      "Owners worked it out publicly. The top comment on two of the three posts is someone multiplying the monthly fee out loud, and the replies are agreeing rather than defending.",
-      "The category has trained its buyers to read a discount as a lock-in. Any honest pricing message now lands against a suspicious audience — which is an advantage if the pricing genuinely is simple.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-6-p1",
-        network: "instagram",
-        publishedOn: "3 weeks ago",
-        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
-        text: "Series 3 is $50 off this week only. Pair with a 24-month plan to unlock the lowest monthly rate we've ever offered.",
-        likes: 420,
-        comments: 210,
-        reposts: 9,
-      },
-      {
-        id: "topic-pt-6-p2",
-        network: "facebook",
-        publishedOn: "3 weeks ago",
-        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
-        text: "Half-price device, all month. Requires an active 2-year Health & GPS plan.",
-        likes: 188,
-        comments: 174,
-        reposts: 5,
-      },
-    ],
-    ageDays: 21,
-    unseen: false,
-    dismissed: false,
-  },
-  {
-    id: "topic-pt-7",
-    contextId: "ctx-pawtrack",
-    sourceId: "influencer-posts",
-    headline: "Cat creators are the biggest under-served audience in the category",
-    analysisTitle: "Everyone markets to dogs; the cats are the ones going missing",
-    summary:
-      "Cat-owner accounts out-engage comparable dog accounts in this niche, yet almost every tracker campaign in the last quarter featured a dog.",
-    analysis: [
-      "Cat-owner accounts in this niche consistently out-engage dog accounts of comparable size, and their comment sections are markedly more anxious — an indoor-outdoor cat is gone for hours by design, so the owner has no baseline for when to worry.",
-      "Almost every tracker campaign we scanned last quarter featured a dog. Where cats appear, it's a size claim rather than a story, and the creative is the same walk-in-the-park footage.",
-      "The behavioural difference is the opening. A dog goes missing as an incident; a cat is unaccounted for as a routine. Those need different posts, and only one of them is being written.",
-    ],
-    posts: [
-      {
-        id: "topic-pt-7-p1",
-        network: "tiktok",
-        publishedOn: "6 weeks ago",
-        author: { name: "Yui Nakamura", handle: "@mochithetabby", initials: "YN", accent: "orange" },
-        text: "He's been out since 6am. This is normal. I have simply decided not to think about it. (I am thinking about it.)",
-        likes: 88000,
-        comments: 2400,
-        reposts: 6100,
-      },
-      {
-        id: "topic-pt-7-p2",
-        network: "instagram",
-        publishedOn: "7 weeks ago",
-        author: { name: "Jiobit", handle: "@jiobit", initials: "JB", accent: "soft-blue" },
-        text: "Small enough for a cat collar. 0.65 oz, and the smallest tracker in its class.",
-        likes: 96,
-        comments: 11,
-        reposts: 2,
-      },
-    ],
-    ageDays: 44,
-    unseen: false,
-    dismissed: false,
-  },
-  {
     id: "topic-ac-1",
     contextId: "ctx-acme",
     sourceId: "competitor-posts",
@@ -3174,113 +2827,6 @@ export const topics = [
 // What "Refresh now" still has to find. Drained two at a time, so a demo can
 // press the button twice and get a fresh batch each time before it runs dry.
 export const topicScanPool = [
-  {
-    id: "topic-pool-1",
-    contextId: "ctx-pawtrack",
-    sourceId: "competitor-monitoring",
-    headline: "Jiobit raised its plan price and the cancellations are public",
-    analysisTitle: "A price rise nobody explained",
-    summary:
-      "Jiobit moved its monthly plan up without a note to existing owners. The comments have turned into a queue of people announcing they've cancelled.",
-    analysis: [
-      "Jiobit's monthly plan went up this month with no announcement to existing subscribers — several owners describe finding out from a bank statement rather than an email.",
-      "The reaction is disproportionate to the amount, which is the interesting part. The grievance is being kept in the dark about a device they rely on, not the few dollars.",
-      "Owners in that thread are actively asking for alternatives and naming the criteria: flat pricing, and being told before something changes.",
-    ],
-    posts: [
-      {
-        id: "topic-pool-1-p1",
-        network: "facebook",
-        publishedOn: "2 days ago",
-        author: { name: "Erin Pollack", handle: "Erin Pollack", initials: "EP", accent: "soft-blue" },
-        text: "Found out my plan went up from my bank app. Not an email, not a note in the app. Cancelled this morning — anyone got a recommendation?",
-        likes: 520,
-        comments: 176,
-        reposts: 22,
-      },
-      {
-        id: "topic-pool-1-p2",
-        network: "instagram",
-        publishedOn: "4 days ago",
-        author: { name: "Sam Okafor", handle: "@samandbisco", initials: "SO", accent: "red" },
-        text: "It's not even the money. Just tell me before you change the price of the thing keeping track of my dog.",
-        likes: 1100,
-        comments: 88,
-        reposts: 40,
-      },
-    ],
-    ageDays: 0,
-    unseen: true,
-    dismissed: false,
-  },
-  {
-    id: "topic-pool-2",
-    contextId: "ctx-pawtrack",
-    sourceId: "brand-feedback",
-    headline: "False geofence alerts are training owners to ignore the app",
-    analysisTitle: "The alert that cried wolf",
-    summary:
-      "Eleven owners described a safe-zone alert firing while the animal was indoors. Most say they've since muted notifications — which defeats the product.",
-    analysis: [
-      "Eleven owners reported safe-zone alerts firing while the animal was demonstrably indoors, usually attributing it to GPS drift in dense housing. That clears the ten-voice bar and it's the same story each time.",
-      "What they do next is the problem. Most say they muted notifications rather than adjusted the zone, which means the one alert that matters won't reach them either.",
-      "This is worth saying out loud in public. Naming a known limitation and what we're doing about it costs less than the trust lost when owners quietly switch the alerts off.",
-    ],
-    posts: [
-      {
-        id: "topic-pool-2-p1",
-        network: "instagram",
-        publishedOn: "3 days ago",
-        author: { name: "Lena Fischer", handle: "@lenaandpepper", initials: "LF", accent: "menthol" },
-        text: 'Fourth "left the safe zone" alert this week. She is asleep on the sofa. I\'ve turned the notifications off, which I know is the wrong answer.',
-        likes: 240,
-        comments: 61,
-        reposts: 7,
-      },
-      {
-        id: "topic-pool-2-p2",
-        network: "x",
-        publishedOn: "5 days ago",
-        author: { name: "Ade Balogun", handle: "@adebalogun", initials: "AB", accent: "purple" },
-        text: "flat in a city = gps thinks my cat is two streets over at 3am. alerts muted. sorry.",
-        likes: 890,
-        comments: 44,
-        reposts: 130,
-      },
-    ],
-    ageDays: 0,
-    unseen: true,
-    dismissed: false,
-  },
-  {
-    id: "topic-pool-3",
-    contextId: "ctx-pawtrack",
-    sourceId: "industry-trends",
-    headline: "Pet insurers have started bundling trackers into policies",
-    analysisTitle: "The insurer is becoming the channel",
-    summary:
-      "Two European insurers began including a tracker with new policies this month. It reframes the collar as risk reduction rather than as a gadget.",
-    analysis: [
-      "Two European pet insurers started bundling a tracker with new policies this month, positioning it as loss prevention rather than as a feature. Conversation about it has grown steadily over the last 30 days.",
-      "The framing does work our own marketing struggles with: an insurer calling a tracker risk reduction is a third party validating the purchase, which no amount of our own copy achieves.",
-      "It also introduces a channel where the buyer isn't the owner. Worth a position before someone else's collar is the one in the envelope.",
-    ],
-    posts: [
-      {
-        id: "topic-pool-3-p1",
-        network: "linkedin",
-        publishedOn: "1 week ago",
-        author: { name: "Petplan Europe", handle: "Petplan Europe", initials: "PE", accent: "green" },
-        text: "Every new Complete policy now ships with a GPS collar included. Lost-pet claims are the single largest category we handle, and the cheapest one to prevent.",
-        likes: 3400,
-        comments: 210,
-        reposts: 480,
-      },
-    ],
-    ageDays: 0,
-    unseen: true,
-    dismissed: false,
-  },
   {
     id: "topic-pool-4",
     contextId: "ctx-acme",
@@ -4687,35 +4233,20 @@ export const demoManyProfiles = (() => {
 // `showTrending: false` on lane-3 is deliberate: it's the fixture that proves the
 // banner and the trending-page entry are actually gated by the lane setting.
 export const researchLanes = [
+  // The fourth real-export lane. Search `dwelling`, scope 16 Jun 09:31 →
+  // 16 Jul 08:00 2026, Instagram only, 45 items across six Belgian and
+  // Luxembourgish homebuilders. Monthly because the scope was a 30-day window;
+  // competitor posts because that is all the search collected — and see the note
+  // on ctx-dwelling about the accounts not being the brief's competitors.
   {
-    id: "topic-list-1",
-    name: "Lost dog recovery topics",
-    playbookId: "ctx-pawtrack",
-    sources: ["competitor-posts", "influencer-posts"],
-    websites: ["https://pawtrack.example.com", "https://pawtrack.example.com/blog"],
-    cadence: "weekly",
-    notify: true,
-    showTrending: true,
-  },
-  {
-    id: "topic-list-2",
-    name: "Competitor launch watch",
-    playbookId: "ctx-pawtrack",
+    id: "topic-list-7",
+    name: "Modular & timber competitors · last 30 days",
+    playbookId: "ctx-dwelling",
     sources: ["competitor-posts"],
-    websites: ["https://pawtrack.example.com", "https://pawtrack.example.com/releases"],
+    websites: ["https://www.thedwellingcompany.com/"],
     cadence: "monthly",
-    notify: false,
-    showTrending: true,
-  },
-  {
-    id: "topic-list-3",
-    name: "Q2 campaign angles",
-    playbookId: "ctx-acme",
-    sources: ["competitor-posts"],
-    websites: ["https://acme.example.com", "https://acme.example.com/blog"],
-    cadence: "weekly",
     notify: true,
-    showTrending: false,
+    showTrending: true,
   },
   // The one lane NOT authored for this prototype. Built from a real Agorapulse
   // listening export — search `alliance_jiujitsu_carlsbad_competitors_posts_
@@ -4785,407 +4316,161 @@ export const researchLanes = [
 // dropped rather than rendered — so getting it wrong here loses the signal
 // instead of breaking the layout. Set the date, not just the flag.
 export const researchBriefs = [
+  // ── The `dwelling` export ────────────────────────────────────────────────
+  // Five topics from gemini-3.5-flash-lite: 2 ready_to_write (articles written)
+  // and 3 needs_strategy (shown to the reader, not written up). One of the three
+  // was additionally judged self-promotional, which is why a "summer shutdown
+  // notices" topic exists at all — it is a real output of the model and worth
+  // keeping as an example of what the floor lets through.
+  //
+  // 17 of 45 items were claimed by a topic (38%); 28 by none. The unclaimed pile
+  // is open houses, anniversaries, recruitment and land-plot ads, which the export
+  // flagged as noise in three named categories.
   {
-    id: "br-1",
-    laneId: "topic-list-1",
+    id: "br-40",
+    laneId: "topic-list-7",
     sourceId: "competitor-posts",
-    ageLabel: "2h ago",
-    headline: "Rivals lead with hardware specs while owners talk about peace of mind",
+    ageLabel: "1d ago",
+    headline: "Timber accounts own 'sustainable material'. Nobody owns 'cheaper to live in'",
     summary:
-      "Fi, Whistle, Jiobit and Garmin all open on chipsets and IP ratings. The posts that actually travel are the ones about an animal coming home — and almost nobody is writing them.",
-    researchType: "ready-to-post",
-    isTrending: true,
-    whyNow: "Recovery-story posts are running at roughly 4x their usual volume in this category this week.",
-    whyNowDetail:
-      "Across the four tracked competitors, posts framed as a recovery story rose +310% over eight days, against a typical week-on-week drift of under 15%. Two of the four have published nothing in that register, so the share of voice is concentrated in a small number of accounts and is still winnable.",
-    research: {
-      title: "Rivals sell hardware; owners are buying peace of mind",
-      paragraphs: [
-        "A scan of Fi, Whistle, Jiobit and Garmin's recent pages shows a consistent pattern: their top posts lead with hardware — chipsets, waterproof ratings, band types, and acronym-dense feature lists. Engagement on these spec-led posts is modest and technical, drawing comments that argue over numbers rather than express relief or trust.",
-        "The posts that travel furthest in the category are the human ones — a dog found, a cat home safe, a range that held when it mattered. Rivals largely under-use this register, leaving the emotional high ground open. Coverage and range appear in these stories as lived relief rather than as a published number.",
-        "The gap surfacing from the sources is one of framing, not capability. Where competitors present coverage as a spec, owners in the comments experience it as the difference between panic and relief — describing the same underlying attribute in entirely human terms.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-1-p1",
-        network: "instagram",
-        publishedOn: "3 days ago",
-        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
-        text: "New Series 3 module: upgraded LTE-M chipset, IP68 waterproofing, and 3-month battery. Specs that speak for themselves. 📶",
-        likes: 210,
-        comments: 18,
-        reposts: 6,
-      },
-      {
-        id: "br-1-p2",
-        network: "facebook",
-        publishedOn: "5 days ago",
-        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
-        text: "Health + location in one device. AT&T network coverage, Bluetooth proximity, and 20-day battery on a single charge.",
-        likes: 64,
-        comments: 22,
-        reposts: 4,
-      },
-      {
-        id: "br-1-p3",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Tractive", handle: "@tractive", initials: "TR", accent: "red" },
-        text: "Luna slipped her lead 6km from camp. Worldwide coverage, unlimited range — reunited in 40 minutes. This is why we build. 🐾❤️",
-        likes: 1400,
-        comments: 96,
-        reposts: 140,
-      },
-    ],
-    history: [
-      { status: "new", when: "8 days ago", note: "First surfaced from competitor sources." },
-      { status: "new", when: "3 days ago", note: "Flagged trending — volume rose above its usual baseline." },
-    ],
-    seedStatus: "new",
-    seedReason: "",
-  },
-  {
-    id: "br-2",
-    laneId: "topic-list-1",
-    sourceId: "influencer-posts",
-    ageLabel: "6w ago",
-    headline: "Trainers recommend trackers unprompted, and none of them are being paid to",
-    summary:
-      "Four of the six trainers with the largest followings in this niche mention a tracker in passing, inside training advice rather than a sponsored slot. The recommendation lands because it isn't the point of the post.",
-    researchType: "ready-to-post",
-    isTrending: false,
-    whyNow: "",
-    whyNowDetail: "",
-    research: {
-      title: "The most persuasive tracker recommendations aren't ads",
-      paragraphs: [
-        "Reviewing the six highest-reach trainers in the recall-and-long-line niche, four mention a GPS tracker inside ordinary advice — a long-line session, a recall drill, a note about working a dog off-lead in unfenced ground. None of the four posts carries a partnership tag.",
-        "The mentions share a shape: the tracker is the safety net that makes the training possible, not the subject. Comment threads under those posts ask which model, unprompted — a question that appears far less often under paid placements from the same accounts.",
-        "What the sources show is a channel that is currently unpaid and unmanaged. The trainers are already doing the recommending; nobody is equipping them to do it accurately.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-2-p1",
-        network: "instagram",
-        publishedOn: "4 days ago",
-        author: { name: "Gundog Basics", handle: "Gundog Basics", initials: "GB", accent: "green" },
-        text: "Long-line work in open country: 15m line, high-value reward, and a tracker on the collar so you can relax enough to actually train.",
-        likes: 880,
-        comments: 74,
-        reposts: 31,
-      },
-      {
-        id: "br-2-p2",
-        network: "instagram",
-        publishedOn: "6 days ago",
-        author: { name: "Ren Alvarez", handle: "@renandrue", initials: "RA", accent: "purple" },
-        text: "Recall isn't a command, it's a relationship. (And yes, there's a tracker on him while we build it.)",
-        likes: 1220,
-        comments: 118,
-        reposts: 64,
-      },
-    ],
-    history: [{ status: "new", when: "2 days ago", note: "First surfaced from influencer sources." }],
-    seedStatus: "new",
-    seedReason: "",
-  },
-  {
-    id: "br-3",
-    laneId: "topic-list-1",
-    sourceId: "competitor-posts",
-    ageLabel: "4d ago",
-    headline: "Fi's subscription price rise is drawing the complaints its launch post buried",
-    summary:
-      "The pricing change itself passed quietly. The discontent is in the replies to unrelated posts three weeks later, which is where the churn language actually shows up.",
-    researchType: "content-strategy",
-    isTrending: true,
-    whyNow: "Complaint volume under Fi's posts is running well above its own baseline for a third straight week.",
-    whyNowDetail:
-      "Mentions of the price change under Fi's non-pricing posts are up +240% against their eight-week baseline, and unlike a launch-week spike this one has not decayed — it has held for three weeks, which reads as sustained discontent rather than a news cycle.",
-    research: {
-      title: "The churn signal is in the replies, not the announcement",
-      paragraphs: [
-        "Fi's subscription increase was announced in a single post that drew comparatively little engagement. The measurable reaction appears elsewhere: in replies to product posts, feature teasers and community content published in the weeks after, where users raise the price unprompted.",
-        "The language in those replies is specific and portable — subscription fatigue, the cost of the device plus the plan, and the question of what happens to the hardware if the plan lapses. That last question recurs most often and is the one Fi's own posts do not answer.",
-        "For a competitor, the finding is not that Fi raised prices. It is that a specific unanswered question is circulating in their own comment threads, and it concerns hardware ownership rather than monthly cost.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-3-p1",
-        network: "facebook",
-        publishedOn: "1 week ago",
-        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
-        text: "Series 3 now ships with the updated escape-detection algorithm. Rolling out to all plans this month.",
-        likes: 143,
-        comments: 210,
-        reposts: 9,
-      },
-      {
-        id: "br-3-p2",
-        network: "x",
-        publishedOn: "5 days ago",
-        author: { name: "Dana K.", handle: "@danakwrites", initials: "DK", accent: "orange" },
-        text: "genuine question — if I stop paying the plan does the collar just become a collar? nobody will answer this",
-        likes: 620,
-        comments: 88,
-        reposts: 104,
-      },
-    ],
-    history: [
-      { status: "new", when: "12 days ago", note: "First surfaced from competitor sources." },
-      { status: "new", when: "6 days ago", note: "Flagged trending — complaint volume above baseline." },
-      { status: "saved", when: "2 days ago", note: "Saved for the competitive review." },
-    ],
-    seedStatus: "saved",
-    seedReason: "",
-  },
-  {
-    id: "br-4",
-    laneId: "topic-list-1",
-    sourceId: "influencer-posts",
-    ageLabel: "3w ago",
-    headline: "Cat owners are the underserved half of this audience",
-    summary:
-      "Tracker content in this niche is overwhelmingly dog-shaped. The cat-owner posts that do exist outperform on saves, and the creators making them are smaller and unsigned.",
-    researchType: "ready-to-post",
-    isTrending: false,
-    whyNow: "",
-    whyNowDetail: "",
-    research: {
-      title: "Cat content is rarer and travels further",
-      paragraphs: [
-        "Across the tracked creator set, posts featuring cats account for a small minority of tracker-adjacent content but show a markedly higher save-to-like ratio — the pattern of a post being kept for later rather than simply approved of.",
-        "The recurring subject is not escape but range: indoor-outdoor cats with unpredictable territory, and owners who want to know where the boundary actually is. That is a different problem from recall, and the content answering it is thin.",
-        "The creators publishing it have smaller followings and no visible partnerships, which makes this both an audience gap and an unclaimed channel.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-4-p1",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Priya Raman", handle: "@thescentwork", initials: "PR", accent: "orange" },
-        text: "Mapped Mango's actual territory for a week. Three gardens, one roof, and a stretch of railway embankment I did not authorise.",
-        likes: 940,
-        comments: 132,
-        reposts: 88,
-      },
-    ],
-    history: [
-      { status: "new", when: "9 days ago", note: "First surfaced from influencer sources." },
-      { status: "used", when: "4 days ago", note: "Drafted into a post." },
-    ],
-    seedStatus: "used",
-    seedReason: "",
-  },
-  {
-    id: "br-5",
-    laneId: "topic-list-1",
-    sourceId: "competitor-posts",
-    ageLabel: "6d ago",
-    headline: "Garmin's outdoor-sport framing keeps resurfacing in the same seasonal window",
-    summary:
-      "Garmin leans hunting-and-hiking every autumn. It performs for them and reads wrong for a pet-safety brand, but the seasonal timing itself is the transferable part.",
-    researchType: "content-strategy",
-    isTrending: true,
-    whyNow: "Seasonal outdoor content is spiking again, on the same eight-week cycle as last year.",
-    whyNowDetail:
-      "Volume in this register is up +180% month-on-month, tracking almost exactly the curve observed in the same window last year. The spike is calendar-driven rather than news-driven, which means it is predictable and can be planned against rather than reacted to.",
-    research: {
-      title: "The framing doesn't transfer; the timing does",
-      paragraphs: [
-        "Garmin's tracker content concentrates on sporting dogs and backcountry use, with engagement drawn from an audience that overlaps only partially with mainstream pet ownership. The register is equipment-led and performs consistently for them.",
-        "Attempting the same framing from a pet-safety position has a poor fit — the audience reads it as a different product category. What does transfer is the calendar: the spike recurs in a predictable eight-week autumn window.",
-        "The usable finding is therefore about scheduling rather than messaging. The seasonal attention exists; the question is what a peace-of-mind brand says into it.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-5-p1",
-        network: "facebook",
-        publishedOn: "2 weeks ago",
-        author: { name: "Garmin", handle: "Garmin", initials: "GA", accent: "electric-blue" },
-        text: "Alpha 300i with inReach: 15km range, multi-dog tracking, satellite messaging where there's no cell coverage.",
-        likes: 380,
-        comments: 41,
-        reposts: 22,
-      },
-    ],
-    history: [
-      { status: "new", when: "3 weeks ago", note: "First surfaced from competitor sources." },
-      { status: "new", when: "2 weeks ago", note: "Flagged trending — seasonal volume above baseline." },
-      { status: "ignored", when: "1 week ago", note: "Ignored — framing doesn't fit the brand." },
-    ],
-    seedStatus: "ignored",
-    seedReason:
-      "Hunting and backcountry framing reads wrong for us — we're a peace-of-mind brand, not an equipment one.",
-  },
-  {
-    id: "br-6",
-    laneId: "topic-list-2",
-    sourceId: "competitor-posts",
-    ageLabel: "9d ago",
-    headline: "Jiobit is quietly repositioning from pets to children",
-    summary:
-      "Three of Jiobit's last five posts feature a child rather than an animal. The product hasn't changed; the audience they're addressing has.",
-    researchType: "content-strategy",
-    isTrending: false,
-    whyNow: "",
-    whyNowDetail: "",
-    research: {
-      title: "A repositioning visible only in the creative",
-      paragraphs: [
-        "Jiobit's messaging has not formally changed — the site, the plans and the specs are as before. The shift is in the creative: children, school runs and family logistics now appear more often than pets across their recent posts.",
-        "Comment threads have followed. Questions about school policies and shared custody arrangements now outnumber questions about collars and harness fit, which suggests the new framing is recruiting a different audience rather than merely decorating the old one.",
-        "If this holds, it vacates territory rather than contesting it — the pet-specific ground they previously occupied is being left open.",
-      ],
-    },
-    posts: [
-      {
-        id: "br-6-p1",
-        network: "instagram",
-        publishedOn: "2 days ago",
-        author: { name: "Jiobit", handle: "@jiobit", initials: "JB", accent: "purple" },
-        text: "First week of walking to school on her own. We're not nervous. (We're a bit nervous.)",
-        likes: 720,
-        comments: 96,
-        reposts: 38,
-      },
-    ],
-    history: [{ status: "new", when: "1 day ago", note: "First surfaced from competitor sources." }],
-    seedStatus: "new",
-    seedReason: "",
-  },
-  {
-    id: "br-7",
-    laneId: "topic-list-2",
-    sourceId: "competitor-posts",
-    ageLabel: "30m ago",
-    headline: "Battery-life claims are the most contested thing competitors publish",
-    summary:
-      "Every stated battery figure draws a reply thread disputing it. The disputes are consistent enough to be a pattern, not noise.",
+      "Four posts across Sibomat and Stabilame sell wood frame and CLT on carbon storage, local sourcing and thermal " +
+      "comfort. Every claim is about the material. None is about the bill that arrives after someone moves in.",
     researchType: "ready-to-post",
     isTrending: true,
     whyNow:
-      "Battery disputes are running at about triple their usual volume across all four tracked competitors at once.",
+      "The densest cluster in the whole window — timber sustainability posts across multiple accounts through late " +
+      "June and July, and the single theme the scan ranked highest by volume.",
     whyNowDetail:
-      "This is the first week in the tracked period where the spike appears under all four competitors simultaneously rather than one at a time, which points to a category-level credibility problem rather than a single brand's overstatement.",
+      "Four items, all Instagram, spread across two accounts and three weeks. The concentration is what makes it " +
+      "actionable: this is not one brand's campaign, it is the register the category has settled into. Which also " +
+      "means the counter-position is unoccupied rather than contested.",
     research: {
-      title: "Stated battery life is the category's least trusted number",
+      title: "They are selling the material. The renter is paying the running cost",
       paragraphs: [
-        "Every competitor publishes a battery figure, and every figure attracts a reply thread contesting it. The pattern is stable across all four tracked accounts and across post formats.",
-        "The disputes are specific rather than vague: users report the stated figure holding only with location updates at their least frequent setting, and dropping sharply in poor coverage where the device works harder to acquire a signal. Nobody's published number is qualified this way.",
-        "The finding is a credibility gap the whole category shares. The transferable observation is that a qualified, conditions-stated figure would be unusual enough to be noticed.",
+        "Four posts in this window make the same case from two accounts. Sibomat explains why it builds in softwood — renewable, strong for its weight, thermally efficient — and pairs that with indoor comfort and durability language. Stabilame shows a Stoumont house where the structure is glued CLT and the wall finishes are cut from the same panels, selling total material harmony. A third Sibomat post uses a couple who chose timber frame twice, thirty-five years apart, as proof the method lasts.",
+        "The vocabulary is remarkably consistent: renewable sourcing, carbon storage, certified forest origin, insulation performance. It is a good argument and it is well made. But every single claim is about the material the building is made of, and the story stops at handover.",
+        "What none of them says is what the building costs to run. Energy Star and DOE ZERH are operating-cost standards, not material credentials — they describe the bill after somebody moves in, which for a household already over the 30% rent threshold is the number that decides whether the apartment is attainable at all.",
+        "That is the opening, and it is a different argument rather than a louder version of theirs. Borrowing the timber-sustainability frame would concede the point to accounts who own it and can out-detail us on it. Leading with the operating cost puts the conversation on ground where a steel skeleton and 95% factory-installed MEP is the stronger answer, not the weaker one.",
       ],
     },
-    posts: [
-      {
-        id: "br-7-p1",
-        network: "x",
-        publishedOn: "1 day ago",
-        author: { name: "Marc T.", handle: "@marctuesday", initials: "MT", accent: "menthol" },
-        text: '"20 day battery" is doing a lot of work here. mine does 6 if the dog is actually outside. which is the entire point of the device',
-        likes: 340,
-        comments: 52,
-        reposts: 61,
-      },
-      {
-        id: "br-7-p2",
-        network: "facebook",
-        publishedOn: "3 days ago",
-        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
-        text: "Up to 20 days of battery on a single charge. Track more, charge less.",
-        likes: 92,
-        comments: 143,
-        reposts: 7,
-      },
-    ],
+    posts: [],
     history: [
-      { status: "new", when: "4 days ago", note: "First surfaced from competitor sources." },
-      { status: "new", when: "1 day ago", note: "Flagged trending — dispute volume above baseline." },
+      {
+        status: "new",
+        when: "1 day ago",
+        note: "Surfaced from the 16 Jun – 16 Jul Instagram scan (4 matching items).",
+      },
     ],
     seedStatus: "new",
     seedReason: "",
   },
   {
-    id: "br-8",
-    laneId: "topic-list-2",
+    id: "br-41",
+    laneId: "topic-list-7",
     sourceId: "competitor-posts",
-    ageLabel: "5w ago",
-    headline: "Nobody in the category shows the app during a live search",
+    ageLabel: "3d ago",
+    headline: "A competitor argues AGAINST finishing in the factory. That argument has a number",
     summary:
-      "Competitors show the hardware and the happy ending. The middle — the screen you're actually staring at while the dog is missing — is absent from all of them.",
+      "Sibomat concedes modular is popular and faster, then explains why it deliberately assembles on the plot " +
+      "instead: standard modules cannot follow a family's brief or an awkward site. It is the clearest statement of " +
+      "the objection in the window.",
     researchType: "ready-to-post",
     isTrending: false,
-    whyNow: "",
-    whyNowDetail: "",
+    isUpdated: true,
+    whatChanged:
+      "Last scan this was one operational post. It is four now, and Stabilame has added a commercial post-and-beam " +
+      "build to the same theme — the customisation objection is becoming the category's shared line, not one " +
+      "account's.",
     research: {
-      title: "The missing middle of the recovery story",
+      title: "Yes, modules are faster. The question is whether 90% costs you the floor plan",
       paragraphs: [
-        "Category creative reliably shows two moments: the device on the animal, and the reunion. The interval between them — the live map, the refresh, the widening search radius — appears in none of the tracked competitors' posts.",
-        "That interval is what the product actually is during the event that justifies buying it. Its absence is consistent enough across four independent accounts to look like an industry habit rather than a series of individual choices.",
-        "Comment threads under reunion posts frequently ask how the search itself went, which suggests the omitted middle is the part the audience is most curious about.",
+        "Sibomat's post is unusually direct for a competitor. It grants that modular building is popular and rightly so — preparing walls and structures in a controlled workshop delivers speed, quality and a more efficient process. Then it explains the deliberate choice to do something else: prefabricate in the atelier, but carry out the rest of the build on the plot itself, so the house can follow one family's requirements and one site's contours instead of a standard module.",
+        "Stabilame makes the same point from the commercial side, with a wood post-and-beam brasserie at Froidchapelle sold on panoramic integration with the lakes and bespoke interior detailing.",
+        "This is the objection worth answering directly, because it is the honest version of it. The unhelpful reply is to claim modules are just as flexible. The useful reply is that the 90% figure is about the parts nobody chooses — the steel skeleton, the risers, the 95% of MEP that goes in indoors — and that finishing those in a factory is what buys the rent reduction. The floor plan is not what gets standardised; the plumbing is.",
+        "There is a second-order point available too. Their argument assumes one house on one plot. At apartment scale the trade inverts: repetition is the product, and a controlled indoor environment is how you get consistent MEP across ninety units rather than ninety variations of it.",
       ],
     },
-    posts: [
-      {
-        id: "br-8-p1",
-        network: "instagram",
-        publishedOn: "1 week ago",
-        author: { name: "Fi", handle: "@fi.collars", initials: "FI", accent: "grey" },
-        text: "Found. 3.2km from home, 22 minutes. Welcome back, Scout. 🧭",
-        likes: 2100,
-        comments: 187,
-        reposts: 210,
-      },
-    ],
+    posts: [],
     history: [
-      { status: "new", when: "1 week ago", note: "First surfaced from competitor sources." },
-      { status: "saved", when: "3 days ago", note: "Saved for later." },
+      { status: "new", when: "2 weeks ago", note: "Surfaced from the competitor scan (1 matching item)." },
+      { status: "new", when: "3 days ago", note: "Re-scanned — 4 matching items, and a second account joined it." },
     ],
-    seedStatus: "saved",
+    seedStatus: "new",
     seedReason: "",
   },
   {
-    id: "br-9",
-    laneId: "topic-list-3",
+    id: "br-42",
+    laneId: "topic-list-7",
     sourceId: "competitor-posts",
-    ageLabel: "4h ago",
-    headline: "Q2 launch messaging in this category is converging on the same three words",
+    ageLabel: "5d ago",
+    headline: "Two competitors are filming the build. A factory line is a better episode than a muddy site",
     summary:
-      "Four competitors, one vocabulary. The overlap is high enough that differentiating on language alone is now available at almost no cost.",
-    researchType: "ready-to-post",
-    isTrending: true,
-    whyNow: "Launch-season vocabulary overlap is at its highest point in the tracked period.",
-    whyNowDetail:
-      "Shared-term density across the four tracked accounts is up +150% quarter-on-quarter, concentrated in the same three terms. Convergence this tight is unusual and tends to resolve within a quarter as one account breaks from it.",
+      "Maisons Blavier launched a bilingual behind-the-scenes site series and Thomas & Piron a site-manager memories " +
+      "series, both in the same fortnight. The format is proven and the subject is transparency.",
+    researchType: "content-strategy",
+    isTrending: false,
     research: {
-      title: "Everyone is launching with the same three words",
+      title: "The format is available. The footage is the commitment",
       paragraphs: [
-        "Across the tracked Q2 launch posts, three terms recur in almost every one, often in the opening line. The convergence is not coordinated; it reads as a category settling into a default vocabulary.",
-        "Engagement on the most heavily overlapping posts is flat relative to each account's own median, which is the signature of language that no longer distinguishes anything.",
-        "The finding is an opening rather than a warning: the cost of sounding different is currently very low, because the baseline everyone is measured against is identical.",
+        "Three posts in a two-week window run the same play. Maisons Blavier published part one of a site series in French and again in Dutch, promising to show how a house takes shape phase by phase and how its teams track progress. Thomas & Piron ran a site manager recalling his last project — a fully circular fire station designed by Philippe Samyn. Mi Casa, outside the topic, is doing a production-process series of its own.",
+        "The demand behind it is uncertainty: someone committing to a build wants to see the phases, the checks and who is watching. That is exactly the anxiety a factory answers better than a site does — a controlled line, repeatable stations, quality control that is measured rather than described.",
+        "Which is why this is a commitment rather than a post. A credible series needs factory access, a camera on the line across several weeks, someone to own the edit, and sign-off to show a process competitors would study. The alternative — one polished flythrough — is a brochure, and the format's whole appeal is that it does not look like one.",
+        "Blocked on: factory filming access and a named owner for a recurring slot. Without both this becomes a single video that sets an expectation nothing follows.",
       ],
     },
-    posts: [
-      {
-        id: "br-9-p1",
-        network: "instagram",
-        publishedOn: "4 days ago",
-        author: { name: "Whistle", handle: "Whistle", initials: "W", accent: "menthol" },
-        text: "Smarter. Safer. Simpler. The new season starts here.",
-        likes: 118,
-        comments: 14,
-        reposts: 5,
-      },
-    ],
-    history: [
-      { status: "new", when: "6 days ago", note: "First surfaced from competitor sources." },
-      { status: "new", when: "2 days ago", note: "Flagged trending — vocabulary overlap above baseline." },
-    ],
+    posts: [],
+    history: [{ status: "new", when: "5 days ago", note: "Surfaced from the competitor scan (3 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-43",
+    laneId: "topic-list-7",
+    sourceId: "competitor-posts",
+    ageLabel: "2w ago",
+    headline: "Stabilame is winning civic work — a marina office built over water",
+    summary:
+      "Three project announcements clustered at the start of July: the Capitainerie at Ath standing largely on water, " +
+      "new visitor infrastructure at the Grottes de Han, and the Domaine de Chevetogne. Public amenities, won on " +
+      "short local supply chains.",
+    researchType: "content-strategy",
+    isTrending: false,
+    research: {
+      title: "The buyer here is a municipality, and it is a different sale entirely",
+      paragraphs: [
+        "Three Stabilame posts in the first half of July announce civic and recreational work: the Capitainerie at Ath, much of it over water; the new reception buildings at the Domaine des Grottes de Han, open to the public this summer; and the Domaine de Chevetogne. The copy leans on short local supply circuits, techniques for building in wet conditions, and low environmental impact.",
+        "This is the one thread in the window with a completely different buyer. A municipality or a regional operator is not comparing rent to income — it is comparing a tender, a timetable and a maintenance liability, and it is accountable for the choice in public.",
+        "The argument transfers, but the proof does not. Factory completion is genuinely stronger for public work: a fixed programme, fewer weather-dependent weeks, and a predictable snag list. What is missing is a delivered civic building to point at, and public-sector procurement does not accept a residential reference as evidence.",
+        "Blocked on: one completed public or institutional project with a named client willing to be cited, plus whatever framework or prequalification the relevant procurement route requires. Until then this is a market to watch, not a campaign to run.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "2 weeks ago", note: "Surfaced from the competitor scan (4 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-44",
+    laneId: "topic-list-7",
+    sourceId: "competitor-posts",
+    ageLabel: "3w ago",
+    headline: "Half the industry closed for July. A factory does not take a building holiday",
+    summary:
+      "Blavier, Naturhome and Stabilame all posted shutdown notices for the same three weeks — Belgium's statutory " +
+      "construction holiday. Sites stop; the model that assembles indoors does not have to.",
+    researchType: "content-strategy",
+    isTrending: false,
+    research: {
+      title: "The most revealing posts in the scan are the out-of-office ones",
+      paragraphs: [
+        "Three accounts published near-identical notices in the second week of July. Maisons Blavier closed its offices until 3 August, in French and again in Dutch, while keeping advisors reachable. Naturhome paused from 18 July to 3 August. Stabilame's whole team went from 10 July to 2 August. This is the Belgian construction holiday — statutory, industry-wide, and unremarkable to anyone in the sector.",
+        "The export flagged this topic as self-promotional and declined to write it up, which is the right call about the posts themselves: they are logistics notices, and there is nothing to say back to an out-of-office.",
+        "It is kept because of what it accidentally demonstrates. Site-dependent construction has weeks in the year when nothing progresses, and everyone in the market has silently agreed which weeks those are. A model that assembles indoors is not exposed to that in the same way — the schedule argument writes itself.",
+        "Blocked on a decision rather than an asset, and not a comfortable one: this only works as a schedule-reliability argument, and it has to be made without appearing to mock a statutory holiday that protects workers. Wrong tone and it reads as a firm boasting that its people do not get August off.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "3 weeks ago", note: "Surfaced from the competitor scan (3 matching items)." }],
     seedStatus: "new",
     seedReason: "",
   },
@@ -5580,81 +4865,6 @@ export const researchBriefs = [
     ],
     seedStatus: "new",
     seedReason: "",
-  },
-  // ── The five UPDATED topics, one per list ────────────────────────────────
-  //
-  // `isUpdated` is a third independent boolean, exactly like `isTrending`: a topic
-  // can be Saved AND updated, New AND updated, or both trending and updated. It
-  // says the SCAN found the story had moved on since it last ran, and `whatChanged`
-  // is the one-line account of how — the Updated counterpart to `whyNow`.
-  {
-    id: "br-17",
-    laneId: "topic-list-1",
-    sourceId: "competitor-posts",
-    ageLabel: "5d ago",
-    headline: "Fi quietly dropped the subscription requirement for basic tracking",
-    summary:
-      "The pricing page no longer gates live location behind a plan. Owners in the replies are re-evaluating trackers they had already written off, and the comparison threads from six months ago are being bumped.",
-    researchType: "ready-to-post",
-    isUpdated: true,
-    whatChanged:
-      "Last sync this was a rumour in two replies. Fi has now changed the pricing page itself, and three of the four tracked competitors have responded within a week.",
-    research: {
-      title: "The subscription objection just moved",
-      paragraphs: [
-        "When this topic first surfaced, the subscription complaint was the strongest recurring objection in the category and no competitor had acted on it. That is no longer true: Fi's pricing page now offers live location without a plan, which removes the single most-cited reason owners gave for not buying.",
-        "The comment threads have shifted with it. Where owners previously argued that every tracker is a subscription trap, the same accounts are now asking which devices still are — a question that favours whoever answers it plainly first.",
-      ],
-    },
-    posts: [],
-    history: [],
-    seedStatus: "new",
-  },
-  {
-    id: "br-18",
-    laneId: "topic-list-2",
-    sourceId: "competitor-posts",
-    ageLabel: "6d ago",
-    headline: "Jiobit's repositioning is now explicit, not implied",
-    summary:
-      "The kids-and-elders framing that was only visible in their creative has reached the copy: the tagline, the product page and the last four posts all name families rather than pets.",
-    researchType: "ready-to-post",
-    isUpdated: true,
-    whatChanged:
-      "Last sync the shift was a read on their imagery. They have since rewritten the tagline and the product page, so this is now a stated position rather than an inference.",
-    research: {
-      title: "A repositioning you can now quote",
-      paragraphs: [
-        "This topic previously rested on inference — Jiobit's photography had moved toward families while the copy still said pets. The copy has now caught up, which matters because a stated position can be quoted, compared and answered where an inferred one cannot.",
-        "It also narrows the category. With Jiobit explicitly addressing families, the pet-first ground they used to share is less contested than it was a month ago.",
-      ],
-    },
-    posts: [],
-    history: [],
-    seedStatus: "new",
-  },
-  {
-    id: "br-19",
-    laneId: "topic-list-3",
-    sourceId: "competitor-posts",
-    ageLabel: "6d ago",
-    headline: "The Q2 launch window your competitors were holding has slipped",
-    summary:
-      "Two of the three accounts that had teased an April launch have gone quiet and moved their dates. The window you were planning around is wider than it looked.",
-    researchType: "content-strategy",
-    isUpdated: true,
-    whatChanged:
-      "Last sync all three were tracking to April. Two have since pulled their dates without announcing it — the teaser posts are still up but the countdowns are gone.",
-    research: {
-      title: "A crowded launch window just emptied out",
-      paragraphs: [
-        "The original read on this topic was that April would be crowded, which argued for either moving early or waiting until the noise passed. Two of the three competing launches have since slipped, and neither said so publicly — the signal is the removed countdown, not an announcement.",
-        "That leaves a quieter window than the plan assumed. The risk has inverted: the question is no longer how to be heard over three launches, but whether being the only launch draws more scrutiny.",
-      ],
-    },
-    posts: [],
-    history: [],
-    seedStatus: "new",
   },
   {
     id: "br-20",

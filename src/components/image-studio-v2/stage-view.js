@@ -11,14 +11,14 @@
 // which edit-view owns (it carries the overlay/crop machinery).
 
 import { html, raw, escapeHtml } from "../../utils.js?v=21";
-import { getPosts } from "../../posts-store.js?v=57";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=51";
-import { renderPostCard } from "../post-card.js?v=95";
-import { KEY, ctx } from "./context.js?v=46";
-import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=71";
-import { editCanvas } from "./edit-view.js?v=46";
+import { getPosts } from "../../posts-store.js?v=58";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=52";
+import { renderPostCard } from "../post-card.js?v=96";
+import { KEY, ctx } from "./context.js?v=47";
+import { composer, settingsPanel, toolPalette, footerBar } from "./composer-view.js?v=72";
+import { editCanvas } from "./edit-view.js?v=47";
 import { compositeOverlays } from "../image-studio/canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=82";
+import * as imageStudio from "../../image-studio.js?v=83";
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over
 // the image, but renderPostCard only takes a URL, so overlays wouldn't show. We
