@@ -1177,7 +1177,18 @@
   display: flex;
   flex: 0 0 auto;
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border-top: 1px solid var(--app-border-soft);
+  /* electric-blue-100, the same value and the same 1px as .topics-card.is-reading —
+     the border that marks the card whose article this is. The two edges now read as
+     one selection: the card is outlined in it on the left, and the pane's action bar
+     is capped with it on the right.
+
+     border-TOP only. The footer sits flush inside the pane, so left, right and
+     bottom would double up on the pane's own border; the top edge is the one that is
+     actually the footer's, dividing it from the scrolling body it floats over.
+
+     Replaces --app-border-soft (grey-10), which read as one more hairline in a pane
+     that already has two. */
+  border-top: 1px solid var(--ref-color-electric-blue-100);
   /* --ref-color-white deliberately, not a semantic background token: this is the
      same surface as .research-feed__article, which sets the same value. A footer
      that resolved its fill independently could drift from the pane it sits in, and
