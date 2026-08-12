@@ -365,7 +365,7 @@ function renderLaneCard(lane) {
          that only existed to own the pinning while the conditional signals row
          shared the footer with it. -->
     <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
-      <span>See Ideas</span>
+      <span>Get ideas</span>
       <i class="ap-icon-arrow-right" aria-hidden="true"></i>
     </button>
   </article>`;
@@ -383,7 +383,7 @@ function renderCreateCard() {
          Cadence and the scanned website are left out: they tune the list, they
          don't explain it, and the form's own lede covers them. -->
     <span class="research-create-card__sub"
-      >Pick a Playbook and the sources I watch — I'll turn what they publish into Ideas you can draft from.</span
+      >Pick a Playbook and idea sources. They will be turned into ideas you can draft from.</span
     >
   </button>`;
 }

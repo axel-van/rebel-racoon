@@ -139,11 +139,11 @@ function renderPage() {
   return html`<div class="research-form__body">
       <div class="research-form__inner">
         <header class="research-form__head">
-          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New content ideas"}</h1>
+          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New Idea stream"}</h1>
           <p class="ap-body research-form__lead">
             ${settings
               ? "What I watch for this Idea stream, and how often I check it."
-              : "Name it, point it at a Playbook, and pick what I should watch."}
+              : "Pick a Playbook and sources to get content ideas."}
           </p>
         </header>
         ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}
