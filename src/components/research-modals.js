@@ -12,6 +12,7 @@
 //   openExport({ count })
 //   openAddToStrategy({ briefId, playbookId, onConfirm })
 //   openFullResearch({ briefId })
+//   openVersionHistory({ briefId })   — past versions of the article
 //
 // Public API mirrors every other modal here: init() once at boot, then open*().
 // Overlay arbitration goes through modal-coordinator so only one is ever up, and
@@ -24,12 +25,13 @@ import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=1
 import {
   ageMinutes,
   getBriefById,
+  getBriefVersions,
   getBriefsForLane,
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=38";
-import { getLanes } from "../research-store.js?v=31";
+} from "../briefs-store.js?v=39";
+import { getLanes } from "../research-store.js?v=32";
 import {
   getContexts,
   getContextById,
@@ -40,9 +42,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=66";
+} from "../contexts-store.js?v=67";
+// No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
+// into this file. The version dialog goes through it rather than calling
+// addReadySource directly so "use in chat" has one definition.
+import { openBriefInChat } from "../brief-flow.js?v=12";
 import { renderBriefCard } from "./brief-card.js?v=35";
-import { renderSocialPostCard } from "./social-post-card.js?v=21";
+import { renderSocialPostCard } from "./social-post-card.js?v=22";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -1104,7 +1110,7 @@ export function renderResearchArticle(brief, { withLabel = true } = {}) {
           </section>`
         : "",
     )}
-    ${raw(renderHistory(brief.history || [], brief.status))}
+    ${raw(renderHistory(brief.history || [], brief.status, brief.id))}
     ${raw(
       posts.length
         ? html`<section class="research-article">
@@ -1147,15 +1153,148 @@ export function openFullResearch({ briefId }) {
   );
 }
 
+// ─── 6. Past versions of an article ────────────────────────────────────────
+//
+// A topic gets rewritten when a re-scan changes what the evidence says. The card
+// marks that with an Updated badge and the timeline records that it happened; this
+// is where you read what actually changed.
+//
+// Version state is module-level for the same reason the strategy dialog's is: each
+// pick re-renders through openShell, which rebuilds the dialog, so the selection
+// has to outlive the paint.
+let versionBriefId = null;
+let versionPickedId = null;
+
+export function openVersionHistory({ briefId }) {
+  const brief = getBriefById(briefId);
+  if (!brief) return;
+  const versions = getBriefVersions(briefId);
+  if (!versions.length) return;
+  versionBriefId = briefId;
+  // Opens on the OLDEST version, not the current one. The current article is what
+  // the panel behind this dialog is already showing, so opening on it would make
+  // the dialog look like it had failed to do anything. Oldest-first also means
+  // stepping down the list reads the topic's development in order.
+  versionPickedId = versions[0].id;
+  paintVersions();
+}
+
+function paintVersions() {
+  const brief = getBriefById(versionBriefId);
+  if (!brief) return;
+  const versions = getBriefVersions(versionBriefId);
+  const picked = versions.find((v) => v.id === versionPickedId) || versions[0];
+  const idx = versions.indexOf(picked);
+  const label = (v) => `${v.when}${v.isCurrent ? " · current" : ""}`;
+
+  openShell(
+    "versions",
+    { briefId: versionBriefId },
+    {
+      title: "Past versions",
+      // The headline, so the dialog says which topic these are versions OF. It is
+      // the shell's own subtitle slot, the same place every other dialog here puts
+      // its context.
+      sub: brief.headline,
+      wide: true,
+      body: html`<div class="research-versions">
+        <!-- The DS Select, built as the details/summary composition it actually is
+             (see the long note in the strategy dialog above for why a native
+             <select class="ap-select"> is drift). Options are dates, newest last,
+             because that is the order the article was written in. -->
+        <div class="ap-form-field research-versions__field">
+          <label id="versionPickLabel">Version</label>
+          <details class="ap-select">
+            <summary class="ap-select-trigger" aria-labelledby="versionPickLabel">
+              <span class="ap-select-value">${label(picked)}</span>
+              <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+            </summary>
+            <div class="ap-select-dropdown">
+              <div class="ap-select-options">
+                ${raw(
+                  versions
+                    .map(
+                      (v) =>
+                        html`<div
+                          class="ap-select-option${raw(v.id === picked.id ? " selected" : "")}"
+                          data-version-pick="${escapeAttr(v.id)}"
+                        >
+                          <span class="ap-select-option-text">${label(v)}</span>
+                          ${raw(
+                            v.id === picked.id
+                              ? '<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>'
+                              : "",
+                          )}
+                        </div>`,
+                    )
+                    .join(""),
+                )}
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Which of how many, in words. The picker shows a date; this says where
+             that date sits in the sequence, which a date alone doesn't tell you. -->
+        <p class="research-versions__pos">
+          Version ${String(idx + 1)} of
+          ${String(versions.length)}${raw(picked.isCurrent ? " — the version you are reading" : "")}
+        </p>
+
+        ${raw(
+          picked.whatChanged
+            ? html`<div class="ap-infobox info research-versions__changed">
+                <i class="ap-icon-info" aria-hidden="true"></i>
+                <div class="ap-infobox-content">
+                  <span class="ap-infobox-title">What changed in this version</span>
+                  <p>${picked.whatChanged}</p>
+                </div>
+              </div>`
+            : "",
+        )}
+
+        <section class="research-article">
+          <h3 class="research-article__title">${picked.title}</h3>
+          ${raw(picked.paragraphs.map((p) => html`<p>${p}</p>`).join(""))}
+        </section>
+      </div>`,
+      // "Use this version in chat" is primary and orange — it is the AI action, the
+      // same treatment "Use in chat" carries on the topic card. Disabled on the
+      // current version: that is exactly what the card's own Use-in-chat already
+      // does, so offering it here twice would be two buttons for one outcome.
+      foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+          <span>Close</span>
+        </button>
+        <button
+          type="button"
+          class="ap-button primary orange"
+          data-version-use="${escapeAttr(picked.id)}"
+          ${raw(picked.isCurrent ? "disabled" : "")}
+        >
+          <span>${picked.isCurrent ? "This is the current version" : "Use this version in chat"}</span>
+        </button>`,
+    },
+  );
+}
+
 // The timeline of how this brief got to its current state. The brief's CURRENT
 // status is appended as the final entry so the list always ends where the card
 // says it is — an authored history that stopped one step short read as a bug.
-function renderHistory(history, currentStatus) {
+function renderHistory(history, currentStatus, briefId = "") {
   const meta = findReviewStatus(currentStatus);
   const entries = [
     ...history,
     { status: currentStatus, when: "now", note: `Currently ${meta ? meta.label : currentStatus}.` },
   ];
+  // Offered only when there IS more than one version. A link promising past
+  // versions that opens a dialog holding one is worse than no link.
+  //
+  // .ap-link, the DS's own link component, rather than a button styled to look
+  // like one: this opens a reader, it does not act on the topic. It sits BELOW the
+  // timeline because it is the same subject continued — the timeline says the
+  // topic changed, this is where you go to see what the change was.
+  const versions = briefId ? getBriefVersions(briefId) : [];
+  const past = versions.length ? versions.length - 1 : 0;
   return html`<section class="research-article">
     <span class="research-article__label"><i class="ap-icon-clock" aria-hidden="true"></i> Topic history</span>
     <ol class="research-timeline">
@@ -1175,6 +1314,17 @@ function renderHistory(history, currentStatus) {
           .join(""),
       )}
     </ol>
+    ${raw(
+      past > 0
+        ? html`<a
+            role="button"
+            tabindex="0"
+            class="ap-link small research-article__versions"
+            data-brief-versions="${escapeAttr(briefId)}"
+            >See past versions of this article</a
+          >`
+        : "",
+    )}
   </section>`;
 }
 
@@ -1186,6 +1336,14 @@ function onPanelClick(event) {
     return;
   }
   if (!active) return;
+
+  // The "See past versions" link inside the Full-article DIALOG. The feed's
+  // article PANE renders the same markup and wires the same attribute in
+  // research-feed.js — one link, two containers.
+  const versionsLink = event.target.closest("[data-brief-versions]");
+  if (versionsLink) {
+    return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
+  }
 
   const pbkEdit = event.target.closest("[data-pbklist-edit]");
   if (pbkEdit) {
@@ -1351,6 +1509,27 @@ function onPanelClick(event) {
     const pid = pillarUse.dataset.pillarUse;
     close();
     if (onPick) onPick(ctxId, pid);
+    return;
+  }
+
+  // ── Past versions ────────────────────────────────────────────────────────
+  // Picking a version. The repaint is what closes the <details> and redraws the
+  // body — the DS Select has no JS of its own to close it.
+  const versionPick = event.target.closest("[data-version-pick]");
+  if (versionPick) {
+    versionPickedId = versionPick.dataset.versionPick;
+    return paintVersions();
+  }
+
+  const versionUse = event.target.closest("[data-version-use]");
+  if (versionUse) {
+    const id = versionBriefId;
+    const vid = versionUse.dataset.versionUse;
+    close();
+    // Same entry point the topic card's Use-in-chat goes through, with a version
+    // attached — so a version lands in a chat exactly the way a topic does, and
+    // there is one definition of what "use in chat" means.
+    openBriefInChat(id, { versionId: vid });
     return;
   }
 

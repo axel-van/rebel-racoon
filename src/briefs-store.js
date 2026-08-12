@@ -41,7 +41,7 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=84";
+import { researchBriefs as seed } from "./mocks.js?v=85";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=14";
@@ -71,6 +71,12 @@ function cloneBrief(b) {
     },
     posts: Array.isArray(b.posts) ? b.posts.map((p) => ({ ...p, author: { ...(p.author || {}) } })) : [],
     history: Array.isArray(b.history) ? b.history.map((h) => ({ ...h })) : [],
+    // Past article versions. Cloned a level deeper than the spread for the same
+    // reason `research` is: each carries its own paragraphs array, and a shallow
+    // copy would hand a view a reference straight into the mocks module.
+    versions: Array.isArray(b.versions)
+      ? b.versions.map((v) => ({ ...v, paragraphs: Array.isArray(v.paragraphs) ? v.paragraphs.slice() : [] }))
+      : [],
     isTrending: !!b.isTrending,
     isUpdated: !!b.isUpdated,
   };
@@ -281,6 +287,37 @@ export function countNewForLane(laneId) {
 export function getBriefById(id) {
   const b = briefs.find((x) => x.id === id);
   return b ? withTriage(b) : null;
+}
+
+/**
+ * Every version of a topic's article, oldest first, with the CURRENT one appended
+ * as the last entry.
+ *
+ * Appending rather than storing it twice: `research` is the live article and the
+ * mocks hold only past versions, so this is the single place the two shapes are
+ * reconciled. `isCurrent` is what a view keys "you are reading this one" off —
+ * never the array index, which changes the next time the topic is re-scanned.
+ *
+ * Returns [] when a topic has only ever had one version. One version is not a
+ * history, and the caller uses the empty array to decide whether to offer the
+ * link at all.
+ */
+export function getBriefVersions(briefId) {
+  const b = briefs.find((x) => x.id === briefId);
+  if (!b || !Array.isArray(b.versions) || !b.versions.length) return [];
+  return [
+    ...b.versions.map((v) => ({ ...v, paragraphs: v.paragraphs.slice(), isCurrent: false })),
+    {
+      id: "current",
+      when: b.ageLabel || "now",
+      // The current version's "what changed" IS the card's Updated explanation —
+      // that badge and this row are the same claim, so they read from one field.
+      whatChanged: b.whatChanged || "",
+      title: b.research?.title || "",
+      paragraphs: (b.research?.paragraphs || []).slice(),
+      isCurrent: true,
+    },
+  ];
 }
 
 export function getStatus(briefId) {

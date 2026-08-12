@@ -5228,6 +5228,64 @@ export const researchBriefs = [
       { status: "new", when: "1 week ago", note: "Surfaced from the competitor scan (1 matching item)." },
       { status: "new", when: "4 days ago", note: "Re-scanned — 8 matching items, and the framing shifted." },
     ],
+    // Past versions of the article, oldest first. `research` above is the CURRENT
+    // one and is never repeated here — the dialog appends it as the last option so
+    // there is exactly one copy of each version in the file.
+    //
+    // Only this topic carries them, deliberately: it is the lane's `isUpdated`
+    // topic, and versions are the evidence behind that badge. A topic that has
+    // never been re-scanned has one version and nothing to compare.
+    //
+    // The arc across ten weeks is the point of the demo — the item count climbs
+    // 1 → 3 → 5 → 8 while the ARGUMENT moves from "a protocol exists" to "here is
+    // who it is for and what it costs elsewhere". Each entry says what changed at
+    // that point, because a version picker that only offers dates makes the reader
+    // diff two articles by eye.
+    versions: [
+      {
+        id: "v1",
+        when: "6 May 2026",
+        whatChanged: "First pass. One Buffer post, reported as a curiosity.",
+        title: "Buffer has shipped an MCP server",
+        paragraphs: [
+          "One item this window. Buffer has published an MCP server, letting an AI chat client call its API directly. The post is addressed to developers and reads as a changelog entry.",
+          "Too thin to act on. Worth watching in case anyone else follows — a single vendor shipping a connector is a product decision, not a market move.",
+        ],
+      },
+      {
+        id: "v2",
+        when: "27 May 2026",
+        whatChanged: "Three items now, and a second vendor. Stopped being one company's changelog.",
+        title: "Two vendors, one protocol — connectors are becoming a category",
+        paragraphs: [
+          "Three items. Hootsuite has joined Buffer, framing protocol bridges as the way its social intelligence reaches tools outside its own product. A creator roundup lists the servers they use weekly.",
+          "The shift worth recording is that this is no longer one vendor's feature. Two independent accounts describing the same mechanism in the same weeks is the beginning of a category.",
+          "Still written entirely for a technical audience. No account has yet said what the protocol is FOR in workflow terms, which is the gap to watch.",
+        ],
+      },
+      {
+        id: "v3",
+        when: "18 Jun 2026",
+        whatChanged: "The audience gap became the story, rather than an aside at the end.",
+        title: "Everyone is explaining the protocol. Nobody is explaining the job",
+        paragraphs: [
+          "Five items, mostly web blogs. The vocabulary has settled — server, connector, bridge, tool call — and it is consistent across every account.",
+          "That consistency is the finding. Five pieces of content about the same mechanism, all pitched at a reader who is comfortable with the word protocol, and none pitched at the person whose work it would actually change.",
+          "A social media manager who already drafts in a chat tool and retypes numbers into it by hand is the beneficiary here. No one is writing for them. That is the opening, and it is an audience gap rather than a feature gap.",
+        ],
+      },
+      {
+        id: "v4",
+        when: "9 Jul 2026",
+        whatChanged: "Buffer moved MCP into its comparison pages, so the pricing angle arrived.",
+        title: "The connector has become a pricing argument",
+        paragraphs: [
+          "Seven items. The change since the last scan is where the mention appears rather than how often: Buffer has started leading with 'MCP access on every plan' inside head-to-head comparison content.",
+          "That moves the protocol out of the changelog and into the buying decision. A capability included on every tier at one vendor and gated at another is a comparison-table row, and comparison content is what the scan shows captures bottom-funnel search.",
+          "The audience gap from the last version still stands and is still unclaimed. The two now travel together: the workflow story for the reader who doesn't care what a server is, and the pricing note for the one comparing tiers.",
+        ],
+      },
+    ],
     seedStatus: "new",
     seedReason: "",
   },

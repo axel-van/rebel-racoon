@@ -31,20 +31,21 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=363";
+import { renderTopbar } from "../components/topbar.js?v=365";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=35";
 import {
   openIgnoreReason,
   openExport,
+  openVersionHistory,
   // PARKED with the handler below — kept imported so restoring is one uncomment.
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=71";
-import { openBriefInChat } from "../brief-flow.js?v=11";
+} from "../components/research-modals.js?v=73";
+import { openBriefInChat } from "../brief-flow.js?v=12";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=31";
+import { getLaneById } from "../research-store.js?v=32";
 import {
   getBriefById,
   getBriefsForLane,
@@ -55,7 +56,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=38";
+} from "../briefs-store.js?v=39";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -63,7 +64,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=14";
-import { getContextById } from "../contexts-store.js?v=66";
+import { getContextById } from "../contexts-store.js?v=67";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -782,6 +783,14 @@ function bind(target) {
     if (event.target.closest("[data-feed-article-close]")) {
       view.articleId = null;
       return paint(target);
+    }
+
+    // "See past versions of this article", from the article PANE. The same link in
+    // the Full-article dialog is wired inside research-modals' own panel handler —
+    // the markup is shared, the delegation root is not.
+    const versionsLink = event.target.closest("[data-brief-versions]");
+    if (versionsLink) {
+      return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
     }
 
     // The explicit half of the infinite load — same path the observer takes, so

@@ -14,12 +14,12 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=48";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=88";
-import * as rightPanel from "./components/right-panel.js?v=497";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=66";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=89";
+import * as rightPanel from "./components/right-panel.js?v=499";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=67";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=25";
-import { connectors as connectorMocks } from "./mocks.js?v=84";
-import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=55";
+import { connectors as connectorMocks } from "./mocks.js?v=85";
+import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=56";
 import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=19";
 

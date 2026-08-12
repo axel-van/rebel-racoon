@@ -30,9 +30,9 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { addReadySource } from "./sources-stream.js?v=80";
-import { getBriefById } from "./briefs-store.js?v=38";
-import { getLaneById } from "./research-store.js?v=31";
+import { addReadySource } from "./sources-stream.js?v=81";
+import { getBriefById, getBriefVersions } from "./briefs-store.js?v=39";
+import { getLaneById } from "./research-store.js?v=32";
 import { findResearchSource } from "./research-catalog.js?v=14";
 
 export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
@@ -44,10 +44,14 @@ export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
  * @returns {boolean} false when the topic is unknown, so the caller can bail
  *   without navigating.
  */
-export function openBriefInChat(briefId) {
+export function openBriefInChat(briefId, { versionId = null } = {}) {
   const brief = getBriefById(briefId);
   if (!brief) return false;
-  setHandoff(BRIEF_CHAT_HANDOFF, { briefId: brief.id });
+  // versionId rides the handoff, not the URL. Unlike contextId and title — which
+  // session.js needs on the first paint to bind and name the chat — this is only
+  // read when the source is attached, and the URL is a worse place for it: a
+  // pasted link would carry a version that a later re-scan has renumbered.
+  setHandoff(BRIEF_CHAT_HANDOFF, { briefId: brief.id, versionId });
   // The Playbook and the chat name ride in the URL rather than in the handoff:
   // session.js already resolves `?contextId=` and `?title=` when it mints a
   // `new-*` session, so the chat is bound and named on its very first paint
@@ -64,15 +68,24 @@ export function openBriefInChat(briefId) {
  * Consumed at session mount. Attaches the topic as an already-processed source;
  * intake-lifecycle turns that into the source-intake card in the thread.
  */
-export function attachBriefToChat(sessionId, briefId) {
+export function attachBriefToChat(sessionId, briefId, versionId = null) {
   const brief = getBriefById(briefId);
   if (!brief) return;
   const src = findResearchSource(brief.sourceId);
+  // A past version attaches as its own source, distinct from the topic. Three
+  // things have to differ or the two are indistinguishable in the thread and the
+  // Sources panel:
+  //   • the id, or sources-stream treats the second attach as the same source;
+  //   • the filename, so the card says WHICH version is in the chat;
+  //   • the preview, which becomes that version's own opening line rather than the
+  //     current summary — the whole point of picking an older one.
+  const version = versionId ? getBriefVersions(briefId).find((v) => v.id === versionId) : null;
+  const past = version && !version.isCurrent;
   addReadySource(sessionId, {
-    id: brief.id,
-    filename: brief.headline,
-    kind: "Topic",
-    preview: brief.summary,
+    id: past ? `${brief.id}-${version.id}` : brief.id,
+    filename: past ? `${brief.headline} (${version.when})` : brief.headline,
+    kind: past ? "Topic · past version" : "Topic",
+    preview: past ? version.paragraphs[0] || version.title : brief.summary,
     iconClass: src?.icon || "ap-icon-folder",
   });
 }

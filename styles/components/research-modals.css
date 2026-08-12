@@ -569,3 +569,44 @@
     transition: none;
   }
 }
+
+/* ── Past versions of an article ───────────────────────────────────────────
+   Reader, not editor: a version picker, what changed, then the article as it read
+   at that point. Everything visual is DS — .ap-form-field, .ap-select,
+   .ap-infobox, .research-article — and these rules only place them. */
+
+/* The link that opens the dialog, under the Topic-history timeline. .ap-link
+   carries the type and colour; this only adds the gap that separates it from the
+   last timeline row, which would otherwise sit tight against it. */
+.research-article__versions {
+  display: inline-flex;
+  margin-top: var(--ref-spacing-xs);
+}
+
+.research-versions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+/* The picker sits at its natural width instead of stretching. Its content is a
+   date, so a full-width trigger would be almost entirely empty. */
+.research-versions__field {
+  align-self: flex-start;
+  min-width: 260px;
+}
+
+.research-versions__pos {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--sys-text-color-light);
+}
+
+/* The infobox and the article are separated by the container's gap, so neither
+   needs a margin of its own — this only removes the one .ap-infobox's paragraph
+   brings with it, which doubled the gap below it. */
+.research-versions__changed p {
+  margin: 0;
+}
