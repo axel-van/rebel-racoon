@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=391";
+import { renderTopbar } from "../components/topbar.js?v=394";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=47";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=20";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=11";
 import { getLaneById } from "../research-store.js?v=40";
-import * as contextBuilder from "../context-builder.js?v=358";
+import * as contextBuilder from "../context-builder.js?v=361";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=525";
+} from "../components/right-panel.js?v=528";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=33";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2155,6 +2155,22 @@ function renderStarterTopicWaiting() {
 // The CTA is the same .starter-card__cta as a live card so the two read as one
 // component; it is an <a> because it navigates, and the card around it is a plain
 // div because there is nothing else here to click.
+//
+// Beside it, the loop: back round to the first Idea. It closes the carousel
+// without letting the arrows wrap — Next stays disabled here, so the size of the
+// queue is still legible from the dots, and going round again is a deliberate
+// click rather than something you fall into by pressing Next once too often.
+//
+// It reuses data-starter-topic-go, the dots' own hook, with index 0: the paging
+// handler already takes an absolute index and already animates backwards when the
+// target is behind you, so this needs no handler of its own.
+//
+// history, checked against the alternatives rather than guessed: refresh means
+// "fetch again" everywhere else in this app (Reset filters, Refresh now) and
+// nothing is re-fetched here; rotate-left is the image-rotation glyph, a square
+// with a corner arrow, which is what it looked like on the card; arrow-left and
+// chevron-left are the Previous arrow, and this is not one step back. history is
+// the only one of the five that means "back to where this started".
 function renderStarterTopicEmpty() {
   return `
     <div class="starter-card starter-card--topic starter-topic--empty">
@@ -2163,9 +2179,30 @@ function renderStarterTopicEmpty() {
       <span class="starter-card__subtitle"
         >Every idea in full, with the posts behind it. I refresh them weekly.</span
       >
-      <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
-        >Explore more ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
-      ></a>
+      <div class="starter-topic__endfoot">
+        <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
+          >Explore more ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
+        ></a>
+        <!-- Button and tooltip share a wrapper so the tooltip anchors to the BUTTON
+             rather than to the row: the button sits after a link of unknown width,
+             so anchored to the row the tail would point at the link instead.
+             The DS Tooltip rather than a title attribute, for the reasons the old
+             flip button's one carried: title waits a second, can't be styled, and
+             paints in OS chrome. Last child so an adjacent-sibling selector reveals
+             it. aria-hidden — the button's own label says this, and a display:none
+             element can't be read through aria-describedby. -->
+        <span class="starter-topic__loop">
+          <button
+            type="button"
+            class="ap-icon-button ghost grey"
+            data-starter-topic-go="0"
+            aria-label="Back to the first idea"
+          >
+            <i class="ap-icon-history" aria-hidden="true"></i>
+          </button>
+          <span class="ap-tooltip top-left starter-topic__tip" aria-hidden="true">Back to the first idea</span>
+        </span>
+      </div>
     </div>
   `;
 }

@@ -23,7 +23,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=391";
+import { renderTopbar } from "../components/topbar.js?v=394";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=20";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=72";
@@ -170,7 +170,7 @@ function renderHead(lanes) {
 
   return html`<header class="research-view__head">
     <div class="research-view__head-text">
-      <h1 class="research-view__title">Content Ideas</h1>
+      <h1 class="research-view__title">Idea streams</h1>
       <p class="research-view__sub">${sub}</p>
     </div>
     <div class="research-view__head-actions">

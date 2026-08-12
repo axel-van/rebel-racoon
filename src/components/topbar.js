@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=525";
+} from "./right-panel.js?v=528";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=86";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=94";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=88";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=318";
+} from "./conversation-status-card.js?v=321";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=72";
@@ -489,14 +489,14 @@ function backTargetFor(path) {
       to: `/content-ideas/${laneSub[1]}`,
       // A deleted lane can still be deep-linked; fall back rather than render
       // "Back to undefined".
-      label: lane ? `Back to ${lane.name}` : "Back to Content Ideas",
+      label: lane ? `Back to ${lane.name}` : "Back to Idea streams",
     };
   }
-  // Every other Content Ideas view — a lane's topic list, and /content-ideas/new — goes
-  // back to the list of lists. Deliberately WITHOUT ?fresh=1: that param runs the
+  // Every other Content Ideas view — a stream's Idea list, and /content-ideas/new — goes
+  // back to the list of streams. Deliberately WITHOUT ?fresh=1: that param runs the
   // generating loader, and a back button should not spend 1.6s pretending to fetch
   // a list you were just looking at.
-  if (/^\/content-ideas\/[^/]+/.test(path)) return { to: "/content-ideas", label: "Back to Content Ideas" };
+  if (/^\/content-ideas\/[^/]+/.test(path)) return { to: "/content-ideas", label: "Back to Idea streams" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.
