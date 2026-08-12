@@ -575,12 +575,26 @@
    at that point. Everything visual is DS — .ap-form-field, .ap-select,
    .ap-infobox, .research-article — and these rules only place them. */
 
-/* The link that opens the dialog, under the Topic-history timeline. .ap-link
-   carries the type and colour; this only adds the gap that separates it from the
-   last timeline row, which would otherwise sit tight against it. */
+/* The link that opens the dialog, under the Topic-history timeline.
+   .ap-link standalone small carries the type, colour, icon sizing and focus ring.
+
+   The reset is here because .ap-link is written for an <a> and this has to be a
+   <button> — it performs an action rather than navigating, and the DS's link
+   guidance requires the element to match the behaviour. A <button> arrives with
+   UA background, border, padding and its own font stack, none of which .ap-link
+   clears. Nothing below overrides a DS declaration; it only removes what the
+   user-agent added. `font: inherit` first so .ap-link's own type wins.
+
+   margin-top is the only spacing: the last timeline row would otherwise sit tight
+   against it. */
 .research-article__versions {
   display: inline-flex;
   margin-top: var(--ref-spacing-xs);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
 }
 
 .research-versions {

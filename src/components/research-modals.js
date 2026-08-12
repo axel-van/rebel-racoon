@@ -1289,10 +1289,25 @@ function renderHistory(history, currentStatus, briefId = "") {
   // Offered only when there IS more than one version. A link promising past
   // versions that opens a dialog holding one is worse than no link.
   //
-  // .ap-link, the DS's own link component, rather than a button styled to look
-  // like one: this opens a reader, it does not act on the topic. It sits BELOW the
-  // timeline because it is the same subject continued — the timeline says the
-  // topic changed, this is where you go to see what the change was.
+  // .ap-link STANDALONE on a real <button>, with an icon. Three things the DS's
+  // link guidance settles, and this had all three wrong first time:
+  //
+  //   • Element. It opens a dialog, so it is an action, and the guidance is
+  //     explicit that the element must match the behaviour — <button> for an
+  //     action, <a href> for navigation. It was an <a role="button" tabindex="0">,
+  //     which is the "an <a> used as a button" anti-pattern by name.
+  //   • Variant. `standalone` is the on-its-own action variant (the guidance's own
+  //     examples are "see more" and "edit"); the default inline variant is for a
+  //     link sitting inside a sentence and is underlined to match it. This is on
+  //     its own line, so it is standalone. `small` keeps it at the density of the
+  //     timeline it follows.
+  //   • Icon. Standalone links are documented as highly recommending one, since
+  //     dropping the underline takes away the affordance the text had on its own.
+  //     ap-icon-history rather than the ap-icon-clock on the section label just
+  //     above it — the same glyph twice in six lines reads as a repeat.
+  //
+  // It sits BELOW the timeline because it is the same subject continued: the
+  // timeline says the topic changed, this is where you see what the change was.
   const versions = briefId ? getBriefVersions(briefId) : [];
   const past = versions.length ? versions.length - 1 : 0;
   return html`<section class="research-article">
@@ -1316,13 +1331,14 @@ function renderHistory(history, currentStatus, briefId = "") {
     </ol>
     ${raw(
       past > 0
-        ? html`<a
-            role="button"
-            tabindex="0"
-            class="ap-link small research-article__versions"
+        ? html`<button
+            type="button"
+            class="ap-link standalone small research-article__versions"
             data-brief-versions="${escapeAttr(briefId)}"
-            >See past versions of this article</a
-          >`
+          >
+            <i class="ap-icon-history" aria-hidden="true"></i>
+            See past versions of this article
+          </button>`
         : "",
     )}
   </section>`;
