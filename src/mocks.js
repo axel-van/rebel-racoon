@@ -5429,4 +5429,65 @@ export const researchBriefs = [
     seedStatus: "new",
     seedReason: "",
   },
+  // ── Two older topics, kept for the feed's infinite load ──────────────────
+  // This lane has nine topics from the real export; a page is ten. These two take
+  // it to eleven, so the second page has something in it — the only way the load
+  // is visible in a demo. Dated 6mo ago, so they land in "Earlier" and never
+  // disturb the recent groups the export produced; "6mo" parses through the same
+  // UNIT_MINUTES table as every other age label (see briefs-store.js).
+  //
+  // Both are content-strategy: needing a decision is what an old topic nobody has
+  // actioned looks like, and it keeps them out of the ready-to-post count.
+  {
+    id: "br-36",
+    laneId: "topic-list-6",
+    sourceId: "competitor-posts",
+    ageLabel: "6mo ago",
+    headline: "Everyone announced a pricing change in the same quarter",
+    summary:
+      "Per-channel, per-brand, per-seat — three competitors repriced within weeks of each other and each explained it as simplification. Nobody published what a team of five actually ends up paying.",
+    researchType: "content-strategy",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "Three repricings, no worked example",
+      paragraphs: [
+        "Three accounts changed pricing model inside one quarter and all three used the word simplification. One moved to per-channel, one to per-brand, one added a seat tier on top of both.",
+        "None of them published the arithmetic. The comparison a buyer actually runs — a team of five, twelve channels, one approval step — is absent from all three announcements, which is why the comparison content that ranks is written by third parties.",
+        "The opening is the worked example rather than an opinion about who is cheapest: same team, same channels, three bills, shown.",
+        "Blocked on: current published rates for all three, and a decision about whether we are willing to show a case where we are not the cheapest. Without the second, the piece is a pricing page in disguise and reads like one.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "6 months ago", note: "Surfaced from the competitor scan (3 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
+  {
+    id: "br-37",
+    laneId: "topic-list-6",
+    sourceId: "competitor-posts",
+    ageLabel: "6mo ago",
+    headline: "The approval workflow is everyone's screenshot and nobody's argument",
+    summary:
+      "Four posts across two accounts show an approval queue in a product shot. None of them says what it prevents — the wrong logo, the unapproved claim, the post that went out during an outage.",
+    researchType: "content-strategy",
+    isTrending: false,
+    whyNow: "",
+    whyNowDetail: "",
+    research: {
+      title: "They show the queue. The story is the thing that did not get published",
+      paragraphs: [
+        "Four items, two accounts, all product screenshots: a draft, a reviewer, a green tick. The feature is table stakes and the copy treats it that way — a caption naming the feature and a link.",
+        "What none of them has is a consequence. An approval step earns its cost exactly once, on the day it catches the post that would have been a problem, and that is the only version of this story anyone remembers.",
+        "This is a strong pillar and a weak post, which is the distinction worth keeping: the argument is available, the evidence is not.",
+        "Blocked on: one customer willing to describe a near-miss on the record. Anonymised it is a hypothetical, and a hypothetical is what all four of these screenshots already are.",
+      ],
+    },
+    posts: [],
+    history: [{ status: "new", when: "6 months ago", note: "Surfaced from the competitor scan (4 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
 ];

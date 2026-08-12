@@ -1205,6 +1205,32 @@
   max-width: var(--topics-card-max);
 }
 
+/* The infinite-load sentinel at the foot of the list — both the thing the
+   IntersectionObserver watches and the slot the spinner appears in, so it is
+   present whether or not a page is loading (see renderLoadMore).
+
+   min-height holds the row's size across the caption/spinner swap, so the list
+   doesn't jump by the spinner's height the moment a load starts — which would
+   move the very cards the user is reading. The spinner is .ap-loader, sized and
+   coloured by DS modifiers with its contents supplied by initArchieLoader(), so
+   there is nothing to declare for it here. */
+.research-feed__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  min-height: 56px;
+  padding: var(--ref-spacing-sm) 0;
+}
+
+.research-feed__more-caption {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--sys-text-color-light);
+}
+
 /* The attention page keeps a single capped column — it has no type split, its
    groups are the two signals. */
 .research-attention__group {

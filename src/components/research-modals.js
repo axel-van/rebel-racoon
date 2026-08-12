@@ -28,8 +28,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=37";
-import { getLanes } from "../research-store.js?v=30";
+} from "../briefs-store.js?v=38";
+import { getLanes } from "../research-store.js?v=31";
 import {
   getContexts,
   getContextById,
@@ -40,9 +40,9 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=65";
+} from "../contexts-store.js?v=66";
 import { renderBriefCard } from "./brief-card.js?v=35";
-import { renderSocialPostCard } from "./social-post-card.js?v=20";
+import { renderSocialPostCard } from "./social-post-card.js?v=21";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";

@@ -20,7 +20,7 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   BRAND_INITIALS,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=54";
+} from "../social-profiles.js?v=55";
 
 const MODAL_ID = "analyze-profiles";
 

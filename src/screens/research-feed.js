@@ -31,7 +31,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=362";
+import { renderTopbar } from "../components/topbar.js?v=363";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard } from "../components/brief-card.js?v=35";
 import {
@@ -41,10 +41,10 @@ import {
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=70";
-import { openBriefInChat } from "../brief-flow.js?v=10";
+} from "../components/research-modals.js?v=71";
+import { openBriefInChat } from "../brief-flow.js?v=11";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=30";
+import { getLaneById } from "../research-store.js?v=31";
 import {
   getBriefById,
   getBriefsForLane,
@@ -55,7 +55,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=37";
+} from "../briefs-store.js?v=38";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -63,7 +63,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=14";
-import { getContextById } from "../contexts-store.js?v=65";
+import { getContextById } from "../contexts-store.js?v=66";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -85,6 +85,19 @@ import { getContextById } from "../contexts-store.js?v=65";
 // is lost is density: a single capped column leaves the right of a wide window
 // empty, which is exactly the space the columns existed to use. That is the
 // accepted cost, not an oversight.
+// ─── Infinite load ─────────────────────────────────────────────────────────
+// A page is 10 topics. The next 10 arrive when the sentinel below the list comes
+// into view, after a deliberate 2s — long enough that the spinner is legible in a
+// demo, short enough not to feel broken.
+//
+// Paging is applied to the FLAT filtered list before grouping, not per age group.
+// The list is already sorted newest-first, so slicing the flat list and grouping
+// the slice keeps every group complete-as-far-as-it-goes: a page boundary can land
+// inside "Earlier", and the heading simply gains cards on the next load rather than
+// a fourth group appearing out of order.
+const PAGE_SIZE = 10;
+const LOAD_MS = 2000;
+
 function renderList(briefs, view) {
   const cards = (rows) =>
     rows
@@ -98,9 +111,12 @@ function renderList(briefs, view) {
       )
       .join("");
 
+  const shown = briefs.slice(0, view.shown);
+  const remaining = briefs.length - shown.length;
+
   return html`<div class="research-feed__list">
     ${raw(
-      groupBriefsByAge(briefs)
+      groupBriefsByAge(shown)
         .map(
           // A heading per non-empty age frame. The label is /topics'
           // .topics-group__label — the app's own answer to this exact problem one
@@ -113,6 +129,39 @@ function renderList(briefs, view) {
             </section>`,
         )
         .join(""),
+    )}
+    ${raw(remaining > 0 ? renderLoadMore(remaining, view.loadingMore) : "")}
+  </div>`;
+}
+
+// The sentinel AND the loading row, one element. It has to render whether or not a
+// load is running: an IntersectionObserver needs something in the DOM to watch, so
+// an element that only appeared once loading started could never start a load.
+//
+// Idle state is a REAL BUTTON, not just a "scroll to load" caption. Scrolling is
+// the primary trigger and the observer handles it, but an infinite list whose only
+// trigger is scroll position cannot be paged from the keyboard and gives a
+// screen-reader user nothing to activate. The button is the same gesture made
+// explicit — it is also what makes the load demoable on command rather than only
+// by scrolling. .ap-button stroked grey: secondary weight, because paging a list is
+// not the thing you came to this screen to do.
+//
+// Loading state swaps it for .ap-loader — empty, because archie-loader.js sweeps
+// for the class and supplies the animated Archie mark, so this matches
+// renderGenerating above and every other spinner in the app. size-24 rather than
+// that page's 60: a row at the foot of a list, not a whole-screen state.
+//
+// role="status" on the caption, so the swap is announced rather than silent.
+function renderLoadMore(remaining, loading) {
+  const label = `Load ${remaining === 1 ? "1 more topic" : `${remaining > PAGE_SIZE ? PAGE_SIZE : remaining} more topics`}`;
+  return html`<div class="research-feed__more" data-research-more>
+    ${raw(
+      loading
+        ? `<span class="ap-loader orange size-24" aria-hidden="true"></span>
+           <p class="research-feed__more-caption" role="status">Loading more topics…</p>`
+        : html`<button type="button" class="ap-button stroked grey" data-research-more-load>
+            <span>${label}</span>
+          </button>`,
     )}
   </div>`;
 }
@@ -195,6 +244,13 @@ function freshView() {
     // auto-open off the id alone would reopen the pane the instant the user shut
     // it, which is the closest thing to a locked door this screen could have.
     articleAuto: false,
+    // How many topics of the filtered list are on screen. One page to start; the
+    // sentinel adds a page at a time. View state, like articleId — "the feed with
+    // three pages loaded" is a scroll position, not a place worth linking to.
+    shown: PAGE_SIZE,
+    // Is a page in flight? Guards the observer against firing twice for the same
+    // sentinel (it stays intersecting for the whole 2s) and drives the spinner.
+    loadingMore: false,
   };
 }
 
@@ -249,6 +305,16 @@ function teardown() {
     window.clearTimeout(timer);
     timer = null;
   }
+  // The observer holds the sentinel from a screen that is being unmounted, and the
+  // timer would paint into a target the router has already replaced.
+  if (moreObserver) {
+    moreObserver.disconnect();
+    moreObserver = null;
+  }
+  if (moreTimer) {
+    window.clearTimeout(moreTimer);
+    moreTimer = null;
+  }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
   if (boundTarget && boundInput) {
     boundTarget.removeEventListener("input", boundInput);
@@ -281,6 +347,64 @@ function paint(target) {
       next.scrollTop = scrollTop;
     }
   }
+  // The sentinel is destroyed and rebuilt by the innerHTML above, so the observer
+  // has to be re-pointed after every paint — not once at mount.
+  observeMore(target);
+}
+
+// ── Infinite load plumbing ─────────────────────────────────────────────────
+
+let moreObserver = null;
+let moreTimer = null;
+
+function resetPaging() {
+  view.shown = PAGE_SIZE;
+  view.loadingMore = false;
+  // A page in flight belongs to the list that requested it. Cancel it, or it lands
+  // on the newly filtered list and pages it too.
+  if (moreTimer) {
+    clearTimeout(moreTimer);
+    moreTimer = null;
+  }
+}
+
+// Point the observer at the current sentinel. Cheap to call on every paint: the
+// observer is created once and simply re-targeted, and disconnect() drops the
+// stale element the paint just threw away.
+//
+// root is the scroll container, not the viewport — .research-feed__body is what
+// scrolls here, so a viewport-rooted observer would never see the sentinel cross
+// anything. rootMargin gives it a screenful of lead time so the next page is
+// already arriving as the user reaches the end.
+function observeMore(target) {
+  const sentinel = target.querySelector("[data-research-more]");
+  if (moreObserver) moreObserver.disconnect();
+  if (!sentinel) return;
+  const root = target.querySelector(".research-feed__body");
+  if (!moreObserver) {
+    moreObserver = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        loadMore(target);
+      },
+      { root, rootMargin: "200px" },
+    );
+  }
+  moreObserver.observe(sentinel);
+}
+
+function loadMore(target) {
+  if (view.loadingMore) return;
+  const total = getBriefsForLane(laneId, filters).length;
+  if (view.shown >= total) return;
+  view.loadingMore = true;
+  paint(target); // swap the caption for the spinner
+  moreTimer = setTimeout(() => {
+    moreTimer = null;
+    view.shown += PAGE_SIZE;
+    view.loadingMore = false;
+    paint(target);
+  }, LOAD_MS);
 }
 
 // ─── Render ────────────────────────────────────────────────────────────────
@@ -567,6 +691,7 @@ function bind(target) {
     }
     if (event.target.closest("[data-feed-reset]")) {
       filters = defaultFilters();
+      resetPaging();
       return paint(target);
     }
     if (event.target.closest("[data-feed-export]")) {
@@ -658,6 +783,12 @@ function bind(target) {
       view.articleId = null;
       return paint(target);
     }
+
+    // The explicit half of the infinite load — same path the observer takes, so
+    // the two can never disagree about what a page is or how long it takes.
+    if (event.target.closest("[data-research-more-load]")) {
+      return loadMore(target);
+    }
   };
   target.addEventListener("click", boundClick);
 
@@ -670,6 +801,10 @@ function bind(target) {
     if (box.checked) set.add(val);
     else set.delete(val);
     filters = { ...filters, [field]: [...set] };
+    // Back to page one. The count is a position in THIS filtered list, so carrying
+    // it across a filter change would show a widened list already three pages deep
+    // — the user narrows to see less and would get more.
+    resetPaging();
     paint(target);
   };
   target.addEventListener("input", boundInput);
