@@ -1379,10 +1379,13 @@ function paintVersions() {
 // says it is — an authored history that stopped one step short read as a bug.
 function renderHistory(history, currentStatus, briefId = "") {
   const meta = findReviewStatus(currentStatus);
-  const entries = [
-    ...history,
-    { status: currentStatus, when: "now", note: `Currently ${meta ? meta.label : currentStatus}.` },
-  ];
+  // Used gets its own sentence. The other three statuses describe a state that is
+  // still true, which "Currently X." says well; Used describes something that
+  // already happened to the topic, and naming the action is what a history row is
+  // for. Only this one is special-cased — the shape still covers New, Saved and
+  // Ignored.
+  const note = currentStatus === "used" ? "Used to draft a post" : `Currently ${meta ? meta.label : currentStatus}.`;
+  const entries = [...history, { status: currentStatus, when: "now", note }];
   // Offered only when there IS more than one version. A link promising past
   // versions that opens a dialog holding one is worse than no link.
   //
