@@ -31,7 +31,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=379";
+import { renderTopbar } from "../components/topbar.js?v=380";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=37";
 import {
@@ -41,8 +41,9 @@ import {
   // PARKED with the handler below — kept imported so restoring is one uncomment.
   openAddToStrategy,
   renderResearchArticle,
-  researchArticleSub,
-} from "../components/research-modals.js?v=87";
+  // researchArticleSub went with the pane's subtitle — the card's source row says
+  // the same thing. Still exported and still used by the Full-research dialog.
+} from "../components/research-modals.js?v=88";
 import { openBriefInChat } from "../brief-flow.js?v=15";
 import { showToast } from "../components/toast.js?v=21";
 import { getLaneById } from "../research-store.js?v=35";
@@ -182,14 +183,23 @@ function renderLoadMore(remaining, loading) {
 function renderArticlePane(brief, entering = false) {
   return html`<aside class="research-feed__article${raw(entering ? " is-entering" : "")}" aria-label="Topic article">
     <header class="research-feed__article-head">
+      <!-- One title, and it is the ARTICLE's — brief.research.title, promoted out of
+           the body and into the header.
+
+           Three things left this block. The "Full article" kicker, because the pane
+           has a title and a close button and sits beside the card it belongs to;
+           naming itself as well was the fourth label in a 60px band. The topic
+           headline, because the card carrying it is right there and highlighted, so
+           the pane repeated the one line the user had just clicked. And the
+           source-and-count sub, which said "Competitors · 14 posts" — the card's own
+           source row says the same thing two inches to the left.
+
+           What remains is the thing the pane alone has: the title Archie gave the
+           article. It wears .topics-card__headline so the pane's first line and the
+           card's first line are set identically, which is what makes the two boxes
+           read as one selection rather than two panels. -->
       <div class="research-feed__article-headtext">
-        <!-- "Full article" moved up here from the body's first section. The pane is
-             the article, so it names itself once, at the top, above the topic it
-             is the article for — and .research-article__label keeps the exact
-             treatment it had inline, so nothing new was invented to hold it. -->
-        <span class="research-article__label"><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span>
-        <h2 class="research-feed__article-title">${brief.headline}</h2>
-        <p class="research-feed__article-sub">${researchArticleSub(brief)}</p>
+        <h2 class="topics-card__headline">${brief.research?.title || brief.headline}</h2>
       </div>
       <button
         type="button"
@@ -201,7 +211,9 @@ function renderArticlePane(brief, entering = false) {
         <i class="ap-icon-close" aria-hidden="true"></i>
       </button>
     </header>
-    <div class="research-feed__article-body">${raw(renderResearchArticle(brief, { withLabel: false }))}</div>
+    <div class="research-feed__article-body">
+      ${raw(renderResearchArticle(brief, { withLabel: false, withTitle: false }))}
+    </div>
     <!-- The card's own action, at the foot of the pane. A reader who has scrolled
          four paragraphs down cannot see the card that opened this, so the verb has
          to be where they finished reading — the same argument the pane's own close

@@ -1081,14 +1081,23 @@ function pickerCard(b, laneName = "") {
  * briefs-store — a core-shell module reaching into a flag-gated feature — which
  * is exactly the dependency this seam avoids.
  */
-export function renderResearchArticle(brief, { withLabel = true } = {}) {
+export function renderResearchArticle(brief, { withLabel = true, withTitle = true } = {}) {
   if (!brief) return "";
   const posts = brief.posts || [];
-  // `withLabel: false` for the feed's article pane, which promotes "Full article"
-  // into its own header — the pane IS the article, so labelling it again inside
-  // its own body said the same thing twice. The dialog keeps the inline label,
-  // because there the article is one section among several in a shell whose title
-  // is the topic's headline.
+  // Both flags are OFF for the feed's article PANE and ON for this module's dialog,
+  // and the reason is the same in each case: the pane has chrome of its own, the
+  // dialog's chrome belongs to something else.
+  //
+  //   withLabel — the pane has a title and a close button and sits beside the card it
+  //     belongs to, so "Full article" was the fourth label in a 60px band. In the
+  //     dialog the article is one section among several, so the label earns its place.
+  //   withTitle — the pane promotes brief.research.title into its own header, so
+  //     rendering it again here printed the same line twice. The dialog's shell title
+  //     is the topic HEADLINE, which is a different string, so the article still needs
+  //     to name itself inside the body.
+  //
+  // Defaults are ON so the dialog reads unchanged and any future caller gets the
+  // complete article rather than a silently headless one.
   return html`<section class="research-article">
       ${raw(
         withLabel
@@ -1097,7 +1106,7 @@ export function renderResearchArticle(brief, { withLabel = true } = {}) {
             >`
           : "",
       )}
-      <h3 class="research-article__title">${brief.research?.title || ""}</h3>
+      ${raw(withTitle ? html`<h3 class="research-article__title">${brief.research?.title || ""}</h3>` : "")}
       ${raw(renderArticleBody(brief.research))}
     </section>
     ${raw(renderTrendLevels(brief))} ${raw(renderHistory(brief.history || [], brief.status, brief.id))}

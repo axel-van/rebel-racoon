@@ -1119,32 +1119,30 @@
   border-bottom: 1px solid var(--ref-color-grey-10);
 }
 
-/* The promoted "Full article" kicker. Sits above the headline, so the pane names
-   itself before it names the topic. */
-.research-feed__article-head .research-article__label {
-  margin-bottom: var(--ref-spacing-xxxs);
-}
-
 .research-feed__article-headtext {
   flex: 1 1 0;
   min-width: 0;
 }
 
-.research-feed__article-title {
-  margin: 0;
-  font-family: var(--sys-text-style-h4-font-family);
-  font-size: var(--sys-text-style-h4-size);
-  line-height: var(--sys-text-style-h4-line-height);
-  font-weight: var(--sys-text-style-h4-weight);
-  color: var(--app-convo-navy);
+/* The header carries ONE line now, and it is .topics-card__headline — the same class
+   the card's headline uses, so the pane's first line and the card's are set
+   identically and the two boxes read as one selection.
+   That class ships an 8px bottom margin for the card, where a summary follows it.
+   Nothing follows it here, and the header owns its own bottom padding, so drop it
+   rather than have the header measure 8px taller than it looks. */
+.research-feed__article-headtext > .topics-card__headline {
+  margin-bottom: 0;
 }
 
-.research-feed__article-sub {
-  margin: var(--ref-spacing-xxxs) 0 0;
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: var(--sys-text-style-caption-bold-weight);
-  color: var(--sys-text-color-light);
-}
+/* GONE with the header's other two lines:
+     .research-feed__article-head .research-article__label  — the "Full article"
+       kicker; the pane has a title and a close button and sits beside the card it
+       belongs to, so naming itself was the fourth label in a 60px band.
+     .research-feed__article-title  — the topic headline, which the highlighted card
+       two inches to the left was already showing.
+     .research-feed__article-sub  — "Competitors · 14 posts", which the card's own
+       source row says.
+   The article's title took their place, promoted out of the body. */
 
 /* The scroll lives here, not on the pane, so the header above stays put. */
 .research-feed__article-body {
