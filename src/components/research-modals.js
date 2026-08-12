@@ -1171,20 +1171,32 @@ export function openVersionHistory({ briefId }) {
   const versions = getBriefVersions(briefId);
   if (!versions.length) return;
   versionBriefId = briefId;
-  // Opens on the OLDEST version, not the current one. The current article is what
-  // the panel behind this dialog is already showing, so opening on it would make
-  // the dialog look like it had failed to do anything. Oldest-first also means
-  // stepping down the list reads the topic's development in order.
-  versionPickedId = versions[0].id;
+  // Opens on the most recent PAST version — the second row, since the picker is
+  // newest-first and the current article is the first. Not the current one: that is
+  // what the panel behind this dialog is already showing, so landing there would
+  // make the dialog look like it had failed to do anything. Second row rather than
+  // last also means the default selection is at the TOP of the list, next to the
+  // trigger that opened it, instead of at the bottom.
+  const past = versions.filter((v) => !v.isCurrent);
+  versionPickedId = (past[past.length - 1] || versions[0]).id;
   paintVersions();
 }
 
 function paintVersions() {
   const brief = getBriefById(versionBriefId);
   if (!brief) return;
-  const versions = getBriefVersions(versionBriefId);
-  const picked = versions.find((v) => v.id === versionPickedId) || versions[0];
-  const idx = versions.indexOf(picked);
+  // Two orders, deliberately, and they are not interchangeable:
+  //   chrono  — oldest → current, the order the article was actually written in.
+  //             This is what "Version 3 of 5" counts, because a version's number is
+  //             a fact about when it was written and must not change with how the
+  //             list happens to be sorted.
+  //   ordered — newest → oldest, the order the picker shows. Most recent first is
+  //             what a reader reaches for: the interesting comparison is against
+  //             what the article says NOW, not against its first draft.
+  const chrono = getBriefVersions(versionBriefId);
+  const ordered = [...chrono].reverse();
+  const picked = ordered.find((v) => v.id === versionPickedId) || ordered[0];
+  const idx = chrono.indexOf(picked);
   const label = (v) => `${v.when}${v.isCurrent ? " · current" : ""}`;
 
   openShell(
@@ -1200,8 +1212,10 @@ function paintVersions() {
       body: html`<div class="research-versions">
         <!-- The DS Select, built as the details/summary composition it actually is
              (see the long note in the strategy dialog above for why a native
-             <select class="ap-select"> is drift). Options are dates, newest last,
-             because that is the order the article was written in. -->
+             <select class="ap-select"> is drift). Options are dates, NEWEST FIRST
+             — the current article leads, then back through the rewrites. The
+             version NUMBERS below stay chronological; see the note on the two
+             orders above. -->
         <div class="ap-form-field research-versions__field">
           <label id="versionPickLabel">Version</label>
           <details class="ap-select">
@@ -1212,7 +1226,7 @@ function paintVersions() {
             <div class="ap-select-dropdown">
               <div class="ap-select-options">
                 ${raw(
-                  versions
+                  ordered
                     .map(
                       (v) =>
                         html`<div
@@ -1235,10 +1249,12 @@ function paintVersions() {
         </div>
 
         <!-- Which of how many, in words. The picker shows a date; this says where
-             that date sits in the sequence, which a date alone doesn't tell you. -->
+             that date sits in the sequence, which a date alone doesn't tell you.
+             Counted on the chronological order, so version 1 is always the first
+             draft however the picker above is sorted. -->
         <p class="research-versions__pos">
           Version ${String(idx + 1)} of
-          ${String(versions.length)}${raw(picked.isCurrent ? " — the version you are reading" : "")}
+          ${String(chrono.length)}${raw(picked.isCurrent ? " — the version you are reading" : "")}
         </p>
 
         ${raw(
@@ -1258,16 +1274,27 @@ function paintVersions() {
           ${raw(picked.paragraphs.map((p) => html`<p>${p}</p>`).join(""))}
         </section>
       </div>`,
-      // "Use this version in chat" is primary and orange — it is the AI action, the
-      // same treatment "Use in chat" carries on the topic card. Disabled on the
-      // current version: that is exactly what the card's own Use-in-chat already
-      // does, so offering it here twice would be two buttons for one outcome.
+      // Matched to the topic card's "Use in chat", because it IS that action — same
+      // verb, same destination, one surface further in. It was `primary orange` on
+      // the argument that use-in-chat is the AI action; the card disagrees, and the
+      // card is what the user sees first, so the card wins.
+      //
+      // .ap-button stroked blue is the DS component whose recipe the card hand-rolls
+      // in .topics-use__main — white fill, electric-blue border, electric-blue-100
+      // label, 14/800. Using the real class rather than copying that CSS also picks
+      // up the hover, active, focus and disabled states the card's version never
+      // declared, and corrects its border to the DS's electric-blue-60 (the card
+      // sets -40).
+      //
+      // Disabled on the current version: that is exactly what the card's own
+      // Use-in-chat already does, so offering it here too would be two controls for
+      // one outcome.
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Close</span>
         </button>
         <button
           type="button"
-          class="ap-button primary orange"
+          class="ap-button stroked blue"
           data-version-use="${escapeAttr(picked.id)}"
           ${raw(picked.isCurrent ? "disabled" : "")}
         >

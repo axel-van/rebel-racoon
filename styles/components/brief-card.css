@@ -410,13 +410,21 @@
   display: inline-flex;
 }
 
+/* These two segments hand-roll the DS's `.ap-button stroked blue` recipe, because
+   the split they form needs a squared inner edge the DS split-button doesn't
+   expose. The VALUES are therefore the DS's, exactly: electric-blue-60 border and
+   weight 700, not the -40 and 800 this used to carry. Those two were drift, and
+   they showed the moment the version dialog used the real component for the same
+   action — the same control rendered two different ways on two surfaces.
+   If .ap-split-button ever gains a squared-inner-edge variant, this whole block
+   should go. */
 .topics-use__main,
 .topics-use__toggle {
   padding: 8px 14px;
   background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-electric-blue-40);
+  border: 1px solid var(--ref-color-electric-blue-60);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--ref-color-electric-blue-100);
   cursor: pointer;
 }
