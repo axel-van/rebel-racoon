@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=394";
+import { renderTopbar } from "../components/topbar.js?v=395";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=47";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=20";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=11";
 import { getLaneById } from "../research-store.js?v=40";
-import * as contextBuilder from "../context-builder.js?v=361";
+import * as contextBuilder from "../context-builder.js?v=362";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=528";
+} from "../components/right-panel.js?v=529";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=33";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2156,21 +2156,11 @@ function renderStarterTopicWaiting() {
 // component; it is an <a> because it navigates, and the card around it is a plain
 // div because there is nothing else here to click.
 //
-// Beside it, the loop: back round to the first Idea. It closes the carousel
-// without letting the arrows wrap — Next stays disabled here, so the size of the
-// queue is still legible from the dots, and going round again is a deliberate
-// click rather than something you fall into by pressing Next once too often.
-//
-// It reuses data-starter-topic-go, the dots' own hook, with index 0: the paging
-// handler already takes an absolute index and already animates backwards when the
-// target is behind you, so this needs no handler of its own.
-//
-// history, checked against the alternatives rather than guessed: refresh means
-// "fetch again" everywhere else in this app (Reset filters, Refresh now) and
-// nothing is re-fetched here; rotate-left is the image-rotation glyph, a square
-// with a corner arrow, which is what it looked like on the card; arrow-left and
-// chevron-left are the Previous arrow, and this is not one step back. history is
-// the only one of the five that means "back to where this started".
+// The loop lives in the nav row, NOT in here. It was a second icon button beside
+// this CTA for a while: two controls in two places for one carousel, one of which
+// only existed on one slide, and it landed on the card's own watermark. The trailing
+// arrow already sits where "what comes after this" belongs, so on this slide it
+// becomes the way round — see renderStarterTopicNav.
 function renderStarterTopicEmpty() {
   return `
     <div class="starter-card starter-card--topic starter-topic--empty">
@@ -2179,30 +2169,9 @@ function renderStarterTopicEmpty() {
       <span class="starter-card__subtitle"
         >Every idea in full, with the posts behind it. I refresh them weekly.</span
       >
-      <div class="starter-topic__endfoot">
-        <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
-          >Explore more ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
-        ></a>
-        <!-- Button and tooltip share a wrapper so the tooltip anchors to the BUTTON
-             rather than to the row: the button sits after a link of unknown width,
-             so anchored to the row the tail would point at the link instead.
-             The DS Tooltip rather than a title attribute, for the reasons the old
-             flip button's one carried: title waits a second, can't be styled, and
-             paints in OS chrome. Last child so an adjacent-sibling selector reveals
-             it. aria-hidden — the button's own label says this, and a display:none
-             element can't be read through aria-describedby. -->
-        <span class="starter-topic__loop">
-          <button
-            type="button"
-            class="ap-icon-button ghost grey"
-            data-starter-topic-go="0"
-            aria-label="Back to the first idea"
-          >
-            <i class="ap-icon-history" aria-hidden="true"></i>
-          </button>
-          <span class="ap-tooltip top-left starter-topic__tip" aria-hidden="true">Back to the first idea</span>
-        </span>
-      </div>
+      <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
+        >Explore more ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
+      ></a>
     </div>
   `;
 }
@@ -2248,9 +2217,18 @@ function renderStarterTopicSlot(sessionId) {
 // .ap-stepper only for numbered multi-step flows) — bare <button> children, no
 // class of their own, .active on the current one.
 //
-// The arrows are DS icon buttons and are DISABLED at the two ends rather than
-// wrapping. Wrapping hides the size of the queue, which is the thing the dots
-// are there to show; disabled says "this is all of them" without a sentence.
+// The arrows are DS icon buttons. Previous is DISABLED on the first slide, because
+// there is nothing before it. The trailing one is never disabled: on the last slide
+// it CIRCLES BACK to the first Idea, which is what closes the carousel.
+//
+// One button, two jobs, and it says which it is doing: on the last slide the glyph
+// becomes `history` and the label becomes "Back to the first idea". A chevron
+// pointing right would promise another slide after this one, and the dots have
+// already said there isn't. `history` was picked against the alternatives rendered
+// side by side — refresh means "fetch again" everywhere else in this app (Reset
+// filters, Refresh now) and nothing is re-fetched; rotate-left is the
+// image-rotation glyph, a square with a corner arrow; arrow-left and chevron-left
+// are Previous, and this is not one step back.
 function renderStarterTopicNav(index, total) {
   const dots = Array.from({ length: total }, (_, i) => {
     // The last slide is not an Idea, so it cannot be labelled as one. Everything
@@ -2260,6 +2238,7 @@ function renderStarterTopicNav(index, total) {
       i === index ? ' aria-current="true"' : ""
     }></button>`;
   }).join("");
+  const looping = index === total - 1;
   return `
     <div class="starter-topic__nav">
       <button
@@ -2276,10 +2255,9 @@ function renderStarterTopicNav(index, total) {
         type="button"
         class="ap-icon-button ghost grey"
         data-starter-topic-step="1"
-        aria-label="Next idea"
-        ${index === total - 1 ? "disabled" : ""}
+        aria-label="${looping ? "Back to the first idea" : "Next idea"}"
       >
-        <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+        <i class="${looping ? "ap-icon-history" : "ap-icon-chevron-right"}" aria-hidden="true"></i>
       </button>
     </div>
   `;
@@ -4973,7 +4951,12 @@ function bindSession(root, session) {
         const wanted = step
           ? starterTopicIndex + Number(step.dataset.starterTopicStep)
           : Number(goDot.dataset.starterTopicGo);
-        const nextIndex = Math.max(0, Math.min(total - 1, wanted));
+        // Forward off the end WRAPS to the first slide — that is the loop, and it is
+        // the only way the index ever moves backwards while still going forwards.
+        // Everything else clamps: Previous is disabled on the first slide, so there
+        // is nothing to wrap the other way, and a dot is always a real slide.
+        const wrapping = !!step && wanted > total - 1;
+        const nextIndex = wrapping ? 0 : Math.max(0, Math.min(total - 1, wanted));
         // Nothing to animate — a disabled arrow that still got clicked, or the dot
         // you are already on. Returning here also stops the 180ms swap from
         // running and re-rendering the block for no reason.
@@ -4981,7 +4964,11 @@ function bindSession(root, session) {
         // Direction, so going back reads as going back: out to the right and in
         // from the left, the mirror of forwards. A carousel that always slides one
         // way makes Previous feel like another Next.
-        const back = nextIndex < starterTopicIndex;
+        //
+        // A wrap is FORWARD motion even though the index drops, so it keeps the
+        // forward animation — sliding right-to-left on the way round is what makes
+        // it read as a loop rather than as four Previouses at once.
+        const back = !wrapping && nextIndex < starterTopicIndex;
         starterTopicIndex = nextIndex;
         const swap = () => {
           // Re-check that the slot we captured on the click is still in the

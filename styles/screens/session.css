@@ -1003,72 +1003,16 @@
   overflow: hidden;
 }
 
-/* ── The closing slide's footer row ───────────────────────────────────────
-   CTA then loop, both at the card's bottom-LEFT. They were pushed to opposite ends
-   first, which is the balanced thing to do with a 930px row — and it put a 36px
-   grey glyph exactly on top of the 72px watermark in the bottom-right corner
-   (measured: they overlapped by 36×36, the whole button). The row paints above the
-   watermark, so it wasn't hidden, just two grey marks in the same place. Clustered
-   left, the two actions read as a pair and the corner stays decorative.
+/* The closing slide keeps the plain bottom-left CTA every other card has — no
+   footer row, no second control. The loop moved to the nav's trailing arrow, which
+   needs no CSS of its own: it is the same DS icon button in the same place, and only
+   its glyph and label change on the last slide.
 
-   The row also takes over the pinning that .starter-card__cta does for itself on
-   every other card — margin-top:auto moves up here; see the overrides below for
-   what that costs the link.
-
-   The tooltip anchors to .starter-topic__loop below, not to this row — see there. */
-.starter-topic__endfoot {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--ref-spacing-xs);
-  width: 100%;
-  margin-top: auto;
-}
-
-/* Three overrides, all of them undoing rules that make .starter-card__cta the LAST
-   thing in a column: the auto margin (the row owns the pinning now), the top
-   padding that separated it from the text above, and align-self: flex-start, which
-   beat the row's align-items and left the link's centre line 10px above the
-   button's. */
-.starter-topic__endfoot .starter-card__cta {
-  margin-top: 0;
-  padding-top: 0;
-  align-self: center;
-}
-
-/* Visibility lives on the APP class, never on .ap-tooltip — redeclaring a DS class
-   outside ds-patches.css flips the cascade for every other use of it (CLAUDE.md).
-   The DS supplies the panel, the arrow and the type; this supplies where it sits
-   and when it shows.
-
-   Above the button: `top-left` is the DS modifier for an arrow on the bottom edge
-   near the left, so the tail points down at the control, and the line grows
-   rightwards across the card's empty middle. The offset is the arrow's own height.
-
-   The wrapper is what makes that work — it is the positioned ancestor, so left:0 is
-   the button's own left edge. Anchored to the row instead, left:0 would be the CTA's
-   left edge and the tail would point at the link. */
-.starter-topic__loop {
-  position: relative;
-  display: inline-flex;
-}
-
-/* nowrap because the wrapper is the containing block and it is 36px wide: an
-   absolutely positioned box shrinks to fit INSIDE that, so "Back to the first idea"
-   came out 56px wide and seven lines tall. The DS max-width (350px) only caps a
-   tooltip, it can't widen one. nowrap rather than a width, so the rule doesn't have
-   to be re-measured if the label changes. */
-.starter-topic__tip {
-  display: none;
-  bottom: calc(100% + var(--ref-spacing-xxs));
-  left: 0;
-  white-space: nowrap;
-}
-
-.starter-topic__loop button:hover + .starter-topic__tip,
-.starter-topic__loop button:focus-visible + .starter-topic__tip {
-  display: block;
-}
+   What went with it: a flex row that took over .starter-card__cta's own pinning
+   (and had to undo its align-self: flex-start, worth 10px of misalignment), a
+   positioned wrapper for the tooltip, and a nowrap rule for the tooltip that the
+   36px wrapper had squeezed to seven lines. Three rules for a control the nav row
+   already had. */
 
 /* The 22ch measure on .starter-card__subtitle is sized for a workflow card at a
    third of the row. On this card, which IS the row, it wrapped a 68-character

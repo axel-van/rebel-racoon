@@ -1,9 +1,9 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=20";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=394";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=361";
-import { init as initRightPanel } from "./components/right-panel.js?v=528";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=395";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=362";
+import { init as initRightPanel } from "./components/right-panel.js?v=529";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=90";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -25,22 +25,22 @@ import { init as initSearchModal } from "./components/search-modal.js?v=44";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=321";
+} from "./components/conversation-status-card.js?v=322";
 import { renderDashboard } from "./screens/dashboard.js?v=87";
-import { renderSession } from "./screens/session.js?v=626";
-import { renderContexts } from "./screens/contexts.js?v=355";
-import { renderConnectors } from "./screens/connectors.js?v=294";
-import { renderTopics } from "./screens/topics.js?v=163";
-import { renderTopicsSettings } from "./screens/topics-settings.js?v=154";
-import { renderResearch } from "./screens/research.js?v=132";
-import { renderResearchForm } from "./screens/research-form.js?v=130";
-import { renderResearchFeed } from "./screens/research-feed.js?v=151";
-import { renderResearchTrending } from "./screens/research-trending.js?v=135";
+import { renderSession } from "./screens/session.js?v=627";
+import { renderContexts } from "./screens/contexts.js?v=356";
+import { renderConnectors } from "./screens/connectors.js?v=295";
+import { renderTopics } from "./screens/topics.js?v=164";
+import { renderTopicsSettings } from "./screens/topics-settings.js?v=155";
+import { renderResearch } from "./screens/research.js?v=133";
+import { renderResearchForm } from "./screens/research-form.js?v=131";
+import { renderResearchFeed } from "./screens/research-feed.js?v=152";
+import { renderResearchTrending } from "./screens/research-trending.js?v=136";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=352";
-import { renderPlaybook } from "./screens/playbook.js?v=366";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=353";
+import { renderPlaybook } from "./screens/playbook.js?v=367";
 import * as __capAddSource from "./components/add-source-modal.js?v=97";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
@@ -51,7 +51,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=528";
+} from "./components/right-panel.js?v=529";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
