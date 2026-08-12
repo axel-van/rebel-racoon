@@ -1351,19 +1351,24 @@ function paintVersions() {
       // declared, and corrects its border to the DS's electric-blue-60 (the card
       // sets -40).
       //
-      // Disabled on the current version: that is exactly what the card's own
-      // Use-in-chat already does, so offering it here too would be two controls for
-      // one outcome.
+      // One label, one behaviour, every row — including the current version. It used
+      // to disable itself there and read "This is the current version", on the
+      // argument that the card's own Use-in-chat already covers that case. The
+      // uniform version is better: a picker whose action changes meaning depending on
+      // which row you are on makes the reader check the footer before trusting it,
+      // and the dialog now OPENS on the current version, so the disabled state was
+      // the first thing you met.
+      //
+      // Nothing downstream needed changing for it to be correct. attachBriefToChat
+      // already branches on isCurrent — the current version attaches as the plain
+      // Topic, with the topic's own summary and no date in the filename, which is
+      // exactly what the card produces. So the two paths agree rather than
+      // duplicating: same source, same id, arrived at from two surfaces.
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Close</span>
         </button>
-        <button
-          type="button"
-          class="ap-button stroked blue"
-          data-version-use="${escapeAttr(picked.id)}"
-          ${raw(picked.isCurrent ? "disabled" : "")}
-        >
-          <span>${picked.isCurrent ? "This is the current version" : "Use this version in chat"}</span>
+        <button type="button" class="ap-button stroked blue" data-version-use="${escapeAttr(picked.id)}">
+          <span>Use this version in chat</span>
         </button>`,
     },
   );
