@@ -237,16 +237,15 @@ export function renderBriefCard(
       )}
     </button>
 
-    <!-- No footer in the picker: the body button already picks, so a row of
-         actions underneath would be a second, different answer to the same
-         click. -->
-    ${raw(
-      picker
-        ? ""
-        : html`<footer class="topics-card__foot">
-            ${raw(trendingPage ? renderUseSingle(brief) : renderUseSplit(brief, menuOpen))}
-          </footer>`,
-    )}
+    <!-- No footer, on any variant. The card is a reading surface now; the verbs live
+         in the article pane's own footer (research-feed.renderUseButtons), which is
+         where the reader has just finished reading and which shows all three at once
+         rather than one plus a chevron.
+
+         The picker never had one — its body button already picks, so a row of actions
+         underneath would have been a second, different answer to the same click. The
+         feed and the trending page did, and both lose it here along with the hairline
+         separator that divided it from the summary. -->
   </article>`;
 }
 
@@ -369,13 +368,19 @@ export function renderUseButtons(brief) {
 }
 
 /**
- * The card's Use-in-chat split button.
+ * The card's Use-in-chat split button — UNREACHABLE, and kept on purpose.
+ *
+ * Nothing calls it: the card's footer is gone from every variant, and the article
+ * pane uses renderUseButtons above. Left whole rather than deleted for the reason the
+ * PARKED blocks elsewhere are: it carries the reasoning for the whole main-segment /
+ * menu split — which verb leads for which topic type, why neither action is ever
+ * hidden, why the reroute row was removed — and renderUseButtons was derived from it.
+ * Restoring a card footer means rendering this again, not rebuilding it.
+ *
+ * The same goes for renderUseSingle below, the trending page's single-button variant.
  *
  * @param {string} menuKey — the value `view.openMenu` is compared against, and the
- *   value the toggle writes back. Defaults to the brief id, which is what the card
- *   uses. Kept parameterised from when the article footer carried a second copy of
- *   this split; that footer is now renderUseButtons above, so today there is one
- *   instance per brief and the default is always right. `modifier` likewise.
+ *   value the toggle writes back. Defaults to the brief id.
  */
 export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier = "" } = {}) {
   const saved = brief.status === "saved";

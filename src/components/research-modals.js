@@ -47,7 +47,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=18";
-import { renderBriefCard } from "./brief-card.js?v=41";
+import { renderBriefCard } from "./brief-card.js?v=42";
 import { renderSocialPostCard } from "./social-post-card.js?v=27";
 import { showToast } from "./toast.js?v=21";
 

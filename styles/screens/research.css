@@ -1178,17 +1178,21 @@
   flex: 0 0 auto;
   padding: var(--ref-spacing-sm) var(--ref-spacing-md);
   /* electric-blue-100, the same value and the same 1px as .topics-card.is-reading —
-     the border that marks the card whose article this is. The two edges now read as
-     one selection: the card is outlined in it on the left, and the pane's action bar
-     is capped with it on the right.
+     the border that marks the card whose article this is. The two read as one
+     selection: the card outlined in it on the left, the pane's action bar outlined in
+     it on the right.
 
-     border-TOP only. The footer sits flush inside the pane, so left, right and
-     bottom would double up on the pane's own border; the top edge is the one that is
-     actually the footer's, dividing it from the scrolling body it floats over.
+     ALL FOUR SIDES. It was border-top only, on the argument that the other three
+     would double up on the pane's own border — and they do sit 1px inside it, but the
+     result reads as an outlined bar seated in the pane rather than as a mistake, and
+     a bar bounded on one side only looked unfinished against a blue-outlined card.
 
-     Replaces --app-border-soft (grey-10), which read as one more hairline in a pane
-     that already has two. */
-  border-top: 1px solid var(--ref-color-electric-blue-100);
+     The bottom corners take the pane's radius less its border, so the blue follows
+     the pane's curve instead of cutting two square corners across it. Derived from
+     the same 14px the pane sets, not typed twice. */
+  border: 1px solid var(--ref-color-electric-blue-100);
+  border-bottom-left-radius: calc(14px - 1px);
+  border-bottom-right-radius: calc(14px - 1px);
   /* --ref-color-white deliberately, not a semantic background token: this is the
      same surface as .research-feed__article, which sets the same value. A footer
      that resolved its fill independently could drift from the pane it sits in, and

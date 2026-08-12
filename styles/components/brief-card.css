@@ -81,14 +81,12 @@
   }
 }
 
-/* Picker variant (the Pick-a-topic modal). Same card, two differences: it has no
-   footer, so the body button has to carry the bottom padding the footer used to
-   provide; and the whole card is a control, so it takes the app's universal card
-   hover wash — light blue fill and light blue border, never navy, per chat.css. */
-.topics-card--picker .topics-card__body {
-  padding-bottom: var(--ref-spacing-sm);
-}
-
+/* Picker variant (the Pick-a-topic modal). One difference left: the whole card is a
+   control, so it takes the app's universal card hover wash — light blue fill and light
+   blue border, never navy, per chat.css.
+   It used to need a bottom-padding override too, being the one variant without a
+   footer. No variant has a footer now, so the body carries that padding for all three
+   and the override is gone. */
 .topics-card--picker:hover,
 .topics-card--picker:focus-within {
   background: var(--ref-color-electric-blue-05);
@@ -110,7 +108,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: var(--topics-card-pad-top) var(--topics-card-pad) 0;
+  /* Bottom padding is the body's own now. It used to be 0 here because
+     .topics-card__foot supplied it; the footer is gone from every variant, so without
+     this the summary would sit flush against the card's bottom edge. */
+  padding: var(--topics-card-pad-top) var(--topics-card-pad) var(--ref-spacing-sm);
   border: 0;
   background: transparent;
   font: inherit;
@@ -463,18 +464,13 @@
   width: 100%;
 }
 
-/* Horizontal MARGIN rather than padding, deliberately: the border-top is drawn
-   at the footer's outer edge, so padding would make the divider span the full
-   card width. Margin keeps it inset by 22px exactly as it was when the card
-   itself carried the padding. */
-.topics-card__foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 14px var(--topics-card-pad) 0;
-  padding: 12px 0 14px;
-  border-top: 1px solid var(--ref-color-grey-10);
-}
+/* .topics-card__foot is GONE, with the hairline separator it carried. The card no
+   longer has an action row on any variant — the verbs live in the article pane's
+   footer, which is where the reader finishes reading and which shows all three at
+   once. The card is a reading surface.
+
+   The body's bottom padding moved into its own rule above, because the footer used to
+   supply it. If a footer ever returns, take it back out. */
 
 /* ── Use-in-chat split button ─────────────────────────────────────────────── */
 
