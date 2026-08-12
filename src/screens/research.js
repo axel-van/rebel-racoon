@@ -371,6 +371,16 @@ function renderCreateCard() {
   return html`<button type="button" class="research-create-card" data-research-create>
     <span class="research-create-card__disc">${raw(renderMark(24))}</span>
     <span class="research-create-card__label">Create a topic list</span>
+    <!-- Same job as contexts-card--ghost__sub: the label names the object, this
+         says what the object is FOR, so the tile isn't a bare verb. It names the
+         two things the form actually asks for that shape the output — a Playbook
+         and the sources — and then the output itself, because "topic list" alone
+         doesn't tell a first-time reader that topics are things you draft from.
+         Cadence and the scanned website are left out: they tune the list, they
+         don't explain it, and the form's own lede covers them. -->
+    <span class="research-create-card__sub"
+      >Pick a Playbook and the sources I watch — I'll turn what they publish into topics you can draft from.</span
+    >
   </button>`;
 }
 

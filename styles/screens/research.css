@@ -375,6 +375,22 @@
   color: var(--app-convo-navy);
 }
 
+/* The DS caption style, the same one contexts-card--ghost__sub uses, so the two
+   create tiles read as one pattern. Colour comes from --sys-text-color-light
+   rather than the ghost card's --ref-color-grey-80: identical value (#5D6A82),
+   semantic tier, and the DS names it as caption's own colour.
+   text-align lives here rather than on the card — the label is one line, so
+   centring the card would change nothing visible while making the rule look
+   like it mattered to both. */
+.research-create-card__sub {
+  max-width: 260px;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+  line-height: var(--sys-text-style-caption-line-height);
+  text-align: center;
+  color: var(--sys-text-color-light);
+}
+
 /* ── Empty state ──────────────────────────────────────────────────────── */
 
 .research-empty {
