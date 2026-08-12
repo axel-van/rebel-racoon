@@ -300,32 +300,21 @@
   color: var(--ref-color-grey-80);
 }
 
-/* The clamp lives here rather than on the block above, because a
-   -webkit-line-clamp element clips at its PADDING box: with the block's own 11px
-   of bottom padding, a third line rendered into that strip below the ellipsis —
-   truncated and still perfectly readable, which is the worst of both. This span
-   has no padding, so the clip lands where the text ends. */
-/* One rule for both clamps. They are the same problem — a tinted block whose
-   text can run long — and had they been written separately they would have drifted
-   to different line counts, which is exactly what makes two blocks that look like
-   one family stop reading like one.
+/* The two-line clamp that used to live here is GONE, with the spans it clamped.
+   Why now and What changed moved off the card into the article's Trend levels
+   section, where the point is to read them in full — a clamp there would truncate
+   the text in the one place the user went to see all of it.
 
-   The clamp is on the INNER span in both cases, never on the padded block: a
-   -webkit-line-clamp element clips at its PADDING box, so with 11px of bottom
-   padding a third line renders below the ellipsis — truncated and still perfectly
-   readable. These spans carry no padding, so the clip lands where the text ends.
+   Recorded because the removed rule solved a real trap, and anything that clamps a
+   tinted block here in future will hit it again: a -webkit-line-clamp element clips
+   at its PADDING box, so clamping a block with 11px of bottom padding renders a
+   third line into that strip below the ellipsis — truncated and still perfectly
+   readable, the worst of both. The fix was to clamp an inner span carrying no
+   padding. -webkit-box + -webkit-line-clamp is still the only combination every
+   current browser honours, and overflow: hidden is what actually produces the
+   ellipsis, so neither element can be display: block.
 
-   -webkit-box + -webkit-line-clamp is still the only combination every current
-   browser honours; `line-clamp` alone is not. overflow: hidden is what actually
-   produces the ellipsis, which is why neither can be display: block. */
-.topics-card__whynow-clamp,
-.topics-card__changed-clamp {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-}
+   The tinted blocks themselves stay below — the article reuses both. */
 
 .topics-card__changed-label {
   font-weight: 800;

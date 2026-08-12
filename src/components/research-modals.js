@@ -47,7 +47,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=15";
-import { renderBriefCard } from "./brief-card.js?v=36";
+import { renderBriefCard } from "./brief-card.js?v=37";
 import { renderSocialPostCard } from "./social-post-card.js?v=25";
 import { showToast } from "./toast.js?v=21";
 
@@ -1100,17 +1100,7 @@ export function renderResearchArticle(brief, { withLabel = true } = {}) {
       <h3 class="research-article__title">${brief.research?.title || ""}</h3>
       ${raw(renderArticleBody(brief.research))}
     </section>
-    ${raw(
-      brief.isTrending && brief.whyNow
-        ? html`<section class="research-article">
-            <p class="topics-card__whynow">
-              <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
-            </p>
-            ${raw(brief.whyNowDetail ? html`<p>${brief.whyNowDetail}</p>` : "")}
-          </section>`
-        : "",
-    )}
-    ${raw(renderHistory(brief.history || [], brief.status, brief.id))}
+    ${raw(renderTrendLevels(brief))} ${raw(renderHistory(brief.history || [], brief.status, brief.id))}
     ${raw(
       posts.length
         ? html`<section class="research-article">
@@ -1119,6 +1109,57 @@ export function renderResearchArticle(brief, { withLabel = true } = {}) {
           </section>`
         : "",
     )}`;
+}
+
+// ── Trend levels ───────────────────────────────────────────────────────────
+// The two attention signals, explained. Both used to sit on the CARD as tinted
+// two-line blocks; they now live here, together, because they answer one question
+// — why is this topic flagged right now — and reading them side by side is the
+// only way to tell a spike apart from a rewrite.
+//
+// One section for both, not two: they are the same kind of claim about the same
+// moment. A topic CAN carry both — isTrending and isUpdated are independent
+// booleans, which is the invariant briefs-store exists to protect — though no
+// seeded topic currently does, so the both-signals case is untested against real
+// copy. Two sections would have made such a topic look like it had two unrelated
+// notices; one section stacks Why now above What changed and reads as one answer.
+//
+// Rendered only when a signal is actually present, so an untriaged topic with no
+// spike and no rewrite gets no empty heading. The gates are the SIGNAL BOOLEANS,
+// not just the text: briefs-store keeps isTrending / isUpdated separate from
+// `status` precisely so a view can ask "is this flagged" without inferring it, and
+// a whyNow string on a topic that is not trending is stale copy rather than a
+// reason to show the block.
+//
+// Reuses .topics-card__whynow and .topics-card__changed — the two tinted blocks the
+// card used to own. They are still the right treatment (a coloured left rule, warm
+// for a spike, cool for a rewrite) and moving the markup does not make them a new
+// component. Neither carries the card's inner clamp span, so both read in full,
+// which is the whole reason for being here rather than there.
+function renderTrendLevels(brief) {
+  const trending = brief.isTrending && brief.whyNow;
+  const updated = brief.isUpdated && brief.whatChanged;
+  if (!trending && !updated) return "";
+  return html`<section class="research-article">
+    <!-- ap-icon-arrow-up, the same glyph the card's Trending badge carries — the
+         section explains that badge, so it should be recognisable as its
+         continuation. There is no ap-icon-trending-up in the DS. -->
+    <span class="research-article__label"><i class="ap-icon-arrow-up" aria-hidden="true"></i> Trend levels</span>
+    ${raw(
+      trending
+        ? html`<p class="topics-card__whynow">
+            <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
+          </p>` + (brief.whyNowDetail ? html`<p>${brief.whyNowDetail}</p>` : "")
+        : "",
+    )}
+    ${raw(
+      updated
+        ? html`<p class="topics-card__changed">
+            <strong class="topics-card__changed-label">What changed:</strong> ${brief.whatChanged}
+          </p>`
+        : "",
+    )}
+  </section>`;
 }
 
 // The article body: two named sections rather than an undifferentiated run of

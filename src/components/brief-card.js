@@ -179,43 +179,19 @@ export function renderBriefCard(
            the word ate a chunk of the first of only two visible lines. -->
       <span class="topics-card__summary" data-brief-summary>${brief.summary}</span>
 
-      ${raw(
-        brief.isTrending && brief.whyNow
-          ? html`<span class="topics-card__whynow">
-              <!-- The clamp is on an INNER span, and here that is doing two jobs.
-                   First, the padding trap: a -webkit-line-clamp element clips at
-                   its PADDING box, so clamping the tinted block itself would
-                   render a third line into its 11px bottom padding — truncated
-                   and still perfectly readable, the worst of both. Same reason
-                   __changed-clamp exists.
+      <!-- Why now and What changed used to sit here, each in a tinted block
+           clamped to two lines. Both moved to the article's "Trend levels"
+           section (research-modals.renderResearchArticle).
 
-                   Second, and specific to Why-now: this same class is reused by
-                   the FULL ARTICLE (research-modals.renderResearchArticle), where
-                   the whole point is to read everything. Putting the clamp on
-                   .topics-card__whynow would have truncated the text in the one
-                   place the user went to see all of it. The article renders no
-                   inner span, so it stays unclamped for free. -->
-              <span class="topics-card__whynow-clamp">
-                <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
-              </span>
-            </span>`
-          : "",
-      )}
-      ${raw(
-        brief.isUpdated && brief.whatChanged
-          ? html`<span class="topics-card__changed">
-              <!-- The clamp goes on an INNER span, not on the tinted block. A
-                   -webkit-line-clamp element clips at its PADDING box, so with
-                   the block's own 11px bottom padding a third line rendered into
-                   that strip below the ellipsis — truncated and still visible.
-                   Clamping a child that has no padding puts the clip where the
-                   text ends. -->
-              <span class="topics-card__changed-clamp">
-                <strong class="topics-card__changed-label">What changed:</strong> ${brief.whatChanged}
-              </span>
-            </span>`
-          : "",
-      )}
+           The card kept saying WHY a topic was flagged while the badge above
+           already said THAT it was, and it could only ever show a clamped two
+           lines of an explanation whose whole value is the detail. Two tinted
+           blocks also gave every flagged card a different height from its
+           neighbours, so the list read as ragged rather than scannable.
+
+           What stays on the card is the signal itself — the Trending and Updated
+           badges in the header. They are the reason to open the article; the
+           article is where the reason is explained. -->
       ${raw(
         !trendingPage && ignored && brief.ignoreReason
           ? html`<span class="topics-card__reason">
