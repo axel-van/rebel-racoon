@@ -41,7 +41,7 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=87";
+import { researchBriefs as seed } from "./mocks.js?v=88";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=14";
@@ -68,6 +68,9 @@ function cloneBrief(b) {
     research: {
       ...(b.research || {}),
       paragraphs: Array.isArray(b.research?.paragraphs) ? b.research.paragraphs.slice() : [],
+      // The article's two section headings. Copied for the same reason paragraphs
+      // are: the spread above would hand a view a reference into the mocks module.
+      subheads: Array.isArray(b.research?.subheads) ? b.research.subheads.slice() : [],
     },
     posts: Array.isArray(b.posts) ? b.posts.map((p) => ({ ...p, author: { ...(p.author || {}) } })) : [],
     history: Array.isArray(b.history) ? b.history.map((h) => ({ ...h })) : [],

@@ -20,20 +20,20 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coordinator.js?v=21";
 import { showToast } from "../toast.js?v=21";
-import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=64";
-import { getSessionById } from "../../sessions-store.js?v=35";
-import { getContextById } from "../../contexts-store.js?v=69";
-import { MODAL_ID, KEY, ctx, state } from "./context.js?v=63";
+import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=65";
+import { getSessionById } from "../../sessions-store.js?v=36";
+import { getContextById } from "../../contexts-store.js?v=70";
+import { MODAL_ID, KEY, ctx, state } from "./context.js?v=64";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
-import { renderStudio } from "./shell-view.js?v=93";
+import { renderStudio } from "./shell-view.js?v=94";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=65";
-import * as imageStudio from "../../image-studio.js?v=89";
+} from "./interactions.js?v=66";
+import * as imageStudio from "../../image-studio.js?v=90";
 
 let backdrop;
 let initialized = false;

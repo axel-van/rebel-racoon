@@ -14,26 +14,26 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=507";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=83";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=91";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=85";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=64";
+} from "./right-panel.js?v=508";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=84";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=92";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=86";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=65";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=300";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=35";
+} from "./conversation-status-card.js?v=301";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=36";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=69";
-import { getLaneById } from "../research-store.js?v=34";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=70";
+import { getLaneById } from "../research-store.js?v=35";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=111";
+} from "../top-posts-flow.js?v=112";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static

@@ -30,8 +30,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=41";
-import { getLanes } from "../research-store.js?v=34";
+} from "../briefs-store.js?v=42";
+import { getLanes } from "../research-store.js?v=35";
 import {
   getContexts,
   getContextById,
@@ -42,13 +42,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=69";
+} from "../contexts-store.js?v=70";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=14";
+import { openBriefInChat } from "../brief-flow.js?v=15";
 import { renderBriefCard } from "./brief-card.js?v=35";
-import { renderSocialPostCard } from "./social-post-card.js?v=24";
+import { renderSocialPostCard } from "./social-post-card.js?v=25";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -1098,7 +1098,7 @@ export function renderResearchArticle(brief, { withLabel = true } = {}) {
           : "",
       )}
       <h3 class="research-article__title">${brief.research?.title || ""}</h3>
-      ${raw((brief.research?.paragraphs || []).map((p) => html`<p>${p}</p>`).join(""))}
+      ${raw(renderArticleBody(brief.research))}
     </section>
     ${raw(
       brief.isTrending && brief.whyNow
@@ -1119,6 +1119,39 @@ export function renderResearchArticle(brief, { withLabel = true } = {}) {
           </section>`
         : "",
     )}`;
+}
+
+// The article body: two named sections rather than an undifferentiated run of
+// paragraphs.
+//
+// Placement is derived, not authored. Every article in this prototype has the same
+// rhetorical shape — the first half is what the scan found and what the accounts
+// say, the second half is the position and what blocks it — so the split lands at
+// the midpoint and each subhead leads a half. The alternative was an index per
+// heading in the data, which would have to be re-checked every time a paragraph was
+// added or cut.
+//
+// Halves rather than "after paragraph 1" and "before the last": that rule orphans
+// the second heading on the two-paragraph topics, of which this lane has two.
+// Splitting on ceil(n/2) gives 1|1, 2|2 and 3|2 for the paragraph counts actually
+// present, with no empty section at either end.
+//
+// Degrades to plain paragraphs when a research object carries fewer than two
+// subheads — which is what the past-version articles do, since they are rendered by
+// the version dialog rather than through here.
+//
+// <h4>, because the article title above is the <h3> — the document order has to
+// hold. The h3 TEXT STYLE is applied by class instead, which the DS sanctions
+// explicitly for the case where the right tag and the right size disagree.
+function renderArticleBody(research) {
+  const paras = research?.paragraphs || [];
+  const subheads = research?.subheads || [];
+  const para = (p) => html`<p>${p}</p>`;
+  if (subheads.length < 2 || paras.length < 2) return paras.map(para).join("");
+  const split = Math.ceil(paras.length / 2);
+  const section = (heading, rows) =>
+    html`<h4 class="research-article__subhead">${heading}</h4>` + rows.map(para).join("");
+  return section(subheads[0], paras.slice(0, split)) + section(subheads[1], paras.slice(split));
 }
 
 /** Source name + post count, the article's own subtitle in either container. */

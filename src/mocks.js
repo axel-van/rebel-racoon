@@ -4415,6 +4415,7 @@ export const researchBriefs = [
       "means the counter-position is unoccupied rather than contested.",
     research: {
       title: "They are selling the material. The renter is paying the running cost",
+      subheads: ["Two accounts, one vocabulary", "The bill that decides affordability"],
       paragraphs: [
         "Four posts in this window make the same case from two accounts. Sibomat explains why it builds in softwood — renewable, strong for its weight, thermally efficient — and pairs that with indoor comfort and durability language. Stabilame shows a Stoumont house where the structure is glued CLT and the wall finishes are cut from the same panels, selling total material harmony. A third Sibomat post uses a couple who chose timber frame twice, thirty-five years apart, as proof the method lasts.",
         "The vocabulary is remarkably consistent: renewable sourcing, carbon storage, certified forest origin, insulation performance. It is a good argument and it is well made. But every single claim is about the material the building is made of, and the story stops at handover.",
@@ -4452,6 +4453,7 @@ export const researchBriefs = [
       "account's.",
     research: {
       title: "Yes, modules are faster. The question is whether 90% costs you the floor plan",
+      subheads: ["A competitor makes the objection for us", "What 90% actually standardises"],
       paragraphs: [
         "Sibomat's post is unusually direct for a competitor. It grants that modular building is popular and rightly so — preparing walls and structures in a controlled workshop delivers speed, quality and a more efficient process. Then it explains the deliberate choice to do something else: prefabricate in the atelier, but carry out the rest of the build on the plot itself, so the house can follow one family's requirements and one site's contours instead of a standard module.",
         "Stabilame makes the same point from the commercial side, with a wood post-and-beam brasserie at Froidchapelle sold on panoramic integration with the lakes and bespoke interior detailing.",
@@ -4480,6 +4482,7 @@ export const researchBriefs = [
     isTrending: false,
     research: {
       title: "The format is available. The footage is the commitment",
+      subheads: ["Three posts, one proven format", "What a credible series costs"],
       paragraphs: [
         "Three posts in a two-week window run the same play. Maisons Blavier published part one of a site series in French and again in Dutch, promising to show how a house takes shape phase by phase and how its teams track progress. Thomas & Piron ran a site manager recalling his last project — a fully circular fire station designed by Philippe Samyn. Mi Casa, outside the topic, is doing a production-process series of its own.",
         "The demand behind it is uncertainty: someone committing to a build wants to see the phases, the checks and who is watching. That is exactly the anxiety a factory answers better than a site does — a controlled line, repeatable stations, quality control that is measured rather than described.",
@@ -4506,6 +4509,7 @@ export const researchBriefs = [
     isTrending: false,
     research: {
       title: "The buyer here is a municipality, and it is a different sale entirely",
+      subheads: ["Civic work, won on short supply chains", "Why a residential reference won't do"],
       paragraphs: [
         "Three Stabilame posts in the first half of July announce civic and recreational work: the Capitainerie at Ath, much of it over water; the new reception buildings at the Domaine des Grottes de Han, open to the public this summer; and the Domaine de Chevetogne. The copy leans on short local supply circuits, techniques for building in wet conditions, and low environmental impact.",
         "This is the one thread in the window with a completely different buyer. A municipality or a regional operator is not comparing rent to income — it is comparing a tender, a timetable and a maintenance liability, and it is accountable for the choice in public.",
@@ -4531,6 +4535,7 @@ export const researchBriefs = [
     isTrending: false,
     research: {
       title: "The most revealing posts in the scan are the out-of-office ones",
+      subheads: ["Three out-of-office notices, one fortnight", "The schedule argument, and its tone problem"],
       paragraphs: [
         "Three accounts published near-identical notices in the second week of July. Maisons Blavier closed its offices until 3 August, in French and again in Dutch, while keeping advisors reachable. Naturhome paused from 18 July to 3 August. Stabilame's whole team went from 10 July to 2 August. This is the Belgian construction holiday — statutory, industry-wide, and unremarkable to anyone in the sector.",
         "The export flagged this topic as self-promotional and declined to write it up, which is the right call about the posts themselves: they are logistics notices, and there is nothing to say back to an out-of-office.",
@@ -4581,6 +4586,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "The parent's real question isn't 'will it work' — it's 'will it make my child aggressive'",
+      subheads: ["Character is the category's pitch", "Why the safest room produces the least fighting"],
       paragraphs: [
         "Across the tracked Carlsbad academies, youth programs are being sold on character: kind, confident, capable children, sometimes from age four. The shift is a good one, and it is now the category default rather than a differentiator. What none of the posts do is answer the hesitation that actually stops a parent signing up — whether martial arts will teach their child to settle conflict with their fists.",
         "That question has a real answer, and it is structural rather than cultural. Most martial arts are striking arts: they train a child to meet conflict with immediate outward aggression. Brazilian Jiu-Jitsu is grappling — leverage, technique and control. A child is taught to neutralise a threat, control a situation and escape safely, which is a fundamentally different instinct to rehearse. Every movement is cause and effect, so the training rewards keeping a cool head and thinking, not swinging.",
@@ -4610,6 +4616,7 @@ export const researchBriefs = [
       "Volume: high. 13 of the 25 collected posts match this topic — the largest cluster in the scan — and it is the most evenly split across networks at 54% Instagram / 46% Facebook, so it is carrying on both. Keywords: belt promotion, stripe, rank, consistency, perseverance.",
     research: {
       title: "A belt is a byproduct of the person a child is becoming",
+      subheads: ["An honest system, poorly explained", "Plateaus, stripes and the comparison trap"],
       paragraphs: [
         "In a category full of participation trophies, the youth belt system is unusually honest — and unusually badly explained. Children move white, grey, yellow, orange, green, earning up to four stripes inside each rank. Those stripes are the mechanism worth talking to parents about: for a young child a year is an eternity, and stripes break an intimidating goal into phases small enough to feel. Each one is a signal that daily effort is compounding.",
         "The reason it works is that the recognition is earned rather than given. A promotion arrives after a child has worked through frustration, refined something they were bad at, and shown up disciplined when they were tired. That teaches the thing empty praise cannot: that their success sits entirely inside their own control. Confidence built that way does not break when life produces a setback.",
@@ -4639,6 +4646,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "The comeback fails on ego long before it fails on cardio",
+      subheads: ["The hesitations, and the real obstacle", "The ramp, and the room you pick"],
       paragraphs: [
         "A dusty gi in the back of a closet comes with a specific set of hesitations: whether the cardio is gone, whether the joints will hold, whether you can keep pace with people who never stopped. The local signal is that plenty of people in North County are having that thought — former white belts who trained for a few months three years ago, coloured belts who took a multi-year break for work or family.",
         "The obstacle is almost never conditioning. It is that your brain remembers techniques your body cannot yet execute, so timing and spatial awareness lag behind knowledge. Force the gap closed with raw athletic effort and the injury rate climbs. The useful reframe is to stop trying to win rounds and start collecting data: accept that you will be slower and more easily fatigued, and treat that as a temporary state rather than a new baseline.",
@@ -4668,6 +4676,7 @@ export const researchBriefs = [
       "Volume: high. 11 of the 25 collected posts match this topic, at 64% Instagram / 36% Facebook. Keywords: family class, parents, kids and parents, community, anniversary. The export marked this one needs_assets rather than ready_to_write — see the blockers below.",
     research: {
       title: "Blocked on assets, not on the idea",
+      subheads: ["Parents on the mat, not on the sideline", "One shoot, three formats"],
       paragraphs: [
         "The opening is parents training alongside their children rather than watching from the side, positioning one academy as the place where both find a real program rather than a compromise. Competitors are already gathering families — family classes, anniversaries run as community events — so the audience is assembled and the framing is unclaimed.",
         "The export flagged this topic as needing assets before it can be written, and the two it names are specific: high-quality photos or video of Carlsbad families actually training at the academy, and testimonials from parents who train alongside their kids. Neither can be substituted with stock — the whole claim is that this happens here.",
@@ -4710,6 +4719,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Belgian weather demands smart layers, not a sudden wardrobe swap",
+      subheads: ["Why a wardrobe swap is the wrong move", "Combinations that carry summer into October"],
       paragraphs: [
         "You know the feeling: the mornings already feel surprisingly crisp, while the afternoon sun warms up the terrace again. In fashion stores and across social media, heavy autumn collections and winter coats are already being pushed everywhere. Yet it is far too early to permanently banish your favorite summer items to the attic.",
         "The secret to effortless style during this transitional period lies not in hastily purchasing a complete autumn wardrobe, but in masterfully combining light layers. As a Belgian multi-brand expert, we at Noba Fashion know how quickly our climate can shift. With a few cleverly chosen basic pieces from our wide brand selection, you can transform your summer outfits into autumn-proof combinations in no time.",
@@ -4786,6 +4796,7 @@ export const researchBriefs = [
       "Discount-led posts — SOLDEN, kortingen tot -70% — appear from 4 July to 3 August across JBC, ZEB and The Fashion Store, on Instagram only (100%). Keywords: solden, korting, -70%, sale. It is the theme every high-volume account touched independently, and the moment a customer is most likely to buy something they will never wear twice.",
     research: {
       title: "Don't get carried away by sale frenzy: choose smart investments",
+      subheads: ["The pitfall of the final sale weeks", "Building a capsule instead of a pile"],
       paragraphs: [
         "Red stickers, aggressive discounts up to -70%, and slogans shouting 'now or never': the final sale weeks can be overwhelming. The pitfall of this period is well known — you come home with garments that were fantastically discounted, only for them to sit at the back of your closet after a single wear because they match nothing else you own.",
         "At Noba Fashion, we take a different view of sales. We don't see them as a hunt for as many cheap items as possible, but as the moment to secure high-quality multi-brand classics that will last for years. With a targeted approach, an impulsive shopping trip becomes a sustainable upgrade to your wardrobe.",
@@ -4865,6 +4876,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Add depth to your wardrobe with autumn's richest hues",
+      subheads: ["This season's shift toward depth", "Texture is what makes earth tones work"],
       paragraphs: [
         "As summer days shorten, the fashion world's color palette transforms. This season sees a clear shift toward deep, warm tones that exude luxury and calm. The absolute showstopper of this autumn is plum — a refined, deep brownish-pink shade — accompanied by warm earth tones like rust brown, chocolate and soft terracotta.",
         "While these rich colors look stunning on mannequins, many women wonder how to translate this trend into their own daily wardrobes. Nobody wants to purchase a head-to-toe outfit that feels dated after a single season. At Noba Fashion, we show you how to introduce these trend colors subtly and stylishly.",
@@ -4949,6 +4961,7 @@ export const researchBriefs = [
       "Last sync their kids classes ran Monday and Wednesday, which was the whole reason this topic read as an opening. The schedule moved onto yours.",
     research: {
       title: "The timetable gap has closed",
+      subheads: ["What changed since the last scan", "What the comparison falls back to"],
       paragraphs: [
         "This topic originally described a scheduling gap: the nearest competing academy ran its kids programme on nights you did not, so parents comparing the two were not choosing between them. Their schedule page now shows the same Tuesday and Thursday slots.",
         "The angle changes with it. Availability is no longer the differentiator, so the comparison falls back to instructor ratio and belt progression — both things your own posts already document and theirs do not.",
@@ -4972,6 +4985,7 @@ export const researchBriefs = [
       "Last sync this was an active discount wave across five accounts and the advice was to counter-programme it. Four have since stopped, so a counter-programming post would now arrive after the fact.",
     research: {
       title: "The sale ended before the response could ship",
+      subheads: ["The wave ended three weeks early", "What survives the change in timing"],
       paragraphs: [
         "The original reading of this topic was that a sustained discount wave gave a sustainable-wardrobe message something concrete to push against. That wave has ended earlier than the seasonal pattern suggested — four of five accounts are back to full-price editorial.",
         "What survives is the observation, not the urgency: shoppers who bought in the wave are three weeks from regret posts, which is a better moment for the capsule argument than the sale itself was.",
@@ -5015,6 +5029,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Everyone says 'stay consistent'. Almost nobody says what that means in practice",
+      subheads: ["Eleven posts, one word: consistency", "The number nobody publishes"],
       paragraphs: [
         "Eleven of the twenty-five posts in the July window frame training as a long-term journey built on steady effort — belt and stripe promotions, anniversary reflections, open mats. The vocabulary is remarkably uniform across the three tracked academies: endurance, perseverance, showing up. Sixty-four percent of it ran on Instagram, the rest on Facebook.",
         "The messaging is also honest about pressure. Several posts note that sparring is where technique gets tested and that the pressure is productive when paired with patience — training rounds framed as a place to try things and help a partner improve rather than to win. That is a genuinely useful thing to say to an adult who is worried about being the worst person in the room.",
@@ -5046,6 +5061,7 @@ export const researchBriefs = [
       "Ten items matched this subject, sixty percent on Instagram and forty on Facebook, and the engagement concentrated on the posts that asked a question rather than made a claim. The pattern held across both accounts that touched it, which suggests the response is to the subject rather than to one account's audience.",
     research: {
       title: "The thing beginners are most afraid of is the thing that teaches them fastest",
+      subheads: ["The post about what happens between rounds", "Nobody explains how the culture is produced"],
       paragraphs: [
         "One tracked account published a post in late July about the conversations that happen between rounds — questions asked, experiences swapped, advice passed down — and closed it by asking followers for the best guidance they had received on the mats. It drew more response than any of that account's promotional posts in the same window.",
         "The framing matters. It presents the room as collaborative rather than competitive, and it makes the explicit claim that a beginner has something to learn from everyone training near them, not only from the instructor. Ten posts across two academies touched the theme; sixty percent ran on Instagram.",
@@ -5076,6 +5092,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Most of what a child actually faces isn't a punch",
+      subheads: ["One post, one implied criticism", "What a playground confrontation actually is"],
       paragraphs: [
         "A single Instagram post in the July window shows a nearby academy's seven-to-twelve group working stand-up striking alongside their grappling. One matching item out of twenty-five, which is under the three-item floor this lane treats as evidence — but adding striking to a kids curriculum is a positioning decision, and the implied claim travels further than the post does.",
         "The claim is that grappling alone is incomplete self-defence, and it is the kind of thing a parent hears once and then carries into every comparison. It deserves a real answer rather than a defensive one.",
@@ -5107,6 +5124,7 @@ export const researchBriefs = [
       "Last sync this looked like two unrelated post series. Eleven items in, the split is systematic: every girls-facing post leads on empowerment and friendship, every boys-facing one leads on self-control and respect.",
     research: {
       title: "The same programme, described two different ways depending on the child",
+      subheads: ["The same class, described twice", "The mechanism does not vary by child"],
       paragraphs: [
         "Eleven July posts cover youth programmes, eighty-two percent of them on Instagram, and the framing divides by gender with unusual consistency. Posts about boys lead on behavioural outcomes — self-control, respect, problem-solving, perseverance, raising boys who are kind and capable rather than fighters. Posts about girls lead on empowerment, self-assurance, fun and friendship, frequently welcoming pairs of sisters.",
         "Both halves are reasonable on their own. Read together they describe the same class twice, and the split implies the two children are there for different reasons. A parent with a son and a daughter is being sold two programmes.",
@@ -5135,6 +5153,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Four formats, three academies, and a month with almost nothing to learn from",
+      subheads: ["Four formats, all social proof", "Won on frequency, not on content"],
       paragraphs: [
         "The July scan flags four recurring formats as self-promotional rather than subject matter: school anniversary and seminar announcements, individual belt and stripe promotions, welcome posts for new and returning students, and Independence Day greetings. Between them they account for most of the twenty-five posts collected across the three tracked academies.",
         "That is not a criticism of any one of them — social proof is a legitimate thing for a local academy to publish, and the promotions genuinely matter to the students in them. It is an observation about what is left over. Strip the four formats out and the month contains a handful of posts that teach a parent or a prospective adult student anything.",
@@ -5183,6 +5202,7 @@ export const researchBriefs = [
       "Hootsuite's Social OS, Vista Social's Ask Vista and Buffer's practitioner MCP content all landed inside one window, at 50% Instagram, 36% web blog and 14% Facebook. Concentration like that means the category has decided this is the story; the question is no longer whether to talk about it.",
     research: {
       title: "The category is selling the architecture. Social media managers buy the hour back",
+      subheads: ["Fourteen items, all architecture", "Show the Tuesday, not the layer"],
       paragraphs: [
         "Fourteen items in this window pitch conversational agents as a replacement for the dashboard. Hootsuite describes rebuilding the product around an agent layer rather than bolting AI onto it. Vista Social launched a command surface wired into fifty-odd tools. Buffer published a creator's stack of MCP servers. The vocabulary is consistent across all three: orchestration layers, intelligence units, autonomous teammates.",
         "What is almost entirely missing is the other half of the sentence. An agent that runs continuously and only interrupts you when something matters is a good pitch — but a social media manager reading it wants to know which of today's twenty jobs it does. Morning briefing? Inbox triage? Flagging the post that overperformed? Some posts list those duties; most stop at the layer.",
@@ -5216,6 +5236,7 @@ export const researchBriefs = [
       "Last sync this was one Buffer post. It is eight items now, and Buffer has started leading with 'MCP access on every plan' in head-to-head comparisons — it has moved from a curiosity to a pricing argument.",
     research: {
       title: "Your listening data, in the chat window where the work already happens",
+      subheads: ["Eight items, one technical register", "The same story, told to a social media manager"],
       paragraphs: [
         "Eight items in this window cover Model Context Protocol connectors, three quarters of them on web blogs. Buffer publishes a creator's roundup of the eight servers they use weekly. Hootsuite frames protocol bridges as the way social intelligence reaches outside tools. One head-to-head comparison makes a point of MCP access being included on every plan.",
         "All of it is written for someone comfortable with the words 'server' and 'protocol'. The person with the most to gain is a social media manager who already drafts in a chat tool and retypes numbers into it by hand — and none of this content is addressed to them.",
@@ -5308,6 +5329,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Everyone tracks more. Almost nobody says which number changes a decision",
+      subheads: ["Three competitors, one complaint", "Which number ends an argument"],
       paragraphs: [
         "Four items in this window, split across web blogs, Facebook and Instagram, converge on the same complaint: reporting breaks at scale when teams use inconsistent definitions and siloed tools, so results can't be compared or trusted. Sprinklr argues for a single governed measurement framework. Buffer shipped a feature to turn data into takeaways. Sprout published the cornerstone metrics guide.",
         "The convergence is the interesting part. Three competitors with very different customers arrived at the same premise — that tracking more does not produce more insight — which means the premise is safe and the differentiation has to be downstream of it.",
@@ -5337,6 +5359,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "The comparison page that matters most may be one you never see",
+      subheads: ["Two items, below this lane's floor", "Unglamorous, and close to what already works"],
       paragraphs: [
         "Two items in this window cover brand visibility inside AI answers. Sprinklr launched LLM Insights — tracking how a brand shows up across LLM-powered search, and whether AI recommends it — and published a content playbook arguing that content now needs sharper structure, direct answers and credible sourcing because discovery is moving beyond ranked links.",
         "Two items is below the floor this lane treats as evidence, so this is an observation rather than a trend. It is recorded because of what it implies rather than how loud it is: if a prospective customer asks an assistant which social tool suits an agency, the answer is assembled from content nobody in this category is writing for that purpose.",
@@ -5367,6 +5390,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Not 'how to post on Bluesky' — 'is it worth your Thursday'",
+      subheads: ["Two guides, both about how", "An honest way to run the test"],
       paragraphs: [
         "Two web-blog items in this window, both from the same competitor: an explainer on what Bluesky is and where it fits in a 2026 strategy, and a fuller guide to building a brand presence — how the network differs from X and Threads, why a roughly 42-million audience skewing 25-34 is worth testing, and how to adapt tone and cadence.",
         "Both are 'how' content, and both are good at it. Neither answers the prior question, which is the one a social media manager with a full calendar actually asks: does this earn a slot, and what comes off the calendar to pay for it?",
@@ -5402,6 +5426,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "The tactic is public. The proof is what's missing",
+      subheads: ["One creator, one number", "What the publishable version needs"],
       paragraphs: [
         "Two items in this window, split between a first-person Instagram post and a longer guide, both from Buffer. The claim is specific: roughly half the account's followers came from keyword-triggered DM automation running on Meta's official API, set up in about ten minutes. The guide's angle is doing it without sounding robotic.",
         "It works because it is first-person and numbered. A platform explaining DM automation is a feature page; a person saying what it did for their own account is a story, and the comments do the rest.",
@@ -5428,6 +5453,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "A format you can build on, or a template you can only copy",
+      subheads: ["Format or template — the distinction", "Why this needs a recurring slot"],
       paragraphs: [
         "Two Instagram posts in this window make the same argument from different angles. The first separates a mockumentary format — which a brand can take and tell its own story inside — from an AI-edit template where every participant produces the identical clip with a different logo. The second argues most trends are a spike on one platform driven by a handful of accounts, not a trend at all.",
         "Both land on a test rather than a verdict, which is the useful part: does this give us something to build on, and is it moving on more than one network? That is two questions a social media manager can actually apply on a Thursday without a meeting.",
@@ -5454,6 +5480,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "The comparison the buyer runs anyway, written by someone who knows the answer",
+      subheads: ["Three comparisons, all conceding something", "The decision that comes before the draft"],
       paragraphs: [
         "Three head-to-head comparisons in this window, all Buffer, all on the blog: against Sprout Social, against Hootsuite, against Metricool. Each covers features, pricing structure and which team size it suits. The scan tags all three the same way — competitor-comparison content aimed at high-intent switchers.",
         "The tone is what makes them work. They concede things. A comparison that finds the competitor better at nothing reads as an advert and converts like one, and buyers who have already opened three tabs can tell the difference immediately.",
@@ -5480,6 +5507,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Posting more didn't work. Posting about something else did",
+      subheads: ["The pattern, and what replacing it looks like", "This argument needs a named company"],
       paragraphs: [
         "Three items in this window, two thirds Instagram. Sprinklr's claim is blunt: most tech brands aren't stuck because they post too little, they're stuck because they all post launches, features and product updates. One global brand publishes 32 times a week to very little effect. Vista Social's contribution is a case study — a company whose biggest lead source last year was organic LinkedIn, not paid.",
         "The two halves fit together well. One names the pattern, the other shows what replacing it looks like, and the second is the half that persuades anyone.",
@@ -5515,6 +5543,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "Three repricings, no worked example",
+      subheads: ["Three repricings, one quarter", "The worked example, and the decision behind it"],
       paragraphs: [
         "Three accounts changed pricing model inside one quarter and all three used the word simplification. One moved to per-channel, one to per-brand, one added a seat tier on top of both.",
         "None of them published the arithmetic. The comparison a buyer actually runs — a team of five, twelve channels, one approval step — is absent from all three announcements, which is why the comparison content that ranks is written by third parties.",
@@ -5541,6 +5570,7 @@ export const researchBriefs = [
     whyNowDetail: "",
     research: {
       title: "They show the queue. The story is the thing that did not get published",
+      subheads: ["Four screenshots, no consequence", "The near-miss nobody will describe"],
       paragraphs: [
         "Four items, two accounts, all product screenshots: a draft, a reviewer, a green tick. The feature is table stakes and the copy treats it that way — a caption naming the feature and a link.",
         "What none of them has is a consequence. An approval step earns its cost exactly once, on the day it catches the post that would have been a problem, and that is the only version of this story anyone remembers.",

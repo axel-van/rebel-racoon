@@ -249,6 +249,28 @@
   color: var(--ref-color-grey-80);
 }
 
+/* Section headings inside an article body. The element is <h4> so the document
+   order under the <h3> title holds, but the TYPE is the DS's h3 — "sub-section
+   heading, for group titles within a section", which is exactly this. Applying the
+   style by token rather than by tag is what the DS's own text-style guidance says to
+   do when the correct tag and the correct size disagree.
+
+   margin-top is larger than the paragraph rhythm so the heading belongs to what
+   follows it rather than floating between two blocks; :first-child loses it, since
+   the article title is already directly above. */
+.research-article__subhead {
+  margin: var(--ref-spacing-sm) 0 var(--ref-spacing-xxs);
+  font-family: var(--sys-text-style-h3-font-family);
+  font-size: var(--sys-text-style-h3-size);
+  font-weight: var(--sys-text-style-h3-weight);
+  line-height: var(--sys-text-style-h3-line-height);
+  color: var(--sys-text-color-default);
+}
+
+.research-article__subhead:first-child {
+  margin-top: 0;
+}
+
 /* Pillar Detail is ONE string carrying blank-line paragraph breaks — that is how
    addTopicToPillar appends each topic's text to the description — so it needs
    pre-wrap to read as paragraphs. A topic's own article doesn't: it arrives as
