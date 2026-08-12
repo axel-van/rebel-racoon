@@ -203,15 +203,31 @@ export const DEFAULT_CADENCE = "weekly";
 // The types a brief can carry — the feed's third filter group, and the axis its
 // two columns are built on.
 //
-// `content-strategy` is the listening export's `needs_strategy`. It spent a while
-// as `needs-assets` — naming the blocker rather than the decision — and is back
-// near the export's own word, because what the topic actually needs is a
-// commitment: a pillar someone owns, then the assets follow. The card's action
-// says the same thing ("Add to strategy"), so the label and the button now agree.
+// ── The LABELS renamed; the ids did not ────────────────────────────────────
+//   content-strategy → "Ideas for later"
+//   ready-to-post    → "Draft-ready"
 //
+// Ids stay because they are data, not copy: `researchType` is written on thirty
+// seeded briefs, keys TYPE_TAG_COLOR below, and appears in the filter state the
+// URL and localStorage carry. Renaming them buys nothing a reader can see and
+// breaks all of that. This repo already runs that split deliberately elsewhere —
+// Content Research is "Content Ideas" in the UI while the code still says
+// research/brief (see CLAUDE.md) — so the pattern is the established one.
+//
+// The new labels say what the reader does next rather than what the topic is.
+// "Draft-ready" is a state of readiness, which is what the green tag claims;
+// "Ideas for later" says the topic is worth keeping without implying the reader
+// owes it a strategy document. The previous pair — "Ready to post" and "Content
+// strategy" — described a workflow stage and a deliverable, and the second one
+// collided with the Playbook's own Content Strategy section, a different object
+// entirely.
+//
+// Historic note, still true of the ID: `content-strategy` is the listening
+// export's `needs_strategy`, and it spent a while as `needs-assets` — naming the
+// blocker rather than the decision.
 export const RESEARCH_TYPES = Object.freeze([
-  { id: "content-strategy", label: "Content strategy" },
-  { id: "ready-to-post", label: "Ready to post" },
+  { id: "content-strategy", label: "Ideas for later" },
+  { id: "ready-to-post", label: "Draft-ready" },
 ]);
 
 /** Filter default: both types. There are only two, and both are worth reading. */
@@ -225,7 +241,7 @@ export const DEFAULT_TYPE_IDS = Object.freeze(["content-strategy", "ready-to-pos
 // trade than one extra chip.
 //
 // Colour: green for postable, grey for not-yet. Green is the DS house rule for
-// "a validated / approved object", which is exactly what Ready to post claims.
+// "a validated / approved object", which is exactly what Draft-ready claims.
 // Grey is the neutral. Deliberately not orange and not blue — in this app those
 // are action colours, and a category is not an action; not red, which means
 // error.
@@ -276,10 +292,13 @@ export const REVIEW_STATUSES = Object.freeze([
   {
     id: "new",
     label: "New",
-    // Sparkles is the app's mark for what Archie produced — the composer's Add menu,
-    // the draft flow and the "Full article" kicker all use it. A New topic is one
-    // Archie surfaced and nobody has answered yet.
-    icon: "ap-icon-sparkles",
+    // Hourglass, not sparkles. Sparkles is this app's AI mark — the composer's Add
+    // menu, the draft flow and the "Full article" kicker all use it for "Archie made
+    // this" — and every topic in the feed is Archie's, so it separated nothing from
+    // the other three. What New actually says is that the decision is still open, so
+    // the glyph is the one that reads "waiting on you". It also stays out of the way
+    // of the row's two attention marks (Trending, Updated), which a bell would not.
+    icon: "ap-icon-hourglass",
     hint: "Surfaced by Archie. You haven't decided on this one yet.",
   },
   // "Saved", not "Saved for later". The long form was chosen to echo the card

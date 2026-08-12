@@ -22,14 +22,14 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=382";
+import { renderTopbar } from "../components/topbar.js?v=383";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=39";
-import { openFullResearch } from "../components/research-modals.js?v=90";
-import { openBriefInChat } from "../brief-flow.js?v=16";
-import { getLaneById } from "../research-store.js?v=36";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=43";
-import { findResearchSource, findCadence } from "../research-catalog.js?v=15";
+import { renderBriefCard } from "../components/brief-card.js?v=40";
+import { openFullResearch } from "../components/research-modals.js?v=91";
+import { openBriefInChat } from "../brief-flow.js?v=17";
+import { getLaneById } from "../research-store.js?v=37";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=44";
+import { findResearchSource, findCadence } from "../research-catalog.js?v=16";
 
 let laneId = null;
 let unsubscribe = null;

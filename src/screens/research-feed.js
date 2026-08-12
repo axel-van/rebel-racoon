@@ -31,9 +31,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=382";
+import { renderTopbar } from "../components/topbar.js?v=383";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=39";
+import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=40";
 import {
   openIgnoreReason,
   openExport,
@@ -43,10 +43,10 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=90";
-import { openBriefInChat } from "../brief-flow.js?v=16";
+} from "../components/research-modals.js?v=91";
+import { openBriefInChat } from "../brief-flow.js?v=17";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=36";
+import { getLaneById } from "../research-store.js?v=37";
 import {
   getBriefById,
   getBriefsForLane,
@@ -57,14 +57,14 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=43";
+} from "../briefs-store.js?v=44";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=15";
+} from "../research-catalog.js?v=16";
 import { getContextById } from "../contexts-store.js?v=70";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough

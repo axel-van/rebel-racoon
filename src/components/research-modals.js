@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=15";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=16";
 import {
   ageMinutes,
   getBriefById,
@@ -30,8 +30,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=43";
-import { getLanes } from "../research-store.js?v=36";
+} from "../briefs-store.js?v=44";
+import { getLanes } from "../research-store.js?v=37";
 import {
   getContexts,
   getContextById,
@@ -46,8 +46,8 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=16";
-import { renderBriefCard } from "./brief-card.js?v=39";
+import { openBriefInChat } from "../brief-flow.js?v=17";
+import { renderBriefCard } from "./brief-card.js?v=40";
 import { renderSocialPostCard } from "./social-post-card.js?v=25";
 import { showToast } from "./toast.js?v=21";
 

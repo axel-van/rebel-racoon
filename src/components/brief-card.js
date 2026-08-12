@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=15";
+import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=16";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the
@@ -357,9 +357,9 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
 
            With Add-to-strategy parked there is only one alternate verb left, so
            the menu carries exactly one row above Ignore and the no-duplication
-           rule decides which: a ready-to-post topic leads with Save for later
-           (its main segment is Use in chat), a content-strategy topic leads with
-           Use in chat (its main segment is now Save for later). -->
+           rule decides which: a Draft-ready topic leads with Save for later (its
+           main segment is Use in chat), an Ideas-for-later topic leads with Use in
+           chat (its main segment is now Save for later). -->
       ${raw(
         ready
           ? html`<button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
