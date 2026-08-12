@@ -5220,7 +5220,7 @@ export const researchBriefs = [
         "Eight items in this window cover Model Context Protocol connectors, three quarters of them on web blogs. Buffer publishes a creator's roundup of the eight servers they use weekly. Hootsuite frames protocol bridges as the way social intelligence reaches outside tools. One head-to-head comparison makes a point of MCP access being included on every plan.",
         "All of it is written for someone comfortable with the words 'server' and 'protocol'. The person with the most to gain is a social media manager who already drafts in a chat tool and retypes numbers into it by hand — and none of this content is addressed to them.",
         "Written for that reader, the story is short: the reporting you screenshot into a prompt can arrive by itself. No new dashboard to learn, no export step, and the thing you were already doing gets its data automatically. That is a workflow post, not a technical one, and it is unoccupied.",
-        "The pricing angle travels with it. If protocol access is a paid tier elsewhere and not here, that belongs in the comparison content the scan shows already captures bottom-funnel search.",
+        "The pricing angle travels with it. If protocol access is a paid tier elsewhere and not here, that belongs in the comparison content the scan shows already captures bottom-funnel search. Written as one piece the two arguments answer different readers without competing: the workflow story for the person who does not care what a server is, and the tier comparison for the one who is already choosing between vendors.",
       ],
     },
     posts: [],
@@ -5248,8 +5248,10 @@ export const researchBriefs = [
         whatChanged: "First pass. One Buffer post, reported as a curiosity.",
         title: "Buffer has shipped an MCP server",
         paragraphs: [
-          "One item this window. Buffer has published an MCP server, letting an AI chat client call its API directly. The post is addressed to developers and reads as a changelog entry.",
-          "Too thin to act on. Worth watching in case anyone else follows — a single vendor shipping a connector is a product decision, not a market move.",
+          "One item this window. Buffer has published a Model Context Protocol server, which lets an AI chat client call its API directly instead of going through the dashboard. In practical terms a user can ask a question in a chat tool and have it answered from live Buffer data, without an export step in between.",
+          "The post is addressed to developers and reads as a changelog entry: what the server exposes, how to authenticate, which endpoints are covered. There is no claim about what the capability is for beyond the fact that it now exists, and no example of the kind of question somebody would actually ask.",
+          "Nothing has changed in the reading yet, because there is nothing to compare this against. One vendor shipping one connector is a product decision. It becomes a market theme only if a second account describes the same mechanism, and so far none has.",
+          "What is missing is any sense of who benefits. The people who would gain most from asking a plain-language question of their own social data are not the people this post is written for, and until somebody addresses them the subject stays a technical footnote. Worth re-scanning rather than acting on: if a competitor picks this up, the item count will move quickly, and that is the signal to watch for.",
         ],
       },
       {
@@ -5258,9 +5260,10 @@ export const researchBriefs = [
         whatChanged: "Three items now, and a second vendor. Stopped being one company's changelog.",
         title: "Two vendors, one protocol — connectors are becoming a category",
         paragraphs: [
-          "Three items. Hootsuite has joined Buffer, framing protocol bridges as the way its social intelligence reaches tools outside its own product. A creator roundup lists the servers they use weekly.",
-          "The shift worth recording is that this is no longer one vendor's feature. Two independent accounts describing the same mechanism in the same weeks is the beginning of a category.",
-          "Still written entirely for a technical audience. No account has yet said what the protocol is FOR in workflow terms, which is the gap to watch.",
+          "Three items this window, up from one. Hootsuite has joined Buffer, framing protocol bridges as the route by which its social intelligence reaches tools outside its own product. A creator roundup published in the same fortnight lists the connectors its author uses weekly, Buffer's among them.",
+          "The two vendors describe the mechanism almost identically — a server, a chat client, a set of tool calls — but pitch it differently. Buffer treats it as access to its own API. Hootsuite treats it as a way for its data to travel into whatever chat application an organisation already uses. The creator roundup treats it as plumbing between tools nobody expected to talk to each other.",
+          "The change since the last version is that this stopped being one company's changelog. Two independent accounts describing the same mechanism in the same weeks is how a category starts, and it means the subject can no longer be dismissed as a single vendor's product decision.",
+          "What is still missing is the same thing that was missing last time: what any of it is for. Every one of the three items explains how the protocol works and none explains the job it removes. That gap has now survived two scans, which makes it more interesting than the protocol itself — but it needs a third scan to know whether the market is going to fill it or leave it open.",
         ],
       },
       {
@@ -5269,9 +5272,10 @@ export const researchBriefs = [
         whatChanged: "The audience gap became the story, rather than an aside at the end.",
         title: "Everyone is explaining the protocol. Nobody is explaining the job",
         paragraphs: [
-          "Five items, mostly web blogs. The vocabulary has settled — server, connector, bridge, tool call — and it is consistent across every account.",
-          "That consistency is the finding. Five pieces of content about the same mechanism, all pitched at a reader who is comfortable with the word protocol, and none pitched at the person whose work it would actually change.",
-          "A social media manager who already drafts in a chat tool and retypes numbers into it by hand is the beneficiary here. No one is writing for them. That is the opening, and it is an audience gap rather than a feature gap.",
+          "Five items this window, three quarters of them web blogs. The vocabulary has settled: server, connector, bridge, tool call. It is used consistently across every account, which was not true a month ago when the same mechanism was being described three different ways.",
+          "The content itself has converged too. Each piece explains the same architecture, and several now include a worked setup — connect the client, authorise the server, ask a question, get numbers back. Two of the five include the phrase no export step, which suggests the accounts have found the benefit they want to lead with.",
+          "The change in the reading is that the audience gap is now the story rather than an aside at the end of it. Five pieces of content about one mechanism, all pitched at a reader comfortable with the word protocol, and none pitched at the person whose working day it would actually change. That consistency is itself the finding.",
+          "The beneficiary is a social media manager who already drafts in a chat tool and retypes numbers into it by hand. Nobody is writing for them, and the piece that does write for them does not need to mention a protocol at all — the reporting you screenshot into a prompt can arrive by itself. That is an audience gap rather than a feature gap, which means it can be closed with a post rather than a roadmap.",
         ],
       },
       {
@@ -5280,9 +5284,10 @@ export const researchBriefs = [
         whatChanged: "Buffer moved MCP into its comparison pages, so the pricing angle arrived.",
         title: "The connector has become a pricing argument",
         paragraphs: [
-          "Seven items. The change since the last scan is where the mention appears rather than how often: Buffer has started leading with 'MCP access on every plan' inside head-to-head comparison content.",
-          "That moves the protocol out of the changelog and into the buying decision. A capability included on every tier at one vendor and gated at another is a comparison-table row, and comparison content is what the scan shows captures bottom-funnel search.",
-          "The audience gap from the last version still stands and is still unclaimed. The two now travel together: the workflow story for the reader who doesn't care what a server is, and the pricing note for the one comparing tiers.",
+          "Seven items this window. The change is not how often the protocol is mentioned but where: Buffer has started leading with MCP access on every plan inside head-to-head comparison content, alongside pricing and channel limits, rather than in a product announcement.",
+          "That relocation matters more than the count. A capability described in a changelog is a feature; the same capability listed in a comparison table next to a price is a reason to choose one vendor over another. Included on every tier at one vendor and gated behind an upgrade at another is exactly the kind of row a buyer screenshots, and comparison content is what this scan repeatedly shows captures bottom-funnel search.",
+          "The audience gap identified in the previous version has not closed. Nobody has written the workflow piece for the social media manager, and the seven items remain addressed to a technical reader. Two scans have now passed with that opening unoccupied, which is long enough to treat it as a standing gap rather than a lag.",
+          "The two arguments now travel together, and that is what makes this actionable: the workflow story for the reader who does not care what a server is, and the pricing note for the one comparing tiers. Written as one piece it answers both, and it is the first version of this topic where the evidence supports publishing rather than continuing to watch.",
         ],
       },
     ],

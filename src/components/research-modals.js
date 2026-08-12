@@ -30,8 +30,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=39";
-import { getLanes } from "../research-store.js?v=32";
+} from "../briefs-store.js?v=41";
+import { getLanes } from "../research-store.js?v=34";
 import {
   getContexts,
   getContextById,
@@ -42,13 +42,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=67";
+} from "../contexts-store.js?v=69";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=12";
+import { openBriefInChat } from "../brief-flow.js?v=14";
 import { renderBriefCard } from "./brief-card.js?v=35";
-import { renderSocialPostCard } from "./social-post-card.js?v=22";
+import { renderSocialPostCard } from "./social-post-card.js?v=24";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -1204,10 +1204,18 @@ function paintVersions() {
     { briefId: versionBriefId },
     {
       title: "Past versions",
-      // The headline, so the dialog says which topic these are versions OF. It is
-      // the shell's own subtitle slot, the same place every other dialog here puts
-      // its context.
-      sub: brief.headline,
+      // "Topic:" is a fixed label, present whatever the headline says. The headline
+      // alone was ambiguous in this dialog specifically: the title above it reads
+      // "Past versions", so an unlabelled sentence underneath could be taken for
+      // the name of a version rather than the topic all five belong to.
+      //
+      // Prefixed HERE, not in the shell. .research-modal__sub is shared by nine
+      // openShell calls and carries something different in each — a connector's
+      // name, a Playbook's name, a topic count, an outright question ("Which
+      // Playbook do you want topics from?"). Labelling the slot itself would print
+      // "Topic: Agorapulse" over a Playbook and "Topic: Which Playbook…" over a
+      // picker.
+      sub: `Topic: ${brief.headline}`,
       wide: true,
       body: html`<div class="research-versions">
         <!-- The DS Select, built as the details/summary composition it actually is
