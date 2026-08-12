@@ -30,8 +30,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=44";
-import { getLanes } from "../research-store.js?v=37";
+} from "../briefs-store.js?v=45";
+import { getLanes } from "../research-store.js?v=38";
 import {
   getContexts,
   getContextById,
@@ -42,13 +42,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=70";
+} from "../contexts-store.js?v=71";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=17";
+import { openBriefInChat } from "../brief-flow.js?v=18";
 import { renderBriefCard } from "./brief-card.js?v=40";
-import { renderSocialPostCard } from "./social-post-card.js?v=25";
+import { renderSocialPostCard } from "./social-post-card.js?v=27";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -1110,14 +1110,79 @@ export function renderResearchArticle(brief, { withLabel = true, withTitle = tru
       ${raw(renderArticleBody(brief.research))}
     </section>
     ${raw(renderTrendLevels(brief))} ${raw(renderHistory(brief.history || [], brief.status, brief.id))}
+    ${raw(renderSources(brief))}`;
+}
+
+// ── Sources ────────────────────────────────────────────────────────────────
+// The posts the article was written from, under Topic history — the last section,
+// because it is the evidence rather than the argument, and a reader who wants it
+// wants it after the claim rather than before.
+//
+// THREE, then a link. This used to render every post it had, which on the
+// densest topic was seventeen cards below a four-paragraph article: the section
+// stopped being evidence you could check and became a second document. Three is
+// enough to see what KIND of post backs the claim, and the modal is there for
+// anyone who wants to audit the rest.
+//
+// The lede is one sentence and it earns its place: a reader arriving at a stack of
+// competitor posts underneath an article by Archie has no way to know whether they
+// are sources or suggestions. It says which.
+//
+// The count is the FULL count, not three, and the link says it — "See all 17" tells
+// you the sample you are looking at is a sample. Rendered only when there is more
+// than the sample; with exactly three, all three are already on screen.
+const SOURCE_SAMPLE = 3;
+
+function renderSources(brief) {
+  const posts = brief.posts || [];
+  if (!posts.length) return "";
+  const shown = posts.slice(0, SOURCE_SAMPLE);
+  const more = posts.length - shown.length;
+  return html`<section class="research-article">
+    <span class="research-article__label"><i class="ap-icon-quote" aria-hidden="true"></i> Sources</span>
+    <p class="research-sources__lede">
+      ${String(posts.length)} ${posts.length === 1 ? "post" : "posts"} from your listening sources make up the article
+      above. ${posts.length > SOURCE_SAMPLE ? `Showing ${String(SOURCE_SAMPLE)}.` : ""}
+    </p>
+    <div class="research-modal__posts">${raw(shown.map((p) => renderSocialPostCard(p)).join(""))}</div>
     ${raw(
-      posts.length
-        ? html`<section class="research-article">
-            <span class="research-article__label">Source posts</span>
-            <div class="research-modal__posts">${raw(posts.map((p) => renderSocialPostCard(p)).join(""))}</div>
-          </section>`
+      more > 0
+        ? // .ap-link standalone small on a real <button>, matching the past-versions
+          // link exactly — same shape of action (open a reader), so the same control.
+          html`<button
+            type="button"
+            class="ap-link standalone small research-sources__all"
+            data-brief-sources="${escapeAttr(brief.id)}"
+          >
+            <i class="ap-icon-view-grid" aria-hidden="true"></i>
+            See all ${String(posts.length)} posts
+          </button>`
         : "",
-    )}`;
+    )}
+  </section>`;
+}
+
+// ─── 7. Every source post behind one topic ─────────────────────────────────
+export function openSourcePosts({ briefId }) {
+  const brief = getBriefById(briefId);
+  if (!brief) return;
+  const posts = brief.posts || [];
+  openShell(
+    "sources",
+    { briefId },
+    {
+      title: "Sources",
+      sub: `Topic: ${brief.headline}`,
+      wide: true,
+      body: html`<p class="research-sources__lede">
+          Every post Archie read to write this article. Each one links out to the original.
+        </p>
+        <div class="research-modal__posts">${raw(posts.map((p) => renderSocialPostCard(p)).join(""))}</div>`,
+      foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+        <span>Close</span>
+      </button>`,
+    },
+  );
 }
 
 // ── Trend levels ───────────────────────────────────────────────────────────
@@ -1509,6 +1574,14 @@ function onPanelClick(event) {
   const versionsLink = event.target.closest("[data-brief-versions]");
   if (versionsLink) {
     return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
+  }
+
+  // "See all N posts", from the Full-article DIALOG. Same markup in the feed's
+  // article pane, wired there — one link, two delegation roots, exactly like the
+  // past-versions link above.
+  const sourcesLink = event.target.closest("[data-brief-sources]");
+  if (sourcesLink) {
+    return openSourcePosts({ briefId: sourcesLink.dataset.briefSources });
   }
 
   const pbkEdit = event.target.closest("[data-pbklist-edit]");

@@ -1398,6 +1398,16 @@
   color: var(--sys-text-color-light);
 }
 
+/* The same slot, empty — the Topic status group's New option, which carries no
+   glyph. It holds the label column straight so the four names line up.
+   1em, not an icon token: --sys-icon-css-sm is 16px and these glyphs render at the
+   14px above, so the em ties the spacer to its siblings' actual size rather than to
+   a scale they don't use. */
+.research-filters__option-icon.is-empty {
+  display: inline-block;
+  width: 1em;
+}
+
 .research-filters__reset-row {
   display: flex;
   justify-content: flex-end;

@@ -654,3 +654,29 @@
    margin left to clear. `.research-versions__changed p { margin: 0 }` used to live
    here and went with the bare <p>. The class stays on the element as a hook for
    whatever this box needs next. */
+
+/* ── Sources ───────────────────────────────────────────────────────────────
+   One sentence above the post cards, saying that they are what the article was
+   written FROM. Without it a stack of competitor posts under an article by Archie
+   could equally be read as suggestions. */
+.research-sources__lede {
+  margin: 0 0 var(--ref-spacing-sm);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  font-weight: var(--sys-text-style-caption-weight);
+  color: var(--sys-text-color-light);
+}
+
+/* "See all N posts". Same treatment as the past-versions link — .ap-link standalone
+   small on a real <button>, so the two readers open the same way. The reset clears
+   what the user-agent adds to a button, since .ap-link is written for an <a>; it
+   overrides no DS declaration. */
+.research-sources__all {
+  display: inline-flex;
+  margin-top: var(--ref-spacing-sm);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+}

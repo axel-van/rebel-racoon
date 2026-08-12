@@ -21,15 +21,15 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=383";
+import { renderTopbar } from "../components/topbar.js?v=384";
 import { showToast } from "../components/toast.js?v=21";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import { renderTopicCard } from "../components/topic-card.js?v=26";
-import { open as openTopicModal } from "../components/topic-modal.js?v=34";
+import { renderTopicCard } from "../components/topic-card.js?v=27";
+import { open as openTopicModal } from "../components/topic-modal.js?v=35";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=70";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=71";
 import { TOPIC_SOURCES, findTopicSource, findCadence } from "../topics-catalog.js?v=3";
-import { openTopicInChat } from "../topic-flow.js?v=31";
+import { openTopicInChat } from "../topic-flow.js?v=32";
 import {
   getTopics,
   getUnseenCount,
@@ -38,7 +38,7 @@ import {
   refreshTopics,
   hasMoreToScan,
   subscribe as subscribeTopics,
-} from "../topics-store.js?v=25";
+} from "../topics-store.js?v=26";
 
 // How long the mock scan appears to run. Long enough to read the scanning line,
 // short enough that nobody waits for it in a demo.

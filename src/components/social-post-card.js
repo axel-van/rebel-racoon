@@ -82,6 +82,29 @@ function accentFor(author) {
   return ACCENTS.has(a) ? a : "grey";
 }
 
+// "View on <network>" — the same affordance top-post-card.js offers on a winner,
+// deliberately identical so one gesture means one thing wherever a post appears.
+//
+// The URL comes off the post (`post.url`), unlike top-post-card which BUILDS a
+// permalink from the id. It can here: these posts arrive from a listening export
+// that already carries `post_link`, so there is a real address to open rather than
+// a plausible one to construct.
+//
+// Rendered only when there is a url. A "View on" that goes to "#" is worse than no
+// link — it looks like the app failed rather than like the data is thin.
+function renderViewOn(post) {
+  if (!post.url) return "";
+  const network = labelFor(post.network);
+  return html`<a
+    class="top-post-view-on social-post-card__view-on"
+    href="${post.url}"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="View original post on ${network}"
+    ><span>View on</span><i class="${iconFor(post.network)}" aria-hidden="true"></i
+  ></a>`;
+}
+
 export function renderSocialPostCard(post, { compact = false } = {}) {
   if (!post) return "";
   const author = post.author || {};
@@ -91,25 +114,37 @@ export function renderSocialPostCard(post, { compact = false } = {}) {
   // brand pages that post under a name rather than an @.
   const identity = author.handle || author.name || "Unknown";
 
-  const stats = compact
-    ? ""
-    : html`<div class="social-post-card__stats">
-        <span class="social-post-card__stat">
-          <i class="ap-icon-heart" aria-hidden="true"></i>
-          <span>${formatCompact(post.likes)}</span>
-          <span class="social-post-card__sr">likes</span>
-        </span>
-        <span class="social-post-card__stat">
-          <i class="ap-icon-double-chat-bubbles" aria-hidden="true"></i>
-          <span>${formatCompact(post.comments)}</span>
-          <span class="social-post-card__sr">comments</span>
-        </span>
-        <span class="social-post-card__stat">
-          <i class="ap-icon-refresh" aria-hidden="true"></i>
-          <span>${formatCompact(post.reposts)}</span>
-          <span class="social-post-card__sr">reposts</span>
-        </span>
-      </div>`;
+  // The engagement run and the View-on link share one row: both are "what happened
+  // to this post", and stacking them would give a four-line card a fifth line for
+  // one link. compact drops the stats but KEEPS the link — a post riding inside a
+  // chat turn still needs a way out to the original.
+  const footer =
+    compact && !post.url
+      ? ""
+      : html`<div class="social-post-card__foot">
+          ${raw(
+            compact
+              ? ""
+              : html`<div class="social-post-card__stats">
+                  <span class="social-post-card__stat">
+                    <i class="ap-icon-heart" aria-hidden="true"></i>
+                    <span>${formatCompact(post.likes)}</span>
+                    <span class="social-post-card__sr">likes</span>
+                  </span>
+                  <span class="social-post-card__stat">
+                    <i class="ap-icon-double-chat-bubbles" aria-hidden="true"></i>
+                    <span>${formatCompact(post.comments)}</span>
+                    <span class="social-post-card__sr">comments</span>
+                  </span>
+                  <span class="social-post-card__stat">
+                    <i class="ap-icon-refresh" aria-hidden="true"></i>
+                    <span>${formatCompact(post.reposts)}</span>
+                    <span class="social-post-card__sr">reposts</span>
+                  </span>
+                </div>`,
+          )}
+          ${raw(renderViewOn(post))}
+        </div>`;
 
   return html`<article class="social-post-card${raw(compact ? " social-post-card--compact" : "")}">
     <header class="social-post-card__head">
@@ -123,6 +158,6 @@ export function renderSocialPostCard(post, { compact = false } = {}) {
       <i class="${iconFor(post.network)} social-post-card__net" aria-label="${network}" role="img"></i>
     </header>
     <p class="social-post-card__text">${post.text}</p>
-    ${raw(stats)}
+    ${raw(footer)}
   </article>`;
 }

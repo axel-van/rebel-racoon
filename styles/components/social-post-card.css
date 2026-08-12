@@ -112,10 +112,29 @@
 
 /* ── Engagement ─────────────────────────────────────────────────────────── */
 
+/* Engagement run on the left, "View on" hard right — both answer "what happened to
+   this post", so they share one row rather than costing the card a fifth line.
+   space-between rather than a margin-left:auto on the link, because in compact mode
+   the stats are absent and the link should still sit right. */
+.social-post-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+}
+
 .social-post-card__stats {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-sm);
+}
+
+/* The link's own type, colour and hover come from .top-post-view-on in
+   top-post-card.css — the same class, so the affordance is identical on a winner and
+   on a piece of evidence. Nothing is redeclared here; this only stops it stretching
+   if the row ever becomes a column. */
+.social-post-card__view-on {
+  align-self: center;
 }
 
 .social-post-card__stat {

@@ -280,26 +280,39 @@ export function findResearchType(id) {
 // panel shows the same pair, and two copies of "which icon means saved" would
 // drift the first time one changed.
 //
-// The four icons are all OUTLINE, deliberately — bookmark_fill and
+// THREE icons, not four — New deliberately has none. See the New entry below.
+// Every icon that IS here is OUTLINE, deliberately: bookmark_fill and
 // rounded-check_fill both exist and either would read as "more applied" on its own,
-// but mixed weights in a set of four make the set look like two sets. Uniform
-// stroke, and the tooltip carries the meaning.
+// but mixed weights in one set make the set look like two sets. Uniform stroke, and
+// the tooltip carries the meaning.
 //
 // `hint` is a sentence, not a restatement of the label. A tooltip that says "Saved"
 // over an icon labelled Saved is a tooltip that has told you nothing; each one says
 // what the status MEANS for the topic.
+//
+// Both fields are OPTIONAL. Every consumer already skips a status without an icon
+// (the card renders nothing, the Filters option row omits the glyph, the legend
+// filters the list), so leaving them off is how a status opts out of the marker.
 export const REVIEW_STATUSES = Object.freeze([
   {
     id: "new",
     label: "New",
-    // Hourglass, not sparkles. Sparkles is this app's AI mark — the composer's Add
-    // menu, the draft flow and the "Full article" kicker all use it for "Archie made
-    // this" — and every topic in the feed is Archie's, so it separated nothing from
-    // the other three. What New actually says is that the decision is still open, so
-    // the glyph is the one that reads "waiting on you". It also stays out of the way
-    // of the row's two attention marks (Trending, Updated), which a bell would not.
-    icon: "ap-icon-hourglass",
-    hint: "Surfaced by Archie. You haven't decided on this one yet.",
+    // No icon, and no hint to put in a tooltip — New is the ABSENCE of a marker.
+    //
+    // The other three statuses all record something the reader DID to the topic:
+    // saved it, used it, ignored it. New records that they haven't, so there is no
+    // event for a glyph to stand for. A marker meaning "nothing has happened" is
+    // the one thing a marker cannot say, and it was the most common value in the
+    // lane — so the feed spent a glyph on almost every row to convey nothing.
+    //
+    // Sparkles was tried and is what prompted this: it is the app's AI mark, and
+    // every topic in the feed is Archie's, so it separated New from nothing. An
+    // hourglass fixed the semantics but not the arithmetic — the glyph still sat on
+    // most rows, competing with Trending and Updated, the two marks in that row that
+    // the reader genuinely cannot know without being told.
+    //
+    // So New now reads off the absence: no glyph means untriaged. The Filters panel
+    // still lists New with its label, which is where the word belongs.
   },
   // "Saved", not "Saved for later". The long form was chosen to echo the card
   // action that sets it ("Save for later"), but a pill states a STATE and the

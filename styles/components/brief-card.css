@@ -205,12 +205,11 @@
 }
 
 /* Colour per status, taken from the PILLS' own text colours below, so the mapping a
-   reader may already have learnt from the timeline still holds. Four shapes carry
+   reader may already have learnt from the timeline still holds. Three shapes carry
    the meaning; the colour is what makes them separable at 14px without reading the
-   shape closely. */
-.topics-card__status[data-status="new"] > .topics-card__status-icon {
-  color: var(--ref-color-grey-100);
-}
+   shape closely.
+   No `new` rule: that status renders no glyph, so a colour for it would style an
+   element that is never emitted. */
 .topics-card__status[data-status="saved"] > .topics-card__status-icon {
   color: var(--ref-color-tag-orange-150);
 }

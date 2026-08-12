@@ -101,7 +101,10 @@ function renderRouteTag(researchType) {
 // name has to carry the explanation itself.
 function renderStatusIcon(status) {
   const meta = findReviewStatus(status);
-  if (!meta) return "";
+  // No icon in the catalog means the status renders no marker at all — New is the
+  // absence of one, and the empty string keeps the meta row from reserving space or
+  // emitting an empty tooltip wrapper for it. `research-catalog.js` has the why.
+  if (!meta || !meta.icon) return "";
   return html`<span class="topics-card__status" data-status="${escapeAttr(meta.id)}">
     <i class="${meta.icon} topics-card__status-icon" role="img" aria-label="${meta.label}. ${meta.hint}"></i>
     <span class="ap-tooltip bottom-left topics-card__status-tip" aria-hidden="true">

@@ -31,22 +31,23 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=383";
+import { renderTopbar } from "../components/topbar.js?v=384";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=40";
 import {
   openIgnoreReason,
   openExport,
   openVersionHistory,
+  openSourcePosts,
   // PARKED with the handler below — kept imported so restoring is one uncomment.
   openAddToStrategy,
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=91";
-import { openBriefInChat } from "../brief-flow.js?v=17";
+} from "../components/research-modals.js?v=92";
+import { openBriefInChat } from "../brief-flow.js?v=18";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=37";
+import { getLaneById } from "../research-store.js?v=38";
 import {
   getBriefById,
   getBriefsForLane,
@@ -57,7 +58,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=44";
+} from "../briefs-store.js?v=45";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -65,7 +66,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=16";
-import { getContextById } from "../contexts-store.js?v=70";
+import { getContextById } from "../contexts-store.js?v=71";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -737,17 +738,33 @@ function renderFilterPanel() {
   </div>`;
 }
 
-// The four status glyphs, unlabelled, for the collapsed group head. Read from
+// The status glyphs, unlabelled, for the collapsed group head. Read from
 // REVIEW_STATUSES so it is the same list, in the same order, with the same icons the
 // cards use — a hand-written legend would drift the first time one icon changed.
+//
+// Filtered to statuses that HAVE an icon, which is three of the four: New renders no
+// marker on a card, so a legend entry for it would explain a glyph the reader will
+// never see. The filter, rather than a hardcoded list of three, is what keeps this
+// honest if a status gains or loses its icon later.
 function renderStatusLegend() {
   return html`<span class="research-filters__legend" aria-hidden="true">
-    ${raw(REVIEW_STATUSES.map((s) => html`<i class="${s.icon}"></i>`).join(""))}
+    ${raw(
+      REVIEW_STATUSES.filter((s) => s.icon)
+        .map((s) => html`<i class="${s.icon}"></i>`)
+        .join(""),
+    )}
   </span>`;
 }
 
 function renderGroup(key, label, options, selected, field) {
   const open = view.groups[key];
+  // Does this group MIX iconless options with iconed ones? Only Topic status does,
+  // now that New carries no glyph, and without this its label would sit a glyph's
+  // width to the left of the other three — four checkboxes with a ragged label
+  // column read as a rendering bug rather than as a status without a marker.
+  // Groups where NO option has an icon (Topic type) reserve nothing, so they keep
+  // their tighter row.
+  const mixedIcons = options.some((o) => o.icon) && options.some((o) => !o.icon);
   return html`<section class="research-filters__group">
     <button
       type="button"
@@ -756,16 +773,17 @@ function renderGroup(key, label, options, selected, field) {
       aria-expanded="${open ? "true" : "false"}"
     >
       <span>${label}</span>
-      <!-- The status group's head carries the four glyphs as a LEGEND, so the panel
-           that owns this axis also says what the cards' icons mean.
+      <!-- The status group's head carries the glyphs as a LEGEND, so the panel that
+           owns this axis also says what the cards' icons mean. Three of them, not
+           four — New has no marker on a card, so it has none here either.
            Shown only while the group is COLLAPSED: expanded, every option row below
            carries its own icon beside its own name, which is the pairing that
-           actually teaches the mapping — the legend would then be the same four
-           glyphs twice, once without labels.
+           actually teaches the mapping — the legend would then be the same glyphs
+           twice, once without labels.
            aria-hidden, because the head is a button whose accessible name is the
-           group's label; four icon names read out before "Topic status" would make
-           the control harder to use, not easier, and the options below name each
-           status properly. -->
+           group's label; a run of icon names read out before "Topic status" would
+           make the control harder to use, not easier, and the options below name
+           each status properly. -->
       ${raw(key === "status" && !open ? renderStatusLegend() : "")}
       <i class="${open ? "ap-icon-chevron-up" : "ap-icon-chevron-down"}" aria-hidden="true"></i>
     </button>
@@ -787,11 +805,19 @@ function renderGroup(key, label, options, selected, field) {
                       <!-- The icon, where a status has one — this is the row that
                            teaches the mapping, because it is the only place the glyph
                            and the word sit together. Sources carry icons too and get
-                           theirs for free; types have none and the expression simply
-                           renders nothing. aria-hidden: the label beside it is the
-                           accessible name and the checkbox already owns it. -->
+                           theirs for free; types have none and the expression renders
+                           nothing at all. New is the third case: it sits in a group
+                           whose other three options DO have glyphs, so it gets an
+                           empty slot of the same width to keep the labels in one
+                           column (see mixedIcons above).
+                           aria-hidden on both: the label beside it is the accessible
+                           name and the checkbox already owns it. -->
                       ${raw(
-                        o.icon ? html`<i class="${o.icon} research-filters__option-icon" aria-hidden="true"></i>` : "",
+                        o.icon
+                          ? html`<i class="${o.icon} research-filters__option-icon" aria-hidden="true"></i>`
+                          : mixedIcons
+                            ? html`<span class="research-filters__option-icon is-empty" aria-hidden="true"></span>`
+                            : "",
                       )}
                       <span>${o.label || o.name}</span>
                     </label>`,
@@ -969,6 +995,13 @@ function bind(target) {
     const versionsLink = event.target.closest("[data-brief-versions]");
     if (versionsLink) {
       return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
+    }
+
+    // "See all N posts", from the article PANE. Its twin in the Full-article dialog
+    // is wired inside research-modals' own panel handler.
+    const sourcesLink = event.target.closest("[data-brief-sources]");
+    if (sourcesLink) {
+      return openSourcePosts({ briefId: sourcesLink.dataset.briefSources });
     }
 
     // The explicit half of the infinite load — same path the observer takes, so

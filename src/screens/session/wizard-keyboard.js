@@ -11,9 +11,9 @@
 //   rebindWizardKeyboard(aside, sessionId) — call after every aside
 //     swap. No-op if no wizard is active.
 
-import * as sidebarWizard from "../../sidebar-wizard.js?v=82";
+import * as sidebarWizard from "../../sidebar-wizard.js?v=83";
 import * as inlineQuestion from "../../inline-question.js?v=48";
-import * as topPostsFlow from "../../top-posts-flow.js?v=112";
+import * as topPostsFlow from "../../top-posts-flow.js?v=113";
 import { bindWizardKeyboard, unbindWizardKeyboard } from "../_analyse-common.js?v=55";
 
 export function rebindWizardKeyboard(aside, sessionId) {
