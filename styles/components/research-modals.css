@@ -241,9 +241,18 @@
   color: var(--app-convo-navy);
 }
 
+/* 15px, matching .topics-card__summary. It was 14px, which made the READING surface
+   set smaller than the SCANNING one — the pane is where you go to read the whole
+   thing, so it should not be the harder of the two to read.
+
+   Measured before and after: the paragraph runs 70 characters per line at 14px and
+   about 66 at 15px, so both sit inside the comfortable 45-75 band and the change
+   costs nothing in measure. line-height stays at 1.65, which is more generous than
+   the card's 1.55 and should be — the card shows three clamped lines, this shows
+   four paragraphs. */
 .research-article > p {
   margin: 0 0 12px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.65;
   color: var(--ref-color-grey-80);

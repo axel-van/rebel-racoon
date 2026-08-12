@@ -120,13 +120,19 @@ function renderList(briefs, view) {
     ${raw(
       groupBriefsByAge(shown)
         .map(
-          // A heading per non-empty age frame. The label is /topics'
-          // .topics-group__label — the app's own answer to this exact problem one
-          // feature over — so the two age-grouped card lists read as one idea
-          // rather than two.
+          // A heading per non-empty age frame, EXCEPT the newest one. "Last 7 days"
+          // was a label on the default: the list is newest-first, so the first group
+          // is where anyone expects to land, and naming it spent a line of
+          // above-the-fold height telling the reader what they had already assumed.
+          // The later frames keep their labels, because those ARE a departure —
+          // "Earlier this month" tells you the recent topics have run out.
+          //
+          // Gated on the group's id rather than its index, so a lane whose newest
+          // topics are all older than a week still labels whatever it opens with.
+          // isFirstFrame is what the pane's alignment reads; see renderPage.
           ({ group, briefs: rows }) =>
             html`<section class="topics-agegroup">
-              <h3 class="topics-agegroup__label">${group.label}</h3>
+              ${raw(group.id === "week" ? "" : html`<h3 class="topics-agegroup__label">${group.label}</h3>`)}
               ${raw(cards(rows))}
             </section>`,
         )
@@ -134,6 +140,16 @@ function renderList(briefs, view) {
     )}
     ${raw(remaining > 0 ? renderLoadMore(remaining, view.loadingMore) : "")}
   </div>`;
+}
+
+// Does the list open with a labelled frame? The pane's top margin exists only to
+// clear the first label so its first line of text lands on the first card's source
+// row — with no label there is nothing to clear, and the 32px would be a hole.
+//
+// Derived from the same grouping the list renders, so the two cannot disagree.
+function listOpensWithLabel(briefs, shown) {
+  const groups = groupBriefsByAge(briefs.slice(0, shown));
+  return !!groups.length && groups[0].group.id !== "week";
 }
 
 // The sentinel AND the loading row, one element. It has to render whether or not a
@@ -584,8 +600,17 @@ function renderPage() {
     <div class="research-feed__inner">
       ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       <!-- The split starts HERE, below the header and the chips, so neither of
-           them changes width when an article opens. -->
-      <div class="research-feed__split${raw(article ? " is-split" : "")}">
+           them changes width when an article opens.
+
+           is-labelled says the list opens with an age-group heading, which is the
+           only case where the pane needs a top margin to stay aligned with the first
+           card. Carried on the split rather than the pane because it is a fact about
+           the LIST, and the pane is the thing that reacts to it. -->
+      <div
+        class="research-feed__split${raw(article ? " is-split" : "")}${raw(
+          listOpensWithLabel(briefs, view.shown) ? " is-labelled" : "",
+        )}"
+      >
         ${raw(
           briefs.length
             ? renderList(briefs, view)

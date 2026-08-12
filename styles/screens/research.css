@@ -976,6 +976,22 @@
   min-width: 0;
 }
 
+/* The list opens with an age-group heading — which now happens only when a lane's
+   newest topics are all older than a week, so the first frame is "Earlier this
+   month" or "Earlier" rather than the unlabelled "Last 7 days". In that case the
+   pane still has to drop by exactly one heading, or its first line of text sits
+   32px above the first card's source row.
+
+   DERIVED from the two tokens that produce it — the label's line-height and the
+   group's own gap — not typed as 32px, so it follows if either changes. Measured:
+   16 + 16 = 32, and the delta closes to 0.
+
+   The screen decides when this applies (listOpensWithLabel in research-feed.js),
+   reading the same grouping the list renders, so the two cannot disagree. */
+.research-feed__split.is-labelled > .research-feed__article {
+  margin-top: calc(var(--sys-text-style-caption-bold-line-height) + var(--ref-spacing-sm));
+}
+
 /* ── The article pane ─────────────────────────────────────────────────────
    `align-self: flex-start` is load-bearing twice over: it stops the pane
    stretching to the height of a long list, and a stretched flex item has no room
@@ -1053,21 +1069,12 @@
   /* Keeps the scrolling body from squaring off the pane's rounded bottom corners.
      Nothing to do with the entrance — that is a transform now. */
   overflow: hidden;
-  /* Dropped by exactly one age-group heading, so the pane's first line of text
-     lands on the first card's source row rather than 32px above it. The list
-     column opens with a .topics-agegroup label ("LAST 7 DAYS") that the pane has
-     no counterpart for, and that label plus the group's own gap is the whole
-     difference.
-
-     DERIVED from the two tokens that produce it — the label's line-height and
-     .topics-agegroup's gap — not typed as 32px, so it follows if either changes.
-     Measured: 16 + 16 = 32, and the delta closes to 0.
-
-     Caveat: it assumes the list opens with an age group, which it does whenever
-     there are cards at all (groupBriefsByAge drops empty groups). Filter the list
-     down to nothing while the pane is open and the offset becomes 32px of blank —
-     with no card left to align to, which is a fair trade. */
-  margin-top: calc(var(--sys-text-style-caption-bold-line-height) + var(--ref-spacing-sm));
+  /* No top margin by default. The list's newest frame no longer carries a label, so
+     both columns start on the same line and the 32px that used to clear "LAST 7
+     DAYS" is given back to the content — which is the whole point of dropping the
+     label. See .research-feed__split.is-labelled below for the case that still
+     needs it. */
+  margin-top: 0;
   position: sticky;
   top: 0;
   align-self: flex-start;
