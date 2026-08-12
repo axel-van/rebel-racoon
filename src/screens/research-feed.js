@@ -730,7 +730,16 @@ function renderFilterPanel() {
       // reaching first.
       renderGroup("types", "Topic type", RESEARCH_TYPES, filters.types, "types") +
         renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
-        renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources"),
+        // Sources renders WITHOUT its glyphs, unlike Topic status. The difference is
+        // whether the row has a mapping to teach: a card shows its status as a BARE
+        // icon, so the filter row is the only place that glyph is ever named — while
+        // a card's source badge already carries the word beside the glyph, leaving
+        // the filter to repeat a pairing the reader has met on every card. Eight of
+        // them down the panel also blunt the status icons, which do need reading.
+        // The icons stay in the catalogue: the source cards on the form use them.
+        renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources", {
+          icons: false,
+        }),
     )}
     <div class="research-filters__reset-row">
       <button type="button" class="research-filters__reset" data-feed-reset>
@@ -758,7 +767,10 @@ function renderStatusLegend() {
   </span>`;
 }
 
-function renderGroup(key, label, options, selected, field) {
+// `icons: false` suppresses the option glyphs for a group whose data happens to
+// carry them (Sources) — the catalogue keeps them for the surfaces that do use
+// them, and only this panel opts out.
+function renderGroup(key, label, options, selected, field, { icons = true } = {}) {
   const open = view.groups[key];
   // Does this group MIX iconless options with iconed ones? Only Topic status does,
   // now that New carries no glyph, and without this its label would sit a glyph's
@@ -766,7 +778,7 @@ function renderGroup(key, label, options, selected, field) {
   // column read as a rendering bug rather than as a status without a marker.
   // Groups where NO option has an icon (Topic type) reserve nothing, so they keep
   // their tighter row.
-  const mixedIcons = options.some((o) => o.icon) && options.some((o) => !o.icon);
+  const mixedIcons = icons && options.some((o) => o.icon) && options.some((o) => !o.icon);
   return html`<section class="research-filters__group">
     <button
       type="button"
@@ -806,17 +818,17 @@ function renderGroup(key, label, options, selected, field) {
                       />
                       <!-- The icon, where a status has one — this is the row that
                            teaches the mapping, because it is the only place the glyph
-                           and the word sit together. Sources carry icons too and get
-                           theirs for free; types have none and the expression renders
-                           nothing at all. New is the third case: it sits in a group
-                           whose other three options DO have glyphs, so it gets an
-                           empty slot of the same width to keep the labels in one
-                           column (see mixedIcons above).
+                           and the word sit together. Types have none and the
+                           expression renders nothing at all; Sources have them in the
+                           catalogue but this panel opts out (icons: false). New is the
+                           third case: it sits in a group whose other three options DO
+                           have glyphs, so it gets an empty slot of the same width to
+                           keep the labels in one column (see mixedIcons above).
                            aria-hidden on both: the label beside it is the accessible
                            name and the checkbox already owns it. -->
                       <span class="research-filters__option-name">
                         ${raw(
-                          o.icon
+                          icons && o.icon
                             ? html`<i class="${o.icon} research-filters__option-icon" aria-hidden="true"></i>`
                             : mixedIcons
                               ? html`<span class="research-filters__option-icon is-empty" aria-hidden="true"></span>`
