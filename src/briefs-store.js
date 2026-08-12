@@ -44,7 +44,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=89";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=16";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=17";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -180,7 +180,17 @@ export function defaultFilters() {
 // that meant nothing.
 export function narrowedGroupCount(filters = defaultFilters()) {
   let n = 0;
-  if ((filters.statuses || []).length !== 4) n++;
+  // Against the DEFAULT, not against all four. The default is New + Saved now, so a
+  // full-breadth comparison would read "narrowed" the moment the panel opened and pin
+  // the badge to 1 forever — which is exactly the failure the types note below
+  // records from when their default was two of three. The badge means "you have
+  // changed something", and at rest it means nothing is changed.
+  //
+  // Length alone is enough here and deliberately so: any change to a group's
+  // selection changes its length UNLESS the user swaps one option for another, which
+  // for a four-item group means they narrowed and widened in equal measure — still a
+  // deviation, but not one worth a second data structure to catch in a prototype.
+  if ((filters.statuses || []).length !== DEFAULT_STATUS_IDS.length) n++;
   if ((filters.sources || []).length !== ALL_SOURCE_IDS.length) n++;
   // Types ARE counted again: the group is back inside the panel, so narrowing it
   // is once more something the badge has to announce. This was briefly excluded,

@@ -1442,12 +1442,27 @@
   cursor: pointer;
 }
 
-/* The glyph beside an option's name — the one place the icon and the word sit
-   together, which is what teaches the mapping the cards then rely on.
-   The row's 10px gap already separates it, so this only pulls it back towards the
-   label it belongs to rather than sitting midway between checkbox and text. */
+/* The glyph and the word are ONE unit, wrapped, with their own gap. The row's gap
+   then separates the checkbox from that unit rather than falling between the glyph
+   and the word it belongs to.
+
+   This replaces a negative margin, which had the spacing backwards: at
+   --ref-spacing-xxs (8px) pulled off a 10px row gap, the glyph sat 2px from its label
+   and 13px from the checkbox — nearly touching the word it labels while reading as a
+   separate column from the control it belongs to. Measured before: 13px / 2px.
+
+   4px inside the pair against the row's 10px is a 1:2.5 ratio, which is what makes
+   the pairing unambiguous. A token, not 6px: xxxs is the tightest step and this is
+   the tightest relationship on the row. */
+.research-filters__option-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
 .research-filters__option-icon {
-  margin-right: calc(-1 * var(--ref-spacing-xxs));
+  flex: 0 0 auto;
   font-size: 14px;
   line-height: 1;
   color: var(--sys-text-color-light);

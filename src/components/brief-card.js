@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=16";
+import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=17";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the

@@ -338,13 +338,18 @@ export const REVIEW_STATUSES = Object.freeze([
   },
 ]);
 
-/** Filter default: New only. Reset restores exactly this. */
-// Every status ticked. The feed used to open on New alone, which meant a topic
-// you had saved or used vanished from the list the moment you triaged it — and
-// that gap is what the attention notice existed to explain. Opening wide removes
-// the premise: the list shows the lane, and the filter is something you narrow
-// rather than something you have to widen before the list makes sense.
-export const DEFAULT_STATUS_IDS = Object.freeze(REVIEW_STATUSES.map((s) => s.id));
+/** Filter default: New and Saved. Reset restores exactly this. */
+// UNTRIAGED and PARKED, not all four. Used and Ignored are both answers the reader
+// has already given — a topic taken into a chat, or one pushed off the list — so
+// opening on them puts finished work in front of someone looking for what to do next.
+// Both are one tick away in the panel, and Ignored also comes back on its own when a
+// topic starts trending or gets updated.
+//
+// This is NOT the old New-only default, which was reverted for a good reason: under
+// it, saving a topic made it vanish the instant you triaged it, and the attention
+// notice existed largely to explain that gap. Saved stays visible here, so the act of
+// parking something never removes it from view.
+export const DEFAULT_STATUS_IDS = Object.freeze(["new", "saved"]);
 
 export function findResearchSource(id) {
   return RESEARCH_SOURCES.find((s) => s.id === id) || null;
