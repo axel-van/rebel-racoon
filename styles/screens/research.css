@@ -1467,13 +1467,15 @@
    and 13px from the checkbox — nearly touching the word it labels while reading as a
    separate column from the control it belongs to. Measured before: 13px / 2px.
 
-   4px inside the pair against the row's 10px is a 1:2.5 ratio, which is what makes
-   the pairing unambiguous. A token, not 6px: xxxs is the tightest step and this is
-   the tightest relationship on the row. */
+   Now 8px inside the pair, up from 4px, against 13px measured from the checkbox to
+   the pair. That is a 1:1.6 ratio where 4px gave 1:3.25 — the glyph is still nearer
+   the word it labels than the control beside it, so the grouping holds, but it is
+   closer than it was and further tightening would need the row's gap to grow with
+   it. Both steps are tokens: xxs here, and the row keeps its own. */
 .research-filters__option-name {
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
+  gap: var(--ref-spacing-xxs);
   min-width: 0;
 }
 
