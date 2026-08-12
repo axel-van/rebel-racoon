@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=390";
+import { renderTopbar } from "../components/topbar.js?v=391";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=47";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=20";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=11";
 import { getLaneById } from "../research-store.js?v=40";
-import * as contextBuilder from "../context-builder.js?v=357";
+import * as contextBuilder from "../context-builder.js?v=358";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=524";
+} from "../components/right-panel.js?v=525";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=33";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1967,15 +1967,23 @@ function removeSlashToken(input) {
 // inline inside this hero). The previous inline AI question flow
 // ("Quick — which context?") was removed — the composer picker is now
 // the single, always-visible context affordance.
-// ── The Content Ideas card on the new-session page ──────────────────────────
+// ── The Content Ideas carousel on the new-session page ──────────────────────
 //
-// One topic at a time, from the same briefs the /content-ideas feed shows. It sits
-// ABOVE the workflow grid rather than inside it: the grid is three fixed
-// workflows and this is a live suggestion with its own lifecycle — it flips, it
-// runs out, it turns into an empty state. Dropping it into the grid would make
-// the grid reflow from four cells to three the moment the queue emptied.
+// One Idea at a time, from the same briefs the /content-ideas feed shows. It is
+// its own block ABOVE the workflow grid, under its own label, at the width of
+// all three workflow cards. It was the grid's first cell for a while; the block
+// is what the carousel needs — a cell can't carry a nav row under it without
+// stretching the row, and a live suggestion with its own lifecycle (it arrives,
+// you page through it, it ends) doesn't belong in a row of three fixed workflows.
 //
-// The queue is rendered one card at a time and advanced by the flip button.
+// A CAROUSEL, not the old shuffle button: prev/next plus a DS dot stepper, so
+// the reader can go back, knows how many there are and where they are. The
+// shuffle could only go forward and said neither.
+//
+// Slides are the queue PLUS ONE — the closing card that points at the full feed.
+// Every dot maps to a slide, which is why the closing card is a slide rather
+// than a state you fall off the end into.
+//
 // `starterTopicIndex` is module-level for the same reason the picker's step is:
 // the hero re-renders through renderEmptyHero and the position has to outlive
 // that.
@@ -2134,70 +2142,120 @@ function renderStarterTopicWaiting() {
   `;
 }
 
-// Reached only by flipping past the last topic — never on first paint, where a
-// user with no topics gets no slot at all rather than an empty one. The CTA is
-// the same .starter-card__cta as a live card so the two read as one component;
-// it is an <a> because it navigates, and the card around it is a plain div
-// because there is nothing else here to click.
+// The LAST SLIDE of the carousel — the one after the queue, never on first paint,
+// where a user with no Ideas gets no block at all rather than an empty one.
+//
+// It used to be the dead end you fell into by flipping past the last card, so it
+// said "that's everything for now". As a slide with a dot of its own it is a
+// destination instead: the carousel shows four Ideas short, and everything about
+// them — the full write-up, the posts behind it, the streams they came from — is
+// one click away. So it says what is over there, and the subtitle answers the two
+// questions that follow: what the full view adds, and when more arrive.
+//
+// The CTA is the same .starter-card__cta as a live card so the two read as one
+// component; it is an <a> because it navigates, and the card around it is a plain
+// div because there is nothing else here to click.
 function renderStarterTopicEmpty() {
   return `
     <div class="starter-card starter-card--topic starter-topic--empty">
       <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
-      <span class="starter-card__title">That's everything for now</span>
-      <span class="starter-card__subtitle">Come back later for more content ideas. Refreshes weekly.</span>
+      <span class="starter-card__title">Get the full details into your Content Ideas</span>
+      <span class="starter-card__subtitle"
+        >Every idea in full, with the posts behind it. I refresh them weekly.</span
+      >
       <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
-        >Explore more Ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
+        >Explore more ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
       ></a>
     </div>
   `;
 }
 
-// The whole block: label + slot. The flip button is a SIBLING of the card, not
-// a child — .starter-card is a <button>, and a button inside a button is
-// invalid HTML that browsers resolve unpredictably. The wrapper is the
-// positioning context for both.
+/** Slides in the carousel: one per queued Idea, plus the closing card. */
+function starterTopicSlideCount(queue) {
+  return queue.length + 1;
+}
+
+// The stage, then the nav under it. Under, not overlaid on the card: at three
+// cards wide there is no gutter left to put a control in, and a pair of arrows
+// pinned inside the card would sit on top of the headline they are meant to
+// change. Under the stage they also read as belonging to the whole block rather
+// than to the card currently in it.
 function renderStarterTopicSlot(sessionId) {
   if (!isFlagOn("contentResearch")) return "";
   if (sessionId) syncStarterTopicSession(sessionId);
   const queue = getStarterTopics();
-  // No topics at all (new-alt mode): no slot, not an empty state. "Come back
-  // later" is an answer to "I've read them all", not to "there was never
+  // No Ideas at all (new-alt mode): no block, not a closing card. "Everything is
+  // in Content Ideas" is an answer to "I've read these", not to "there was never
   // anything here".
   if (!queue.length) return "";
   const waiting = starterTopicCountdown > 0;
-  const brief = waiting ? null : queue[starterTopicIndex] || null;
-  const remaining = queue.length - starterTopicIndex - 1;
+  const total = starterTopicSlideCount(queue);
+  // Clamped on READ as well as on write: the queue is recomputed from the store
+  // on every render, so triaging an Idea elsewhere can shorten it under a
+  // position that was valid when it was set.
+  const index = Math.min(starterTopicIndex, total - 1);
+  const brief = waiting ? null : queue[index] || null;
   if (waiting) startStarterTopicCountdown();
   return `
-    <div class="starter-topic" data-starter-topic-slot>
+    <div class="starter-topic" data-starter-topic-slot role="group" aria-labelledby="starterTopicLabel">
       <div class="starter-topic__stage" data-starter-topic-stage>
         ${waiting ? renderStarterTopicWaiting() : brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty()}
       </div>
-      ${
-        brief
-          ? `<button
-              type="button"
-              class="ap-icon-button ghost grey starter-topic__flip"
-              data-starter-topic-flip
-              aria-label="Cycle through more ideas${remaining > 0 ? ` (${remaining} more)` : ""}"
-            >
-              <i class="ap-icon-shuffle" aria-hidden="true"></i>
-            </button>
-            <!-- The DS Tooltip, not the native title attribute. title waits about
-                 a second, can't be styled, and renders in the OS chrome rather
-                 than the page — three reasons the DS ships a component for this.
-                 It sits AFTER the button so a plain adjacent-sibling selector can
-                 reveal it, and inside .starter-topic (position: relative) rather
-                 than the card, whose overflow:hidden would clip it.
-                 aria-hidden: the button's own label already carries this, and a
-                 display:none target can't be read through aria-describedby. -->
-            <span class="ap-tooltip top-right starter-topic__tip" aria-hidden="true"
-              >Click to cycle through more ideas</span
-            >`
-          : ""
-      }
+      ${waiting ? "" : renderStarterTopicNav(index, total)}
     </div>
   `;
+}
+
+// Prev · dots · next. The dots are the DS .ap-dot-stepper, which exists for
+// exactly this ("carousel indicators", and its own usage rule says to prefer
+// .ap-stepper only for numbered multi-step flows) — bare <button> children, no
+// class of their own, .active on the current one.
+//
+// The arrows are DS icon buttons and are DISABLED at the two ends rather than
+// wrapping. Wrapping hides the size of the queue, which is the thing the dots
+// are there to show; disabled says "this is all of them" without a sentence.
+function renderStarterTopicNav(index, total) {
+  const dots = Array.from({ length: total }, (_, i) => {
+    // The last slide is not an Idea, so it cannot be labelled as one. Everything
+    // else is "Idea N of <queue length>" — total minus that closing slide.
+    const label = i === total - 1 ? "Everything else, in Content Ideas" : `Idea ${i + 1} of ${total - 1}`;
+    return `<button type="button"${i === index ? ' class="active"' : ""} data-starter-topic-go="${i}" aria-label="${label}"${
+      i === index ? ' aria-current="true"' : ""
+    }></button>`;
+  }).join("");
+  return `
+    <div class="starter-topic__nav">
+      <button
+        type="button"
+        class="ap-icon-button ghost grey"
+        data-starter-topic-step="-1"
+        aria-label="Previous idea"
+        ${index === 0 ? "disabled" : ""}
+      >
+        <i class="ap-icon-chevron-left" aria-hidden="true"></i>
+      </button>
+      <div class="ap-dot-stepper starter-topic__dots">${dots}</div>
+      <button
+        type="button"
+        class="ap-icon-button ghost grey"
+        data-starter-topic-step="1"
+        aria-label="Next idea"
+        ${index === total - 1 ? "disabled" : ""}
+      >
+        <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  `;
+}
+
+// Label + carousel, or nothing at all. One function so the label can't outlive
+// the block it names — renderStarterTopicSlot returns "" in three cases (flag
+// off, no Ideas, new-alt), and a heading with nothing under it would be worse
+// than no heading.
+function renderStarterTopicBlock(sessionId) {
+  const slot = renderStarterTopicSlot(sessionId);
+  if (!slot) return "";
+  return `<h2 class="empty-chat__starter-label" id="starterTopicLabel">Ideas waiting for you</h2>${slot}`;
 }
 
 // Both halves of "a topic opens its own chat" now live in brief-flow.js, because
@@ -2256,15 +2314,17 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
         Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>
       ${raw(composerMarkup)}
+      <!-- Content Ideas FIRST, then the workflows. Both blocks answer "what now?",
+           but only one of them knows anything about you: these four Ideas came out
+           of your own streams this week, where the workflows are the same three on
+           every chat. The "Or" on the workflow label below is what ties the two
+           together — this, or failing that, one of these.
+           It was the grid's first cell (see renderStarterTopicBlock for why the
+           carousel needed its own block), which is also why the two share a
+           max-width: same left edge, same right edge, one alignment. -->
+      ${raw(renderStarterTopicBlock(sessionId))}
       <h2 class="empty-chat__starter-label" id="starterGridLabel">Or jump into a workflow</h2>
-      <!-- The Content Ideas card is the grid's FIRST cell, two columns wide —
-           see renderStarterTopicSlot. It sits under the same label as the
-           workflow cards because it answers the same question ("what now?"),
-           and inside the grid rather than above it so the two share one
-           alignment instead of stacking two full-width blocks. -->
-      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">
-        ${raw(renderStarterTopicSlot(sessionId))}${raw(cards)}
-      </div>
+      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">${raw(cards)}</div>
     </div>
   `;
 }
@@ -4852,44 +4912,66 @@ function bindSession(root, session) {
       // setting `action` on the mock. The "open-video-clips" action opens the
       // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
       // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
-      // ── The Content Ideas starter card ─────────────────────────────────
-      // Flip: animate the current card out, swap the markup at the halfway
+      // ── The Content Ideas carousel ──────────────────────────────────────
+      // Paging: animate the current card out, swap the markup at the halfway
       // point, animate the next one in. The class is driven from JS rather than
       // :target/:checked because the content changes between the two halves —
       // there is no pure-CSS way to swap the card and keep both directions
       // animated. Reduced motion short-circuits to an instant swap.
-      const flipBtn = event.target.closest("[data-starter-topic-flip]");
-      if (flipBtn) {
-        const slot = flipBtn.closest("[data-starter-topic-slot]");
+      //
+      // One handler for the arrows and the dots: they differ only in how the next
+      // index is worked out (step is relative, a dot is absolute), and both then
+      // run the identical swap.
+      const step = event.target.closest("[data-starter-topic-step]");
+      const goDot = event.target.closest("[data-starter-topic-go]");
+      if (step || goDot) {
+        const control = step || goDot;
+        const slot = control.closest("[data-starter-topic-slot]");
         const stage = slot?.querySelector("[data-starter-topic-stage]");
         if (!stage) return;
-        starterTopicIndex += 1;
+        // Recomputed here rather than trusted from the markup: the queue is
+        // derived from the store, so it can be shorter than it was when this nav
+        // was painted (triaging one of these Ideas in another tab of the app).
+        const total = starterTopicSlideCount(getStarterTopics());
+        const wanted = step
+          ? starterTopicIndex + Number(step.dataset.starterTopicStep)
+          : Number(goDot.dataset.starterTopicGo);
+        const nextIndex = Math.max(0, Math.min(total - 1, wanted));
+        // Nothing to animate — a disabled arrow that still got clicked, or the dot
+        // you are already on. Returning here also stops the 180ms swap from
+        // running and re-rendering the block for no reason.
+        if (nextIndex === starterTopicIndex) return;
+        // Direction, so going back reads as going back: out to the right and in
+        // from the left, the mirror of forwards. A carousel that always slides one
+        // way makes Previous feel like another Next.
+        const back = nextIndex < starterTopicIndex;
+        starterTopicIndex = nextIndex;
         const swap = () => {
           // Re-check that the slot we captured on the click is still in the
           // document. It might not be: this runs 180ms later, and in between the
           // countdown's own swap can have replaced it, the hero can have
           // re-rendered, or a second click can have landed. Without the guard
           // `slot.parentElement` is null and replaceChild throws — reachable just
-          // by clicking the shuffle button twice quickly. The countdown's swap
-          // already had this check; the flip's didn't.
+          // by double-clicking an arrow. The countdown's swap already had this
+          // check; the old flip button's didn't.
           const host = slot.parentElement;
           if (!host || !document.body.contains(slot)) return;
-          const next = document.createElement("div");
-          next.innerHTML = renderStarterTopicSlot();
-          // Swap the slot in place inside the grid, so the workflow cells
-          // around it keep their positions.
-          const fresh = next.querySelector("[data-starter-topic-slot]");
+          const holder = document.createElement("div");
+          holder.innerHTML = renderStarterTopicSlot();
+          // Swap the slot in place, so the label above it and the workflow grid
+          // below it keep their positions.
+          const fresh = holder.querySelector("[data-starter-topic-slot]");
           if (fresh) host.replaceChild(fresh, slot);
         };
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
           swap();
           return;
         }
-        stage.classList.add("is-leaving");
+        stage.classList.add(back ? "is-leaving-back" : "is-leaving");
         window.setTimeout(() => {
           swap();
           const s = document.querySelector("[data-starter-topic-stage]");
-          if (s) s.classList.add("is-entering");
+          if (s) s.classList.add(back ? "is-entering-back" : "is-entering");
         }, 180);
         return;
       }

@@ -807,23 +807,38 @@
   transform: translateX(3px);
 }
 
-/* ── The Content Ideas card ───────────────────────────────────────────────
-   The first cell of the workflow grid, two columns wide. Same .starter-card
-   chrome; what is added here is the accent, the lane/mark head row, the flip
-   control and the swap animation.
+/* ── The Content Ideas carousel ───────────────────────────────────────────
+   Its own block above the workflow grid, at the grid's full width — the same
+   1040px, so the card's edges line up with the three workflow cards under it
+   and the two blocks read as one column rather than two widths. Same
+   .starter-card chrome inside; what is added here is the accent, the lane/mark
+   head row, the nav row and the swap animation.
 
-   One column, the same as a workflow card. It spanned two for a while, on the
-   argument that the headline is a real sentence rather than a three-word
-   workflow name — see the headline clamp below for how that is paid for at this
-   width. The slot keeps its footprint when it turns into the empty state, so the
-   grid never reflows either way.
+   It was one cell of the grid (a two-column cell before that). The block is what
+   the carousel needs: the nav row sits UNDER the stage, and a grid cell can't
+   grow under itself without stretching every workflow card in the row to match.
 
-   The wrapper exists to be the positioning context for the flip button, which
-   is a SIBLING of the card, not a child — .starter-card is a <button> and a
-   button inside a button is invalid HTML. */
+   Column, so the stage and the nav stack. align-self overrides .empty-chat's
+   align-items: center — the same trick .empty-chat__starter-label uses to sit in
+   the grid's box rather than shrink to its own text. */
 .starter-topic {
   position: relative;
   display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  align-self: center;
+  width: 100%;
+  max-width: 1040px;
+}
+
+/* Prev · dots · next, centred under the card. Centred rather than pushed to one
+   end: the dots are the middle of the group and reading position off-centre is
+   harder than it looks. */
+.starter-topic__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
 }
 
 .starter-card--topic {
@@ -880,25 +895,18 @@
    wide gap here separates the LABEL from the MARK, and the crumb owns the tight
    spacing between its own parts.
 
-   The flip button's clearance is reserved HERE rather than on the card, because
-   only this row runs under it. As card padding it cost the headline and the CTA
-   60px they had no reason to give up — invisible at two columns, a fifth of the
-   card at one.
-
    One child now — the crumb. The signal mark moved to the end of the title, so
-   nothing here competes with the path for the row. */
+   nothing here competes with the path for the row.
+
+   The right padding is gone with the flip button it was reserving room for: the
+   controls moved out of the card into the nav row under it, so nothing overlaps
+   this row any more and the crumb gets the card's full width. */
 .starter-topic__head {
   position: relative;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
   min-width: 0;
-  /* Clearance for the flip button, measured rather than guessed: the control is
-     36px at right:12px, and this row already sits inside the card's 16px
-     padding, so it only has to give back 32px. xl leaves 8px of air. It was
-     xxxl (60px), which over-reserved 20px — free at two columns, a sixth of the
-     crumb's remaining room at one. */
-  padding-right: var(--ref-spacing-xl);
 }
 
 /* The mark, inline at the end of the title. baseline rather than middle so it
@@ -995,10 +1003,19 @@
   overflow: hidden;
 }
 
+/* The 22ch measure on .starter-card__subtitle is sized for a workflow card at a
+   third of the row. On this card, which IS the row, it wrapped a 68-character
+   sentence into three 22-character lines with 700px of empty space beside them.
+   60ch puts the line back inside the 45–75 character reading band at this width. */
+.starter-card--topic .starter-card__subtitle {
+  max-width: 60ch;
+}
+
 /* The watermark, resized for this card. The workflow cards are 158px tall and
-   carry a 104px glyph; this one is ~116px, so the same glyph reached the
-   top-right corner and sat directly behind the flip button. Smaller and lower,
-   it stays a texture in the corner instead of competing with a control. */
+   carry a 104px glyph; this one is shorter, so the same glyph reached the
+   top-right corner — where the flip button used to sit, and where the crumb still
+   does. Smaller and lower, it stays a texture in the corner instead of competing
+   with the content. */
 .starter-card--topic .starter-card__art {
   /* decorative glyph — outside the DS type scale, like the base rule above */
   font-size: 72px;
@@ -1006,40 +1023,16 @@
   bottom: calc(var(--ref-spacing-xs) * -1);
 }
 
-/* The flip control. Pinned to the card's top-right corner, above the card in
-   the stacking order so its own hover works. */
-.starter-topic__flip {
-  position: absolute;
-  top: var(--ref-spacing-xs);
-  right: var(--ref-spacing-xs);
-  z-index: 1;
-}
-
-/* The flip control's tooltip. Visibility lives on the APP class, never on
-   .ap-tooltip — redeclaring a DS class outside ds-patches.css flips the cascade
-   for every other use of it (CLAUDE.md). The DS supplies the panel, the arrow
-   and the type; this supplies where it sits and when it shows.
-
-   Anchored ABOVE the button now, not below: below, it dropped over the card's
-   own headline and covered the thing you were deciding about. Above, it sits
-   over the page gutter instead — the card is the first row of the grid, so
-   there is nothing up there to hide.
-
-   `top-right` is the DS modifier for an arrow on the bottom edge, near the right
-   — the tooltip's own tail points down at the control. The offset is the
-   button's top inset plus the arrow's height, both from tokens.
-   --sys-icon-button-height, not the --comp- one: component tokens are off-limits
-   in app CSS (CLAUDE.md, and validate_css errors on it). Right-aligned with the
-   button so a 33-character line grows leftwards into the card, not off its edge. */
-.starter-topic__tip {
-  display: none;
-  bottom: calc(100% - var(--ref-spacing-xs) + var(--ref-spacing-xxs));
-  right: var(--ref-spacing-xs);
-}
-
-.starter-topic__flip:hover + .starter-topic__tip,
-.starter-topic__flip:focus-visible + .starter-topic__tip {
-  display: block;
+/* The dots take the middle and the arrows pin to the card's two edges. That is
+   the DS component's own behaviour — .ap-dot-stepper is width:100% with the dots
+   centred inside it — and it is stated here as flex-grow so the layout is a
+   decision rather than something inherited: on a card this wide, an arrow beside
+   the edge it moves the card towards reads as direction, where a tight trio in the
+   middle would leave 400px of empty row on either side of it.
+   The class is my own, not a redeclared .ap-dot-stepper — everything the DS owns
+   (dot size, spacing, active state, hover growth) is left alone. */
+.starter-topic__dots {
+  flex: 1 1 auto;
 }
 
 /* ── The swap ─────────────────────────────────────────────────────────────
@@ -1064,6 +1057,18 @@
   animation: starter-topic-in 220ms var(--app-ease-standard);
 }
 
+/* Backwards: the same two animations mirrored, so Previous pulls the card back in
+   from the left instead of pushing it on from the right. Four keyframe sets rather
+   than one with a sign variable, because `translateX(var(--x))` inside a keyframe
+   can't be flipped per-element without re-declaring the animation anyway. */
+.starter-topic__stage.is-leaving-back {
+  animation: starter-topic-out-back 180ms var(--app-ease-standard) forwards;
+}
+
+.starter-topic__stage.is-entering-back {
+  animation: starter-topic-in-back 220ms var(--app-ease-standard);
+}
+
 @keyframes starter-topic-out {
   to {
     opacity: 0;
@@ -1078,11 +1083,27 @@
   }
 }
 
+@keyframes starter-topic-out-back {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes starter-topic-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
 /* The JS already short-circuits to an instant swap under reduced motion; this
    is the belt-and-braces half, in case a class lands anyway. */
 @media (prefers-reduced-motion: reduce) {
   .starter-topic__stage.is-leaving,
-  .starter-topic__stage.is-entering {
+  .starter-topic__stage.is-entering,
+  .starter-topic__stage.is-leaving-back,
+  .starter-topic__stage.is-entering-back {
     animation: none;
   }
 }
@@ -1173,6 +1194,12 @@
 @media (max-width: 900px) {
   .starter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 651px;
+  }
+
+  /* Follows the grid down, or the carousel would hang 389px past the two workflow
+     cards it is supposed to be aligned with. Same 651px as the label above it. */
+  .starter-topic {
     max-width: 651px;
   }
 }
