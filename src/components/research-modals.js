@@ -41,7 +41,7 @@ import {
   addTopicToPillar,
   PILLAR_LIMIT,
 } from "../contexts-store.js?v=65";
-import { renderBriefCard } from "./brief-card.js?v=34";
+import { renderBriefCard } from "./brief-card.js?v=35";
 import { renderSocialPostCard } from "./social-post-card.js?v=20";
 import { showToast } from "./toast.js?v=21";
 
@@ -144,11 +144,15 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size 
   // One extra width, for the step whose content sets its own. See
   // .research-modal--topics in research-modals.css.
   panel.classList.toggle("research-modal--topics", size === "topics");
-  // Add to Content strategy gets its own name and its own width. Named for the
+  // ─── PARKED: Add to strategy ─────────────────────────────────────────────
+  // Its own name and its own width (700px, +25% on the 560 base). Named for the
   // dialog rather than the shell because .research-modal IS the shell — the same
   // element serves Need-that-source, Ignore topic, Export, Full research and both
   // pickers, so a name claiming otherwise would be wrong on five of the six.
-  panel.classList.toggle("content-strategy-add-modal", kind === "strategy");
+  // Uncomment with the rest of the flow; .content-strategy-add-modal is still in
+  // styles/components/research-modals.css, untouched.
+  //
+  // panel.classList.toggle("content-strategy-add-modal", kind === "strategy");
   backdrop.hidden = false;
   // The `open` class, not just [hidden], is what actually reveals the scrim —
   // .app-modal-backdrop is display:none until it lands. Every other modal in the
@@ -493,6 +497,13 @@ function renderPillarDetailStep(ctx) {
   });
 }
 
+// ─── PARKED: Add to strategy ───────────────────────────────────────────────
+// UNREACHABLE while the flow is parked, and left whole on purpose. Every caller
+// is commented out (research-feed.js), the card no longer emits the attribute
+// that reaches them (brief-card.js), and the dialog's width class no longer gets
+// toggled (openShell above). The function, its paint, its confirm handler and the
+// contexts-store pillar API it writes through are all still here — restoring is
+// uncommenting the call sites, not rebuilding this.
 export function openAddToStrategy({ briefId, playbookId, onConfirm = null }) {
   const brief = getBriefById(briefId);
   const ctx = getContextById(playbookId);

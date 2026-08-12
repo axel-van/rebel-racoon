@@ -31,16 +31,17 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=361";
+import { renderTopbar } from "../components/topbar.js?v=362";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=34";
+import { renderBriefCard } from "../components/brief-card.js?v=35";
 import {
   openIgnoreReason,
   openExport,
+  // PARKED with the handler below — kept imported so restoring is one uncomment.
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=69";
+} from "../components/research-modals.js?v=70";
 import { openBriefInChat } from "../brief-flow.js?v=10";
 import { showToast } from "../components/toast.js?v=21";
 import { getLaneById } from "../research-store.js?v=30";
@@ -604,14 +605,19 @@ function bind(target) {
       return;
     }
 
-    const strategy = event.target.closest("[data-brief-strategy]");
-    if (strategy) {
-      view.openMenu = null;
-      const lane = getLaneById(laneId);
-      // Opens a confirmation. The status does NOT change here — only on confirm,
-      // inside the modal. Flipping it on this click was a real bug.
-      return openAddToStrategy({ briefId: strategy.dataset.briefStrategy, playbookId: lane?.playbookId });
-    }
+    // ─── PARKED: Add to strategy ─────────────────────────────────────────────
+    // The way in. Uncomment to bring the flow back — the dialog it opens is still
+    // in research-modals.js, and brief-card.js no longer emits data-brief-strategy
+    // (see its own PARKED note), so that has to come back too.
+    //
+    // const strategy = event.target.closest("[data-brief-strategy]");
+    // if (strategy) {
+    //   view.openMenu = null;
+    //   const lane = getLaneById(laneId);
+    //   // Opens a confirmation. The status does NOT change here — only on confirm,
+    //   // inside the modal. Flipping it on this click was a real bug.
+    //   return openAddToStrategy({ briefId: strategy.dataset.briefStrategy, playbookId: lane?.playbookId });
+    // }
 
     // The reroute. Writes through the store rather than into `view`, so the
     // correction survives a repaint and a remount — it is a fact about the topic

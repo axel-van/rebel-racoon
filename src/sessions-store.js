@@ -55,6 +55,29 @@ export function togglePin(id) {
   const s = sessions.find((x) => x.id === id);
   if (!s) return null;
   s.pinned = !s.pinned;
+  // A chat can't be pinned AND a content pillar: the sidebar renders one row per
+  // chat and the two live in separate sections, so holding both flags would print
+  // it twice. Pinning therefore clears the pillar mark, and togglePillar below
+  // clears `pinned` — last gesture wins, which is what the user just asked for.
+  if (s.pinned) s.contentPillar = false;
+  notify();
+  return s;
+}
+
+/**
+ * Mark a chat as a Content Pillar. It then renders under its own sidebar heading
+ * instead of Pinned or Recent.
+ *
+ * A pillar is a standing theme you keep publishing against, so the sidebar — the
+ * list you actually live in — is a defensible home for it. This is the surface
+ * that replaces the parked Playbook Content Strategy section; see the PARKED notes
+ * in playbook-view.js and brief-card.js.
+ */
+export function togglePillar(id) {
+  const s = sessions.find((x) => x.id === id);
+  if (!s) return null;
+  s.contentPillar = !s.contentPillar;
+  if (s.contentPillar) s.pinned = false; // see togglePin — one section per chat
   notify();
   return s;
 }

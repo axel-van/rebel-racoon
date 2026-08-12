@@ -55,7 +55,15 @@ const SECTIONS = [
   { id: "pbk-sec-goals", scope: "goals", icon: "ap-icon-target", title: "Audience & goals" },
   { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
-  { id: "pbk-sec-strategy", scope: "strategy", icon: "ap-icon-note", title: "Content Strategy" },
+  // ─── PARKED: Content Strategy ────────────────────────────────────────────
+  // Dropping the entry is the whole switch-off: sectionsFor() filters this array,
+  // and the rail nav, the panel order and the ?section=strategy deep link all read
+  // from it. Everything downstream is untouched — renderStrategyPanel, the pillar
+  // cards, renderPillarModal, the pillar sub-modals, contexts-store's pillar API
+  // and the seeded ctx.strategy data all still exist and still work. Uncomment to
+  // bring the section back exactly as it was.
+  //
+  // { id: "pbk-sec-strategy", scope: "strategy", icon: "ap-icon-note", title: "Content Strategy" },
   { id: "pbk-sec-competitors", scope: "competitors", icon: "ap-icon-buildings", title: "Competitors" },
   { id: "pbk-sec-influencers", scope: "influencers", icon: "ap-icon-star", title: "Influencers" },
 ];
@@ -80,6 +88,16 @@ function competitorsOn() {
 // bug rather than as a choice. One flag, both sections, or neither.
 function influencersOn() {
   return competitorsOn();
+}
+
+// ─── PARKED: Content Strategy ──────────────────────────────────────────────
+// Return true to bring the section back, together with its SECTIONS entry above.
+// Both are needed: SECTIONS drives the rail nav and the deep link, this gates the
+// panel render. It is a constant rather than a feature flag because the section is
+// parked for a demo, not made optional — a flag would put it in the Admin popover
+// and imply it is a setting.
+function strategyOn() {
+  return false;
 }
 
 // The sections this Playbook actually shows — drives the rail nav and the
@@ -2159,7 +2177,7 @@ function paint() {
         ${renderGoalsPanel(data, scope === "goals")}
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
-        ${renderStrategyPanel(data, scope === "strategy")}
+        ${strategyOn() ? renderStrategyPanel(data, scope === "strategy") : ""}
         ${competitorsOn() ? renderCompetitorsPanel(data, scope === "competitors") : ""}
         ${influencersOn() ? renderInfluencersPanel(data, scope === "influencers") : ""}
       </div>

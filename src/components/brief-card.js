@@ -261,17 +261,45 @@ export function renderBriefCard(
 // no longer CORRECTABLE. If Archie files a topic wrongly it stays filed wrongly
 // — the label simply stops blocking anyone. Fine while the label costs nothing to
 // ignore; revisit if a mislabel ever carries a consequence beyond this card.
+// ─── PARKED: Add to strategy ───────────────────────────────────────────────
+// The Content-strategy / pillar flow is parked, not deleted. Everything it needs
+// is still here — briefs-store, contexts-store's pillar API, the dialog in
+// research-modals.js, the Playbook section in playbook-view.js, the composer item
+// in screens/session.js. Only the ways IN are commented out, in five files, each
+// marked "PARKED".
+//
+// To restore this card, put these two expressions back (they are written without
+// template syntax on purpose — a backtick or a dollar-brace in a comment inside
+// the html literal below would end or interpolate it):
+//
+//   main segment attribute:
+//     ready ? data-brief-use=ID : data-brief-strategy=ID
+//   main segment label:
+//     ready ? "Use in chat" : "Add to strategy"
+//   first menu row:
+//     ready ? a data-brief-strategy row labelled "Add to strategy"
+//           : a data-brief-use row labelled "Use in chat"
+//   plus the standalone data-brief-save row that always followed it.
+//
+// While parked, Save for later is promoted from that standalone row to the main
+// segment for content-strategy topics, because Add to strategy was the only thing
+// there and a topic still needs one verb of its own.
 function renderUseSplit(brief, menuOpen) {
   const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
   const ready = brief.researchType === "ready-to-post";
   return html`<span class="topics-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
+    <!-- PARKED — see the restore notes in the JS comment above this function.
+         A content-strategy topic has no Add-to-strategy destination while that
+         flow is parked, so its main segment takes the other verb the card already
+         owns: Save for later. The card's rule still holds — whichever action is
+         the main segment does NOT repeat in the menu below. -->
     <button
       type="button"
       class="topics-use__main"
-      ${raw(ready ? `data-brief-use="${escapeAttr(brief.id)}"` : `data-brief-strategy="${escapeAttr(brief.id)}"`)}
+      ${raw(ready ? `data-brief-use="${escapeAttr(brief.id)}"` : `data-brief-save="${escapeAttr(brief.id)}"`)}
     >
-      ${ready ? "Use in chat" : "Add to strategy"}
+      ${ready ? "Use in chat" : saved ? "Remove from saved" : "Save for later"}
     </button>
     <button
       type="button"
@@ -298,18 +326,25 @@ function renderUseSplit(brief, menuOpen) {
            anyway", where "anyway" was doing the work of arguing with Archie's
            classification. Neither is needed: the row's presence already says the
            other action is available. -->
+      <!-- PARKED — the Add-to-strategy row; the restore snippet is in the JS
+           comment above this function, kept out of the template because a
+           backtick or a dollar-brace inside it would end or interpolate the
+           literal.
+
+           With Add-to-strategy parked there is only one alternate verb left, so
+           the menu carries exactly one row above Ignore and the no-duplication
+           rule decides which: a ready-to-post topic leads with Save for later
+           (its main segment is Use in chat), a content-strategy topic leads with
+           Use in chat (its main segment is now Save for later). -->
       ${raw(
         ready
-          ? html`<button type="button" class="topics-use__item" data-brief-strategy="${escapeAttr(brief.id)}">
-              <span>Add to strategy</span>
+          ? html`<button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
+              <span>${saved ? "Remove from saved" : "Save for later"}</span>
             </button>`
           : html`<button type="button" class="topics-use__item" data-brief-use="${escapeAttr(brief.id)}">
               <span>Use in chat</span>
             </button>`,
       )}
-      <button type="button" class="topics-use__item" data-brief-save="${escapeAttr(brief.id)}">
-        <span>${saved ? "Remove from saved" : "Save for later"}</span>
-      </button>
       ${raw(
         // Ignore lives in here rather than beside Use in chat. It is the one
         // destructive-ish option on the card, and a menu is where the app already

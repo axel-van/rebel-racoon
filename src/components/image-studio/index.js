@@ -21,7 +21,7 @@
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coordinator.js?v=21";
 import { showToast } from "../toast.js?v=21";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=60";
-import { getSessionById } from "../../sessions-store.js?v=30";
+import { getSessionById } from "../../sessions-store.js?v=31";
 import { getContextById } from "../../contexts-store.js?v=65";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=59";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
