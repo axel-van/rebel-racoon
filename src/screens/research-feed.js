@@ -211,12 +211,23 @@ function renderArticlePane(brief, entering = false) {
            source-and-count sub, which said "Competitors · 14 posts" — the card's own
            source row says the same thing two inches to the left.
 
-           What remains is the thing the pane alone has: the title Archie gave the
-           article. It wears .topics-card__headline so the pane's first line and the
-           card's first line are set identically, which is what makes the two boxes
-           read as one selection rather than two panels. -->
+           What remains is brief.headline — the SAME string the card shows, in the
+           SAME class. That is the point, and it was briefly the article's own title
+           instead: two different sentences for one topic, one on the card you
+           clicked and one in the pane that opened, so the pane read as a different
+           object rather than as the thing you had just selected.
+
+           Same class AND same string. .topics-card__headline sets the pane's first
+           line and the card's identically, and now they also SAY the same thing —
+           which is what makes the two boxes read as one selection rather than two
+           panels.
+
+           brief.research.title, the article's own title, is consequently not
+           rendered in the pane at all: the header carries the headline and the body
+           starts at its first section heading. Pass withTitle: true to
+           renderResearchArticle below to put it back in the body. -->
       <div class="research-feed__article-headtext">
-        <h2 class="topics-card__headline">${brief.research?.title || brief.headline}</h2>
+        <h2 class="topics-card__headline">${brief.headline}</h2>
       </div>
       <button
         type="button"
