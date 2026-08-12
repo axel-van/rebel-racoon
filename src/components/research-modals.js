@@ -1171,14 +1171,24 @@ export function openVersionHistory({ briefId }) {
   const versions = getBriefVersions(briefId);
   if (!versions.length) return;
   versionBriefId = briefId;
-  // Opens on the most recent PAST version — the second row, since the picker is
-  // newest-first and the current article is the first. Not the current one: that is
-  // what the panel behind this dialog is already showing, so landing there would
-  // make the dialog look like it had failed to do anything. Second row rather than
-  // last also means the default selection is at the TOP of the list, next to the
-  // trigger that opened it, instead of at the bottom.
-  const past = versions.filter((v) => !v.isCurrent);
-  versionPickedId = (past[past.length - 1] || versions[0]).id;
+  // Opens on the CURRENT version — the first row, since the picker is newest-first.
+  // It is the baseline: you compare an older draft against what the article says
+  // now, so the dialog starts by showing you what "now" is, and every step down the
+  // list is a step back from a known position. It also puts the default selection
+  // on the row nearest the trigger that opened it.
+  //
+  // The trade, stated because it is real: the footer's action starts DISABLED, since
+  // using the current version is what the card's own Use-in-chat already does. On
+  // open, Close is the only enabled button. That is the honest reading of this state
+  // — there is nothing to take into a chat that the card doesn't already offer — and
+  // picking any other row enables it immediately.
+  //
+  // (This opened on the most recent PAST version until asked otherwise, on the
+  // argument that landing on what the panel behind already shows looks like nothing
+  // happened. Current-as-baseline is the stronger reading; noted so the swap isn't
+  // mistaken for an oversight.)
+  const current = versions.find((v) => v.isCurrent);
+  versionPickedId = (current || versions[versions.length - 1]).id;
   paintVersions();
 }
 
@@ -1265,13 +1275,27 @@ function paintVersions() {
           ${String(chrono.length)}${raw(picked.isCurrent ? " — the version you are reading" : "")}
         </p>
 
+        <!-- The DS infobox, in its documented anatomy. This was built without the
+             .ap-infobox-texts wrapper and it showed: .ap-infobox-content switches to
+             a ROW at 588px and up, so the title and the message became the two row
+             items and the title wrapped in a squeezed column beside the text.
+             .ap-infobox-texts is the width:100% wrapper the two are meant to stack
+             inside; the row layout is for content-plus-action-button.
+
+             Three more corrections from the same spec: .has-title is required
+             whenever .ap-infobox-title is present (it re-aligns the icon to the
+             top), the info variant's icon is ap-icon-info_fill rather than
+             ap-icon-info, and the body is .ap-infobox-message rather than a bare
+             paragraph. -->
         ${raw(
           picked.whatChanged
-            ? html`<div class="ap-infobox info research-versions__changed">
-                <i class="ap-icon-info" aria-hidden="true"></i>
+            ? html`<div class="ap-infobox info has-title research-versions__changed">
+                <i class="ap-icon-info_fill" aria-hidden="true"></i>
                 <div class="ap-infobox-content">
-                  <span class="ap-infobox-title">What changed in this version</span>
-                  <p>${picked.whatChanged}</p>
+                  <div class="ap-infobox-texts">
+                    <span class="ap-infobox-title">What changed in this version</span>
+                    <span class="ap-infobox-message">${picked.whatChanged}</span>
+                  </div>
                 </div>
               </div>`
             : "",

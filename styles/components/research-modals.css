@@ -618,9 +618,8 @@
   color: var(--sys-text-color-light);
 }
 
-/* The infobox and the article are separated by the container's gap, so neither
-   needs a margin of its own — this only removes the one .ap-infobox's paragraph
-   brings with it, which doubled the gap below it. */
-.research-versions__changed p {
-  margin: 0;
-}
+/* The infobox needs no rule of its own: the container's gap spaces it, and its body
+   is now .ap-infobox-message (a span) rather than a paragraph, so there is no UA
+   margin left to clear. `.research-versions__changed p { margin: 0 }` used to live
+   here and went with the bare <p>. The class stays on the element as a hook for
+   whatever this box needs next. */
