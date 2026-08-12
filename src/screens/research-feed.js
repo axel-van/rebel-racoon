@@ -31,7 +31,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=384";
+import { renderTopbar } from "../components/topbar.js?v=385";
 import { isFlagOn } from "../feature-flags.js?v=19";
 import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=40";
 import {
@@ -44,7 +44,7 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=92";
+} from "../components/research-modals.js?v=93";
 import { openBriefInChat } from "../brief-flow.js?v=18";
 import { showToast } from "../components/toast.js?v=21";
 import { getLaneById } from "../research-store.js?v=38";

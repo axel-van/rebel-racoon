@@ -1128,9 +1128,12 @@ export function renderResearchArticle(brief, { withLabel = true, withTitle = tru
 // competitor posts underneath an article by Archie has no way to know whether they
 // are sources or suggestions. It says which.
 //
-// The count is the FULL count, not three, and the link says it — "See all 17" tells
-// you the sample you are looking at is a sample. Rendered only when there is more
-// than the sample; with exactly three, all three are already on screen.
+// The count is the FULL count, not three. The lede used to add "Showing 3." after
+// it and that sentence is gone: the link underneath already reads "See all 6 posts",
+// which says the same thing at the moment the reader can act on it, so the lede was
+// announcing a limit twice before anyone had reached it. Rendered only when there is
+// more than the sample; with exactly three, all three are already on screen and the
+// count in the lede is the whole truth on its own.
 const SOURCE_SAMPLE = 3;
 
 function renderSources(brief) {
@@ -1142,7 +1145,7 @@ function renderSources(brief) {
     <span class="research-article__label"><i class="ap-icon-quote" aria-hidden="true"></i> Sources</span>
     <p class="research-sources__lede">
       ${String(posts.length)} ${posts.length === 1 ? "post" : "posts"} from your listening sources make up the article
-      above. ${posts.length > SOURCE_SAMPLE ? `Showing ${String(SOURCE_SAMPLE)}.` : ""}
+      above.
     </p>
     <div class="research-modal__posts">${raw(shown.map((p) => renderSocialPostCard(p)).join(""))}</div>
     ${raw(
