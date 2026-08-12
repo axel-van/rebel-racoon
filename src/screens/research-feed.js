@@ -284,6 +284,12 @@ let boundTarget = null;
 let boundClick = null;
 let boundInput = null;
 let boundDocClick = null;
+let boundResize = null;
+let boundScroll = null;
+// The element the scroll handler is on. Held separately because paint() replaces the
+// scroller on every repaint, so teardown has to detach from the one it attached to,
+// not from whichever element happens to match the selector by then.
+let boundScrollEl = null;
 
 export function renderResearchFeed(params, target) {
   if (!isFlagOn("contentResearch")) {
@@ -346,6 +352,15 @@ function teardown() {
     document.removeEventListener("click", boundDocClick);
     boundDocClick = null;
   }
+  if (boundResize) {
+    window.removeEventListener("resize", boundResize);
+    boundResize = null;
+  }
+  if (boundScrollEl && boundScroll) {
+    boundScrollEl.removeEventListener("scroll", boundScroll);
+  }
+  boundScrollEl = null;
+  boundScroll = null;
   boundTarget = null;
   boundClick = null;
   boundInput = null;
@@ -372,7 +387,30 @@ function paint(target) {
   // The sentinel is destroyed and rebuilt by the innerHTML above, so the observer
   // has to be re-pointed after every paint — not once at mount.
   observeMore(target);
+  watchPaneScroll(target);
   sizeArticlePane(target);
+}
+
+// Keep the pane's cap in step with the scroll. Re-bound on every paint for the same
+// reason the sentinel observer is: the innerHTML swap above destroys the scroller,
+// so a listener from the previous paint is attached to a detached node.
+//
+// Synchronous, not rAF-coalesced. rAF looks like the right tool for scroll-driven
+// layout and was tried first, but it does not fire at all while the tab is hidden —
+// so the cap would go stale in a background tab and, more practically, the behaviour
+// could not be exercised in an automated browser. The work here is two rect reads
+// and a write the epsilon guard usually skips, against scroll events the browser
+// already delivers at about frame rate, so coalescing bought little.
+//
+// Passive, so measuring never delays the scroll. Measure only — no repaint — so it
+// cannot fight what the user is doing.
+function watchPaneScroll(target) {
+  if (boundScrollEl && boundScroll) boundScrollEl.removeEventListener("scroll", boundScroll);
+  boundScrollEl = target.querySelector(".research-feed__body");
+  boundScroll = null;
+  if (!boundScrollEl) return;
+  boundScroll = () => sizeArticlePane(target);
+  boundScrollEl.addEventListener("scroll", boundScroll, { passive: true });
 }
 
 // Cap the article pane so its BOTTOM — and therefore its footer — is always on
@@ -385,23 +423,39 @@ function paint(target) {
 // while the pane ended in mid-paragraph; with an action footer down there it is not,
 // because the control is simply not visible until you scroll.
 //
-// Not expressible in CSS: the pane is sticky inside the scroller, so its unstuck
-// offset is the header's height — content-driven, and % max-height resolves against
-// a content-height containing block rather than the scroller. So measure once per
-// paint and publish it as a custom property the stylesheet consumes.
+// Not expressible in CSS: the pane's top moves. It starts below the feed header and
+// rises to the sticky offset as that header scrolls away — 116px of travel here —
+// and a % max-height resolves against a containing block whose height is the LIST's,
+// not the scroller's. So measure and publish a custom property the stylesheet reads.
 //
-// Sized for the UNSTUCK position, which is the taller of the two cases, so the cap
-// holds in both. Once stuck the pane is shorter than it strictly could be; that
-// costs a little article and buys a footer that never moves.
+// Measured from the pane's CURRENT top, on every paint AND on scroll, so the pane
+// fills the screen in both states. A single static cap cannot: sized for the unstuck
+// position it leaves ~130px of dead space once stuck, and sized for the stuck one it
+// pushes the footer off the fold at the top of the page. Two right answers, so the
+// value has to follow the travel.
+//
+// Safe to resize on scroll because the pane is not what makes the scroller scroll —
+// the list column is several times taller, so the split's height is the list's and
+// changing the pane's cannot feed back into scrollHeight. The epsilon guard below is
+// belt-and-braces for the case where a heavily filtered list leaves the pane as the
+// tallest item.
 function sizeArticlePane(target) {
   const pane = target.querySelector(".research-feed__article");
   const scroller = target.querySelector(".research-feed__body");
   if (!pane || !scroller) return;
-  // offsetTop is measured against the scroller's content box, which is exactly the
-  // header's height plus the pane's own margin — i.e. where the pane sits before it
-  // sticks.
-  const avail = scroller.clientHeight - pane.offsetTop - PANE_BOTTOM_GAP;
-  pane.style.setProperty("--article-max-h", `${Math.max(PANE_MIN_H, Math.round(avail))}px`);
+  // Against the VIEWPORT, not the scroller: what matters is where the fold is, and
+  // the scroller already ends there. Reading the live rect also means the sticky
+  // clamp is accounted for without reproducing it — no need to know the pane's
+  // margin or the scroller's offset, both of which this got wrong before. (It used
+  // pane.offsetTop, whose offsetParent is the document body rather than the
+  // scroller, so the cap carried the topbar's 56px as well.)
+  const avail = window.innerHeight - pane.getBoundingClientRect().top - PANE_BOTTOM_GAP;
+  const next = Math.max(PANE_MIN_H, Math.round(avail));
+  // Only write on a real change. A no-op style write is cheap but not free, and this
+  // runs on every scroll frame.
+  const current = parseInt(pane.style.getPropertyValue("--article-max-h"), 10);
+  if (Number.isFinite(current) && Math.abs(current - next) < 2) return;
+  pane.style.setProperty("--article-max-h", `${next}px`);
 }
 
 // Breathing room under the pane, so its shadow and rounded corner are not flush
@@ -888,4 +942,11 @@ function bind(target) {
     paint(target);
   };
   document.addEventListener("click", boundDocClick);
+
+  // Re-measure the pane on resize. The scroll half of this is bound in paint(),
+  // because paint() replaces the scroller and a listener attached here would be
+  // detached from the document on the first repaint. Window-level events like this
+  // one survive, so they belong here.
+  boundResize = () => sizeArticlePane(target);
+  window.addEventListener("resize", boundResize);
 }
