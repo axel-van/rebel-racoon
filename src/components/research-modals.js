@@ -1577,6 +1577,16 @@ function onPanelClick(event) {
     const id = versionBriefId;
     const vid = versionUse.dataset.versionUse;
     close();
+    // Used, exactly as the card's own Use-in-chat marks it. The status is a fact
+    // about the TOPIC — whether this user has taken it into a chat — not about
+    // which draft of the article they took, so an older version counts. Anything
+    // else would leave a topic sitting at New after it had been acted on, and the
+    // point of the status is to stop a triaged topic asking again.
+    //
+    // Before openBriefInChat, and that order matters: the call navigates, this
+    // screen unmounts, and a setStatus after it would run against a store nobody
+    // is listening to any more. Same reasoning as research-feed.js's handler.
+    setStatus(id, "used");
     // Same entry point the topic card's Use-in-chat goes through, with a version
     // attached — so a version lands in a chat exactly the way a topic does, and
     // there is one definition of what "use in chat" means.
