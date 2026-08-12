@@ -7,9 +7,9 @@ import {
   dayKey,
   addToQueue,
   subscribe as subscribeQueue,
-} from "../schedule-store.js?v=35";
+} from "../schedule-store.js?v=36";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
-import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=60";
+import { renderProfileTag, profileForNetwork } from "../social-profiles.js?v=61";
 
 // Schedule modal (multi-draft).
 //   • 960px wide, two-column body

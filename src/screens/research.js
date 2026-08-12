@@ -1,4 +1,7 @@
-// Content Research — the lane list, route /content-ideas.
+// Content Research — the Idea-stream list, route /content-ideas.
+//
+// VOCABULARY: an IDEA STREAM in the UI is a LANE in code, and an IDEA is a brief.
+// CLAUDE.md has the full mapping; comments here still say lane and topic.
 //
 // A LANE is a named standing query: one Playbook × a set of sources × a cadence.
 // This screen is the account's whole set of them, plus the empty state before any
@@ -20,12 +23,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=388";
+import { renderTopbar } from "../components/topbar.js?v=390";
 import { showToast } from "../components/toast.js?v=21";
-import { isFlagOn } from "../feature-flags.js?v=19";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=71";
-import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=39";
-import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=46";
+import { isFlagOn } from "../feature-flags.js?v=20";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=72";
+import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=40";
+import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=47";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook
@@ -127,10 +130,11 @@ function renderEmpty() {
     <span class="research-empty__disc" aria-hidden="true">${raw(renderMark(38))}</span>
     <h1 class="research-empty__title">Oops, there's nothing here yet</h1>
     <p class="research-empty__body">
-      Create a topic list to pair a Playbook with the sources I should watch — then I'll start surfacing topics for you.
+      Create an Idea stream to pair a Playbook with the sources I should watch — then I'll start surfacing Ideas for
+      you.
     </p>
     <button type="button" class="ap-button primary blue" data-research-create>
-      <span>Create a topic list</span>
+      <span>Create an Idea stream</span>
     </button>
   </div>`;
 }
@@ -149,7 +153,7 @@ function renderBody(lanes) {
   return html`<div class="research-view__page">
     ${raw(renderHead(lanes))}
     <div class="research-grid">${raw(shown.map(renderLaneCard).join(""))}${raw(renderCreateCard())}</div>
-    ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No topic list matches that search.</p>` : "")}
+    ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No Idea stream matches that search.</p>` : "")}
   </div>`;
 }
 
@@ -161,8 +165,8 @@ function renderHead(lanes) {
   // across every lane is that number here.
   const waiting = lanes.reduce((sum, l) => sum + countNewForLane(l.id), 0);
   const sub =
-    `${lanes.length} ${lanes.length === 1 ? "topic list" : "topic lists"} · ` +
-    `${waiting} ${waiting === 1 ? "topic" : "topics"} waiting`;
+    `${lanes.length} ${lanes.length === 1 ? "Idea stream" : "Idea streams"} · ` +
+    `${waiting} ${waiting === 1 ? "Idea" : "Ideas"} waiting`;
 
   return html`<header class="research-view__head">
     <div class="research-view__head-text">
@@ -175,14 +179,14 @@ function renderHead(lanes) {
         <input
           type="search"
           class="ap-input"
-          placeholder="Search topics…"
+          placeholder="Search Idea streams…"
           value="${escapeAttr(view.query)}"
           data-research-search
         />
       </div>
       ${raw(renderPlaybookFilter(contexts, active))}
       <button type="button" class="ap-button primary blue" data-research-create>
-        <span>Create a topic list</span>
+        <span>Create an Idea stream</span>
       </button>
     </div>
   </header>`;
@@ -279,7 +283,7 @@ function renderLaneCard(lane) {
             trendingCount
               ? html`<span
                   class="trending-mark"
-                  aria-label="${trendingCount} ${trendingCount === 1 ? "topic" : "topics"} trending"
+                  aria-label="${trendingCount} ${trendingCount === 1 ? "Idea" : "Ideas"} trending"
                 >
                   <i class="ap-icon-arrow-up" aria-hidden="true"></i>
                   <span>${trendingCount} trending</span>
@@ -295,7 +299,7 @@ function renderLaneCard(lane) {
             newCount
               ? html`<span
                   class="ap-badge orange"
-                  aria-label="${newCount} new ${newCount === 1 ? "topic" : "topics"} to review"
+                  aria-label="${newCount} new ${newCount === 1 ? "Idea" : "Ideas"} to review"
                   >${newCount} new</span
                 >`
               : "",
@@ -361,7 +365,7 @@ function renderLaneCard(lane) {
          that only existed to own the pinning while the conditional signals row
          shared the footer with it. -->
     <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
-      <span>See topics</span>
+      <span>See Ideas</span>
       <i class="ap-icon-arrow-right" aria-hidden="true"></i>
     </button>
   </article>`;
@@ -370,16 +374,16 @@ function renderLaneCard(lane) {
 function renderCreateCard() {
   return html`<button type="button" class="research-create-card" data-research-create>
     <span class="research-create-card__disc">${raw(renderMark(24))}</span>
-    <span class="research-create-card__label">Create a topic list</span>
+    <span class="research-create-card__label">Create an Idea stream</span>
     <!-- Same job as contexts-card--ghost__sub: the label names the object, this
          says what the object is FOR, so the tile isn't a bare verb. It names the
          two things the form actually asks for that shape the output — a Playbook
-         and the sources — and then the output itself, because "topic list" alone
-         doesn't tell a first-time reader that topics are things you draft from.
+         and the sources — and then the output itself, because "Idea stream" alone
+         doesn't tell a first-time reader that Ideas are things you draft from.
          Cadence and the scanned website are left out: they tune the list, they
          don't explain it, and the form's own lede covers them. -->
     <span class="research-create-card__sub"
-      >Pick a Playbook and the sources I watch — I'll turn what they publish into topics you can draft from.</span
+      >Pick a Playbook and the sources I watch — I'll turn what they publish into Ideas you can draft from.</span
     >
   </button>`;
 }

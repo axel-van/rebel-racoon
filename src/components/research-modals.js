@@ -30,8 +30,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=46";
-import { getLanes } from "../research-store.js?v=39";
+} from "../briefs-store.js?v=47";
+import { getLanes } from "../research-store.js?v=40";
 import {
   getContexts,
   getContextById,
@@ -42,13 +42,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=71";
+} from "../contexts-store.js?v=72";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=19";
-import { renderBriefCard } from "./brief-card.js?v=43";
-import { renderSocialPostCard } from "./social-post-card.js?v=27";
+import { openBriefInChat } from "../brief-flow.js?v=20";
+import { renderBriefCard } from "./brief-card.js?v=44";
+import { renderSocialPostCard } from "./social-post-card.js?v=28";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -215,7 +215,7 @@ export function openIgnoreReason({ briefId, onDone = null }) {
     "ignore",
     { briefId, onDone },
     {
-      title: "Why did this topic miss the mark?",
+      title: "Why did this Idea miss the mark?",
       body: html`<textarea
           class="research-modal__textarea"
           rows="4"
@@ -227,8 +227,8 @@ export function openIgnoreReason({ briefId, onDone = null }) {
         <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
           <div>
-            This helps me tailor topics to your needs. I'll keep this topic out of your feed unless it trends well above
-            its usual volume baseline — so you still catch real spikes without noise from recurring topics.
+            This helps me tailor Ideas to your needs. I'll keep this Idea out of your feed unless it trends well above
+            its usual volume baseline — so you still catch real spikes without noise from recurring Ideas.
           </div>
         </div>
         <label class="research-modal__check">
@@ -252,22 +252,22 @@ export function openExport({ count }) {
     "export",
     { count },
     {
-      title: "Export topics",
+      title: "Export Ideas",
       body: html`<p class="research-modal__lede">
-          Export all ${count} research ${count === 1 ? "card" : "cards"} currently in your feed.
+          Export all ${count} ${count === 1 ? "Idea" : "Ideas"} currently in your feed.
         </p>
         <label class="research-modal__radio is-selected">
           <input type="radio" name="researchExportFormat" checked />
           <span class="research-modal__radio-text">
             <strong>CSV spreadsheet</strong>
-            <span>One row per topic, with source and status.</span>
+            <span>One row per Idea, with source and status.</span>
           </span>
         </label>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Cancel</span>
         </button>
         <button type="button" class="ap-button primary blue" data-export-go>
-          <span>Export ${count} ${count === 1 ? "topic" : "topics"}</span>
+          <span>Export ${count} ${count === 1 ? "Idea" : "Ideas"}</span>
         </button>`,
     },
   );
@@ -276,12 +276,12 @@ export function openExport({ count }) {
 // ─── 4. Add to Content strategy ────────────────────────────────────────────
 
 // What a pillar IS, stated once, at the moment the user is deciding to make one.
-// A pillar is not a saved topic and the difference is not obvious, so the dialog
+// A pillar is not a saved Idea and the difference is not obvious, so the dialog
 // says it rather than assuming it: a saved topic gets reused as it is, a pillar
 // accumulates and gets refined as more topics feed into it.
 const PILLAR_EXPLAINER =
   "Archie writes against your pillars: when a draft fits one, it adapts its " +
-  "writing to what that pillar already knows. Filing a topic into an existing " +
+  "writing to what that pillar already knows. Filing an Idea into an existing " +
   "pillar fleshes it out, so the next draft on that theme starts better informed " +
   "once the assets are ready.";
 
@@ -378,7 +378,7 @@ function renderPillarPbStep(ctx) {
               .join(""),
           )}
         </div>`
-      : html`<p class="muted">No Playbook has a content pillar yet. Add a topic to a strategy first.</p>`,
+      : html`<p class="muted">No Playbook has a content pillar yet. Add an Idea to a strategy first.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
       <span>Cancel</span>
     </button>`,
@@ -398,7 +398,7 @@ function renderPillarListStep(ctx) {
             const srcN = p.sources.length;
             const assetN = p.assets.length;
             const meta = [
-              srcN ? `${srcN} ${srcN === 1 ? "topic" : "topics"}` : "",
+              srcN ? `${srcN} ${srcN === 1 ? "Idea" : "Ideas"}` : "",
               assetN ? `${assetN} ${assetN === 1 ? "asset" : "assets"}` : "",
             ]
               .filter(Boolean)
@@ -474,7 +474,7 @@ function renderPillarDetailStep(ctx) {
       ${raw(
         p.sources.length
           ? html`<section class="research-article">
-              <span class="research-article__label">Topics that fed this pillar</span>
+              <span class="research-article__label">Ideas that fed this pillar</span>
               <ol class="recap__pilmodal-sources">
                 ${raw(
                   p.sources
@@ -558,7 +558,7 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
             <i class="ap-icon-info_fill"></i>
             <div class="ap-infobox-content">
               <div class="ap-infobox-texts">
-                <span class="ap-infobox-title">A pillar is not a saved topic</span>
+                <span class="ap-infobox-title">A pillar is not a saved Idea</span>
                 <span class="ap-infobox-message">${PILLAR_EXPLAINER}</span>
               </div>
             </div>
@@ -567,7 +567,7 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
           ${raw(
             returning
               ? html`<p class="strategy__returning">
-                  This topic already feeds <strong>${target ? target.title : "a pillar"}</strong>. What changed is below
+                  This Idea already feeds <strong>${target ? target.title : "a pillar"}</strong>. What changed is below
                   — it gets appended, so nothing the pillar already knows is lost.
                 </p>`
               : renderStrategyChoice(pillars, room, full),
@@ -642,10 +642,10 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
                Never a backtick in this comment — it sits inside a tagged template
                literal, and one backtick here ends the template. -->
           <div class="ap-textarea-field resizable strategy__field">
-            <label for="strategyText">${linking ? "What this topic adds" : "Details"}</label>
+            <label for="strategyText">${linking ? "What this Idea adds" : "Details"}</label>
             <textarea id="strategyText" rows="9" data-strategy-text>${strategyText}</textarea>
             <span class="ap-form-message"
-              >${brief ? "Pre-filled from the topic. Trim it to what the pillar should actually carry." : ""}</span
+              >${brief ? "Pre-filled from the Idea. Trim it to what the pillar should actually carry." : ""}</span
             >
           </div>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
@@ -690,8 +690,8 @@ function renderStrategyChoice(pillars, room, full) {
              component for this value. -->
         <span
           >${full
-            ? `All ${PILLAR_LIMIT} pillars are in use. File the topic into one of them, or remove a pillar in the Playbook first.`
-            : `${pillars.length} of ${PILLAR_LIMIT} used. A new theme to write against — start it from this topic, then refine it as more topics land.`}</span
+            ? `All ${PILLAR_LIMIT} pillars are in use. File the Idea into one of them, or remove a pillar in the Playbook first.`
+            : `${pillars.length} of ${PILLAR_LIMIT} used. A new theme to write against — start it from this Idea, then refine it as more Ideas land.`}</span
         >
       </div>
     </label>
@@ -932,8 +932,8 @@ function renderPlaybookStep(ctx) {
   const options = pickerPlaybookOptions();
 
   openShell("idea-picker", ctx, {
-    title: "Pick a topic",
-    sub: "Which Playbook do you want topics from?",
+    title: "Pick an Idea",
+    sub: "Which Playbook do you want Ideas from?",
     // wide, because .contexts-card is built for a ~300px minimum and the default
     // 560px shell gave it one cramped column.
     wide: true,
@@ -965,12 +965,12 @@ function renderPlaybookStep(ctx) {
                   )}
                   <footer class="contexts-card__foot">
                     <div class="contexts-card__counters">
-                      <span class="contexts-card__counter" title="${n} ${n === 1 ? "topic" : "topics"}">
+                      <span class="contexts-card__counter" title="${n} ${n === 1 ? "Idea" : "Ideas"}">
                         <i class="ap-icon-note"></i><span>${n}</span>
                       </span>
                       <span
                         class="contexts-card__counter"
-                        title="${lanes.length} ${lanes.length === 1 ? "topic list" : "topic lists"}"
+                        title="${lanes.length} ${lanes.length === 1 ? "Idea stream" : "Idea streams"}"
                       >
                         <i class="ap-icon-folder"></i><span>${lanes.length}</span>
                       </span>
@@ -981,7 +981,7 @@ function renderPlaybookStep(ctx) {
               .join(""),
           )}
         </div>`
-      : html`<p class="research-pick__empty muted">No topics yet. Content Ideas fills up once a lane has run.</p>`,
+      : html`<p class="research-pick__empty muted">No Ideas yet. Content Ideas fills up once a stream has run.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
       <span>Cancel</span>
     </button>`,
@@ -1014,8 +1014,8 @@ function renderTopicStep(ctx) {
   const pb = getContextById(pickerPlaybook);
 
   openShell("idea-picker", ctx, {
-    title: "Pick a topic",
-    sub: `${shownTotal} ${shownTotal === 1 ? "topic" : "topics"} in ${pb ? pb.name : "this Playbook"}`,
+    title: "Pick an Idea",
+    sub: `${shownTotal} ${shownTotal === 1 ? "Idea" : "Ideas"} in ${pb ? pb.name : "this Playbook"}`,
     // Sized to the card rather than to a generic "wide": the topic card caps
     // itself at its own content, so the 768px shell step 1 uses would leave a
     // dead column beside every card.
@@ -1048,7 +1048,7 @@ function renderTopicStep(ctx) {
                 </section>`,
             )
             .join("")
-        : html`<p class="research-pick__empty muted">No topics in this Playbook yet.</p>`,
+        : html`<p class="research-pick__empty muted">No Ideas in this Playbook yet.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-idea-back>
         <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Playbooks</span>
       </button>
@@ -1102,7 +1102,7 @@ export function renderResearchArticle(brief, { withLabel = true, withTitle = tru
       ${raw(
         withLabel
           ? html`<span class="research-article__label"
-              ><i class="ap-icon-sparkles" aria-hidden="true"></i> Full article</span
+              ><i class="ap-icon-sparkles" aria-hidden="true"></i> Full Idea</span
             >`
           : "",
       )}
@@ -1144,7 +1144,7 @@ function renderSources(brief) {
   return html`<section class="research-article">
     <span class="research-article__label"><i class="ap-icon-quote" aria-hidden="true"></i> Sources</span>
     <p class="research-sources__lede">
-      ${String(posts.length)} ${posts.length === 1 ? "post" : "posts"} from your listening sources make up the article
+      ${String(posts.length)} ${posts.length === 1 ? "post" : "posts"} from your listening sources make up the Idea
       above.
     </p>
     <div class="research-modal__posts">${raw(shown.map((p) => renderSocialPostCard(p)).join(""))}</div>
@@ -1175,10 +1175,10 @@ export function openSourcePosts({ briefId }) {
     { briefId },
     {
       title: "Sources",
-      sub: `Topic: ${brief.headline}`,
+      sub: `Idea: ${brief.headline}`,
       wide: true,
       body: html`<p class="research-sources__lede">
-          Every post Archie read to write this article. Each one links out to the original.
+          Every post Archie read to write this Idea. Each one links out to the original.
         </p>
         <div class="research-modal__posts">${raw(posts.map((p) => renderSocialPostCard(p)).join(""))}</div>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
@@ -1376,13 +1376,13 @@ function paintVersions() {
       // Playbook do you want topics from?"). Labelling the slot itself would print
       // "Topic: Agorapulse" over a Playbook and "Topic: Which Playbook…" over a
       // picker.
-      sub: `Topic: ${brief.headline}`,
+      sub: `Idea: ${brief.headline}`,
       wide: true,
       body: html`<div class="research-versions">
         <!-- The DS Select, built as the details/summary composition it actually is
              (see the long note in the strategy dialog above for why a native
              <select class="ap-select"> is drift). Options are dates, NEWEST FIRST
-             — the current article leads, then back through the rewrites. The
+             — the current Idea leads, then back through the rewrites. The
              version NUMBERS below stay chronological; see the note on the two
              orders above. -->
         <div class="ap-form-field research-versions__field">
@@ -1529,7 +1529,7 @@ function renderHistory(history, currentStatus, briefId = "") {
   const versions = briefId ? getBriefVersions(briefId) : [];
   const past = versions.length ? versions.length - 1 : 0;
   return html`<section class="research-article">
-    <span class="research-article__label"><i class="ap-icon-clock" aria-hidden="true"></i> Topic history</span>
+    <span class="research-article__label"><i class="ap-icon-clock" aria-hidden="true"></i> Idea history</span>
     <ol class="research-timeline">
       ${raw(
         entries
@@ -1555,7 +1555,7 @@ function renderHistory(history, currentStatus, briefId = "") {
             data-brief-versions="${escapeAttr(briefId)}"
           >
             <i class="ap-icon-history" aria-hidden="true"></i>
-            See past versions of this article
+            See past versions of this Idea
           </button>`
         : "",
     )}
@@ -1646,14 +1646,14 @@ function onPanelClick(event) {
     const done = active.ctx.onDone;
     close();
     if (done) done();
-    showToast("Topic ignored");
+    showToast("Idea ignored");
     return;
   }
 
   if (event.target.closest("[data-export-go]")) {
     const n = active.ctx.count;
     close();
-    showToast(`Exported ${n} ${n === 1 ? "topic" : "topics"} as CSV`);
+    showToast(`Exported ${n} ${n === 1 ? "Idea" : "Ideas"} as CSV`);
     return;
   }
 

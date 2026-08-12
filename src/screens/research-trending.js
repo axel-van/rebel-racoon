@@ -22,13 +22,13 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=388";
-import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=43";
-import { openFullResearch } from "../components/research-modals.js?v=96";
-import { openBriefInChat } from "../brief-flow.js?v=19";
-import { getLaneById } from "../research-store.js?v=39";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=46";
+import { renderTopbar } from "../components/topbar.js?v=390";
+import { isFlagOn } from "../feature-flags.js?v=20";
+import { renderBriefCard } from "../components/brief-card.js?v=44";
+import { openFullResearch } from "../components/research-modals.js?v=98";
+import { openBriefInChat } from "../brief-flow.js?v=20";
+import { getLaneById } from "../research-store.js?v=40";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=47";
 import { findResearchSource, findCadence } from "../research-catalog.js?v=17";
 
 let laneId = null;
@@ -110,7 +110,7 @@ function renderPage() {
           <span class="research-trending__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
           <div class="research-feed__id-text">
             <div class="research-feed__titlerow">
-              <h1 class="research-feed__name">${n} ${n === 1 ? "topic needs" : "topics need"} your attention</h1>
+              <h1 class="research-feed__name">${n} ${n === 1 ? "Idea needs" : "Ideas need"} your attention</h1>
             </div>
             <div class="research-feed__meta">
               <span class="research-feed__meta-item">

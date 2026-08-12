@@ -117,29 +117,29 @@ export const FLAGS = Object.freeze([
   },
   {
     id: "contentResearch",
-    label: "Content Ideas (research lanes)",
+    label: "Content Ideas (Idea streams)",
     default: false,
     hides:
       "When OFF (default), hides everything Content Ideas: the /content-ideas " +
-      "routes (lane list, form, feed, trending page), its sidebar nav row, and " +
+      "routes (stream list, form, feed, trending page), its sidebar nav row, and " +
       "the composer Add → 'Content Ideas' picker. A stale deep link bounces " +
       "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
-      "a named research LANE, and Archie returns topics — a headline, a " +
-      "summary, a full article and the social posts behind it — each triaged " +
-      "New / Saved / Used / Ignored. Topics whose volume runs above their own " +
+      "a named IDEA STREAM, and Archie returns Ideas — a headline, a " +
+      "summary, a full write-up and the social posts behind it — each triaged " +
+      "New / Saved / Used / Ignored. Ideas whose volume runs above their own " +
       "baseline are additionally flagged Trending (an independent boolean, " +
       "never a status), surfaced by a notice plus a dedicated page. " +
-      "\n\nNAMING: the UI says Content Ideas and calls each card a TOPIC, and the " +
-      "CSS classes now follow it (.topics-card / .topics-status / .topics-use). " +
-      "The code underneath still says research/brief — briefs-store, the " +
-      "brief-card module, data-brief-* hooks and the /content-ideas routes — the same " +
-      "split as Playbook/Context. Note the classes are TOPICS-plural: .topic-card " +
-      "singular already belongs to the other feature and would collide exactly. " +
-      "briefs-store cannot be renamed at all — topics-store is that feature. " +
-      "Which is " +
-      "the live caveat: the `topics` flag below owns a different object also " +
-      "called Topic (a listening dossier in /topics, one stream across every " +
-      "Playbook). Both flags ON puts two unrelated things under one word.",
+      "\n\nNAMING: the UI says Content Ideas, calls each stream an IDEA STREAM " +
+      "and each card an IDEA. Everything underneath still says research / brief / " +
+      "lane / topic — briefs-store, the brief-card module, data-brief-* hooks, the " +
+      "/content-ideas routes and the .topics-* CSS classes — the same split as " +
+      "Playbook/Context. briefs-store could not be renamed regardless: " +
+      "topics-store is a different feature. " +
+      "\n\nThe rename settled the old collision: the `topics` flag below owns a " +
+      "listening dossier, still called Topic, and Content Ideas no longer uses " +
+      "that word for anything a user sees. The word Idea is now the shared one — " +
+      "the pipeline's extracted Idea (Sources → Ideas → Drafts, in the right " +
+      "panel) is a different object from an Idea in a stream.",
   },
   {
     id: "playbookCompetitors",

@@ -2765,7 +2765,7 @@ export const contexts = [
             "Monitored accounts state that online discovery is shifting beyond traditional web page ranking toward automated answer generation and conversational summary tools. To maintain organic reach, posts emphasize structuring written material so automated systems can efficiently interpret and quote primary details. The surrounding copy frames artificial intelligence as an efficiency tool, while asserting that human oversight remains necessary to ensure factual credibility, structural clarity, and direct alignment with audience needs.\n\n" +
             "The monitored accounts present various methods for navigating representation across these summary platforms. One account announced a tracking tool designed to measure how generative search models cite a brand, verify whether recommendation tools suggest the brand, and link those insights to customer conversation data instead of basic keyword tracking. A second account published editorial recommendations focused on evaluating content assets by their specific purpose, structural layout, and suitability for direct quotation by automated summary engines. A third account referenced a 2026 social trends research report, identifying answer engine optimization and the public search indexing of video content as key drivers of changing audience discovery behaviors.\n\n" +
             "Messaging across the accounts converges on the premise that organizations face reduced direct control over how automated query tools summarize their information. Where the accounts diverge is in their proposed operational response: one focuses on monitoring outputs through dedicated tracking software, another advocates for refined content audits and editorial structure, and a third situates the phenomenon within broader social network indexation trends.\n\n" +
-            "Three items matched this subject in the window between April 2025 and July 2026. Volume for this topic is low, with web blogs accounting for two-thirds of the posts and Facebook representing the remaining third.",
+            "Three items matched this subject in the window between April 2025 and July 2026. Volume for this Idea is low, with web blogs accounting for two-thirds of the posts and Facebook representing the remaining third.",
           sources: [
             {
               briefId: "br-30",
@@ -4484,7 +4484,7 @@ export const researchBriefs = [
       title: "The format is available. The footage is the commitment",
       subheads: ["Three posts, one proven format", "What a credible series costs"],
       paragraphs: [
-        "Three posts in a two-week window run the same play. Maisons Blavier published part one of a site series in French and again in Dutch, promising to show how a house takes shape phase by phase and how its teams track progress. Thomas & Piron ran a site manager recalling his last project — a fully circular fire station designed by Philippe Samyn. Mi Casa, outside the topic, is doing a production-process series of its own.",
+        "Three posts in a two-week window run the same play. Maisons Blavier published part one of a site series in French and again in Dutch, promising to show how a house takes shape phase by phase and how its teams track progress. Thomas & Piron ran a site manager recalling his last project — a fully circular fire station designed by Philippe Samyn. Mi Casa, outside the Idea, is doing a production-process series of its own.",
         "The demand behind it is uncertainty: someone committing to a build wants to see the phases, the checks and who is watching. That is exactly the anxiety a factory answers better than a site does — a controlled line, repeatable stations, quality control that is measured rather than described.",
         "Which is why this is a commitment rather than a post. A credible series needs factory access, a camera on the line across several weeks, someone to own the edit, and sign-off to show a process competitors would study. The alternative — one polished flythrough — is a brochure, and the format's whole appeal is that it does not look like one.",
         "Blocked on: factory filming access and a named owner for a recurring slot. Without both this becomes a single video that sets an expectation nothing follows.",
@@ -4538,7 +4538,7 @@ export const researchBriefs = [
       subheads: ["Three out-of-office notices, one fortnight", "The schedule argument, and its tone problem"],
       paragraphs: [
         "Three accounts published near-identical notices in the second week of July. Maisons Blavier closed its offices until 3 August, in French and again in Dutch, while keeping advisors reachable. Naturhome paused from 18 July to 3 August. Stabilame's whole team went from 10 July to 2 August. This is the Belgian construction holiday — statutory, industry-wide, and unremarkable to anyone in the sector.",
-        "The export flagged this topic as self-promotional and declined to write it up, which is the right call about the posts themselves: they are logistics notices, and there is nothing to say back to an out-of-office.",
+        "The export flagged this Idea as self-promotional and declined to write it up, which is the right call about the posts themselves: they are logistics notices, and there is nothing to say back to an out-of-office.",
         "It is kept because of what it accidentally demonstrates. Site-dependent construction has weeks in the year when nothing progresses, and everyone in the market has silently agreed which weeks those are. A model that assembles indoors is not exposed to that in the same way — the schedule argument writes itself.",
         "Blocked on a decision rather than an asset, and not a comfortable one: this only works as a schedule-reliability argument, and it has to be made without appearing to mock a statutory holiday that protects workers. Wrong tone and it reads as a firm boasting that its people do not get August off.",
       ],
@@ -4613,7 +4613,7 @@ export const researchBriefs = [
     isTrending: true,
     whyNow: "Belt and stripe promotions are the highest-volume theme across all three tracked competitors this month.",
     whyNowDetail:
-      "Volume: high. 13 of the 25 collected posts match this topic — the largest cluster in the scan — and it is the most evenly split across networks at 54% Instagram / 46% Facebook, so it is carrying on both. Keywords: belt promotion, stripe, rank, consistency, perseverance.",
+      "Volume: high. 13 of the 25 collected posts match this Idea — the largest cluster in the scan — and it is the most evenly split across networks at 54% Instagram / 46% Facebook, so it is carrying on both. Keywords: belt promotion, stripe, rank, consistency, perseverance.",
     research: {
       title: "A belt is a byproduct of the person a child is becoming",
       subheads: ["An honest system, poorly explained", "Plateaus, stripes and the comparison trap"],
@@ -4673,13 +4673,13 @@ export const researchBriefs = [
     isTrending: false,
     whyNow: "",
     whyNowDetail:
-      "Volume: high. 11 of the 25 collected posts match this topic, at 64% Instagram / 36% Facebook. Keywords: family class, parents, kids and parents, community, anniversary. The export marked this one needs_assets rather than ready_to_write — see the blockers below.",
+      "Volume: high. 11 of the 25 collected posts match this Idea, at 64% Instagram / 36% Facebook. Keywords: family class, parents, kids and parents, community, anniversary. The export marked this one needs_assets rather than ready_to_write — see the blockers below.",
     research: {
       title: "Blocked on assets, not on the idea",
       subheads: ["Parents on the mat, not on the sideline", "One shoot, three formats"],
       paragraphs: [
         "The opening is parents training alongside their children rather than watching from the side, positioning one academy as the place where both find a real program rather than a compromise. Competitors are already gathering families — family classes, anniversaries run as community events — so the audience is assembled and the framing is unclaimed.",
-        "The export flagged this topic as needing assets before it can be written, and the two it names are specific: high-quality photos or video of Carlsbad families actually training at the academy, and testimonials from parents who train alongside their kids. Neither can be substituted with stock — the whole claim is that this happens here.",
+        "The export flagged this Idea as needing assets before it can be written, and the two it names are specific: high-quality photos or video of Carlsbad families actually training at the academy, and testimonials from parents who train alongside their kids. Neither can be substituted with stock — the whole claim is that this happens here.",
         "Suggested formats were an Instagram carousel, a short video reel, and a blog post — which is to say the shoot serves all three, so the asset gap is one production job rather than three.",
         "Worth noting what the same scan told us NOT to copy: competitors' generic Independence Day posts were flagged as carrying no brand angle at all, and Gracie Barra's 1st-anniversary celebration and belt-rank seminars were flagged as self-promotional events that don't translate into a credible theme for another academy. The family angle is the part of the community conversation that does transfer.",
       ],
@@ -4958,12 +4958,12 @@ export const researchBriefs = [
     researchType: "content-strategy",
     isUpdated: true,
     whatChanged:
-      "Last sync their kids classes ran Monday and Wednesday, which was the whole reason this topic read as an opening. The schedule moved onto yours.",
+      "Last sync their kids classes ran Monday and Wednesday, which was the whole reason this Idea read as an opening. The schedule moved onto yours.",
     research: {
       title: "The timetable gap has closed",
       subheads: ["What changed since the last scan", "What the comparison falls back to"],
       paragraphs: [
-        "This topic originally described a scheduling gap: the nearest competing academy ran its kids programme on nights you did not, so parents comparing the two were not choosing between them. Their schedule page now shows the same Tuesday and Thursday slots.",
+        "This Idea originally described a scheduling gap: the nearest competing academy ran its kids programme on nights you did not, so parents comparing the two were not choosing between them. Their schedule page now shows the same Tuesday and Thursday slots.",
         "The angle changes with it. Availability is no longer the differentiator, so the comparison falls back to instructor ratio and belt progression — both things your own posts already document and theirs do not.",
       ],
     },
@@ -4987,7 +4987,7 @@ export const researchBriefs = [
       title: "The sale ended before the response could ship",
       subheads: ["The wave ended three weeks early", "What survives the change in timing"],
       paragraphs: [
-        "The original reading of this topic was that a sustained discount wave gave a sustainable-wardrobe message something concrete to push against. That wave has ended earlier than the seasonal pattern suggested — four of five accounts are back to full-price editorial.",
+        "The original reading of this Idea was that a sustained discount wave gave a sustainable-wardrobe message something concrete to push against. That wave has ended earlier than the seasonal pattern suggested — four of five accounts are back to full-price editorial.",
         "What survives is the observation, not the urgency: shoppers who bought in the wave are three weeks from regret posts, which is a better moment for the capsule argument than the sale itself was.",
       ],
     },
@@ -5470,7 +5470,7 @@ export const researchBriefs = [
           "Seven items this window. The change is not how often the protocol is mentioned but where: Buffer has started leading with MCP access on every plan inside head-to-head comparison content, alongside pricing and channel limits, rather than in a product announcement.",
           "That relocation matters more than the count. A capability described in a changelog is a feature; the same capability listed in a comparison table next to a price is a reason to choose one vendor over another. Included on every tier at one vendor and gated behind an upgrade at another is exactly the kind of row a buyer screenshots, and comparison content is what this scan repeatedly shows captures bottom-funnel search.",
           "The audience gap identified in the previous version has not closed. Nobody has written the workflow piece for the social media manager, and the seven items remain addressed to a technical reader. Two scans have now passed with that opening unoccupied, which is long enough to treat it as a standing gap rather than a lag.",
-          "The two arguments now travel together, and that is what makes this actionable: the workflow story for the reader who does not care what a server is, and the pricing note for the one comparing tiers. Written as one piece it answers both, and it is the first version of this topic where the evidence supports publishing rather than continuing to watch.",
+          "The two arguments now travel together, and that is what makes this actionable: the workflow story for the reader who does not care what a server is, and the pricing note for the one comparing tiers. Written as one piece it answers both, and it is the first version of this Idea where the evidence supports publishing rather than continuing to watch.",
         ],
       },
     ],
@@ -5753,7 +5753,7 @@ export const researchBriefs = [
       paragraphs: [
         "Two items in this window, split between a first-person Instagram post and a longer guide, both from Buffer. The claim is specific: roughly half the account's followers came from keyword-triggered DM automation running on Meta's official API, set up in about ten minutes. The guide's angle is doing it without sounding robotic.",
         "It works because it is first-person and numbered. A platform explaining DM automation is a feature page; a person saying what it did for their own account is a story, and the comments do the rest.",
-        "Which is also what this topic is waiting on. The version worth publishing needs someone's real numbers — before, after, over what period — and permission to use them. Without that it is the same explainer everyone has.",
+        "Which is also what this Idea is waiting on. The version worth publishing needs someone's real numbers — before, after, over what period — and permission to use them. Without that it is the same explainer everyone has.",
         "Blocked on: a customer or an in-house account willing to share follower data, and a screen recording of the setup rather than a description of it.",
       ],
     },

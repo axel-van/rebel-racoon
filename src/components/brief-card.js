@@ -46,7 +46,7 @@ import { findReviewStatus, findResearchType, typeTagColor } from "../research-ca
 // paragraph, became one line, and is now the shortest thing that still carries the
 // rule: ignoring is not deleting, and a spike overrides it.
 //
-// "this list", not "feed": the user is standing in ONE topic list when they read
+// "this list", not "feed": the user is standing in ONE Idea stream when they read
 // it, and that is the scope of what ignoring does. "Feed" was ambiguous with the
 // /topics feed, which is a different surface with a different object in it.
 // "Baseline" went earlier for length; the full version still lives where the
@@ -357,9 +357,9 @@ export function renderUseButtons(brief) {
               type="button"
               class="ap-button ghost red"
               data-brief-ignore="${escapeAttr(brief.id)}"
-              aria-label="Ignore topic. ${IGNORE_HINT}"
+              aria-label="Ignore Idea. ${IGNORE_HINT}"
             >
-              <span>Ignore topic</span>
+              <span>Ignore Idea</span>
             </button>
             <span class="ap-tooltip top-right topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
           </span>`,
@@ -408,7 +408,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
       data-brief-use-menu="${escapeAttr(menuKey)}"
       aria-haspopup="true"
       aria-expanded="${menuOpen ? "true" : "false"}"
-      aria-label="More options for this topic"
+      aria-label="More options for this Idea"
     >
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>
@@ -469,7 +469,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
               data-brief-ignore="${escapeAttr(brief.id)}"
             >
               <span class="topics-use__item-text">
-                <span>Ignore topic</span>
+                <span>Ignore Idea</span>
                 <span class="topics-use__item-desc">${IGNORE_HINT}</span>
               </span>
             </button>`,

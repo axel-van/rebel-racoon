@@ -16,11 +16,11 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 import { html, raw } from "../utils.js?v=21";
-import { getTopicById, markSeen, dismissTopic, topicWhen, subscribe as subscribeTopics } from "../topics-store.js?v=26";
+import { getTopicById, markSeen, dismissTopic, topicWhen, subscribe as subscribeTopics } from "../topics-store.js?v=27";
 import { findTopicSource } from "../topics-catalog.js?v=3";
-import { getContextById } from "../contexts-store.js?v=71";
-import { openTopicInChat } from "../topic-flow.js?v=32";
-import { renderSocialPostCard } from "./social-post-card.js?v=27";
+import { getContextById } from "../contexts-store.js?v=72";
+import { openTopicInChat } from "../topic-flow.js?v=33";
+import { renderSocialPostCard } from "./social-post-card.js?v=28";
 
 const MODAL_ID = "topic";
 

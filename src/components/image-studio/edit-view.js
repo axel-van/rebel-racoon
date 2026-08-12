@@ -5,11 +5,11 @@
 // rest are their private building blocks.
 
 import { escapeHtml } from "../../utils.js?v=21";
-import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=40";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=60";
-import { KEY } from "./context.js?v=65";
+import { FORMATS, NETWORK_FORMATS } from "../../clip-formats.js?v=41";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=61";
+import { KEY } from "./context.js?v=66";
 import { outlineMetrics, shadowMetrics, cssFamily } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=91";
+import * as imageStudio from "../../image-studio.js?v=92";
 
 // Edit mode — the floating AI reprompt bar over the canvas bottom: a single-row
 // composer card — the mermaid-sparkle cue (= generative AI), a borderless

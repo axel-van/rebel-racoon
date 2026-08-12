@@ -15,11 +15,11 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { openPillarInChat } from "./pillar-flow.js?v=10";
+import { openPillarInChat } from "./pillar-flow.js?v=11";
 import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=19";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=60";
+import { isFlagOn } from "./feature-flags.js?v=20";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=61";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { open as openAddPlaybookEntry } from "./components/add-playbook-entry-modal.js?v=1";
 
@@ -1000,7 +1000,7 @@ function renderPillarSources(sources) {
   return `<ol class="recap__pilmodal-sources">${sources
     .map(
       (srcItem) => `<li class="recap__pilmodal-source">
-        <span class="recap__pilmodal-source-head">${esc(srcItem.headline || "Untitled topic")}</span>
+        <span class="recap__pilmodal-source-head">${esc(srcItem.headline || "Untitled Idea")}</span>
         ${srcItem.when ? `<span class="recap__pilmodal-source-when">${esc(srcItem.when)}</span>` : ""}
       </li>`,
     )
@@ -1078,7 +1078,7 @@ function renderPillarModal(p, i, edit) {
           <span class="recap__refedit-flabel">Your notes</span>
           ${
             edit
-              ? `<textarea data-recap-pillar-notes data-recap-pillar-index="${i}" rows="4" placeholder="Anything Archie should follow that the topics don't say — angles to avoid, who signs off, the format that works…">${esc(
+              ? `<textarea data-recap-pillar-notes data-recap-pillar-index="${i}" rows="4" placeholder="Anything Archie should follow that the Ideas don't say — angles to avoid, who signs off, the format that works…">${esc(
                   p.notes || "",
                 )}</textarea>`
               : p.notes
@@ -1094,7 +1094,7 @@ function renderPillarModal(p, i, edit) {
              built from — not something you act on, so it sits below the fields you
              do act on rather than between them. -->
         <div class="recap__refmodal-sec">
-          <span class="recap__refedit-flabel">Topics that fed this pillar</span>
+          <span class="recap__refedit-flabel">Ideas that fed this pillar</span>
           ${renderPillarSources(sources)}
         </div>
       </div>
@@ -1645,7 +1645,7 @@ function renderPillarCard(p, i, edit) {
   const srcCount = Array.isArray(p.sources) ? p.sources.length : 0;
   const assetCount = Array.isArray(p.assets) ? p.assets.length : 0;
   const meta = [
-    srcCount ? `${srcCount} ${srcCount === 1 ? "topic" : "topics"}` : "",
+    srcCount ? `${srcCount} ${srcCount === 1 ? "Idea" : "Ideas"}` : "",
     assetCount ? `${assetCount} ${assetCount === 1 ? "asset" : "assets"}` : "",
   ]
     .filter(Boolean)
@@ -1700,7 +1700,7 @@ function renderStrategyPanel(data, edit) {
               </button>`
            : ""
        }`
-    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept a topic into the strategy.</p>`;
+    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept an Idea into the strategy.</p>`;
 
   const body = `${approachBlock}${renderRow("Content pillars", pillarsBlock)}`;
 

@@ -1,4 +1,8 @@
-// Content Research — a lane's brief feed, route /content-ideas/:id.
+// Content Research — one Idea stream's feed, route /content-ideas/:id.
+//
+// VOCABULARY: the UI says Idea stream (a lane) and Idea (a brief/"topic"). The
+// code below keeps lane/brief/topic throughout — see CLAUDE.md's vocabulary note.
+// Comments in this file predate the rename and still say "topic" for an Idea.
 //
 // The generating loader runs on ARRIVAL FROM ELSEWHERE only, keyed on ?fresh=1,
 // which both the lane list's open action and the form's save append. Returning
@@ -6,7 +10,7 @@
 // straight away — re-running a 1.6s spinner on a back button is punishment, not
 // feedback.
 //
-// Filtering is ONE control: the Filters panel, three groups — Topic type, Topic
+// Filtering is ONE control: the Filters panel, three groups — Idea type, Idea
 // status, Sources — in that order. Its badge counts NARROWED GROUPS, not ticked
 // options (see briefs-store.narrowedGroupCount).
 //
@@ -32,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=388";
-import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=43";
+import { renderTopbar } from "../components/topbar.js?v=390";
+import { isFlagOn } from "../feature-flags.js?v=20";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=44";
 import {
   openIgnoreReason,
   openExport,
@@ -45,10 +49,10 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=96";
-import { openBriefInChat } from "../brief-flow.js?v=19";
+} from "../components/research-modals.js?v=98";
+import { openBriefInChat } from "../brief-flow.js?v=20";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=39";
+import { getLaneById } from "../research-store.js?v=40";
 import {
   getBriefById,
   getBriefsForLane,
@@ -59,7 +63,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=46";
+} from "../briefs-store.js?v=47";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -67,7 +71,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=17";
-import { getContextById } from "../contexts-store.js?v=71";
+import { getContextById } from "../contexts-store.js?v=72";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -173,12 +177,12 @@ function listOpensWithLabel(briefs, shown) {
 //
 // role="status" on the caption, so the swap is announced rather than silent.
 function renderLoadMore(remaining, loading) {
-  const label = `Load ${remaining === 1 ? "1 more topic" : `${remaining > PAGE_SIZE ? PAGE_SIZE : remaining} more topics`}`;
+  const label = `Load ${remaining === 1 ? "1 more Idea" : `${remaining > PAGE_SIZE ? PAGE_SIZE : remaining} more Ideas`}`;
   return html`<div class="research-feed__more" data-research-more>
     ${raw(
       loading
         ? `<span class="ap-loader orange size-24" aria-hidden="true"></span>
-           <p class="research-feed__more-caption" role="status">Loading more topics…</p>`
+           <p class="research-feed__more-caption" role="status">Loading more Ideas…</p>`
         : html`<button type="button" class="ap-button stroked grey" data-research-more-load>
             <span>${label}</span>
           </button>`,
@@ -199,7 +203,7 @@ function renderLoadMore(remaining, loading) {
 // that card can be scrolled off-screen, so the pane needs an exit that is always
 // where the reader is looking.
 function renderArticlePane(brief, entering = false) {
-  return html`<aside class="research-feed__article${raw(entering ? " is-entering" : "")}" aria-label="Topic article">
+  return html`<aside class="research-feed__article${raw(entering ? " is-entering" : "")}" aria-label="Idea">
     <header class="research-feed__article-head">
       <!-- One title, and it is the ARTICLE's — brief.research.title, promoted out of
            the body and into the header.
@@ -234,8 +238,8 @@ function renderArticlePane(brief, entering = false) {
         type="button"
         class="ap-icon-button ghost grey"
         data-feed-article-close
-        aria-label="Close article"
-        title="Close article"
+        aria-label="Close Idea"
+        title="Close Idea"
       >
         <i class="ap-icon-close" aria-hidden="true"></i>
       </button>
@@ -259,8 +263,8 @@ function renderArticlePane(brief, entering = false) {
 
 const GENERATE_MS = 1600;
 
-// The attention notice above the topic list. Off: with every review status ticked
-// by default, a flagged topic is already visible in the list, so the notice
+// The attention notice above the Idea list. Off: with every review status ticked
+// by default, a flagged Idea is already visible in the list, so the notice
 // repeated it. One line to restore — nothing below it was removed.
 const SHOW_ATTENTION_NOTICE = false;
 
@@ -618,7 +622,7 @@ function renderPage() {
           briefs.length
             ? renderList(briefs, view)
             : html`<p class="research-feed__empty muted">
-                No topics match these filters. Try widening them, or reset to the defaults.
+                No Ideas match these filters. Try widening them, or reset to the defaults.
               </p>`,
         )}
         ${raw(article ? renderArticlePane(article, entering) : "")}
@@ -728,8 +732,8 @@ function renderFilterPanel() {
       // screen. First in the group order rather than last: it is the axis that
       // changes which action a card offers, so of the three it is the one worth
       // reaching first.
-      renderGroup("types", "Topic type", RESEARCH_TYPES, filters.types, "types") +
-        renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
+      renderGroup("types", "Idea type", RESEARCH_TYPES, filters.types, "types") +
+        renderGroup("status", "Idea status", REVIEW_STATUSES, filters.statuses, "statuses") +
         // Sources renders WITHOUT its glyphs, unlike Topic status. The difference is
         // whether the row has a mapping to teach: a card shows its status as a BARE
         // icon, so the filter row is the only place that glyph is ever named — while
@@ -795,7 +799,7 @@ function renderGroup(key, label, options, selected, field, { icons = true } = {}
            actually teaches the mapping — the legend would then be the same glyphs
            twice, once without labels.
            aria-hidden, because the head is a button whose accessible name is the
-           group's label; a run of icon names read out before "Topic status" would
+           group's label; a run of icon names read out before "Idea status" would
            make the control harder to use, not easier, and the options below name
            each status properly. -->
       ${raw(key === "status" && !open ? renderStatusLegend() : "")}
@@ -878,11 +882,11 @@ function renderAttentionNotice({ trending, updated, total }) {
     <i class="ap-icon-arrow-up" aria-hidden="true"></i>
     <div class="ap-infobox-content">
       <div class="ap-infobox-texts">
-        <span class="ap-infobox-title">${total} ${one ? "topic needs" : "topics need"} your attention</span>
-        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} in this topic list. </span>
+        <span class="ap-infobox-title">${total} ${one ? "Idea needs" : "Ideas need"} your attention</span>
+        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} in this Idea stream. </span>
       </div>
       <button type="button" class="ap-button primary blue" data-feed-trending>
-        <span>See topics</span>
+        <span>See Ideas</span>
         <i class="ap-icon-arrow-right" aria-hidden="true"></i>
       </button>
     </div>

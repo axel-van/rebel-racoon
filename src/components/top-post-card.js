@@ -13,7 +13,7 @@
 // picker state).
 
 import { html, raw } from "../utils.js?v=21";
-import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=60";
+import { profileForNetwork, NETWORK_ICON_BY_PLATFORM, BRAND_INITIALS } from "../social-profiles.js?v=61";
 import { renderEmptyState } from "./empty-state.js?v=1";
 
 const NET_ICON = {

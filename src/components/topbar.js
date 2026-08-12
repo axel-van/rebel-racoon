@@ -14,26 +14,26 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=522";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=85";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=93";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=87";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=66";
+} from "./right-panel.js?v=524";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=86";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=94";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=88";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=67";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=315";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=37";
+} from "./conversation-status-card.js?v=317";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=71";
-import { getLaneById } from "../research-store.js?v=39";
-import { isFlagOn } from "../feature-flags.js?v=19";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=72";
+import { getLaneById } from "../research-store.js?v=40";
+import { isFlagOn } from "../feature-flags.js?v=20";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=113";
+} from "../top-posts-flow.js?v=114";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static

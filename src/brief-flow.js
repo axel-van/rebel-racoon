@@ -30,9 +30,9 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { addReadySource } from "./sources-stream.js?v=85";
-import { getBriefById, getBriefVersions } from "./briefs-store.js?v=46";
-import { getLaneById } from "./research-store.js?v=39";
+import { addReadySource } from "./sources-stream.js?v=86";
+import { getBriefById, getBriefVersions } from "./briefs-store.js?v=47";
+import { getLaneById } from "./research-store.js?v=40";
 import { findResearchSource } from "./research-catalog.js?v=17";
 
 export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
@@ -84,7 +84,7 @@ export function attachBriefToChat(sessionId, briefId, versionId = null) {
   addReadySource(sessionId, {
     id: past ? `${brief.id}-${version.id}` : brief.id,
     filename: past ? `${brief.headline} (${version.when})` : brief.headline,
-    kind: past ? "Topic · past version" : "Topic",
+    kind: past ? "Idea · past version" : "Idea",
     preview: past ? version.paragraphs[0] || version.title : brief.summary,
     iconClass: src?.icon || "ap-icon-folder",
   });
