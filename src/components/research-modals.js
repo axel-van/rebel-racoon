@@ -144,6 +144,11 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size 
   // One extra width, for the step whose content sets its own. See
   // .research-modal--topics in research-modals.css.
   panel.classList.toggle("research-modal--topics", size === "topics");
+  // Add to Content strategy gets its own name and its own width. Named for the
+  // dialog rather than the shell because .research-modal IS the shell — the same
+  // element serves Need-that-source, Ignore topic, Export, Full research and both
+  // pickers, so a name claiming otherwise would be wrong on five of the six.
+  panel.classList.toggle("content-strategy-add-modal", kind === "strategy");
   backdrop.hidden = false;
   // The `open` class, not just [hidden], is what actually reveals the scrim —
   // .app-modal-backdrop is display:none until it lands. Every other modal in the
@@ -611,11 +616,17 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
                 </div>`,
           )}
 
-          <div class="ap-form-field strategy__field">
+          <!-- .ap-textarea-field, NOT .ap-form-field with a class on the textarea.
+               The DS ships a dedicated field wrapper for textareas that styles its
+               child textarea implicitly (border, padding, radius, focus ring, the
+               input type scale) — and there is no .ap-textarea class at all, so the
+               old markup left the control with none of it. "resizable" is the DS
+               modifier for resize: vertical, which app CSS was hand-rolling.
+               Never a backtick in this comment — it sits inside a tagged template
+               literal, and one backtick here ends the template. -->
+          <div class="ap-textarea-field resizable strategy__field">
             <label for="strategyText">${linking ? "What this topic adds" : "Details"}</label>
-            <textarea class="ap-textarea strategy__text" id="strategyText" rows="9" data-strategy-text>
-${strategyText}</textarea
-            >
+            <textarea id="strategyText" rows="9" data-strategy-text>${strategyText}</textarea>
             <span class="ap-form-message"
               >${brief ? "Pre-filled from the topic. Trim it to what the pillar should actually carry." : ""}</span
             >

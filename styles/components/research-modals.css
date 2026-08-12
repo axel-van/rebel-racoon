@@ -32,6 +32,15 @@
   width: min(706px, calc(100vw - 48px));
 }
 
+/* "Add to Content strategy", +25% on the 560px base. The dialog's main field is
+   a textarea seeded with the topic's whole article, so it is the one step here
+   that is read as much as it is filled in — the extra measure is for the reading.
+   Scoped to this dialog, not the shell: .research-modal is shared with five
+   others that are sized for their own content. */
+.content-strategy-add-modal {
+  width: min(700px, calc(100vw - 48px));
+}
+
 .research-modal[hidden] {
   display: none;
 }
@@ -477,7 +486,7 @@
 /* ── Add to Content strategy ───────────────────────────────────────────────
    The dialog is a short form now rather than a confirmation, so it needs field
    rhythm. Everything visual comes from the DS — .ap-infobox, .ap-radio-card,
-   .ap-form-field, .ap-select, .ap-textarea; these rules only place them. */
+   .ap-form-field, .ap-select, .ap-textarea-field; these rules only place them. */
 .strategy__why {
   margin-bottom: var(--ref-spacing-sm);
 }
@@ -505,13 +514,10 @@
   margin-top: var(--ref-spacing-sm);
 }
 
-/* A reading measure on the seeded article text. The topic's full research runs to
-   several paragraphs and this is the field where the user trims it, so the line
-   length has to be comfortable to read, not just to type into. */
-.strategy__text {
-  min-height: 168px;
-  resize: vertical;
-}
+/* `resize: vertical` and the height used to live here on a .strategy__text class.
+   Both are the DS's job now: `.ap-textarea-field.resizable` owns the resize, and
+   rows="9" owns the height. The reading measure this was really about comes from
+   the dialog — see .content-strategy-add-modal above. */
 
 /* The Updated case, where the pillar is already decided and the dialog says so
    instead of asking again. */
