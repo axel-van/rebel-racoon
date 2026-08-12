@@ -31,9 +31,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=376";
+import { renderTopbar } from "../components/topbar.js?v=377";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard } from "../components/brief-card.js?v=35";
+import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=36";
 import {
   openIgnoreReason,
   openExport,
@@ -42,7 +42,7 @@ import {
   openAddToStrategy,
   renderResearchArticle,
   researchArticleSub,
-} from "../components/research-modals.js?v=84";
+} from "../components/research-modals.js?v=85";
 import { openBriefInChat } from "../brief-flow.js?v=15";
 import { showToast } from "../components/toast.js?v=21";
 import { getLaneById } from "../research-store.js?v=35";
@@ -202,7 +202,28 @@ function renderArticlePane(brief, entering = false) {
       </button>
     </header>
     <div class="research-feed__article-body">${raw(renderResearchArticle(brief, { withLabel: false }))}</div>
+    <!-- The card's own action, at the foot of the pane. A reader who has scrolled
+         four paragraphs down cannot see the card that opened this, so the verb has
+         to be where they finished reading — the same argument the pane's own close
+         button makes.
+
+         Its menu is keyed ARTICLE_MENU_KEY, not the brief id: keyed on the id it
+         would share state with the card's copy and one chevron would open both. -->
+    <footer class="research-feed__article-foot">
+      ${raw(
+        renderUseSplit(brief, view.openMenu === articleMenuKey(brief.id), {
+          menuKey: articleMenuKey(brief.id),
+          modifier: "topics-use--article",
+        }),
+      )}
+    </footer>
   </aside>`;
+}
+
+// The article footer's menu key. Prefixed so it can never collide with a brief id,
+// which is what `view.openMenu` otherwise holds.
+function articleMenuKey(briefId) {
+  return `article:${briefId}`;
 }
 
 const GENERATE_MS = 1600;
@@ -351,7 +372,44 @@ function paint(target) {
   // The sentinel is destroyed and rebuilt by the innerHTML above, so the observer
   // has to be re-pointed after every paint — not once at mount.
   observeMore(target);
+  sizeArticlePane(target);
 }
+
+// Cap the article pane so its BOTTOM — and therefore its footer — is always on
+// screen.
+//
+// The CSS max-height it replaces was `100vh - topbar - 2 × xl`, which assumes the
+// pane starts directly below the topbar. It doesn't: the feed header sits above it
+// INSIDE the scroller and scrolls away, so at scrollTop 0 the pane starts ~148px
+// lower and its bottom edge lands about 70px past the fold. That was survivable
+// while the pane ended in mid-paragraph; with an action footer down there it is not,
+// because the control is simply not visible until you scroll.
+//
+// Not expressible in CSS: the pane is sticky inside the scroller, so its unstuck
+// offset is the header's height — content-driven, and % max-height resolves against
+// a content-height containing block rather than the scroller. So measure once per
+// paint and publish it as a custom property the stylesheet consumes.
+//
+// Sized for the UNSTUCK position, which is the taller of the two cases, so the cap
+// holds in both. Once stuck the pane is shorter than it strictly could be; that
+// costs a little article and buys a footer that never moves.
+function sizeArticlePane(target) {
+  const pane = target.querySelector(".research-feed__article");
+  const scroller = target.querySelector(".research-feed__body");
+  if (!pane || !scroller) return;
+  // offsetTop is measured against the scroller's content box, which is exactly the
+  // header's height plus the pane's own margin — i.e. where the pane sits before it
+  // sticks.
+  const avail = scroller.clientHeight - pane.offsetTop - PANE_BOTTOM_GAP;
+  pane.style.setProperty("--article-max-h", `${Math.max(PANE_MIN_H, Math.round(avail))}px`);
+}
+
+// Breathing room under the pane, so its shadow and rounded corner are not flush
+// with the fold.
+const PANE_BOTTOM_GAP = 16;
+// A floor, so a very short window cannot collapse the pane to nothing — better to
+// overflow slightly than to render a 40px article.
+const PANE_MIN_H = 320;
 
 // ── Infinite load plumbing ─────────────────────────────────────────────────
 

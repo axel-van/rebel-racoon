@@ -1077,7 +1077,14 @@
      column left empty, but prose set to 900px is a worse read than the same
      prose in a column, so it stops at the measure and leaves the rest. */
   max-width: var(--article-w);
-  max-height: calc(100vh - var(--app-topbar-height) - 2 * var(--ref-spacing-xl));
+  /* --article-max-h is measured and set per paint by sizeArticlePane() in
+     screens/research-feed.js, because the pane's distance from the top of the
+     scroller is the feed header's height and that is content-driven. The vh
+     expression is the fallback for the frame before the first measurement — it
+     assumes the pane starts under the topbar, which is only true once the pane has
+     stuck, so it runs ~70px tall at scrollTop 0. See the note on sizeArticlePane
+     for why this is not doable in CSS alone. */
+  max-height: var(--article-max-h, calc(100vh - var(--app-topbar-height) - 2 * var(--ref-spacing-xl)));
   display: flex;
   flex-direction: column;
   background: var(--ref-color-white);
@@ -1145,6 +1152,43 @@
   min-height: 0;
   overflow-y: auto;
   padding: var(--ref-spacing-md);
+}
+
+/* ── The pane's action footer ──────────────────────────────────────────────
+   The card's Use-in-chat split button, repeated at the foot of the article.
+
+   FLOATING is structural, not positional: the pane is already a flex column whose
+   BODY is the scroller, so a footer declared as the last child with flex: 0 0 auto
+   never scrolls away. No sticky, no fixed, no z-index — the body scrolls beneath a
+   bar that was never in its flow. The shadow is what makes that legible; without
+   it, text passing under an opaque edge reads as clipped rather than as covered.
+
+   Full width comes free from the column's default align-items: stretch, so there is
+   no width declaration to keep in sync with --article-w.
+
+   Padding matches the header's horizontal padding so the button's left edge lands
+   on the headline above it. */
+.research-feed__article-foot {
+  display: flex;
+  flex: 0 0 auto;
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border-top: 1px solid var(--app-border-soft);
+  /* --ref-color-white deliberately, not a semantic background token: this is the
+     same surface as .research-feed__article, which sets the same value. A footer
+     that resolved its fill independently could drift from the pane it sits in, and
+     the shadow only works over an opaque edge that matches. */
+  background: var(--ref-color-white);
+  box-shadow: var(--app-shadow-footer-up);
+}
+
+/* The footer's menu opens UPWARD. Downward it would grow past the pane's bottom
+   edge, and the pane sets overflow: hidden to keep the scrolling body off its
+   rounded corners — so a downward menu is not merely awkward here, it is invisible.
+   Upward it grows into the pane's own height, which is 600px+ against a ~150px
+   menu, so it stays inside the box that clips it. */
+.topics-use--article > .topics-use__menu {
+  top: auto;
+  bottom: calc(100% + var(--ref-spacing-xxxs));
 }
 
 /* The entrance is OPT-IN, one paint at a time — the screen adds .is-entering only

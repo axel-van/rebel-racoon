@@ -121,6 +121,11 @@
   --app-shadow-popover-md: 0 8px 24px rgba(33, 46, 68, 0.12);
   --app-shadow-popover-lg: 0 12px 32px rgba(33, 46, 68, 0.12);
   --app-shadow-drawer-left: -8px 0 32px rgba(33, 46, 68, 0.12);
+  /* Upward-facing, for a bar pinned to the BOTTOM of a scrolling box — the article
+     pane's footer. Same colour and blur as the drawer's directional variant above,
+     with the offset turned through 90°, so a floating edge reads the same whichever
+     side of the box it is on. */
+  --app-shadow-footer-up: 0 -8px 24px rgba(33, 46, 68, 0.1);
 
   /* Handoff card shadow — soft cool-slate, two-layer. Matches the
      `--shadow-card` in design_handoff_studio/source/colors_and_type.css. */

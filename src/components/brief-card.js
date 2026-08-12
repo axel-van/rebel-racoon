@@ -284,11 +284,26 @@ export function renderBriefCard(
 // While parked, Save for later is promoted from that standalone row to the main
 // segment for content-strategy topics, because Add to strategy was the only thing
 // there and a topic still needs one verb of its own.
-function renderUseSplit(brief, menuOpen) {
+/**
+ * The card's Use-in-chat split button. Exported because the feed's article pane
+ * carries a second copy in its footer.
+ *
+ * @param {string} menuKey — the value `view.openMenu` is compared against, and the
+ *   value the toggle writes back. It defaults to the brief id, which is what the
+ *   card uses. The pane passes something else, and MUST: two copies of the same
+ *   brief's button keyed on the same id would open and close as one, so pressing
+ *   the chevron in the footer would silently open the card's menu too.
+ *   `modifier` is a class appended to the wrapper so each copy can be positioned
+ *   independently — the footer's menu has to open upward.
+ */
+export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier = "" } = {}) {
   const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
   const ready = brief.researchType === "ready-to-post";
-  return html`<span class="topics-use" data-brief-use-wrap="${escapeAttr(brief.id)}">
+  return html`<span
+    class="topics-use${raw(modifier ? ` ${modifier}` : "")}"
+    data-brief-use-wrap="${escapeAttr(brief.id)}"
+  >
     <!-- PARKED — see the restore notes in the JS comment above this function.
          A content-strategy topic has no Add-to-strategy destination while that
          flow is parked, so its main segment takes the other verb the card already
@@ -304,14 +319,14 @@ function renderUseSplit(brief, menuOpen) {
     <button
       type="button"
       class="topics-use__toggle"
-      data-brief-use-menu="${escapeAttr(brief.id)}"
+      data-brief-use-menu="${escapeAttr(menuKey)}"
       aria-haspopup="true"
       aria-expanded="${menuOpen ? "true" : "false"}"
       aria-label="More options for this topic"
     >
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>
-    <div class="topics-use__menu" data-brief-menu="${escapeAttr(brief.id)}" ${raw(menuOpen ? "" : " hidden")}>
+    <div class="topics-use__menu" data-brief-menu="${escapeAttr(menuKey)}" ${raw(menuOpen ? "" : " hidden")}>
       <!-- Text only, no icon tiles. Three rows is short enough to read as a
            list, and the tiles were doing decoration rather than disambiguation:
            a bookmark, a target and an eye-off don't tell you anything the labels
