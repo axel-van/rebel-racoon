@@ -23,7 +23,7 @@ import { getContexts, getContextById, subscribe as subscribeContexts } from "../
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=58";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=26";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=38";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=519";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=520";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=93";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=66";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=85";

@@ -31,9 +31,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=385";
+import { renderTopbar } from "../components/topbar.js?v=386";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=40";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=41";
 import {
   openIgnoreReason,
   openExport,
@@ -44,7 +44,7 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=93";
+} from "../components/research-modals.js?v=94";
 import { openBriefInChat } from "../brief-flow.js?v=18";
 import { showToast } from "../components/toast.js?v=21";
 import { getLaneById } from "../research-store.js?v=38";
@@ -242,28 +242,18 @@ function renderArticlePane(brief, entering = false) {
     <div class="research-feed__article-body">
       ${raw(renderResearchArticle(brief, { withLabel: false, withTitle: false }))}
     </div>
-    <!-- The card's own action, at the foot of the pane. A reader who has scrolled
-         four paragraphs down cannot see the card that opened this, so the verb has
-         to be where they finished reading — the same argument the pane's own close
-         button makes.
+    <!-- The card's actions, at the foot of the pane. A reader who has scrolled four
+         paragraphs down cannot see the card that opened this, so the verbs have to be
+         where they finished reading — the same argument the pane's own close button
+         makes.
 
-         Its menu is keyed ARTICLE_MENU_KEY, not the brief id: keyed on the id it
-         would share state with the card's copy and one chevron would open both. -->
-    <footer class="research-feed__article-foot">
-      ${raw(
-        renderUseSplit(brief, view.openMenu === articleMenuKey(brief.id), {
-          menuKey: articleMenuKey(brief.id),
-          modifier: "topics-use--article",
-        }),
-      )}
-    </footer>
+         All THREE flat, not the card's split. The card hides two behind a chevron
+         because it is one of ten in a column and can spare one button's width; the
+         footer is the full pane with nothing else in it, so the chevron was charging
+         a click for space that was already free. It also takes no view state at all
+         now — no menu means no menu key to keep apart from the card's. -->
+    <footer class="research-feed__article-foot">${raw(renderUseButtons(brief))}</footer>
   </aside>`;
-}
-
-// The article footer's menu key. Prefixed so it can never collide with a brief id,
-// which is what `view.openMenu` otherwise holds.
-function articleMenuKey(briefId) {
-  return `article:${briefId}`;
 }
 
 const GENERATE_MS = 1600;

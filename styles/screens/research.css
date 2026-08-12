@@ -1197,14 +1197,54 @@
   box-shadow: var(--app-shadow-footer-up);
 }
 
-/* The footer's menu opens UPWARD. Downward it would grow past the pane's bottom
-   edge, and the pane sets overflow: hidden to keep the scrolling body off its
-   rounded corners — so a downward menu is not merely awkward here, it is invisible.
-   Upward it grows into the pane's own height, which is 600px+ against a ~150px
-   menu, so it stays inside the box that clips it. */
-.topics-use--article > .topics-use__menu {
-  top: auto;
-  bottom: calc(100% + var(--ref-spacing-xxxs));
+/* The footer's three flat buttons. No .topics-use--article rule any more: that one
+   existed to open the split's menu UPWARD, because downward it grew past the pane's
+   bottom edge and the pane's overflow: hidden made it invisible rather than merely
+   awkward. With no menu there is nothing to position.
+
+   gap only — the three .ap-button children bring their own height, padding, radius
+   and states. The Ignore wrapper is pushed right because it is the taking-away
+   action: the two you might want sit together on the left, and the one that removes
+   the topic is deliberately not adjacent to them. */
+.topics-use-flat {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+
+/* position: relative for the tooltip it hosts; margin-left: auto is what moves
+   Ignore away from the pair. */
+.topics-use-flat__ignore {
+  position: relative;
+  display: inline-flex;
+  margin-left: auto;
+}
+
+/* The hint the menu row carried as a caption. Visibility on the APP class, never on
+   .ap-tooltip — redeclaring a DS class outside ds-patches.css flips the cascade for
+   every other use of it (CLAUDE.md).
+
+   ABOVE and right-aligned: the footer is the pane's bottom edge, so there is nothing
+   below to open into, and Ignore is the right-most control, so a bubble growing
+   leftwards stays inside the pane. `top-right` is the DS modifier for that pair —
+   arrow on the bottom edge, near the right, pointing down at the button.
+
+   Hover only. Unlike the card's status glyph this trigger IS a button, so focus
+   would be available — but the button already carries the same words in its
+   aria-label, and adding :focus-visible would pop the bubble on every keyboard pass
+   through the footer. */
+.topics-use-flat__tip {
+  display: none;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  right: 0;
+  width: max-content;
+  max-width: 280px;
+  white-space: normal;
+}
+
+.topics-use-flat__ignore:hover > .topics-use-flat__tip {
+  display: block;
 }
 
 /* The entrance is OPT-IN, one paint at a time — the screen adds .is-entering only

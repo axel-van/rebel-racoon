@@ -297,16 +297,85 @@ export function renderBriefCard(
 // segment for content-strategy topics, because Add to strategy was the only thing
 // there and a topic still needs one verb of its own.
 /**
- * The card's Use-in-chat split button. Exported because the feed's article pane
- * carries a second copy in its footer.
+ * The article pane's footer: the split button's three actions, laid out flat.
+ *
+ * Same three verbs the card's split offers, no chevron and no menu. The card needs
+ * the menu because it is one of ten in a scrolling column and can spare one button's
+ * width; the footer is 620px of pane with nothing else in it, so hiding two of three
+ * actions behind a chevron was spending a click to save space that was already free.
+ *
+ * Dropping the menu also retires two things the split needed and this does not: the
+ * `article:<id>` menu key that kept the footer's dropdown from opening the card's,
+ * and the upward-opening rule that stopped it being clipped by the pane's
+ * overflow: hidden. Fewer moving parts for the same three actions.
+ *
+ * Real .ap-button, not the card's hand-rolled .topics-use__main — the segments only
+ * hand-roll it because a split needs a squared inner edge the DS does not expose, and
+ * three separate buttons have no such constraint. The weights carry the hierarchy the
+ * menu used to carry by position:
+ *
+ *   stroked blue   the main verb — same treatment as the card's main segment and the
+ *                  version dialog's action, so "use in chat" looks identical wherever
+ *                  it is offered
+ *   stroked grey   the alternate verb, quieter because it is the one you did not come
+ *                  here for
+ *   ghost red      Ignore, the taking-away one. The DS's red family, and ghost rather
+ *                  than stroked so it does not read as a third equal choice — the
+ *                  menu made this point with .red-mode on the label.
+ */
+export function renderUseButtons(brief) {
+  const saved = brief.status === "saved";
+  const ignored = brief.status === "ignored";
+  const ready = brief.researchType === "ready-to-post";
+  const savedLabel = saved ? "Remove from saved" : "Save for later";
+  // Whichever verb is not the main one, exactly as the menu decided it.
+  const main = ready
+    ? { attr: "data-brief-use", label: "Use in chat" }
+    : { attr: "data-brief-save", label: savedLabel };
+  const alt = ready ? { attr: "data-brief-save", label: savedLabel } : { attr: "data-brief-use", label: "Use in chat" };
+  return html`<span class="topics-use-flat" data-brief-use-wrap="${escapeAttr(brief.id)}">
+    <button type="button" class="ap-button stroked blue" ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}>
+      <span>${main.label}</span>
+    </button>
+    <button type="button" class="ap-button stroked grey" ${raw(`${alt.attr}="${escapeAttr(brief.id)}"`)}>
+      <span>${alt.label}</span>
+    </button>
+    <!-- Hidden once ignored — the action has been taken and a second press has
+         nothing to do, the same rule the menu row followed.
+
+         The hint the menu row carried as a caption becomes a tooltip: a button has no
+         room for a second line, and the sentence is the whole reason a reader is
+         willing to press this (ignoring is not deleting, and a spike overrides it).
+         Same DS Tooltip construction as the card's status glyph — bubble after its
+         trigger, visibility on the app class, aria-hidden with the words repeated in
+         the button's own aria-label so a display:none element is not the only place
+         they live. -->
+    ${raw(
+      ignored
+        ? ""
+        : html`<span class="topics-use-flat__ignore">
+            <button
+              type="button"
+              class="ap-button ghost red"
+              data-brief-ignore="${escapeAttr(brief.id)}"
+              aria-label="Ignore topic. ${IGNORE_HINT}"
+            >
+              <span>Ignore topic</span>
+            </button>
+            <span class="ap-tooltip top-right topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
+          </span>`,
+    )}
+  </span>`;
+}
+
+/**
+ * The card's Use-in-chat split button.
  *
  * @param {string} menuKey — the value `view.openMenu` is compared against, and the
- *   value the toggle writes back. It defaults to the brief id, which is what the
- *   card uses. The pane passes something else, and MUST: two copies of the same
- *   brief's button keyed on the same id would open and close as one, so pressing
- *   the chevron in the footer would silently open the card's menu too.
- *   `modifier` is a class appended to the wrapper so each copy can be positioned
- *   independently — the footer's menu has to open upward.
+ *   value the toggle writes back. Defaults to the brief id, which is what the card
+ *   uses. Kept parameterised from when the article footer carried a second copy of
+ *   this split; that footer is now renderUseButtons above, so today there is one
+ *   instance per brief and the default is always right. `modifier` likewise.
  */
 export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier = "" } = {}) {
   const saved = brief.status === "saved";
