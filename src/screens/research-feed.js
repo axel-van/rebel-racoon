@@ -31,9 +31,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=380";
+import { renderTopbar } from "../components/topbar.js?v=382";
 import { isFlagOn } from "../feature-flags.js?v=19";
-import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=37";
+import { renderBriefCard, renderUseSplit } from "../components/brief-card.js?v=39";
 import {
   openIgnoreReason,
   openExport,
@@ -43,10 +43,10 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=88";
-import { openBriefInChat } from "../brief-flow.js?v=15";
+} from "../components/research-modals.js?v=90";
+import { openBriefInChat } from "../brief-flow.js?v=16";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=35";
+import { getLaneById } from "../research-store.js?v=36";
 import {
   getBriefById,
   getBriefsForLane,
@@ -57,14 +57,14 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=42";
+} from "../briefs-store.js?v=43";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=14";
+} from "../research-catalog.js?v=15";
 import { getContextById } from "../contexts-store.js?v=70";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
@@ -737,6 +737,15 @@ function renderFilterPanel() {
   </div>`;
 }
 
+// The four status glyphs, unlabelled, for the collapsed group head. Read from
+// REVIEW_STATUSES so it is the same list, in the same order, with the same icons the
+// cards use — a hand-written legend would drift the first time one icon changed.
+function renderStatusLegend() {
+  return html`<span class="research-filters__legend" aria-hidden="true">
+    ${raw(REVIEW_STATUSES.map((s) => html`<i class="${s.icon}"></i>`).join(""))}
+  </span>`;
+}
+
 function renderGroup(key, label, options, selected, field) {
   const open = view.groups[key];
   return html`<section class="research-filters__group">
@@ -747,6 +756,17 @@ function renderGroup(key, label, options, selected, field) {
       aria-expanded="${open ? "true" : "false"}"
     >
       <span>${label}</span>
+      <!-- The status group's head carries the four glyphs as a LEGEND, so the panel
+           that owns this axis also says what the cards' icons mean.
+           Shown only while the group is COLLAPSED: expanded, every option row below
+           carries its own icon beside its own name, which is the pairing that
+           actually teaches the mapping — the legend would then be the same four
+           glyphs twice, once without labels.
+           aria-hidden, because the head is a button whose accessible name is the
+           group's label; four icon names read out before "Topic status" would make
+           the control harder to use, not easier, and the options below name each
+           status properly. -->
+      ${raw(key === "status" && !open ? renderStatusLegend() : "")}
       <i class="${open ? "ap-icon-chevron-up" : "ap-icon-chevron-down"}" aria-hidden="true"></i>
     </button>
     ${raw(
@@ -764,6 +784,15 @@ function renderGroup(key, label, options, selected, field) {
                         value="${escapeAttr(o.id)}"
                         ${raw(selected.includes(o.id) ? "checked" : "")}
                       />
+                      <!-- The icon, where a status has one — this is the row that
+                           teaches the mapping, because it is the only place the glyph
+                           and the word sit together. Sources carry icons too and get
+                           theirs for free; types have none and the expression simply
+                           renders nothing. aria-hidden: the label beside it is the
+                           accessible name and the checkbox already owns it. -->
+                      ${raw(
+                        o.icon ? html`<i class="${o.icon} research-filters__option-icon" aria-hidden="true"></i>` : "",
+                      )}
                       <span>${o.label || o.name}</span>
                     </label>`,
                 )

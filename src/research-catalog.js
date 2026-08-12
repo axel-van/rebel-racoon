@@ -259,15 +259,51 @@ export function findResearchType(id) {
 // Trending is deliberately absent — it is an independent boolean on the brief,
 // not a status. A brief can be Saved AND trending, or Ignored AND trending, so
 // the two can never share one field.
+// `icon` and `hint` were added when the card's status stopped being a pill and
+// became a glyph. Both belong HERE rather than in the card: the feed's Filters
+// panel shows the same pair, and two copies of "which icon means saved" would
+// drift the first time one changed.
+//
+// The four icons are all OUTLINE, deliberately — bookmark_fill and
+// rounded-check_fill both exist and either would read as "more applied" on its own,
+// but mixed weights in a set of four make the set look like two sets. Uniform
+// stroke, and the tooltip carries the meaning.
+//
+// `hint` is a sentence, not a restatement of the label. A tooltip that says "Saved"
+// over an icon labelled Saved is a tooltip that has told you nothing; each one says
+// what the status MEANS for the topic.
 export const REVIEW_STATUSES = Object.freeze([
-  { id: "new", label: "New" },
+  {
+    id: "new",
+    label: "New",
+    // Sparkles is the app's mark for what Archie produced — the composer's Add menu,
+    // the draft flow and the "Full article" kicker all use it. A New topic is one
+    // Archie surfaced and nobody has answered yet.
+    icon: "ap-icon-sparkles",
+    hint: "Surfaced by Archie. You haven't decided on this one yet.",
+  },
   // "Saved", not "Saved for later". The long form was chosen to echo the card
   // action that sets it ("Save for later"), but a pill states a STATE and the
   // menu row states an ACTION — they don't have to read identically, and at pill
   // size the extra two words were the widest thing in the status row.
-  { id: "saved", label: "Saved" },
-  { id: "used", label: "Used" },
-  { id: "ignored", label: "Ignored" },
+  {
+    id: "saved",
+    label: "Saved",
+    icon: "ap-icon-bookmark",
+    hint: "Kept for later. It stays in the list until you use or ignore it.",
+  },
+  {
+    id: "used",
+    label: "Used",
+    icon: "ap-icon-rounded-check",
+    hint: "Taken into a chat to draft a post.",
+  },
+  {
+    id: "ignored",
+    label: "Ignored",
+    icon: "ap-icon-eye-off",
+    hint: "Kept off this list unless it starts trending or gets updated.",
+  },
 ]);
 
 /** Filter default: New only. Reset restores exactly this. */

@@ -179,7 +179,92 @@
    cards on /research say it the same way, so it can't live here. That file also
    carries the reasoning for why it's text and not a pill. */
 
-/* Status pills — the four review states. */
+/* ── The card's status glyph ───────────────────────────────────────────────
+   The card shows the status as one icon now, right of the age. The PILLS below are
+   still live — the article's Topic-history timeline uses them, where a row has space
+   for the word and the point is to name each state in a list — so nothing here
+   replaces them.
+
+   The anchor is position: relative because it hosts the tooltip. Safe inside the
+   card, which never sets overflow: hidden (see the note at the top of this file —
+   the Use-in-chat dropdown depends on the same thing). */
+.topics-card__status {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--ref-spacing-xxs);
+}
+
+/* Sized to the row's text, not to an icon scale: this glyph sits in a run of 13px
+   meta text and should read as one of its characters rather than as a control
+   dropped into it. --sys-icon-css-sm is 16px, which is the next size up and looked
+   like a button. */
+.topics-card__status-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Colour per status, taken from the PILLS' own text colours below, so the mapping a
+   reader may already have learnt from the timeline still holds. Four shapes carry
+   the meaning; the colour is what makes them separable at 14px without reading the
+   shape closely. */
+.topics-card__status[data-status="new"] > .topics-card__status-icon {
+  color: var(--ref-color-grey-100);
+}
+.topics-card__status[data-status="saved"] > .topics-card__status-icon {
+  color: var(--ref-color-tag-orange-150);
+}
+.topics-card__status[data-status="used"] > .topics-card__status-icon {
+  color: var(--ref-color-electric-blue-150);
+}
+.topics-card__status[data-status="ignored"] > .topics-card__status-icon {
+  color: var(--ref-color-red-100);
+}
+
+/* The DS Tooltip. Visibility on the APP class, never on .ap-tooltip — redeclaring a
+   DS class outside ds-patches.css flips the cascade for every other use of it
+   (CLAUDE.md). The DS supplies the panel, the arrow and the type; this supplies
+   where it sits and when it shows.
+
+   DOWNWARD and LEFT-ALIGNED, and both were the other way first — worth recording,
+   because the obvious choices are wrong here for reasons specific to this position.
+
+   The glyph sits just right of the age label, which puts it near the card's LEFT
+   edge. Right-aligning the bubble there (the pattern session.js's tip uses, where
+   its trigger is at the card's top-RIGHT) grew a 260px panel leftwards straight off
+   the card — measured 260 wide with its left edge outside the card's bounds. Aligned
+   left it grows rightwards into a card that is 620px wide.
+
+   Downward, because the status row is the card's FIRST row: a bubble above it clears
+   the card entirely and lands on the previous card's footer. Below, it covers this
+   card's own headline for as long as the pointer rests on the glyph — the reader
+   asking what an icon means is not reading the headline in that instant, and
+   covering a neighbouring card would be worse.
+
+   `bottom-left` is the DS modifier for that pair: arrow on the top edge, near the
+   left, so the tail points up at the glyph.
+
+   Hover only, not focus: the icon sits inside .topics-card__body, which is a
+   <button>, and a focusable element inside a button is the invalid nesting this
+   file's body/footer split exists to avoid. Keyboard and screen-reader users get the
+   same words from the icon's own aria-label instead. */
+.topics-card__status-tip {
+  display: none;
+  top: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+  width: max-content;
+  max-width: 260px;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.topics-card__status:hover > .topics-card__status-tip {
+  display: block;
+}
+
+/* Status pills — the four review states. Still used by the article's Topic-history
+   timeline (research-modals.renderHistory); the CARD shows the glyph above instead. */
 .topics-status {
   display: inline-flex;
   align-items: center;

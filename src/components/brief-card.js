@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=14";
+import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=15";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the
@@ -77,10 +77,37 @@ function renderRouteTag(researchType) {
   return html`<span class="ap-tag ${typeTagColor(researchType)} topics-card__route">${meta.label}</span>`;
 }
 
-function renderStatusPill(status) {
+// The status, as one glyph. It was a filled pill carrying the word.
+//
+// Why the pill went: it was the widest thing in the meta row and it stated the
+// least. Three of the four values are things the reader themselves did, so the row
+// spent its most valuable horizontal space telling them their own last action —
+// while the two things they could NOT know without being told, Trending and Updated,
+// sat to its left competing for the same strip. A glyph says the same thing in 16px
+// and stops competing.
+//
+// The tooltip is where the words went, and it says MORE than the pill did: the pill
+// said "Ignored", the tooltip says what being ignored does to the topic.
+//
+// The DS Tooltip, not a title attribute — title waits a second, cannot be styled and
+// renders in OS chrome. Structure follows session.js's starter-topic tip, the app's
+// existing use of this component: the bubble sits AFTER its trigger so a plain
+// adjacent-sibling selector reveals it, and visibility lives on the APP class,
+// never on .ap-tooltip, because redeclaring a DS class outside ds-patches.css flips
+// the cascade for every other use of it.
+//
+// aria-hidden on the bubble, with the label AND the hint on the trigger's aria-label:
+// a display:none element cannot be read through aria-describedby, so the accessible
+// name has to carry the explanation itself.
+function renderStatusIcon(status) {
   const meta = findReviewStatus(status);
   if (!meta) return "";
-  return html`<span class="topics-status topics-status--${meta.id}">${meta.label}</span>`;
+  return html`<span class="topics-card__status" data-status="${escapeAttr(meta.id)}">
+    <i class="${meta.icon} topics-card__status-icon" role="img" aria-label="${meta.label}. ${meta.hint}"></i>
+    <span class="ap-tooltip bottom-left topics-card__status-tip" aria-hidden="true">
+      <strong>${meta.label}</strong> — ${meta.hint}
+    </span>
+  </span>`;
 }
 
 // The Updated counterpart. Same reasoning as the trending mark — text, never a
@@ -157,6 +184,15 @@ export function renderBriefCard(
              what took the lane headings away. -->
         ${raw(laneName ? html`<span class="topics-card__lane">· ${laneName}</span>` : "")}
         <span class="topics-card__when">· ${brief.ageLabel}</span>
+        <!-- The status glyph, immediately right of the age. It moved here from the
+             far right of the row, past the spacer, and the move is the point: the
+             left of this row is the topic's own facts — where it came from, how old
+             it is — and its triage state is now read as one of them rather than as
+             a chip competing with the Trending and Updated marks. Those two keep
+             the right-hand side to themselves.
+             Never on the trending page, which shows no triage controls at all — see
+             the variant note at the top of this file. -->
+        ${raw(trendingPage ? "" : renderStatusIcon(brief.status))}
         <!-- The route sits on the LEFT of the meta run, with the source and the
              age. The left side answers "what is this"; the right side, past the
              spacer, answers "where am I with it" — signals then status. Putting
@@ -167,9 +203,6 @@ export function renderBriefCard(
         ${raw(feed ? renderRouteTag(brief.researchType) : "")}
         <span class="topics-card__spacer"></span>
         ${raw(brief.isTrending ? renderTrendingMark() : "")}${raw(brief.isUpdated ? renderUpdatedMark() : "")}
-        <!-- Status pill is ALWAYS shown in the feed and NEVER on the trending
-             page — see the variant note at the top of this file. -->
-        ${raw(trendingPage ? "" : renderStatusPill(brief.status))}
       </span>
 
       <span class="topics-card__headline">${brief.headline}</span>

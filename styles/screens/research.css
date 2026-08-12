@@ -1358,6 +1358,24 @@
   padding: 0 12px 10px;
 }
 
+/* The four status glyphs in the collapsed group head — a legend, so the panel that
+   owns this axis also says what the cards' icons mean.
+
+   margin-left: auto pushes the set to sit beside the chevron rather than beside the
+   label, so the head still reads label-then-control. The head is
+   justify-content: space-between with two children; this becomes the third, so the
+   auto margin is what keeps the chevron hard right. */
+.research-filters__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin-left: auto;
+  margin-right: var(--ref-spacing-xs);
+  font-size: 14px;
+  line-height: 1;
+  color: var(--sys-text-color-light);
+}
+
 .research-filters__option {
   display: flex;
   align-items: center;
@@ -1367,6 +1385,17 @@
   font-weight: 600;
   color: var(--ref-color-grey-80);
   cursor: pointer;
+}
+
+/* The glyph beside an option's name — the one place the icon and the word sit
+   together, which is what teaches the mapping the cards then rely on.
+   The row's 10px gap already separates it, so this only pulls it back towards the
+   label it belongs to rather than sitting midway between checkbox and text. */
+.research-filters__option-icon {
+  margin-right: calc(-1 * var(--ref-spacing-xxs));
+  font-size: 14px;
+  line-height: 1;
+  color: var(--sys-text-color-light);
 }
 
 .research-filters__reset-row {
