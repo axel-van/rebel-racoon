@@ -876,7 +876,16 @@
 .starter-topic__list {
   display: flex;
   flex-direction: column;
-  max-height: calc(var(--starter-row) * var(--starter-rows-shown));
+  /* Height in ROWS, but capped by the window so this section can never push the
+     workflow label below the fold. Measured before: in an 800px thread the label sat
+     72px under it, because 3.5 rows is a fixed 364px whatever the screen is.
+
+     clamp reads outward: never shorter than 1.5 rows (below that the cut row stops
+     reading as "there is more" and starts reading as a bug), 28vh by preference, and
+     never taller than the 3.5 rows this was designed at — so a tall window shows the
+     full 3.5 and gains nothing further, and a short one gives the space back to what
+     is under it. */
+  max-height: clamp(calc(var(--starter-row) * 1.5), 28vh, calc(var(--starter-row) * var(--starter-rows-shown)));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1218,7 +1227,12 @@
    way it does in the list state: content (3.5 rows + footer) + border. */
 .starter-topic__panel--waiting > .starter-topic--waiting {
   flex: 1 1 auto;
-  min-height: calc(var(--starter-row) * var(--starter-rows-shown) + var(--starter-foot));
+  /* The same clamp as the list, plus the footer — otherwise the two states diverge
+     again the moment the window is short enough for the clamp to bite. */
+  min-height: calc(
+    clamp(calc(var(--starter-row) * 1.5), 28vh, calc(var(--starter-row) * var(--starter-rows-shown))) +
+      var(--starter-foot)
+  );
   border: 0;
   border-radius: 0;
   background: transparent;
