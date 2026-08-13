@@ -1073,82 +1073,20 @@
 }
 
 /* ── The swap ─────────────────────────────────────────────────────────────
-   Out to the left, in from the right, so the two halves read as one card being
-   replaced by the next rather than as a card blinking. TRANSFORM ONLY — no layout
-   properties, so neither half reflows the page, and no opacity either.
+   There isn't one any more. The card is replaced in place, in the same frame as
+   the click (session.js repaintStarterTopicSlot), so this file has nothing to
+   animate.
 
-   No fade, and fast: 75ms out + 75ms in, sequenced, so a page lands in 150ms. It
-   was 180 + 220 = 400ms with both halves fading through opacity 0, which on a
-   control you press four times in a row reads as waiting rather than as motion. The
-   fade was also what made the duration necessary — a cross-fade needs time to be
-   read as one, where a displacement does not.
+   What was here: a 24px slide out and in, mirrored for backwards, once with a
+   cross-fade and then without. Both went for the same reason — on a control you
+   press four or five times in a row, any duration at all reads as the carousel
+   making you wait, and the displacement was never carrying information the active
+   dot doesn't already carry. Dropping it also took three sources of complexity with
+   it: a JS timer that had to stay equal to a CSS duration, a stale-class trap in
+   the cascade (entering rules beat leaving ones at equal specificity), and a
+   reduced-motion branch that had to mirror the whole thing.
 
-   --ref-animation-xshort is the DS's own 75ms step; the JS that sequences the two
-   halves has to stay equal to the OUT duration (see STARTER_SWAP_MS). */
-/* Fills the wrapper rather than sizing to its content — as a plain flex item it
-   shrank to the card's intrinsic width and left the cell 39px short of the two
-   columns it spans. min-width:0 is what actually lets a flex item narrow below
-   its content, which the clamped headline needs. */
-.starter-topic__stage {
-  display: flex;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.starter-topic__stage.is-leaving {
-  animation: starter-topic-out var(--ref-animation-xshort) var(--app-ease-standard) forwards;
-}
-
-.starter-topic__stage.is-entering {
-  animation: starter-topic-in var(--ref-animation-xshort) var(--app-ease-standard);
-}
-
-/* Backwards: the same two animations mirrored, so Previous pulls the card back in
-   from the left instead of pushing it on from the right. Four keyframe sets rather
-   than one with a sign variable, because `translateX(var(--x))` inside a keyframe
-   can't be flipped per-element without re-declaring the animation anyway. */
-.starter-topic__stage.is-leaving-back {
-  animation: starter-topic-out-back var(--ref-animation-xshort) var(--app-ease-standard) forwards;
-}
-
-.starter-topic__stage.is-entering-back {
-  animation: starter-topic-in-back var(--ref-animation-xshort) var(--app-ease-standard);
-}
-
-@keyframes starter-topic-out {
-  to {
-    transform: translateX(-24px);
-  }
-}
-
-@keyframes starter-topic-in {
-  from {
-    transform: translateX(24px);
-  }
-}
-
-@keyframes starter-topic-out-back {
-  to {
-    transform: translateX(24px);
-  }
-}
-
-@keyframes starter-topic-in-back {
-  from {
-    transform: translateX(-24px);
-  }
-}
-
-/* The JS already short-circuits to an instant swap under reduced motion; this
-   is the belt-and-braces half, in case a class lands anyway. */
-@media (prefers-reduced-motion: reduce) {
-  .starter-topic__stage.is-leaving,
-  .starter-topic__stage.is-entering,
-  .starter-topic__stage.is-leaving-back,
-  .starter-topic__stage.is-entering-back {
-    animation: none;
-  }
-}
+   .starter-topic__stage keeps its layout rule above; only the animation went. */
 
 /* The spinner takes everything under the message. .ap-loader-container already
    centres its child (DS: display:flex + align/justify center); all this adds is

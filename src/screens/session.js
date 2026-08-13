@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=400";
+import { renderTopbar } from "../components/topbar.js?v=401";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=48";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=21";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=12";
 import { getLaneById } from "../research-store.js?v=41";
-import * as contextBuilder from "../context-builder.js?v=367";
+import * as contextBuilder from "../context-builder.js?v=368";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=534";
+} from "../components/right-panel.js?v=535";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=34";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2031,11 +2031,11 @@ function startStarterTopicCountdown() {
     next.innerHTML = renderStarterTopicSlot();
     const fresh = next.querySelector("[data-starter-topic-slot]");
     if (!fresh) return;
+    // The whole slot, because this is the one moment the nav ARRIVES: the waiting
+    // card renders none, so there is no nav element to repaint in place yet.
+    // Paging is the other way round and repaints in place — see
+    // repaintStarterTopicSlot.
     host.replaceChild(fresh, slot);
-    const stage = fresh.querySelector("[data-starter-topic-stage]");
-    if (stage && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      stage.classList.add("is-entering");
-    }
   }, STARTER_TOPIC_COUNTDOWN * 1000);
 }
 
@@ -2185,12 +2185,6 @@ function renderStarterTopicEmpty() {
   `;
 }
 
-// How long the outgoing card is given before the markup is swapped. It MUST equal
-// the leave animation's duration in session.css, which is --ref-animation-xshort
-// (75ms) — shorter and the card is cut off mid-slide, longer and it sits parked at
-// -24px waiting. The pair costs 150ms: 75 out, 75 in.
-const STARTER_SWAP_MS = 75;
-
 /** Slides in the carousel: one per queued Idea, plus the closing card. */
 function starterTopicSlideCount(queue) {
   return queue.length + 1;
@@ -2243,7 +2237,7 @@ function renderStarterTopicSlot(sessionId) {
 //
 // Labels stay "Previous idea" / "Next idea" throughout. With a ring there is no state
 // where either is a dead end, so there is nothing for a label to warn about.
-function renderStarterTopicNav(index, total) {
+function renderStarterTopicNavInner(index, total) {
   const dots = Array.from({ length: total }, (_, i) => {
     // The last slide is not an Idea, so it cannot be labelled as one. Everything
     // else is "Idea N of <queue length>" — total minus that closing slide.
@@ -2253,16 +2247,49 @@ function renderStarterTopicNav(index, total) {
     }></button>`;
   }).join("");
   return `
-    <div class="starter-topic__nav">
-      <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="-1" aria-label="Previous idea">
-        <i class="ap-icon-chevron-left" aria-hidden="true"></i>
-      </button>
-      <div class="ap-dot-stepper starter-topic__dots">${dots}</div>
-      <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="1" aria-label="Next idea">
-        <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-      </button>
-    </div>
+    <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="-1" aria-label="Previous idea">
+      <i class="ap-icon-chevron-left" aria-hidden="true"></i>
+    </button>
+    <div class="ap-dot-stepper starter-topic__dots">${dots}</div>
+    <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="1" aria-label="Next idea">
+      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
+    </button>
   `;
+}
+
+// The nav's CONTENTS, separately from its box. Paging rewrites the contents and
+// leaves the <div class="starter-topic__nav"> itself mounted, which is what keeps
+// the row on screen through a page instead of being torn out and rebuilt with the
+// slot around it.
+function renderStarterTopicNav(index, total) {
+  return `<div class="starter-topic__nav">${renderStarterTopicNavInner(index, total)}</div>`;
+}
+
+// Paging: rewrite the stage's card and the nav's contents IN PLACE. Neither element
+// is replaced, so the nav row is on screen continuously — it used to go out with the
+// whole slot, which also meant its active dot still showed the OLD position for as
+// long as the swap took.
+//
+// Instant, because there is no animation left to wait for. The slide (and the fade
+// before it) are gone: on a control you press repeatedly, the card you asked for
+// arriving in the same frame as the click IS the feedback, and a 24px displacement
+// only delayed it. Nothing here is timed, so nothing can be interrupted mid-flight
+// either — the double-click race the old 75ms timer needed a mounted-check for
+// cannot happen.
+//
+// Reads the queue fresh and re-clamps: triaging an Idea elsewhere can shorten it
+// under a position that was valid when it was set.
+function repaintStarterTopicSlot(slot) {
+  if (!slot || !document.body.contains(slot)) return;
+  const queue = getStarterTopics();
+  if (!queue.length) return;
+  const total = starterTopicSlideCount(queue);
+  const index = Math.min(starterTopicIndex, total - 1);
+  const brief = queue[index] || null;
+  const stage = slot.querySelector("[data-starter-topic-stage]");
+  const nav = slot.querySelector(".starter-topic__nav");
+  if (stage) stage.innerHTML = brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty();
+  if (nav) nav.innerHTML = renderStarterTopicNavInner(index, total);
 }
 
 // Label + carousel, or nothing at all. One function so the label can't outlive
@@ -4930,22 +4957,21 @@ function bindSession(root, session) {
       // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
       // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
       // ── The Idea streams carousel ──────────────────────────────────────
-      // Paging: animate the current card out, swap the markup at the halfway
-      // point, animate the next one in. The class is driven from JS rather than
-      // :target/:checked because the content changes between the two halves —
-      // there is no pure-CSS way to swap the card and keep both directions
-      // animated. Reduced motion short-circuits to an instant swap.
+      // Paging: work out the next index, then repaint the stage and the nav in
+      // place (repaintStarterTopicSlot). No animation, no timer, no reduced-motion
+      // branch to keep in step with a stylesheet — the card you asked for is on
+      // screen in the same frame as the click.
       //
       // One handler for the arrows and the dots: they differ only in how the next
-      // index is worked out (step is relative, a dot is absolute), and both then
-      // run the identical swap.
+      // index is worked out (step is relative, a dot is absolute).
       const step = event.target.closest("[data-starter-topic-step]");
       const goDot = event.target.closest("[data-starter-topic-go]");
       if (step || goDot) {
         const control = step || goDot;
         const slot = control.closest("[data-starter-topic-slot]");
-        const stage = slot?.querySelector("[data-starter-topic-stage]");
-        if (!stage) return;
+        // A nav can only exist alongside a stage; bail if this click came from
+        // markup that is already half torn down.
+        if (!slot || !slot.querySelector("[data-starter-topic-stage]")) return;
         // Recomputed here rather than trusted from the markup: the queue is
         // derived from the store, so it can be shorter than it was when this nav
         // was painted (triaging one of these Ideas in another tab of the app).
@@ -4963,53 +4989,8 @@ function bindSession(root, session) {
         // one-slide ring. Returning here also stops the swap from running and
         // re-rendering the block for no reason.
         if (nextIndex === starterTopicIndex) return;
-        // Direction, so going back reads as going back: out to the right and in
-        // from the left, the mirror of forwards. A carousel that always slides one
-        // way makes Previous feel like another Next.
-        //
-        // Taken from the STEP, not from the indexes, now that both ends wrap: on a
-        // ring the index can fall while you travel forwards (last → first) and rise
-        // while you travel backwards (first → last), so comparing the two would
-        // animate every wrap the wrong way round. A dot has no direction of its own,
-        // so it still compares.
-        const back = step ? Number(step.dataset.starterTopicStep) < 0 : nextIndex < starterTopicIndex;
         starterTopicIndex = nextIndex;
-        const swap = () => {
-          // Re-check that the slot we captured on the click is still in the
-          // document. It might not be: this runs a beat later, and in between the
-          // countdown's own swap can have replaced it, the hero can have
-          // re-rendered, or a second click can have landed. Without the guard
-          // `slot.parentElement` is null and replaceChild throws — reachable just
-          // by double-clicking an arrow. The countdown's swap already had this
-          // check; the old flip button's didn't.
-          const host = slot.parentElement;
-          if (!host || !document.body.contains(slot)) return;
-          const holder = document.createElement("div");
-          holder.innerHTML = renderStarterTopicSlot();
-          // Swap the slot in place, so the label above it and the workflow grid
-          // below it keep their positions.
-          const fresh = holder.querySelector("[data-starter-topic-slot]");
-          if (fresh) host.replaceChild(fresh, slot);
-        };
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          swap();
-          return;
-        }
-        // Clear the ENTERING class before adding a leaving one, or the leave never
-        // plays. Both rules set `animation` at equal specificity, so the later one in
-        // session.css wins — and the entering rules are declared after the
-        // leaving ones. The stage still carries the entering class from the swap that
-        // painted it (a finished animation with no fill, so nothing looks wrong at
-        // rest), which meant the outgoing card sat still while only the incoming one
-        // animated. Measured, not guessed: the class list at 60ms after a click read
-        // ["is-entering-back", "is-leaving"].
-        stage.classList.remove("is-entering", "is-entering-back", "is-leaving", "is-leaving-back");
-        stage.classList.add(back ? "is-leaving-back" : "is-leaving");
-        window.setTimeout(() => {
-          swap();
-          const s = document.querySelector("[data-starter-topic-stage]");
-          if (s) s.classList.add(back ? "is-entering-back" : "is-entering");
-        }, STARTER_SWAP_MS);
+        repaintStarterTopicSlot(slot);
         return;
       }
       // Clicking the card itself drafts from that topic — the same handoff the
