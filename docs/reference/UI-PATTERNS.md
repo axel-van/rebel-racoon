@@ -305,37 +305,49 @@ contrôles ont quitté la carte pour une **barre de nav sous la scène** (voir c
 La règle reste vraie pour la prochaine surface qui voudra poser un contrôle sur une
 carte-bouton ; simplement, ne rien poser dessus est encore mieux quand il y a la place.
 
-### Un carrousel = `.ap-dot-stepper` + deux icon buttons, et un anneau
+### Le carrousel : ce qu'il faut savoir si une surface en redemande un
 
-Le carrousel d'Topics de la page nouvelle session (`.starter-topic`) est le
-précédent en place. Ce qu'il fixe :
+**Il n'y en a plus dans l'app.** Celui de la page nouvelle session (`.starter-topic`)
+a été remplacé par une **liste qui défile** — le lecteur y balayait pour trouver le
+bon élément, pas pour considérer chaque carte à son tour, et une liste met sept ou
+huit titres à l'écran là où le carrousel en montrait un. Ce qui suit reste vrai pour
+la prochaine surface qui en voudra un, et explique pourquoi celui-ci a coûté cher.
 
 - **Les points sont le composant DS**, `.ap-dot-stepper` — sa doc dit littéralement
   « carousel indicators », et sa règle d'usage réserve `.ap-stepper` aux flows
   numérotés. Enfants `<button>` nus, `.active` sur le courant, aucune classe à
-  inventer. Ils sont **cliquables** et sautent à la slide.
-- **La nav est SOUS la scène**, pas posée sur la carte : à la largeur des trois
-  starter cards il ne reste aucune gouttière, et une paire de flèches épinglée dans
-  la carte se pose sur le titre qu'elle est censée changer.
-- **Les points prennent le milieu, les flèches les deux bords.** C'est le
-  comportement du composant (il est `width: 100%`), énoncé en `flex-grow` sur la
-  classe app pour que ce soit une décision et pas un héritage.
-- **Un anneau, pas deux culs-de-sac.** Aucune flèche désactivée : `(i + pas + n) % n`.
-  Les points, eux, ne bouclent pas — chacun est une slide réelle.
-- **Pas d'animation, et c'est le point d'arrivée.** La scène et la nav sont **réécrites en
-  place**, dans la frame du clic. Deux versions animées ont existé — un glissement de 24px
-  avec fondu (400ms), puis sans fondu (150ms) — et les deux sont parties : sur un contrôle
-  qu'on presse quatre fois de suite, toute durée se lit comme une attente, et le point actif
-  portait déjà l'information que le déplacement décorait. Ce que l'animation coûtait, en plus
-  du délai : un timer JS qui devait rester égal à une durée CSS, une branche
-  `prefers-reduced-motion` à tenir en phase, la direction à dériver du **pas** (sur un anneau
-  l'index descend quand on avance), et un piège de cascade — les règles d'entrée étant
-  déclarées après celles de sortie à spécificité égale, une classe d'entrée oubliée sur la
-  scène **faisait taire la sortie**.
-- **Réécrire en place, pas remplacer.** Le premier jet remplaçait tout le bloc à chaque page,
-  ce qui sortait la barre de nav du DOM et laissait son point actif en retard d'une transition.
-  Garder l'élément monté et ne réécrire que son contenu demande de séparer le rendu de la nav
-  de celui de sa boîte — une fonction pour le conteneur, une pour ses enfants.
+  inventer.
+- **La nav va SOUS la scène**, pas posée sur la carte : à pleine largeur il ne reste
+  aucune gouttière, et une paire de flèches épinglée dans la carte se pose sur le
+  titre qu'elle est censée changer.
+- **Un anneau, pas deux culs-de-sac** : `(i + pas + n) % n`, aucune flèche
+  désactivée. Les points, eux, ne bouclent pas — chacun est une slide réelle.
+- ⚠️ **La direction vient du PAS, pas de la comparaison d'index** : sur un anneau
+  l'index descend quand on avance (dernière → première).
+- ⚠️ **Nettoyer la classe d'entrée avant de poser la classe de sortie** : les règles
+  d'entrée étant déclarées après celles de sortie à spécificité égale, une classe
+  d'entrée oubliée sur la scène **fait taire l'animation de sortie**.
+- **Réécrire en place, pas remplacer** : remplacer tout le bloc à chaque page sortait
+  la barre de nav du DOM et laissait son point actif en retard d'une transition.
+
+Le bilan, pour la prochaine fois : un carrousel demande une position, une direction,
+un anneau, une animation et une barre de nav — cinq choses qu'une liste n'a pas. Ne
+le reprendre que si les éléments doivent vraiment être vus **un par un**.
+
+### Une liste qui défile dans une page qui défile
+
+Le bloc « Topics waiting for you » (`.starter-topic__list`) est le précédent.
+
+- **La hauteur se dit en LIGNES, pas en pixels** — 3,5 ici. La demi-ligne coupée est
+  ce qui annonce qu'il y en a d'autres ; un scrollbar de trackpad, non.
+- ⚠️ **Les enfants d'une colonne flex avec `max-height` RÉTRÉCISSENT.** Huit lignes
+  dans 364px sont sorties à 34px chacune, et chaque texte clampé (`-webkit-box` +
+  `line-clamp`) est tombé à **zéro** hauteur. `flex: 0 0 auto` sur les lignes.
+- **`overscroll-behavior: contain`** sur le scroller : sans lui, un flick en fin de
+  liste emporte la page — ici, la grille de workflows sous le bloc.
+- **Un plafond doit exister aux deux bouts** : le store dit combien d'éléments
+  existent, la vue dit combien elle en dessine. S'ils divergent, l'un tronque l'autre
+  en silence.
 
 ### Un sélecteur montre la vraie carte, pas une ligne compacte
 
