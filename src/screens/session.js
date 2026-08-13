@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=408";
+import { renderTopbar } from "../components/topbar.js?v=412";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -71,11 +71,16 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getBriefById, getStarterTopics, subscribe as subscribeBriefs } from "../briefs-store.js?v=51";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=24";
+import {
+  getBriefById,
+  getStarterTopics,
+  countFreshTopics,
+  subscribe as subscribeBriefs,
+} from "../briefs-store.js?v=52";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=25";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=13";
 import { getLaneById } from "../research-store.js?v=42";
-import * as contextBuilder from "../context-builder.js?v=375";
+import * as contextBuilder from "../context-builder.js?v=379";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -112,7 +117,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=3";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=105";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=106";
 import { findResearchSource } from "../research-catalog.js?v=19";
 import {
   openDrafts as openDraftsPanel,
@@ -120,7 +125,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=542";
+} from "../components/right-panel.js?v=546";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=35";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2144,27 +2149,27 @@ function renderStarterTopicWaiting() {
   `;
 }
 
-// The LAST SLIDE of the carousel — the one after the queue, never on first paint,
-// where a user with no Topics gets no block at all rather than an empty one.
+// The panel's LAST ROW, and the only part of it that is not a Topic. It was a CARD in
+// the list — the seventh item of a six-item list, which is exactly why it read as
+// content and got skipped as content. As the panel's footer it is a different kind of
+// thing by construction, and it is PINNED: the way out no longer costs six rows of
+// scrolling to reach.
 //
-// It is where the list stops and the feed starts. The cap means the list is
-// deliberately short of everything, so the row that closes it says where the rest is
-// rather than apologising for the end. It was a carousel slide with a dot of its own
-// before the list; the job it does is the same.
+// The count is "N out of M": M is every Topic under a week old across every feed,
+// whatever its status (briefs-store.countFreshTopics). M deliberately does NOT shrink
+// as the reader triages — the sentence is a statement about the week, not a burn-down.
+// Math.max is a belt: the queue is fresh-only so M >= N holds, and if that ever stops
+// being true the number still cannot read as nonsense.
 //
-// The CTA is the same .starter-card__cta as a live row, so the two read as one
-// component; it is an <a> because it navigates, and the card around it is a plain
-// div because there is nothing else here to click.
-function renderStarterTopicEmpty() {
+// It does NOT say "scroll for more". The cut half-row at the bottom of the scroller
+// already says it, and in the one case where it would be needed — every row fitting —
+// it would be an instruction for something that cannot happen.
+function renderStarterTopicFoot(shown, fresh) {
   return `
-    <div class="starter-card starter-card--topic starter-topic--empty">
-      <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
-      <span class="starter-card__title">See more topics in your feed</span>
-      <span class="starter-card__subtitle"
-        >Browse all your topic feeds in one place, deep dive into topics.</span
-      >
-      <a class="starter-card__cta ap-link standalone small" href="#/topic-feeds"
-        >Explore more topics<i class="ap-icon-arrow-right" aria-hidden="true"></i
+    <div class="starter-topic__foot">
+      <span class="starter-topic__count">${shown} out of ${Math.max(fresh, shown)} shown</span>
+      <a class="ap-link standalone small" href="#/topic-feeds"
+        >See more topics in your feed<i class="ap-icon-arrow-right" aria-hidden="true"></i
       ></a>
     </div>
   `;
@@ -2200,6 +2205,7 @@ function renderStarterTopicSlot(sessionId) {
   const visible = queue.slice(0, STARTER_TOPIC_LIMIT);
   const shown = visible.length;
   const rows = visible.map(renderStarterTopicCard).join("");
+  const fresh = countFreshTopics();
   // tabindex on the scroller: a keyboard user has to be able to reach the overflow,
   // and the rows inside it are buttons, so focusing one of those scrolls the box
   // anyway — this covers reading without tabbing through every row.
@@ -2207,9 +2213,11 @@ function renderStarterTopicSlot(sessionId) {
     <div class="starter-topic" data-starter-topic-slot role="group" aria-labelledby="starterTopicLabel">
       ${
         waiting
-          ? renderStarterTopicWaiting()
-          : `<div class="starter-topic__list" tabindex="0">${rows}${renderStarterTopicEmpty()}</div>
-             <span class="starter-topic__hint">${shown} shown · scroll for more</span>`
+          ? `<div class="starter-topic__panel starter-topic__panel--waiting">${renderStarterTopicWaiting()}</div>`
+          : `<div class="starter-topic__panel">
+              <div class="starter-topic__list" tabindex="0">${rows}</div>
+              ${renderStarterTopicFoot(shown, fresh)}
+            </div>`
       }
     </div>
   `;

@@ -146,8 +146,26 @@ const STARTER_MAX = 6;
  * resolves the lane name, because lane names live in research-store and this
  * store deliberately doesn't know about it.
  */
+/** Age cut for "fresh": the same 7 days the feed's first age group uses. */
+const FRESH_DAYS = 7;
+const isFresh = (b) => ageMinutes(b.ageLabel) <= FRESH_DAYS * DAY;
+
+/**
+ * Every Topic under a week old, across every feed and whatever its status. The
+ * denominator of the new-session list's "N out of M shown" — M is what is FRESH,
+ * not what is untriaged, so the number does not drop as the reader works through
+ * the list. Counting all statuses is also what keeps M ≥ N: the list only draws
+ * fresh `new` ones, which is a subset of this.
+ */
+export function countFreshTopics() {
+  return briefs.filter(isFresh).length;
+}
+
 export function getStarterTopics() {
-  const all = briefs.map(withTriage).filter((b) => b.status === "new");
+  // Fresh only, to match the section's own label. A `new` Topic older than a week
+  // used to qualify, which made "Fresh topics to review" false and could push the
+  // shown count above the fresh total.
+  const all = briefs.map(withTriage).filter((b) => b.status === "new" && isFresh(b));
   const byAge = (a, b) => ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel);
   const trending = all.filter((b) => b.isTrending).sort(byAge)[0] || null;
   const updated = all.filter((b) => b.isUpdated && b !== trending).sort(byAge)[0] || null;

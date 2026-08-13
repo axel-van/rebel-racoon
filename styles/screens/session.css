@@ -827,26 +827,78 @@
   align-self: center;
   width: 100%;
   max-width: 1016px;
+  /* The block must never move the page under the reader. It is swapped whole twice —
+     when the waiting panel becomes the list, and on every triage that drops a row —
+     and a swap that changes height makes Chrome's scroll anchoring adjust the thread's
+     scroll to compensate, which reads as the page jumping to this section on load.
+     The waiting panel is now exactly the list's size so there is no delta to correct,
+     and this makes that structural rather than arithmetic: even if a future change
+     breaks the equality, the page will not scroll itself. */
+  overflow-anchor: none;
 }
 
-/* The scroller. Its height is stated in ROWS rather than pixels — 3.5 of them, so
-   the cut row is the thing that says "there is more", which no scrollbar on a
-   trackpad will do on its own. --starter-row is the row's own height plus the gap,
-   declared once here so the two cannot drift.
+/* ── The panel ────────────────────────────────────────────────────────────
+   ONE bordered surface with hairline-separated rows, rather than six separate cards.
+   The difference is structural and that is the point: a stack of cards rhymes with
+   the three workflow cards below, where a panel of rows does not — the reader can
+   tell which block they are in before reading a word.
 
-   overscroll-behavior: contain stops a flick at the end of this list from carrying
-   on into the page — the block sits mid-page above the workflow grid, and scrolling
-   past its end used to take the grid with it. */
-.starter-topic__list {
+   NOT .ap-list-panel, and this was checked rather than assumed. That component is a
+   settings SIDEBAR list: border-right only (no frame, no radius), height:100% (it
+   needs a sized parent or it collapses), items centred at a 40px min-height, and
+   -item-name is `white-space: nowrap` with an ellipsis — a single-line name, where a
+   Topic headline runs to two. Using it meant overriding five of its own rules, and
+   redeclaring .ap-* outside ds-patches is banned regardless. So this is hand-built
+   from tokens, deliberately, and says so.
+
+   The three heights live here and are shared: a row, how many show, and the footer.
+   The waiting state reads them too, so the block is the same height before and after
+   the first Topic lands. */
+.starter-topic__panel {
   --starter-row: 104px;
+  --starter-rows-shown: 3.5;
+  --starter-foot: 45px;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  max-height: calc(var(--starter-row) * 3.5);
+  overflow: hidden;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-card);
+}
+
+/* The scroller. Its height is stated in ROWS rather than pixels — 3.5 of them, so the
+   cut row is the thing that says "there is more", which no scrollbar on a trackpad
+   will do on its own.
+
+   overscroll-behavior: contain stops a flick at the end of this list from carrying on
+   into the page — the block sits mid-page above the workflow grid, and scrolling past
+   its end used to take the grid with it. */
+.starter-topic__list {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(var(--starter-row) * var(--starter-rows-shown));
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* Room for the scrollbar so it never sits on a row's border. */
-  padding-right: var(--ref-spacing-xxs);
+}
+
+/* Pinned under the scroller, inside the panel's frame: the count on the left, the way
+   out on the right. It does not scroll with the rows, which is the whole argument for
+   taking it out of the list. */
+.starter-topic__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+  min-height: var(--starter-foot);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border-top: 1px solid var(--app-border);
+  background: var(--ref-color-grey-bg);
+}
+
+.starter-topic__count {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
 }
 
 /* Rows do NOT shrink. The scroller is a flex column with a max-height, so its
@@ -858,20 +910,45 @@
   flex: 0 0 auto;
 }
 
-/* The count line. It says how many are on screen rather than how many exist, because
-   the number that matters to a reader deciding whether to scroll is the one in front
-   of them — and the total is what the feed is for. */
-.starter-topic__hint {
-  align-self: flex-start;
-  margin-top: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--sys-text-color-light);
+/* Rows are separated by HAIRLINES, not by gaps and their own borders. Each row draws
+   its bottom rule and the last drops it, so the panel's own frame closes the list —
+   two adjacent 1px borders would read as a 2px seam. */
+.starter-topic__list > * {
+  border-bottom: 1px solid var(--app-border);
+}
+
+.starter-topic__list > *:last-child,
+.starter-topic__list .starter-card--topic:last-child {
+  border-bottom-width: 0;
 }
 
 .starter-topic__list:focus-visible {
   outline: 2px solid var(--ref-color-electric-blue-100);
   outline-offset: 2px;
+}
+
+/* Inside the panel a row is not a card: no frame of its own, no radius, and the
+   hover fills the row instead of outlining it. The panel is the surface; the rows are
+   its contents. */
+.starter-topic__list .starter-card--topic {
+  /* Sides and top only — the BOTTOM is the hairline between rows, and a blanket
+     `border: 0` here silently won it on specificity (0,2,0 against 0,1,0) and left
+     the list with no separators at all. */
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.starter-topic__list .starter-card--topic:hover,
+.starter-topic__list .starter-card--topic:focus-visible {
+  border-color: transparent;
+  background: var(--ref-color-grey-bg);
+}
+
+/* The tint wash belongs to a card; on a row it is a second hover on top of the one
+   above. */
+.starter-topic__list .starter-card--topic::before {
+  display: none;
 }
 
 .starter-card--topic {
@@ -1127,6 +1204,24 @@
 .starter-topic--empty,
 .starter-topic--waiting {
   cursor: default;
+}
+
+/* The waiting state is THE PANEL, not a card that happens to be the same size. Sizing
+   it by arithmetic left it 1px short of the real thing (409 against 410) — the border
+   and the footer's rounded min-height do not add up to what they measure. Rendering it
+   inside the same element makes the two states identical by construction, so the block
+   cannot jump when the loader is replaced by the list. */
+/* The height goes on the CONTENT, not on the panel. On the panel it was a border-box
+   min-height, so the 2 × 1px frame came out of the 409px rather than being added to it
+   and the waiting state measured 409 against the list's 410 — a 1px jump when the
+   loader was replaced. Sizing the card instead makes the panel add its frame the same
+   way it does in the list state: content (3.5 rows + footer) + border. */
+.starter-topic__panel--waiting > .starter-topic--waiting {
+  flex: 1 1 auto;
+  min-height: calc(var(--starter-row) * var(--starter-rows-shown) + var(--starter-foot));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 /* Coming-soon teaser card — non-interactive: no hover lift, no pointer, and a

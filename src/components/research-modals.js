@@ -31,7 +31,7 @@ import {
   ignoreBrief,
   setStatus,
   toggleSaved,
-} from "../briefs-store.js?v=51";
+} from "../briefs-store.js?v=52";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
 import { renderUseButtons } from "./brief-card.js?v=46";
@@ -50,7 +50,7 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=24";
+import { openBriefInChat } from "../brief-flow.js?v=25";
 import { renderBriefCard } from "./brief-card.js?v=46";
 import { renderSocialPostCard } from "./social-post-card.js?v=30";
 import { showToast } from "./toast.js?v=21";
