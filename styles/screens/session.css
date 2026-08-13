@@ -1074,8 +1074,17 @@
 
 /* ── The swap ─────────────────────────────────────────────────────────────
    Out to the left, in from the right, so the two halves read as one card being
-   replaced by the next rather than as a card blinking. Both are transform +
-   opacity only — no layout properties — so neither reflows the page. */
+   replaced by the next rather than as a card blinking. TRANSFORM ONLY — no layout
+   properties, so neither half reflows the page, and no opacity either.
+
+   No fade, and fast: 75ms out + 75ms in, sequenced, so a page lands in 150ms. It
+   was 180 + 220 = 400ms with both halves fading through opacity 0, which on a
+   control you press four times in a row reads as waiting rather than as motion. The
+   fade was also what made the duration necessary — a cross-fade needs time to be
+   read as one, where a displacement does not.
+
+   --ref-animation-xshort is the DS's own 75ms step; the JS that sequences the two
+   halves has to stay equal to the OUT duration (see STARTER_SWAP_MS). */
 /* Fills the wrapper rather than sizing to its content — as a plain flex item it
    shrank to the card's intrinsic width and left the cell 39px short of the two
    columns it spans. min-width:0 is what actually lets a flex item narrow below
@@ -1087,11 +1096,11 @@
 }
 
 .starter-topic__stage.is-leaving {
-  animation: starter-topic-out 180ms var(--app-ease-standard) forwards;
+  animation: starter-topic-out var(--ref-animation-xshort) var(--app-ease-standard) forwards;
 }
 
 .starter-topic__stage.is-entering {
-  animation: starter-topic-in 220ms var(--app-ease-standard);
+  animation: starter-topic-in var(--ref-animation-xshort) var(--app-ease-standard);
 }
 
 /* Backwards: the same two animations mirrored, so Previous pulls the card back in
@@ -1099,37 +1108,33 @@
    than one with a sign variable, because `translateX(var(--x))` inside a keyframe
    can't be flipped per-element without re-declaring the animation anyway. */
 .starter-topic__stage.is-leaving-back {
-  animation: starter-topic-out-back 180ms var(--app-ease-standard) forwards;
+  animation: starter-topic-out-back var(--ref-animation-xshort) var(--app-ease-standard) forwards;
 }
 
 .starter-topic__stage.is-entering-back {
-  animation: starter-topic-in-back 220ms var(--app-ease-standard);
+  animation: starter-topic-in-back var(--ref-animation-xshort) var(--app-ease-standard);
 }
 
 @keyframes starter-topic-out {
   to {
-    opacity: 0;
     transform: translateX(-24px);
   }
 }
 
 @keyframes starter-topic-in {
   from {
-    opacity: 0;
     transform: translateX(24px);
   }
 }
 
 @keyframes starter-topic-out-back {
   to {
-    opacity: 0;
     transform: translateX(24px);
   }
 }
 
 @keyframes starter-topic-in-back {
   from {
-    opacity: 0;
     transform: translateX(-24px);
   }
 }

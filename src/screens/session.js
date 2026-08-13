@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=399";
+import { renderTopbar } from "../components/topbar.js?v=400";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=48";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=21";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=12";
 import { getLaneById } from "../research-store.js?v=41";
-import * as contextBuilder from "../context-builder.js?v=366";
+import * as contextBuilder from "../context-builder.js?v=367";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=533";
+} from "../components/right-panel.js?v=534";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=34";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2184,6 +2184,12 @@ function renderStarterTopicEmpty() {
     </div>
   `;
 }
+
+// How long the outgoing card is given before the markup is swapped. It MUST equal
+// the leave animation's duration in session.css, which is --ref-animation-xshort
+// (75ms) — shorter and the card is cut off mid-slide, longer and it sits parked at
+// -24px waiting. The pair costs 150ms: 75 out, 75 in.
+const STARTER_SWAP_MS = 75;
 
 /** Slides in the carousel: one per queued Idea, plus the closing card. */
 function starterTopicSlideCount(queue) {
@@ -4954,7 +4960,7 @@ function bindSession(root, session) {
         // queue no longer has.
         const nextIndex = step ? (wanted + total) % total : Math.max(0, Math.min(total - 1, wanted));
         // Nothing to animate — the dot you are already on, or an arrow on a
-        // one-slide ring. Returning here also stops the 180ms swap from running and
+        // one-slide ring. Returning here also stops the swap from running and
         // re-rendering the block for no reason.
         if (nextIndex === starterTopicIndex) return;
         // Direction, so going back reads as going back: out to the right and in
@@ -4970,7 +4976,7 @@ function bindSession(root, session) {
         starterTopicIndex = nextIndex;
         const swap = () => {
           // Re-check that the slot we captured on the click is still in the
-          // document. It might not be: this runs 180ms later, and in between the
+          // document. It might not be: this runs a beat later, and in between the
           // countdown's own swap can have replaced it, the hero can have
           // re-rendered, or a second click can have landed. Without the guard
           // `slot.parentElement` is null and replaceChild throws — reachable just
@@ -5003,7 +5009,7 @@ function bindSession(root, session) {
           swap();
           const s = document.querySelector("[data-starter-topic-stage]");
           if (s) s.classList.add(back ? "is-entering-back" : "is-entering");
-        }, 180);
+        }, STARTER_SWAP_MS);
         return;
       }
       // Clicking the card itself drafts from that topic — the same handoff the
