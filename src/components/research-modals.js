@@ -1623,10 +1623,13 @@ function onPanelClick(event) {
   // Inspiration used before navigating (the status has to change while this code
   // still runs), Save toggles and says so, Ignore hands over to the reason dialog.
   //
-  // Use and Ignore leave this dialog — one navigates, the other replaces the
-  // dialog's contents. Save does NOT: the label flips between Save for later and
-  // Remove from saved, so the footer is re-rendered in place and the reader stays
-  // where they were.
+  // All three LEAVE this dialog: Use navigates, Ignore replaces the dialog's
+  // contents, and Save closes. Save kept the dialog open for a while, on the
+  // argument that the label flips to Remove from saved and the reader should see
+  // it — but saving IS the decision, and holding a full-screen article open after
+  // it asks the reader to close a thing they have finished with. The toast carries
+  // the confirmation, and the flipped label is there on the card and in the feed
+  // the moment they look.
   const useBtn = event.target.closest("[data-brief-use]");
   if (useBtn) {
     const id = useBtn.dataset.briefUse;
@@ -1636,11 +1639,9 @@ function onPanelClick(event) {
   }
   const saveBtn = event.target.closest("[data-brief-save]");
   if (saveBtn) {
-    const id = saveBtn.dataset.briefSave;
-    const next = toggleSaved(id);
+    const next = toggleSaved(saveBtn.dataset.briefSave);
+    close();
     showToast(next === "saved" ? "Saved for later" : "Removed from saved");
-    const fresh = getBriefById(id);
-    if (fresh && footEl) footEl.innerHTML = renderUseButtons(fresh);
     return;
   }
   const ignoreBtn = event.target.closest("[data-brief-ignore]");

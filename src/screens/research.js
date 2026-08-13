@@ -23,7 +23,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=404";
+import { renderTopbar } from "../components/topbar.js?v=405";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=21";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=73";
