@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=406";
+import { renderTopbar } from "../components/topbar.js?v=407";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -71,11 +71,11 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getBriefById, getStarterTopics } from "../briefs-store.js?v=49";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=22";
+import { getBriefById, getStarterTopics } from "../briefs-store.js?v=50";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=23";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=13";
 import { getLaneById } from "../research-store.js?v=42";
-import * as contextBuilder from "../context-builder.js?v=373";
+import * as contextBuilder from "../context-builder.js?v=374";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -112,7 +112,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=3";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=103";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=104";
 import { findResearchSource } from "../research-catalog.js?v=19";
 import {
   openDrafts as openDraftsPanel,
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=540";
+} from "../components/right-panel.js?v=541";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=35";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1984,10 +1984,6 @@ function removeSlashToken(input) {
 // Every dot maps to a slide, which is why the closing card is a slide rather
 // than a state you fall off the end into.
 //
-// `starterTopicIndex` is module-level for the same reason the picker's step is:
-// the hero re-renders through renderEmptyHero and the position has to outlive
-// that.
-let starterTopicIndex = 0;
 let starterTopicSession = null;
 
 // Reset the queue when the hero paints for a DIFFERENT chat. Carrying the
@@ -2006,7 +2002,6 @@ let starterTopicTimer = null;
 function syncStarterTopicSession(sessionId) {
   if (starterTopicSession === sessionId) return;
   starterTopicSession = sessionId;
-  starterTopicIndex = 0;
   starterTopicCountdown = STARTER_TOPIC_COUNTDOWN;
 }
 
@@ -2031,10 +2026,8 @@ function startStarterTopicCountdown() {
     next.innerHTML = renderStarterTopicSlot();
     const fresh = next.querySelector("[data-starter-topic-slot]");
     if (!fresh) return;
-    // The whole slot, because this is the one moment the nav ARRIVES: the waiting
-    // card renders none, so there is no nav element to repaint in place yet.
-    // Paging is the other way round and repaints in place — see
-    // repaintStarterTopicSlot.
+    // The whole slot: the waiting card is replaced by the list, a different
+    // element rather than a repaint of the same one.
     host.replaceChild(fresh, slot);
   }, STARTER_TOPIC_COUNTDOWN * 1000);
 }
@@ -2154,27 +2147,19 @@ function renderStarterTopicWaiting() {
 // The LAST SLIDE of the carousel — the one after the queue, never on first paint,
 // where a user with no Topics gets no block at all rather than an empty one.
 //
-// It used to be the dead end you fell into by flipping past the last card, so it
-// said "that's everything for now". As a slide with a dot of its own it is a
-// destination instead: the carousel shows four Topics short, and everything about
-// them — the full write-up, the posts behind it, the feeds they came from — is
-// one click away. So it says what is over there, and the subtitle answers the two
-// questions that follow: what the full view adds, and when more arrive.
+// It is where the list stops and the feed starts. The cap means the list is
+// deliberately short of everything, so the row that closes it says where the rest is
+// rather than apologising for the end. It was a carousel slide with a dot of its own
+// before the list; the job it does is the same.
 //
-// The CTA is the same .starter-card__cta as a live card so the two read as one
+// The CTA is the same .starter-card__cta as a live row, so the two read as one
 // component; it is an <a> because it navigates, and the card around it is a plain
 // div because there is nothing else here to click.
-//
-// The loop lives in the nav row, NOT in here. It was a second icon button beside
-// this CTA for a while: two controls in two places for one carousel, one of which
-// only existed on one slide, and it landed on the card's own watermark. The trailing
-// arrow already sits where "what comes after this" belongs, so on this slide it
-// becomes the way round — see renderStarterTopicNav.
 function renderStarterTopicEmpty() {
   return `
     <div class="starter-card starter-card--topic starter-topic--empty">
       <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
-      <span class="starter-card__title">Get the full details into your Topic feeds</span>
+      <span class="starter-card__title">See more topics in your feed</span>
       <span class="starter-card__subtitle"
         >Browse all your topic feeds in one place, deep dive into topics.</span
       >
@@ -2185,114 +2170,49 @@ function renderStarterTopicEmpty() {
   `;
 }
 
-/** Slides in the carousel: one per queued Topic, plus the closing card. */
-function starterTopicSlideCount(queue) {
-  return queue.length + 1;
-}
+// How many Topics the list shows before the closing card. Must match STARTER_MAX in
+// briefs-store — the store decides how many exist, this decides how many are drawn,
+// and if they disagree the list silently truncates or the cap does nothing.
+const STARTER_TOPIC_LIMIT = 8;
 
-// The stage, then the nav under it. Under, not overlaid on the card: at three
-// cards wide there is no gutter left to put a control in, and a pair of arrows
-// pinned inside the card would sit on top of the headline they are meant to
-// change. Under the stage they also read as belonging to the whole block rather
-// than to the card currently in it.
+// A SCROLLING LIST, not a carousel. It was one card at a time with prev/next and a
+// dot stepper, which is the right shape when the set is small and each one is meant
+// to be considered — and the wrong shape here, because the reader is scanning for
+// the one worth opening. A list puts seven or eight headlines on screen at once, so
+// scanning is the eye's job rather than a sequence of clicks, and there is no
+// position for a control to remember.
+//
+// It also answers both halves of "explore" from one surface: sideways is looking
+// down the list, outward is the closing card, and the way out is the chat that was
+// never left.
+//
+// A row opens the article dialog (openIdeaArticle, wired in the delegated handler) —
+// the row is a trigger, not a destination.
 function renderStarterTopicSlot(sessionId) {
   if (!isFlagOn("contentResearch")) return "";
   if (sessionId) syncStarterTopicSession(sessionId);
   const queue = getStarterTopics();
-  // No Topics at all (new-alt mode): no block, not a closing card. "Everything is
-  // in Topic feeds" is an answer to "I've read these", not to "there was never
-  // anything here".
+  // No Topics at all (new-alt mode): no block, not a closing card. "See more in your
+  // feed" is an answer to "I've read these", not to "there was never anything here".
   if (!queue.length) return "";
   const waiting = starterTopicCountdown > 0;
-  const total = starterTopicSlideCount(queue);
-  // Clamped on READ as well as on write: the queue is recomputed from the store
-  // on every render, so triaging a Topic elsewhere can shorten it under a
-  // position that was valid when it was set.
-  const index = Math.min(starterTopicIndex, total - 1);
-  const brief = waiting ? null : queue[index] || null;
   if (waiting) startStarterTopicCountdown();
+  const rows = queue.slice(0, STARTER_TOPIC_LIMIT).map(renderStarterTopicCard).join("");
+  // tabindex on the scroller: a keyboard user has to be able to reach the overflow,
+  // and the rows inside it are buttons, so focusing one of those scrolls the box
+  // anyway — this covers reading without tabbing through every row.
   return `
     <div class="starter-topic" data-starter-topic-slot role="group" aria-labelledby="starterTopicLabel">
-      <div class="starter-topic__stage" data-starter-topic-stage>
-        ${waiting ? renderStarterTopicWaiting() : brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty()}
-      </div>
-      ${waiting ? "" : renderStarterTopicNav(index, total)}
+      ${
+        waiting
+          ? renderStarterTopicWaiting()
+          : `<div class="starter-topic__list" tabindex="0">${rows}${renderStarterTopicEmpty()}</div>`
+      }
     </div>
   `;
 }
 
-// Prev · dots · next. The dots are the DS .ap-dot-stepper, which exists for
-// exactly this ("carousel indicators", and its own usage rule says to prefer
-// .ap-stepper only for numbered multi-step flows) — bare <button> children, no
-// class of their own, .active on the current one.
-//
-// The arrows are DS icon buttons, and NEITHER is ever disabled: the carousel wraps
-// both ways. Next off the last slide lands on the first Topic, Previous off the first
-// lands on the closing card. Five slides in a ring, reachable from either direction.
-//
-// Two plain chevrons, unchanged on every slide. A glyph that swapped to `history` at
-// the ends was tried and dropped: it made one control look like two, and it is not
-// needed — the dots already say where the ring ends, so a chevron promises the next
-// slide rather than a slide that doesn't exist.
-//
-// Labels stay "Previous idea" / "Next idea" throughout. With a ring there is no state
-// where either is a dead end, so there is nothing for a label to warn about.
-function renderStarterTopicNavInner(index, total) {
-  const dots = Array.from({ length: total }, (_, i) => {
-    // The last slide is not a Topic, so it cannot be labelled as one. Everything
-    // else is "Topic N of <queue length>" — total minus that closing slide.
-    const label = i === total - 1 ? "Everything else, in Topic feeds" : `Topic ${i + 1} of ${total - 1}`;
-    return `<button type="button"${i === index ? ' class="active"' : ""} data-starter-topic-go="${i}" aria-label="${label}"${
-      i === index ? ' aria-current="true"' : ""
-    }></button>`;
-  }).join("");
-  return `
-    <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="-1" aria-label="Previous idea">
-      <i class="ap-icon-chevron-left" aria-hidden="true"></i>
-    </button>
-    <div class="ap-dot-stepper starter-topic__dots">${dots}</div>
-    <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="1" aria-label="Next idea">
-      <i class="ap-icon-chevron-right" aria-hidden="true"></i>
-    </button>
-  `;
-}
-
-// The nav's CONTENTS, separately from its box. Paging rewrites the contents and
-// leaves the <div class="starter-topic__nav"> itself mounted, which is what keeps
-// the row on screen through a page instead of being torn out and rebuilt with the
-// slot around it.
-function renderStarterTopicNav(index, total) {
-  return `<div class="starter-topic__nav">${renderStarterTopicNavInner(index, total)}</div>`;
-}
-
-// Paging: rewrite the stage's card and the nav's contents IN PLACE. Neither element
-// is replaced, so the nav row is on screen continuously — it used to go out with the
-// whole slot, which also meant its active dot still showed the OLD position for as
-// long as the swap took.
-//
-// Instant, because there is no animation left to wait for. The slide (and the fade
-// before it) are gone: on a control you press repeatedly, the card you asked for
-// arriving in the same frame as the click IS the feedback, and a 24px displacement
-// only delayed it. Nothing here is timed, so nothing can be interrupted mid-flight
-// either — the double-click race the old 75ms timer needed a mounted-check for
-// cannot happen.
-//
-// Reads the queue fresh and re-clamps: triaging a Topic elsewhere can shorten it
-// under a position that was valid when it was set.
-function repaintStarterTopicSlot(slot) {
-  if (!slot || !document.body.contains(slot)) return;
-  const queue = getStarterTopics();
-  if (!queue.length) return;
-  const total = starterTopicSlideCount(queue);
-  const index = Math.min(starterTopicIndex, total - 1);
-  const brief = queue[index] || null;
-  const stage = slot.querySelector("[data-starter-topic-stage]");
-  const nav = slot.querySelector(".starter-topic__nav");
-  if (stage) stage.innerHTML = brief ? renderStarterTopicCard(brief) : renderStarterTopicEmpty();
-  if (nav) nav.innerHTML = renderStarterTopicNavInner(index, total);
-}
-
-// Label + carousel, or nothing at all. One function so the label can't outlive
+// Label + list, or nothing at all. One function so the label can't outlive
 // the block it names — renderStarterTopicSlot returns "" in three cases (flag
 // off, no Topics, new-alt), and a heading with nothing under it would be worse
 // than no heading.
@@ -4956,44 +4876,7 @@ function bindSession(root, session) {
       // setting `action` on the mock. The "open-video-clips" action opens the
       // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
       // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
-      // ── The Topic feeds carousel ──────────────────────────────────────
-      // Paging: work out the next index, then repaint the stage and the nav in
-      // place (repaintStarterTopicSlot). No animation, no timer, no reduced-motion
-      // branch to keep in step with a stylesheet — the card you asked for is on
-      // screen in the same frame as the click.
-      //
-      // One handler for the arrows and the dots: they differ only in how the next
-      // index is worked out (step is relative, a dot is absolute).
-      const step = event.target.closest("[data-starter-topic-step]");
-      const goDot = event.target.closest("[data-starter-topic-go]");
-      if (step || goDot) {
-        const control = step || goDot;
-        const slot = control.closest("[data-starter-topic-slot]");
-        // A nav can only exist alongside a stage; bail if this click came from
-        // markup that is already half torn down.
-        if (!slot || !slot.querySelector("[data-starter-topic-stage]")) return;
-        // Recomputed here rather than trusted from the markup: the queue is
-        // derived from the store, so it can be shorter than it was when this nav
-        // was painted (triaging one of these Topics in another tab of the app).
-        const total = starterTopicSlideCount(getStarterTopics());
-        const wanted = step
-          ? starterTopicIndex + Number(step.dataset.starterTopicStep)
-          : Number(goDot.dataset.starterTopicGo);
-        // The arrows WRAP; the dots don't need to, since every dot is a real slide.
-        // Off the end lands on the first slide, off the start lands on the last —
-        // (i + step + total) % total, which is the ring in one expression. A dot is
-        // still clamped, defensively: a stale nav can name an index the shortened
-        // queue no longer has.
-        const nextIndex = step ? (wanted + total) % total : Math.max(0, Math.min(total - 1, wanted));
-        // Nothing to animate — the dot you are already on, or an arrow on a
-        // one-slide ring. Returning here also stops the swap from running and
-        // re-rendering the block for no reason.
-        if (nextIndex === starterTopicIndex) return;
-        starterTopicIndex = nextIndex;
-        repaintStarterTopicSlot(slot);
-        return;
-      }
-      // Clicking the card OPENS THE INSPIRATION, it does not act on it. The card
+      // Clicking a row OPENS THE TOPIC, it does not act on it. The row
       // shows a headline and three clamped lines; deciding to draft from that is
       // deciding on a summary. The dialog is the same article the feed's pane
       // shows, with the same three verbs under it — so the decision is made

@@ -807,50 +807,71 @@
   transform: translateX(3px);
 }
 
-/* ── The Content Ideas carousel ───────────────────────────────────────────
-   Its own block above the workflow grid, at the grid's full width — the same
-   1040px, so the card's edges line up with the three workflow cards under it
-   and the two blocks read as one column rather than two widths. Same
-   .starter-card chrome inside; what is added here is the accent, the lane/mark
-   head row, the nav row and the swap animation.
+/* ── The Topics list ──────────────────────────────────────────────────────
+   Its own block above the workflow grid, at 1016px — narrower than the grid's
+   1040px by design: a list is read down its left edge, and a row that runs the
+   full width of three cards is a longer line than a headline needs.
 
-   It was one cell of the grid (a two-column cell before that). The block is what
-   the carousel needs: the nav row sits UNDER the stage, and a grid cell can't
-   grow under itself without stretching every workflow card in the row to match.
+   It was a carousel here (one card, prev/next, a dot stepper). The list replaced
+   it because the reader is scanning for the one worth opening, not considering
+   each in turn — see session.js for the full reasoning. What went with the
+   carousel: the stage, the nav row, the dots, the ring and the swap animation.
 
-   Column, so the stage and the nav stack. align-self overrides .empty-chat's
-   align-items: center — the same trick .empty-chat__starter-label uses to sit in
-   the grid's box rather than shrink to its own text. */
+   align-self overrides .empty-chat's align-items: center — the same trick
+   .empty-chat__starter-label uses to sit in the grid's box rather than shrink to
+   its own text. */
 .starter-topic {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
   align-self: center;
   width: 100%;
-  max-width: 1040px;
+  max-width: 1016px;
 }
 
-/* Prev · dots · next, centred under the card. Centred rather than pushed to one
-   end: the dots are the middle of the group and reading position off-centre is
-   harder than it looks. */
-.starter-topic__nav {
+/* The scroller. Its height is stated in ROWS rather than pixels — 3.5 of them, so
+   the cut row is the thing that says "there is more", which no scrollbar on a
+   trackpad will do on its own. --starter-row is the row's own height plus the gap,
+   declared once here so the two cannot drift.
+
+   overscroll-behavior: contain stops a flick at the end of this list from carrying
+   on into the page — the block sits mid-page above the workflow grid, and scrolling
+   past its end used to take the grid with it. */
+.starter-topic__list {
+  --starter-row: 104px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ref-spacing-xs);
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  max-height: calc(var(--starter-row) * 3.5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Room for the scrollbar so it never sits on a row's border. */
+  padding-right: var(--ref-spacing-xxs);
+}
+
+/* Rows do NOT shrink. The scroller is a flex column with a max-height, so its
+   children are flex items that shrink to fit by default — eight rows in a 364px box
+   squashed to 34px each, which collapsed every clamped line to zero height and left
+   a row showing nothing but its source line. Measured before the fix: row height 34px,
+   title and summary both 0. */
+.starter-topic__list > * {
+  flex: 0 0 auto;
+}
+
+.starter-topic__list:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 2px;
 }
 
 .starter-card--topic {
   width: 100%;
-  /* One height for every slide, so paging never resizes the block or shoves the
-     nav row and the workflow grid down. 218px is measured, not chosen: the
-     tallest a live slide can be is crumb + a TWO-line headline + a 3-line
-     summary + the CTA + the card's own padding, and at this width (983px of
-     title measure) a 230-character headline still only reaches two lines. A
-     1-line slide and the closing card spend the difference as air in the middle,
-     because the CTA pins itself to the bottom. */
-  min-height: 218px;
+  /* A ROW now, not a slide. The carousel pinned every card to 218px so paging
+     could not resize the block; in a list that height is the whole problem —
+     eight of them would run 1700px and bury the workflow grid. The row is as tall
+     as its content (about 104px: source line, headline, two lines of summary) and
+     --starter-row in the scroller above is kept equal to it. */
+  min-height: 0;
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   gap: var(--ref-spacing-xxs);
   /* stretch, overriding .starter-card's align-items: flex-start. That default
      sizes each child to its CONTENT, which is invisible on a workflow card whose
@@ -1028,6 +1049,35 @@
   max-width: 60ch;
 }
 
+/* Two lines in a row, not the feed's three: at eight rows the third line is 8 × 23px
+   of scroll for a sentence the dialog shows in full one click later. */
+.starter-topic__list .topics-card__summary {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 14px;
+}
+
+/* The watermark is a slide's texture, not a row's. At row height the 72px glyph
+   fills the card and shows through the summary; the list drops it rather than
+   shrinking it to something that reads as a stray mark. */
+.starter-topic__list .starter-card__art {
+  display: none;
+}
+
+/* …except on the closing row, which is the one row that navigates somewhere and so
+   needs to say where. See the rule after this one. */
+
+/* The CTA earned its place on a card you were meant to dwell on. In a list the row
+   IS the affordance — eight rows each ending in the same blue link is eight copies
+   of one instruction, and the hover already says the row is live. */
+.starter-topic__list .starter-card__cta {
+  display: none;
+}
+
+.starter-topic__list .starter-topic--empty .starter-card__cta {
+  display: inline-flex;
+}
+
 /* The watermark, resized for this card. The workflow cards are 158px tall and
    carry a 104px glyph; this one is shorter, so the same glyph reached the
    top-right corner — where the flip button used to sit, and where the crumb still
@@ -1040,33 +1090,9 @@
   bottom: calc(var(--ref-spacing-xs) * -1);
 }
 
-/* The dots take the middle and the arrows pin to the card's two edges. That is
-   the DS component's own behaviour — .ap-dot-stepper is width:100% with the dots
-   centred inside it — and it is stated here as flex-grow so the layout is a
-   decision rather than something inherited: on a card this wide, an arrow beside
-   the edge it moves the card towards reads as direction, where a tight trio in the
-   middle would leave 400px of empty row on either side of it.
-   The class is my own, not a redeclared .ap-dot-stepper — everything the DS owns
-   (dot size, spacing, active state, hover growth) is left alone. */
-.starter-topic__dots {
-  flex: 1 1 auto;
-}
-
-/* ── The swap ─────────────────────────────────────────────────────────────
-   There isn't one any more. The card is replaced in place, in the same frame as
-   the click (session.js repaintStarterTopicSlot), so this file has nothing to
-   animate.
-
-   What was here: a 24px slide out and in, mirrored for backwards, once with a
-   cross-fade and then without. Both went for the same reason — on a control you
-   press four or five times in a row, any duration at all reads as the carousel
-   making you wait, and the displacement was never carrying information the active
-   dot doesn't already carry. Dropping it also took three sources of complexity with
-   it: a JS timer that had to stay equal to a CSS duration, a stale-class trap in
-   the cascade (entering rules beat leaving ones at equal specificity), and a
-   reduced-motion branch that had to mirror the whole thing.
-
-   .starter-topic__stage keeps its layout rule above; only the animation went. */
+/* What is no longer here: the dot stepper's flex rule, and the swap animation with
+   its four keyframe sets. Both belonged to the carousel. The list has no transition
+   at all — a row that opens a dialog is not a state change to animate. */
 
 /* The spinner takes everything under the message. .ap-loader-container already
    centres its child (DS: display:flex + align/justify center); all this adds is
