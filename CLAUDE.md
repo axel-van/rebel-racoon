@@ -25,17 +25,22 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 
 ### Routes (declared in `src/app.js`)
 
-| Route                | Screen                 | Notes                                                                                             |
-| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `/`                  | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
-| `/session/:id`       | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
-| `/contexts`          | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
-| `/playbook/:id`      | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
-| `/connectors`        | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
-| `/topics`            | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
-| `/topics/settings`   | `topics-settings.js`   | **Topics settings** — the six listening sources + cadence for one Playbook (`?pb=`); topbar back  |
-| `/welcome-alt`       | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
-| `/welcome-alt/recap` | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
+| Route                          | Screen                 | Notes                                                                                             |
+| ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `/`                            | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
+| `/session/:id`                 | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
+| `/contexts`                    | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
+| `/playbook/:id`                | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
+| `/connectors`                  | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
+| `/topics`                      | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
+| `/topics/settings`             | `topics-settings.js`   | **Topics settings** — the six listening sources + cadence for one Playbook (`?pb=`); topbar back  |
+| `/content-ideas`               | `research.js`          | **Idea streams** list (H1 "Idea streams") — gated by `contentResearch`                            |
+| `/content-ideas/new`           | `research-form.js`     | Create a stream. Registered BEFORE `/content-ideas/:id`, which would swallow "new"                |
+| `/content-ideas/:id`           | `research-feed.js`     | One stream's Idea feed + article pane; `?fresh=1` plays the generating loader                     |
+| `/content-ideas/:id/settings`  | `research-form.js`     | The same form in settings mode; topbar back keeps the stream's own name                           |
+| `/content-ideas/:id/attention` | `research-trending.js` | The flagged Ideas (trending / updated), outside triage                                            |
+| `/welcome-alt`                 | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
+| `/welcome-alt/recap`           | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
 
 There is **no `/settings` route** — it was removed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
 
@@ -195,7 +200,7 @@ A topic offers exactly two actions: **Start a chat** and **Dismiss**. Start-a-ch
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 11 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (**ON** — the prompt-at-the-bottom redesign in `components/image-studio-v2/` is the Image Studio; OFF falls back to the previous one), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 12 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (**ON** — the prompt-at-the-bottom redesign in `components/image-studio-v2/` is the Image Studio; OFF falls back to the previous one), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog), `contentResearch` (OFF — gates the whole Content Ideas feature: the `/content-ideas*` routes, the nav row + counter, the composer's Content Ideas picker, and the new-session carousel). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 

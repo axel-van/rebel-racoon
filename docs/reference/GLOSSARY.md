@@ -8,7 +8,8 @@
 Source  →  Idea  →  Draft  →  Schedule
 (input)    (insight) (post)    (calendar slot)
    ▲
-   └── Topic  (optionnel, en amont — flag `topics`)
+   ├── Topic             (optionnel, en amont — flag `topics`)
+   └── Idea (d'un stream) (optionnel, en amont — flag `contentResearch`)
 ```
 
 1. **Source** — un input brut (PDF, URL, vidéo, audio, video clip, ou une réponse de connecteur). Stocké global cross-session dans `sources-stream.js`.
@@ -16,7 +17,9 @@ Source  →  Idea  →  Draft  →  Schedule
 3. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
 4. **Schedule** — un draft posté dans le queue du calendrier.
 
-En amont, **optionnellement** : un **Topic**. Une Idea peut toujours venir directement d'une Source.
+En amont, **optionnellement** : un **Topic** ou une **Idea d'un stream**. Les deux entrent dans le pipeline comme **Source**. Une Idea de pipeline peut toujours venir directement d'une Source.
+
+> ⚠️ **« Idea » nomme deux objets.** L'Idea du pipeline (extraite d'une source, panneau de droite, `library.js`, `idea-card`) et l'Idea d'un **Idea stream** (Content Ideas, `briefs-store`, `brief-card`). Les deux sont visibles par l'utilisateur : **nommer la surface** dès que l'un ou l'autre est possible — « une Idea de ce stream », jamais un « Idea » nu. En code ils ne se touchent jamais : stores, modules de carte et routes différents.
 
 ### Topic
 
@@ -32,9 +35,23 @@ Un **Topic** est un dossier qu'Archie assemble à partir du listening Agorapulse
 | `ageDays`            | **La** source de vérité de l'âge : groupe le feed et dérive chaque libellé |
 | `unseen` `dismissed` | Badge de la sidebar / masqué du feed (jamais supprimé, pour l'Undo)        |
 
-Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. ⚠️ `topic` reste **banni comme synonyme d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
+Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. C'est désormais le **seul** objet appelé Topic dans l'UI : Content Ideas, qui appelait ses cartes des Topics, dit **Idea** depuis le renommage (voir plus bas). `topic` reste **banni comme synonyme d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
 
 Deux actions, pas plus : **Start a chat** (le topic entre dans le chat comme Source, donc tout le pipeline existant s'allume) et **Dismiss**. Voir [`FEATURES.md`](FEATURES.md) §17.
+
+### Idea stream + Idea (Content Ideas)
+
+Un **Idea stream** est une **requête permanente nommée** : un Playbook × un jeu de sources × une cadence. Archie y dépose des **Ideas** : une accroche, un résumé, un article complet (avec ses versions successives) et les posts sociaux qui la fondent, chacune triée **New / Saved / Used / Ignored** et éventuellement flaguée **Trending** ou **Updated**.
+
+| UI            | Code                                                                            |
+| ------------- | ------------------------------------------------------------------------------- |
+| Content Ideas | `research-*` (`/content-ideas`, `research-store`, `screens/research-*.js`)      |
+| Idea stream   | **lane** (`laneId`, `getLanes`, `research-store.js`)                            |
+| Idea          | **brief** (`briefs-store.js`, `brief-card.js`, `data-brief-*`, `.topics-*` CSS) |
+
+Le split UI/code est le même que Playbook/Context, avec une contrainte de plus : `briefs-store` **ne peut pas** être renommé `topics-store`, qui est la feature ci-dessus. Les classes CSS sont `.topics-*` au pluriel pour la même raison — `.topic-card` au singulier appartient déjà au dossier de listening.
+
+Une Idea offre trois actions : **Use in chat** (elle entre comme Source, comme un Topic), **Save for later**, **Ignore Idea**. Voir [`FEATURES.md`](FEATURES.md) §18.
 
 ## Concepts clés
 
@@ -84,9 +101,9 @@ Un **Source** est tout input brut qu'Archie peut ingérer :
 
 Géré par [`src/sources-stream.js`](../../src/sources-stream.js) — le seul store global.
 
-### Idea (kind taxonomy)
+### Idea du pipeline (kind taxonomy)
 
-Une idée est typée selon une de ces 5 kinds :
+Celle-ci, pas celle d'un Idea stream (voir plus haut). Une idée est typée selon une de ces 5 kinds :
 
 | Kind        | Description                                     |
 | ----------- | ----------------------------------------------- |
@@ -127,7 +144,7 @@ Une **source live MCP-queryable** (Notion, Slite, Google Drive, Slack, …) que 
 - Une requête déclenche un round-trip MCP simulé (reasoning chip "Querying X via MCP" + réponse citée)
 - Géré par [`connectors-store.js`](../../src/connectors-store.js), state machine `connected / disconnected / syncing / error`
 
-**Feature flag `connectors`** : default OFF. Activable dans `/settings → Admin`.
+**Feature flag `connectors`** : default OFF. Activable dans le **popover ⚙️ Admin de la sidebar** (`admin-menu.js`) — il n'y a plus de route `/settings`.
 
 ### User mode (proto control)
 
@@ -136,7 +153,7 @@ Une **source live MCP-queryable** (Notion, Slite, Google Drive, Slack, …) que 
 - `"returning"` (default) — stores seedent depuis `mocks.js`, expérience d'un utilisateur établi
 - `"new-alt"` — stores vides, force le redirect `/` → `/welcome-alt` (onboarding)
 
-Switch UI : `/settings → Admin`. Un reload est forcé pour que les stores re-seedent.
+Switch UI : **popover ⚙️ Admin de la sidebar**. Un reload est forcé pour que les stores re-seedent.
 
 ## Vocabulaire UI à éviter
 

@@ -166,22 +166,27 @@ que le groupement par âge ait besoin des mois.
 
 ### Filter chips
 
-`.ap-filter-chip` piloté par `aria-pressed`, optionnels `-icon` / `-avatar` (img rond) / `-count`. Partout : connectors-view, playbook-view, ideas, generate-image-modal, right-panel, feedback-control, schedule-modal, et la ligne de types du feed Content Ideas.
+`.ap-filter-chip` piloté par `aria-pressed`, optionnels `-icon` / `-avatar` (img rond) / `-count`. Partout : connectors-view, playbook-view, ideas, generate-image-modal, right-panel, feedback-control, schedule-modal.
 
-**Une facette vit à UN seul endroit.** Le type de topic était le 3ᵉ groupe du
-panneau Filters ; il est passé en chips et le groupe a été **supprimé**, pas
-dupliqué. Deux contrôles pour un même filtre, c'est la règle « one pattern per
-problem per surface » — et surtout deux sources de vérité qui finissent par se
-contredire. Corollaire mesurable : `narrowedGroupCount()` ne compte **plus** le
-groupe types, sinon le badge « Filters » resterait bloqué sur 1 (le défaut est
-2 types sur 3).
+**Une facette vit à UN seul endroit.** Le type d'Idea a fait l'aller-retour : 3ᵉ groupe
+du panneau Filters → ligne de chips toujours visible sous l'en-tête → **de retour dans
+le panneau, en 1ᵉʳ groupe**. La règle n'a pas bougé, seul l'endroit a changé — jamais
+les deux à la fois, parce que deux contrôles pour un même filtre finissent par se
+contredire. Ce qui a fait revenir le groupe : la ligne de chips coûtait ~48px de
+hauteur au-dessus de la ligne de flottaison — une ligne de carte entière — pour garder
+deux cases à l'écran, alors que la carte porte déjà son type en étiquette.
 
-**Une chip sans contenu se désactive, elle ne disparaît pas** (`filter-chips-list.md`).
-Mais **seulement quand elle est éteinte** : désactiver une chip allumée
-enfermerait l'utilisateur derrière un filtre qu'il ne peut plus relâcher. Cas réel
-sans rien rerouter : la lane 1 n'a aucun topic « Content strategy », donc cette
-chip y est éteinte **et** désactivée, alors que la même chip est allumée sur la
-lane 6.
+Corollaire mesurable, qui a suivi le même aller-retour : `narrowedGroupCount()` compte
+**de nouveau** le groupe types (un contrôle qu'on voit n'a pas besoin de badge ; un
+contrôle replié, si). Et il compare chaque groupe à **son défaut**, pas à sa largeur
+totale — les statuts par défaut sont New + Saved, donc une comparaison aux quatre
+épinglerait le badge sur 1 dès l'ouverture du panneau. C'est exactement le piège que le
+groupe types avait connu à l'époque où son défaut était 2 types sur 3.
+
+**Une chip sans contenu se désactive, elle ne disparaît pas** (`filter-chips-list.md`) —
+la règle reste valable pour les chips qui existent ailleurs dans l'app. Mais
+**seulement quand elle est éteinte** : désactiver une chip allumée enfermerait
+l'utilisateur derrière un filtre qu'il ne peut plus relâcher.
 
 ### Status pills
 
@@ -287,11 +292,43 @@ reste du traitement (lavis teinté, filigrane) ne change pas.
 
 ### Un contrôle par-dessus une carte-bouton est un FRÈRE, pas un enfant
 
-`.starter-card` est un `<button>`. Le bouton « voir un autre topic » ne peut donc pas
+`.starter-card` est un `<button>`. Un contrôle qui agit sur la carte ne peut donc pas
 vivre dedans : un bouton dans un bouton est du HTML invalide que les navigateurs
 résolvent de façon imprévisible. Le motif est un wrapper `position: relative` qui
 contient les deux en frères, le contrôle étant positionné en absolu dans le coin.
 Même raison que la séparation body / footer de `topics-card`.
+
+La carte Content Ideas de la page nouvelle session **n'utilise plus ce motif** : ses
+contrôles ont quitté la carte pour une **barre de nav sous la scène** (voir ci-dessous).
+La règle reste vraie pour la prochaine surface qui voudra poser un contrôle sur une
+carte-bouton ; simplement, ne rien poser dessus est encore mieux quand il y a la place.
+
+### Un carrousel = `.ap-dot-stepper` + deux icon buttons, et un anneau
+
+Le carrousel Content Ideas de la page nouvelle session (`.starter-topic`) est le
+précédent en place. Ce qu'il fixe :
+
+- **Les points sont le composant DS**, `.ap-dot-stepper` — sa doc dit littéralement
+  « carousel indicators », et sa règle d'usage réserve `.ap-stepper` aux flows
+  numérotés. Enfants `<button>` nus, `.active` sur le courant, aucune classe à
+  inventer. Ils sont **cliquables** et sautent à la slide.
+- **La nav est SOUS la scène**, pas posée sur la carte : à la largeur des trois
+  starter cards il ne reste aucune gouttière, et une paire de flèches épinglée dans
+  la carte se pose sur le titre qu'elle est censée changer.
+- **Les points prennent le milieu, les flèches les deux bords.** C'est le
+  comportement du composant (il est `width: 100%`), énoncé en `flex-grow` sur la
+  classe app pour que ce soit une décision et pas un héritage.
+- **Un anneau, pas deux culs-de-sac.** Aucune flèche désactivée : `(i + pas + n) % n`.
+  Les points, eux, ne bouclent pas — chacun est une slide réelle.
+- ⚠️ **La direction vient du PAS, pas de la comparaison d'index.** Sur un anneau
+  l'index descend quand on avance (dernière → première) et monte quand on recule :
+  comparer les index animerait chaque bouclage à l'envers.
+- ⚠️ **Nettoyer la classe d'entrée avant de poser la classe de sortie.** Les deux
+  règles posent `animation` à spécificité égale, donc la dernière déclarée gagne — et
+  les règles d'entrée sont déclarées après celles de sortie. Une classe d'entrée
+  laissée sur la scène par le swap précédent fait donc **taire l'animation de
+  sortie** : la carte sortante ne bouge pas, seule l'entrante s'anime. Vérifié en
+  résolvant `animation-name` sur un élément portant les deux classes.
 
 ### Un sélecteur montre la vraie carte, pas une ligne compacte
 
