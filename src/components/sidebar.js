@@ -23,7 +23,7 @@ import { getContexts, getContextById, subscribe as subscribeContexts } from "../
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=59";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=27";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=41";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=535";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=536";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=95";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=67";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=87";
@@ -620,7 +620,7 @@ const NAV = [
     // tech still separate them — but if the collapsed rail ever needs to be
     // scannable on its own, this is the pair that breaks it.
     icon: "ap-icon-antenna",
-    label: "Idea streams",
+    label: "Inspiration feeds",
     flag: "contentResearch",
     // Prefix, so the row stays lit on a lane's feed, form and trending page.
     match: (p) => p.startsWith("/content-ideas"),

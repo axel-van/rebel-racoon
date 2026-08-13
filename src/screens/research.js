@@ -1,6 +1,6 @@
-// Content Research — the Idea-stream list, route /content-ideas.
+// Content Research — the Inspiration-feed list, route /content-ideas.
 //
-// VOCABULARY: an IDEA STREAM in the UI is a LANE in code, and an IDEA is a brief.
+// VOCABULARY: an INSPIRATION FEED in the UI is a LANE in code, and an IDEA is a brief.
 // CLAUDE.md has the full mapping; comments here still say lane and topic.
 //
 // A LANE is a named standing query: one Playbook × a set of sources × a cadence.
@@ -23,7 +23,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=401";
+import { renderTopbar } from "../components/topbar.js?v=402";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=21";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=73";
@@ -130,11 +130,11 @@ function renderEmpty() {
     <span class="research-empty__disc" aria-hidden="true">${raw(renderMark(38))}</span>
     <h1 class="research-empty__title">Oops, there's nothing here yet</h1>
     <p class="research-empty__body">
-      Create an Idea stream to pair a Playbook with the sources I should watch — then I'll start surfacing Ideas for
-      you.
+      Create an Inspiration feed to pair a Playbook with the sources I should watch — then I'll start surfacing
+      Inspirations for you.
     </p>
     <button type="button" class="ap-button primary blue" data-research-create>
-      <span>Create an Idea stream</span>
+      <span>Create an Inspiration feed</span>
     </button>
   </div>`;
 }
@@ -153,7 +153,9 @@ function renderBody(lanes) {
   return html`<div class="research-view__page">
     ${raw(renderHead(lanes))}
     <div class="research-grid">${raw(shown.map(renderLaneCard).join(""))}${raw(renderCreateCard())}</div>
-    ${raw(!shown.length ? html`<p class="research-view__nomatch muted">No Idea stream matches that search.</p>` : "")}
+    ${raw(
+      !shown.length ? html`<p class="research-view__nomatch muted">No Inspiration feed matches that search.</p>` : "",
+    )}
   </div>`;
 }
 
@@ -165,12 +167,12 @@ function renderHead(lanes) {
   // across every lane is that number here.
   const waiting = lanes.reduce((sum, l) => sum + countNewForLane(l.id), 0);
   const sub =
-    `${lanes.length} ${lanes.length === 1 ? "Idea stream" : "Idea streams"} · ` +
-    `${waiting} ${waiting === 1 ? "Idea" : "Ideas"} waiting`;
+    `${lanes.length} ${lanes.length === 1 ? "Inspiration feed" : "Inspiration feeds"} · ` +
+    `${waiting} ${waiting === 1 ? "Inspiration" : "Inspirations"} waiting`;
 
   return html`<header class="research-view__head">
     <div class="research-view__head-text">
-      <h1 class="research-view__title">Idea streams</h1>
+      <h1 class="research-view__title">Inspiration feeds</h1>
       <p class="research-view__sub">${sub}</p>
     </div>
     <div class="research-view__head-actions">
@@ -179,14 +181,14 @@ function renderHead(lanes) {
         <input
           type="search"
           class="ap-input"
-          placeholder="Search Idea streams…"
+          placeholder="Search Inspiration feeds…"
           value="${escapeAttr(view.query)}"
           data-research-search
         />
       </div>
       ${raw(renderPlaybookFilter(contexts, active))}
       <button type="button" class="ap-button primary blue" data-research-create>
-        <span>Create an Idea stream</span>
+        <span>Create an Inspiration feed</span>
       </button>
     </div>
   </header>`;
@@ -283,7 +285,7 @@ function renderLaneCard(lane) {
             trendingCount
               ? html`<span
                   class="trending-mark"
-                  aria-label="${trendingCount} ${trendingCount === 1 ? "Idea" : "Ideas"} trending"
+                  aria-label="${trendingCount} ${trendingCount === 1 ? "Inspiration" : "Inspirations"} trending"
                 >
                   <i class="ap-icon-arrow-up" aria-hidden="true"></i>
                   <span>${trendingCount} trending</span>
@@ -299,7 +301,7 @@ function renderLaneCard(lane) {
             newCount
               ? html`<span
                   class="ap-badge orange"
-                  aria-label="${newCount} new ${newCount === 1 ? "Idea" : "Ideas"} to review"
+                  aria-label="${newCount} new ${newCount === 1 ? "Inspiration" : "Inspirations"} to review"
                   >${newCount} new</span
                 >`
               : "",
@@ -365,7 +367,7 @@ function renderLaneCard(lane) {
          that only existed to own the pinning while the conditional signals row
          shared the footer with it. -->
     <button type="button" class="research-card__open" data-lane-open="${escapeAttr(lane.id)}">
-      <span>Get ideas</span>
+      <span>See Feed</span>
       <i class="ap-icon-arrow-right" aria-hidden="true"></i>
     </button>
   </article>`;
@@ -374,16 +376,16 @@ function renderLaneCard(lane) {
 function renderCreateCard() {
   return html`<button type="button" class="research-create-card" data-research-create>
     <span class="research-create-card__disc">${raw(renderMark(24))}</span>
-    <span class="research-create-card__label">Create an Idea stream</span>
+    <span class="research-create-card__label">Create an Inspiration feed</span>
     <!-- Same job as contexts-card--ghost__sub: the label names the object, this
          says what the object is FOR, so the tile isn't a bare verb. It names the
          two things the form actually asks for that shape the output — a Playbook
-         and the sources — and then the output itself, because "Idea stream" alone
-         doesn't tell a first-time reader that Ideas are things you draft from.
+         and the sources — and then the output itself, because "Inspiration feed" alone
+         doesn't tell a first-time reader that Inspirations are things you draft from.
          Cadence and the scanned website are left out: they tune the list, they
          don't explain it, and the form's own lede covers them. -->
     <span class="research-create-card__sub"
-      >Pick a Playbook and idea sources. They will be turned into ideas you can draft from.</span
+      >Pick a Playbook and inspiration sources. They will be turned into inspirations you can draft from.</span
     >
   </button>`;
 }

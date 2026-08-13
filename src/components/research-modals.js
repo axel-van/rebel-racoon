@@ -62,7 +62,7 @@ const SHOW_HIDDEN_TRENDING = false;
 let backdrop, panel, titleEl, subEl, bodyEl, footEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
-// Idea-picker state. Module-level because each step re-renders through openShell,
+// Inspiration-picker state. Module-level because each step re-renders through openShell,
 // which rebuilds the dialog — the step and the answer have to outlive that.
 let pickerStep = "playbooks";
 let pickerPlaybook = null; // one id; picking a card IS the navigation
@@ -215,7 +215,7 @@ export function openIgnoreReason({ briefId, onDone = null }) {
     "ignore",
     { briefId, onDone },
     {
-      title: "Why did this Idea miss the mark?",
+      title: "Why did this Inspiration miss the mark?",
       body: html`<textarea
           class="research-modal__textarea"
           rows="4"
@@ -227,8 +227,9 @@ export function openIgnoreReason({ briefId, onDone = null }) {
         <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
           <div>
-            This helps me tailor Ideas to your needs. I'll keep this Idea out of your feed unless it trends well above
-            its usual volume baseline — so you still catch real spikes without noise from recurring Ideas.
+            This helps me tailor Inspirations to your needs. I'll keep this Inspiration out of your feed unless it
+            trends well above its usual volume baseline — so you still catch real spikes without noise from recurring
+            Inspirations.
           </div>
         </div>
         <label class="research-modal__check">
@@ -252,22 +253,22 @@ export function openExport({ count }) {
     "export",
     { count },
     {
-      title: "Export Ideas",
+      title: "Export Inspirations",
       body: html`<p class="research-modal__lede">
-          Export all ${count} ${count === 1 ? "Idea" : "Ideas"} currently in your feed.
+          Export all ${count} ${count === 1 ? "Inspiration" : "Inspirations"} currently in your feed.
         </p>
         <label class="research-modal__radio is-selected">
           <input type="radio" name="researchExportFormat" checked />
           <span class="research-modal__radio-text">
             <strong>CSV spreadsheet</strong>
-            <span>One row per Idea, with source and status.</span>
+            <span>One row per Inspiration, with source and status.</span>
           </span>
         </label>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
           <span>Cancel</span>
         </button>
         <button type="button" class="ap-button primary blue" data-export-go>
-          <span>Export ${count} ${count === 1 ? "Idea" : "Ideas"}</span>
+          <span>Export ${count} ${count === 1 ? "Inspiration" : "Inspirations"}</span>
         </button>`,
     },
   );
@@ -276,12 +277,12 @@ export function openExport({ count }) {
 // ─── 4. Add to Content strategy ────────────────────────────────────────────
 
 // What a pillar IS, stated once, at the moment the user is deciding to make one.
-// A pillar is not a saved Idea and the difference is not obvious, so the dialog
+// A pillar is not a saved Inspiration and the difference is not obvious, so the dialog
 // says it rather than assuming it: a saved topic gets reused as it is, a pillar
 // accumulates and gets refined as more topics feed into it.
 const PILLAR_EXPLAINER =
   "Archie writes against your pillars: when a draft fits one, it adapts its " +
-  "writing to what that pillar already knows. Filing an Idea into an existing " +
+  "writing to what that pillar already knows. Filing an Inspiration into an existing " +
   "pillar fleshes it out, so the next draft on that theme starts better informed " +
   "once the assets are ready.";
 
@@ -378,7 +379,7 @@ function renderPillarPbStep(ctx) {
               .join(""),
           )}
         </div>`
-      : html`<p class="muted">No Playbook has a content pillar yet. Add an Idea to a strategy first.</p>`,
+      : html`<p class="muted">No Playbook has a content pillar yet. Add an Inspiration to a strategy first.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
       <span>Cancel</span>
     </button>`,
@@ -398,7 +399,7 @@ function renderPillarListStep(ctx) {
             const srcN = p.sources.length;
             const assetN = p.assets.length;
             const meta = [
-              srcN ? `${srcN} ${srcN === 1 ? "Idea" : "Ideas"}` : "",
+              srcN ? `${srcN} ${srcN === 1 ? "Inspiration" : "Inspirations"}` : "",
               assetN ? `${assetN} ${assetN === 1 ? "asset" : "assets"}` : "",
             ]
               .filter(Boolean)
@@ -474,7 +475,7 @@ function renderPillarDetailStep(ctx) {
       ${raw(
         p.sources.length
           ? html`<section class="research-article">
-              <span class="research-article__label">Ideas that fed this pillar</span>
+              <span class="research-article__label">Inspirations that fed this pillar</span>
               <ol class="recap__pilmodal-sources">
                 ${raw(
                   p.sources
@@ -558,7 +559,7 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
             <i class="ap-icon-info_fill"></i>
             <div class="ap-infobox-content">
               <div class="ap-infobox-texts">
-                <span class="ap-infobox-title">A pillar is not a saved Idea</span>
+                <span class="ap-infobox-title">A pillar is not a saved Inspiration</span>
                 <span class="ap-infobox-message">${PILLAR_EXPLAINER}</span>
               </div>
             </div>
@@ -567,8 +568,8 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
           ${raw(
             returning
               ? html`<p class="strategy__returning">
-                  This Idea already feeds <strong>${target ? target.title : "a pillar"}</strong>. What changed is below
-                  — it gets appended, so nothing the pillar already knows is lost.
+                  This Inspiration already feeds <strong>${target ? target.title : "a pillar"}</strong>. What changed is
+                  below — it gets appended, so nothing the pillar already knows is lost.
                 </p>`
               : renderStrategyChoice(pillars, room, full),
           )}
@@ -642,10 +643,12 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
                Never a backtick in this comment — it sits inside a tagged template
                literal, and one backtick here ends the template. -->
           <div class="ap-textarea-field resizable strategy__field">
-            <label for="strategyText">${linking ? "What this Idea adds" : "Details"}</label>
+            <label for="strategyText">${linking ? "What this Inspiration adds" : "Details"}</label>
             <textarea id="strategyText" rows="9" data-strategy-text>${strategyText}</textarea>
             <span class="ap-form-message"
-              >${brief ? "Pre-filled from the Idea. Trim it to what the pillar should actually carry." : ""}</span
+              >${brief
+                ? "Pre-filled from the Inspiration. Trim it to what the pillar should actually carry."
+                : ""}</span
             >
           </div>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
@@ -690,8 +693,8 @@ function renderStrategyChoice(pillars, room, full) {
              component for this value. -->
         <span
           >${full
-            ? `All ${PILLAR_LIMIT} pillars are in use. File the Idea into one of them, or remove a pillar in the Playbook first.`
-            : `${pillars.length} of ${PILLAR_LIMIT} used. A new theme to write against — start it from this Idea, then refine it as more Ideas land.`}</span
+            ? `All ${PILLAR_LIMIT} pillars are in use. File the Inspiration into one of them, or remove a pillar in the Playbook first.`
+            : `${pillars.length} of ${PILLAR_LIMIT} used. A new theme to write against — start it from this Inspiration, then refine it as more Inspirations land.`}</span
         >
       </div>
     </label>
@@ -840,10 +843,10 @@ export function openPlaybookList({ playbookId, kind }) {
   );
 }
 
-// ─── 6. Pick a topic (composer Add → Idea streams) ─────────────────────────
+// ─── 6. Pick a topic (composer Add → Inspiration feeds) ─────────────────────────
 //
 // The composer's Add menu can reach every other source kind but had no way into
-// Idea streams, so a topic you had already triaged could only be used from its
+// Inspiration feeds, so a topic you had already triaged could only be used from its
 // own feed. This is that door.
 //
 // Grouped by lane rather than shown flat: a topic only means something next to
@@ -932,8 +935,8 @@ function renderPlaybookStep(ctx) {
   const options = pickerPlaybookOptions();
 
   openShell("idea-picker", ctx, {
-    title: "Pick an Idea",
-    sub: "Which Playbook do you want Ideas from?",
+    title: "Pick an Inspiration",
+    sub: "Which Playbook do you want Inspirations from?",
     // wide, because .contexts-card is built for a ~300px minimum and the default
     // 560px shell gave it one cramped column.
     wide: true,
@@ -965,12 +968,12 @@ function renderPlaybookStep(ctx) {
                   )}
                   <footer class="contexts-card__foot">
                     <div class="contexts-card__counters">
-                      <span class="contexts-card__counter" title="${n} ${n === 1 ? "Idea" : "Ideas"}">
+                      <span class="contexts-card__counter" title="${n} ${n === 1 ? "Inspiration" : "Inspirations"}">
                         <i class="ap-icon-note"></i><span>${n}</span>
                       </span>
                       <span
                         class="contexts-card__counter"
-                        title="${lanes.length} ${lanes.length === 1 ? "Idea stream" : "Idea streams"}"
+                        title="${lanes.length} ${lanes.length === 1 ? "Inspiration feed" : "Inspiration feeds"}"
                       >
                         <i class="ap-icon-folder"></i><span>${lanes.length}</span>
                       </span>
@@ -981,7 +984,9 @@ function renderPlaybookStep(ctx) {
               .join(""),
           )}
         </div>`
-      : html`<p class="research-pick__empty muted">No Ideas yet. Your Idea streams fill up once one has run.</p>`,
+      : html`<p class="research-pick__empty muted">
+          No Inspirations yet. Your Inspiration feeds fill up once one has run.
+        </p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
       <span>Cancel</span>
     </button>`,
@@ -1014,8 +1019,8 @@ function renderTopicStep(ctx) {
   const pb = getContextById(pickerPlaybook);
 
   openShell("idea-picker", ctx, {
-    title: "Pick an Idea",
-    sub: `${shownTotal} ${shownTotal === 1 ? "Idea" : "Ideas"} in ${pb ? pb.name : "this Playbook"}`,
+    title: "Pick an Inspiration",
+    sub: `${shownTotal} ${shownTotal === 1 ? "Inspiration" : "Inspirations"} in ${pb ? pb.name : "this Playbook"}`,
     // Sized to the card rather than to a generic "wide": the topic card caps
     // itself at its own content, so the 768px shell step 1 uses would leave a
     // dead column beside every card.
@@ -1048,7 +1053,7 @@ function renderTopicStep(ctx) {
                 </section>`,
             )
             .join("")
-        : html`<p class="research-pick__empty muted">No Ideas in this Playbook yet.</p>`,
+        : html`<p class="research-pick__empty muted">No Inspirations in this Playbook yet.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-idea-back>
         <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Playbooks</span>
       </button>
@@ -1102,7 +1107,7 @@ export function renderResearchArticle(brief, { withLabel = true, withTitle = tru
       ${raw(
         withLabel
           ? html`<span class="research-article__label"
-              ><i class="ap-icon-sparkles" aria-hidden="true"></i> Full Idea</span
+              ><i class="ap-icon-sparkles" aria-hidden="true"></i> Full Inspiration</span
             >`
           : "",
       )}
@@ -1144,8 +1149,8 @@ function renderSources(brief) {
   return html`<section class="research-article">
     <span class="research-article__label"><i class="ap-icon-quote" aria-hidden="true"></i> Sources</span>
     <p class="research-sources__lede">
-      ${String(posts.length)} ${posts.length === 1 ? "post" : "posts"} from your listening sources make up the Idea
-      above.
+      ${String(posts.length)} ${posts.length === 1 ? "post" : "posts"} from your listening sources make up the
+      Inspiration above.
     </p>
     <div class="research-modal__posts">${raw(shown.map((p) => renderSocialPostCard(p)).join(""))}</div>
     ${raw(
@@ -1175,10 +1180,10 @@ export function openSourcePosts({ briefId }) {
     { briefId },
     {
       title: "Sources",
-      sub: `Idea: ${brief.headline}`,
+      sub: `Inspiration: ${brief.headline}`,
       wide: true,
       body: html`<p class="research-sources__lede">
-          Every post Archie read to write this Idea. Each one links out to the original.
+          Every post Archie read to write this Inspiration. Each one links out to the original.
         </p>
         <div class="research-modal__posts">${raw(posts.map((p) => renderSocialPostCard(p)).join(""))}</div>`,
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
@@ -1376,13 +1381,13 @@ function paintVersions() {
       // Playbook do you want topics from?"). Labelling the slot itself would print
       // "Topic: Agorapulse" over a Playbook and "Topic: Which Playbook…" over a
       // picker.
-      sub: `Idea: ${brief.headline}`,
+      sub: `Inspiration: ${brief.headline}`,
       wide: true,
       body: html`<div class="research-versions">
         <!-- The DS Select, built as the details/summary composition it actually is
              (see the long note in the strategy dialog above for why a native
              <select class="ap-select"> is drift). Options are dates, NEWEST FIRST
-             — the current Idea leads, then back through the rewrites. The
+             — the current Inspiration leads, then back through the rewrites. The
              version NUMBERS below stay chronological; see the note on the two
              orders above. -->
         <div class="ap-form-field research-versions__field">
@@ -1529,7 +1534,7 @@ function renderHistory(history, currentStatus, briefId = "") {
   const versions = briefId ? getBriefVersions(briefId) : [];
   const past = versions.length ? versions.length - 1 : 0;
   return html`<section class="research-article">
-    <span class="research-article__label"><i class="ap-icon-clock" aria-hidden="true"></i> Idea history</span>
+    <span class="research-article__label"><i class="ap-icon-clock" aria-hidden="true"></i> Inspiration history</span>
     <ol class="research-timeline">
       ${raw(
         entries
@@ -1555,7 +1560,7 @@ function renderHistory(history, currentStatus, briefId = "") {
             data-brief-versions="${escapeAttr(briefId)}"
           >
             <i class="ap-icon-history" aria-hidden="true"></i>
-            See past versions of this Idea
+            See past versions of this Inspiration
           </button>`
         : "",
     )}
@@ -1612,7 +1617,7 @@ function onPanelClick(event) {
     return;
   }
 
-  // ── Idea-picker step navigation ──────────────────────────────────────────
+  // ── Inspiration-picker step navigation ──────────────────────────────────────────
   // A Playbook card: choosing it and moving on are one action, so there is no
   // Continue to guard and no state that can be empty.
   const pbCard = event.target.closest("[data-idea-pb]");
@@ -1646,14 +1651,14 @@ function onPanelClick(event) {
     const done = active.ctx.onDone;
     close();
     if (done) done();
-    showToast("Idea ignored");
+    showToast("Inspiration ignored");
     return;
   }
 
   if (event.target.closest("[data-export-go]")) {
     const n = active.ctx.count;
     close();
-    showToast(`Exported ${n} ${n === 1 ? "Idea" : "Ideas"} as CSV`);
+    showToast(`Exported ${n} ${n === 1 ? "Inspiration" : "Inspirations"} as CSV`);
     return;
   }
 

@@ -1,8 +1,8 @@
-// Content Research — one Idea stream's feed, route /content-ideas/:id.
+// Content Research — one Inspiration feed, route /content-ideas/:id.
 //
-// VOCABULARY: the UI says Idea stream (a lane) and Idea (a brief/"topic"). The
+// VOCABULARY: the UI says Inspiration feed (a lane) and Inspiration (a brief/"topic"). The
 // code below keeps lane/brief/topic throughout — see CLAUDE.md's vocabulary note.
-// Comments in this file predate the rename and still say "topic" for an Idea.
+// Comments in this file predate the rename and still say "topic" for an Inspiration.
 //
 // The generating loader runs on ARRIVAL FROM ELSEWHERE only, keyed on ?fresh=1,
 // which both the lane list's open action and the form's save append. Returning
@@ -10,7 +10,7 @@
 // straight away — re-running a 1.6s spinner on a back button is punishment, not
 // feedback.
 //
-// Filtering is ONE control: the Filters panel, three groups — Idea type, Idea
+// Filtering is ONE control: the Filters panel, three groups — Inspiration type, Inspiration
 // status, Sources — in that order. Its badge counts NARROWED GROUPS, not ticked
 // options (see briefs-store.narrowedGroupCount).
 //
@@ -36,7 +36,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=401";
+import { renderTopbar } from "../components/topbar.js?v=402";
 import { isFlagOn } from "../feature-flags.js?v=21";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=45";
 import {
@@ -177,12 +177,12 @@ function listOpensWithLabel(briefs, shown) {
 //
 // role="status" on the caption, so the swap is announced rather than silent.
 function renderLoadMore(remaining, loading) {
-  const label = `Load ${remaining === 1 ? "1 more Idea" : `${remaining > PAGE_SIZE ? PAGE_SIZE : remaining} more Ideas`}`;
+  const label = `Load ${remaining === 1 ? "1 more Inspiration" : `${remaining > PAGE_SIZE ? PAGE_SIZE : remaining} more Inspirations`}`;
   return html`<div class="research-feed__more" data-research-more>
     ${raw(
       loading
         ? `<span class="ap-loader orange size-24" aria-hidden="true"></span>
-           <p class="research-feed__more-caption" role="status">Loading more Ideas…</p>`
+           <p class="research-feed__more-caption" role="status">Loading more Inspirations…</p>`
         : html`<button type="button" class="ap-button stroked grey" data-research-more-load>
             <span>${label}</span>
           </button>`,
@@ -203,7 +203,7 @@ function renderLoadMore(remaining, loading) {
 // that card can be scrolled off-screen, so the pane needs an exit that is always
 // where the reader is looking.
 function renderArticlePane(brief, entering = false) {
-  return html`<aside class="research-feed__article${raw(entering ? " is-entering" : "")}" aria-label="Idea">
+  return html`<aside class="research-feed__article${raw(entering ? " is-entering" : "")}" aria-label="Inspiration">
     <header class="research-feed__article-head">
       <!-- One title, and it is the ARTICLE's — brief.research.title, promoted out of
            the body and into the header.
@@ -238,8 +238,8 @@ function renderArticlePane(brief, entering = false) {
         type="button"
         class="ap-icon-button ghost grey"
         data-feed-article-close
-        aria-label="Close Idea"
-        title="Close Idea"
+        aria-label="Close Inspiration"
+        title="Close Inspiration"
       >
         <i class="ap-icon-close" aria-hidden="true"></i>
       </button>
@@ -263,8 +263,8 @@ function renderArticlePane(brief, entering = false) {
 
 const GENERATE_MS = 1600;
 
-// The attention notice above the Idea list. Off: with every review status ticked
-// by default, a flagged Idea is already visible in the list, so the notice
+// The attention notice above the Inspiration list. Off: with every review status ticked
+// by default, a flagged Inspiration is already visible in the list, so the notice
 // repeated it. One line to restore — nothing below it was removed.
 const SHOW_ATTENTION_NOTICE = false;
 
@@ -622,7 +622,7 @@ function renderPage() {
           briefs.length
             ? renderList(briefs, view)
             : html`<p class="research-feed__empty muted">
-                No Ideas match these filters. Try widening them, or reset to the defaults.
+                No Inspirations match these filters. Try widening them, or reset to the defaults.
               </p>`,
         )}
         ${raw(article ? renderArticlePane(article, entering) : "")}
@@ -638,7 +638,7 @@ function renderGenerating() {
   // was the only loader in the product that didn't.
   return html`<div class="research-generating">
     <span class="ap-loader orange size-60" aria-hidden="true"></span>
-    <p class="research-generating__caption" role="status">We are generating ideas for you…</p>
+    <p class="research-generating__caption" role="status">We are generating inspirations for you…</p>
   </div>`;
 }
 
@@ -732,8 +732,8 @@ function renderFilterPanel() {
       // screen. First in the group order rather than last: it is the axis that
       // changes which action a card offers, so of the three it is the one worth
       // reaching first.
-      renderGroup("types", "Idea type", RESEARCH_TYPES, filters.types, "types") +
-        renderGroup("status", "Idea status", REVIEW_STATUSES, filters.statuses, "statuses") +
+      renderGroup("types", "Inspiration type", RESEARCH_TYPES, filters.types, "types") +
+        renderGroup("status", "Inspiration status", REVIEW_STATUSES, filters.statuses, "statuses") +
         // Sources renders WITHOUT its glyphs, unlike Topic status. The difference is
         // whether the row has a mapping to teach: a card shows its status as a BARE
         // icon, so the filter row is the only place that glyph is ever named — while
@@ -799,7 +799,7 @@ function renderGroup(key, label, options, selected, field, { icons = true } = {}
            actually teaches the mapping — the legend would then be the same glyphs
            twice, once without labels.
            aria-hidden, because the head is a button whose accessible name is the
-           group's label; a run of icon names read out before "Idea status" would
+           group's label; a run of icon names read out before "Inspiration status" would
            make the control harder to use, not easier, and the options below name
            each status properly. -->
       ${raw(key === "status" && !open ? renderStatusLegend() : "")}
@@ -882,11 +882,11 @@ function renderAttentionNotice({ trending, updated, total }) {
     <i class="ap-icon-arrow-up" aria-hidden="true"></i>
     <div class="ap-infobox-content">
       <div class="ap-infobox-texts">
-        <span class="ap-infobox-title">${total} ${one ? "Idea needs" : "Ideas need"} your attention</span>
-        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} in this Idea stream. </span>
+        <span class="ap-infobox-title">${total} ${one ? "Inspiration needs" : "Inspirations need"} your attention</span>
+        <span class="ap-infobox-message"> ${raw(parts.join(" · "))} in this Inspiration feed. </span>
       </div>
       <button type="button" class="ap-button primary blue" data-feed-trending>
-        <span>See Ideas</span>
+        <span>See Inspirations</span>
         <i class="ap-icon-arrow-right" aria-hidden="true"></i>
       </button>
     </div>

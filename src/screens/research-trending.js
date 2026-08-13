@@ -1,4 +1,4 @@
-// Idea streams — the attention page, route /content-ideas/:id/attention.
+// Inspiration feeds — the attention page, route /content-ideas/:id/attention.
 //
 // The file is still research-trending.js. The route was renamed when the page
 // grew to carry both signals; the module name lags, the same split as
@@ -22,7 +22,7 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=401";
+import { renderTopbar } from "../components/topbar.js?v=402";
 import { isFlagOn } from "../feature-flags.js?v=21";
 import { renderBriefCard } from "../components/brief-card.js?v=45";
 import { openFullResearch } from "../components/research-modals.js?v=99";
@@ -102,7 +102,7 @@ function renderPage() {
   // Same recap__header shape as the feed, minus the monogram: this page belongs
   // to one lane you have already identified by arriving from it, and the orange
   // mark is the thing that should carry the eye. Back is the topbar's, via
-  // backTargetFor() — no in-page button on any Idea streams detail view.
+  // backTargetFor() — no in-page button on any Inspiration feeds detail view.
   return html`<div class="research-feed__body">
     <div class="research-trending__inner">
       <header class="research-feed__header research-feed__header--trending">
@@ -110,7 +110,9 @@ function renderPage() {
           <span class="research-trending__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
           <div class="research-feed__id-text">
             <div class="research-feed__titlerow">
-              <h1 class="research-feed__name">${n} ${n === 1 ? "Idea needs" : "Ideas need"} your attention</h1>
+              <h1 class="research-feed__name">
+                ${n} ${n === 1 ? "Inspiration needs" : "Inspirations need"} your attention
+              </h1>
             </div>
             <div class="research-feed__meta">
               <span class="research-feed__meta-item">

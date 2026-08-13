@@ -127,7 +127,7 @@ export function ageGroupOf(brief) {
 }
 
 /**
- * Up to four briefs for the new-session page's Idea-streams carousel, in the order
+ * Up to four briefs for the new-session page's Inspiration-feeds carousel, in the order
  * they are shown: the trending one, the updated one, then two plain New ones.
  *
  * The order is the point. The card shows one topic at a time, so the first one

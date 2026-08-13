@@ -60,7 +60,7 @@ Règle universelle (`chat.css`) : _« a light-blue wash on hover/focus (never na
 - `.drafts-card:hover` → `border-color: --ref-color-electric-blue-20` + `background: --ref-color-electric-blue-05`. Actif = `.is-active` (electric-blue-40).
 - `.top-post-card:hover`, `.clip-card` sélectionné → `border-color: --ref-color-electric-blue-100`.
 - Radius carte = `--app-radius-card` (12). Tuiles icône AI/brand = fond `--ref-color-orange-10` + glyphe orange.
-- ⛔️ **Jamais de liseré d'accent coloré sur un bord de carte** (`border-left: 3px solid …`). Règle catégorique de Matt. **L'état d'une carte va dans son contenu, pas sur son cadre** — un marqueur explicite (point + mot, ex. « • New ») dit la même chose sans repeindre la bordure. Deux cas ont existé et les deux ont été retirés (unseen sur `.topic-card`, puis Trending / Updated sur la carte d'Idea de la page nouvelle session — voir plus bas) : la règle n'a **aucune** exception dans l'app. Les `border-left`/`border-right` restants sont des séparateurs de panneau 1px dans la ramp sombre video-clips, pas des accents.
+- ⛔️ **Jamais de liseré d'accent coloré sur un bord de carte** (`border-left: 3px solid …`). Règle catégorique de Matt. **L'état d'une carte va dans son contenu, pas sur son cadre** — un marqueur explicite (point + mot, ex. « • New ») dit la même chose sans repeindre la bordure. Deux cas ont existé et les deux ont été retirés (unseen sur `.topic-card`, puis Trending / Updated sur la carte d'Inspiration de la page nouvelle session — voir plus bas) : la règle n'a **aucune** exception dans l'app. Les `border-left`/`border-right` restants sont des séparateurs de panneau 1px dans la ramp sombre video-clips, pas des accents.
 - Cartes in-bubble : `.chat-bubble-card` (grey-05, border grey-10) via `bulletsBlock()` (`_analyse-common.js`).
 
 ### Boutons / CTAs
@@ -168,7 +168,7 @@ que le groupement par âge ait besoin des mois.
 
 `.ap-filter-chip` piloté par `aria-pressed`, optionnels `-icon` / `-avatar` (img rond) / `-count`. Partout : connectors-view, playbook-view, ideas, generate-image-modal, right-panel, feedback-control, schedule-modal.
 
-**Une facette vit à UN seul endroit.** Le type d'Idea a fait l'aller-retour : 3ᵉ groupe
+**Une facette vit à UN seul endroit.** Le type d'Inspiration a fait l'aller-retour : 3ᵉ groupe
 du panneau Filters → ligne de chips toujours visible sous l'en-tête → **de retour dans
 le panneau, en 1ᵉʳ groupe**. La règle n'a pas bougé, seul l'endroit a changé — jamais
 les deux à la fois, parce que deux contrôles pour un même filtre finissent par se
@@ -271,7 +271,7 @@ serveur/utilisateur de [`briefs-store.js`](../../src/briefs-store.js).
 catégorique de Matt (voir plus haut, ⛔️) n'a plus d'exception : l'état d'une carte va
 dans son **contenu**, pas sur son cadre.
 
-Elle en a eu une, et c'est instructif. La carte d'Idea de la page nouvelle session
+Elle en a eu une, et c'est instructif. La carte d'Inspiration de la page nouvelle session
 portait 4px en haut — orange (`--app-archie-orange`) pour Trending, menthol
 (`--ref-color-menthol-100`) pour Updated — au motif que c'était **une carte unique en
 vedette**, où le signal est la raison d'être de la carte et où il n'y a pas de
@@ -300,14 +300,14 @@ résolvent de façon imprévisible. Le motif est un wrapper `position: relative`
 contient les deux en frères, le contrôle étant positionné en absolu dans le coin.
 Même raison que la séparation body / footer de `topics-card`.
 
-La carte d'Idea de la page nouvelle session **n'utilise plus ce motif** : ses
+La carte d'Inspiration de la page nouvelle session **n'utilise plus ce motif** : ses
 contrôles ont quitté la carte pour une **barre de nav sous la scène** (voir ci-dessous).
 La règle reste vraie pour la prochaine surface qui voudra poser un contrôle sur une
 carte-bouton ; simplement, ne rien poser dessus est encore mieux quand il y a la place.
 
 ### Un carrousel = `.ap-dot-stepper` + deux icon buttons, et un anneau
 
-Le carrousel d'Ideas de la page nouvelle session (`.starter-topic`) est le
+Le carrousel d'Inspirations de la page nouvelle session (`.starter-topic`) est le
 précédent en place. Ce qu'il fixe :
 
 - **Les points sont le composant DS**, `.ap-dot-stepper` — sa doc dit littéralement
@@ -356,7 +356,7 @@ Deux ajustements imposés par la réutilisation :
 modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
 dans `styles/components/`.
 
-### Les URLs des Idea streams
+### Les URLs des Inspiration feeds
 
 Les routes utilisent le vocabulaire de l'UI, pas celui du code :
 `/content-ideas`, `/content-ideas/:id`, `/content-ideas/:id/settings`,
@@ -439,7 +439,7 @@ mise en page.
 ### Une seule température de page
 
 Tous les écrans peignent le fond du shell (`--app-bg` → `--ref-color-grey-bg`,
-`#F9F9FA`). Les Idea streams ont longtemps fait exception : la liste de topics, la page
+`#F9F9FA`). Les Inspiration feeds ont longtemps fait exception : la liste de topics, la page
 attention et la page de réglages étaient sur `--app-paper` (`#F9F9F2`, chaud), au
 motif que « les vues de détail gardent le papier ». Sauf que `/playbook/:id` est une
 vue de détail et se trouve sur le fond du shell — la règle n'avait qu'un membre, et

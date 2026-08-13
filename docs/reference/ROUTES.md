@@ -13,10 +13,10 @@ Source de vérité : [`src/app.js`](../../src/app.js) (route table) + [`src/rout
 | `/connectors`                  | `connectors.js`        | Gallery des connectors (feature flag `connectors`, default OFF). Détail dans un modal.                                                                                |
 | `/topics`                      | `topics.js`            | Feed des dossiers du listening. Filtres Playbook (`?pb=`) + Source. Flag `topics`, default OFF ; deep-link périmé → `/`.                                              |
 | `/topics/settings`             | `topics-settings.js`   | **Topics settings** — les six sources d'écoute + la cadence, scopées à un Playbook (`?pb=`). Une page, pas un onglet : on la règle une fois. Topbar back → `/topics`. |
-| `/content-ideas`               | `research.js`          | Liste des **Idea streams** (H1 « Idea streams »). Flag `contentResearch`, défaut OFF ; deep-link périmé → `/`. Voir [`FEATURES.md`](FEATURES.md) §18.                 |
+| `/content-ideas`               | `research.js`          | Liste des **Inspiration feeds** (H1 « Inspiration feeds »). Flag `contentResearch`, défaut OFF ; deep-link périmé → `/`. Voir [`FEATURES.md`](FEATURES.md) §18.       |
 | `/content-ideas/new`           | `research-form.js`     | Créer un stream : nom + Playbook + sources + cadence. **Déclarée AVANT `/content-ideas/:id`** — `match()` rend la 1ʳᵉ route qui matche, et `:id` avalerait « new ».   |
 | `/content-ideas/:id/settings`  | `research-form.js`     | Le même écran en mode réglages. Topbar back → le stream, en gardant **son nom**.                                                                                      |
-| `/content-ideas/:id/attention` | `research-trending.js` | Les Ideas flaguées (trending / updated) hors triage. Topbar back → le stream.                                                                                         |
+| `/content-ideas/:id/attention` | `research-trending.js` | Les Inspirations flaguées (trending / updated) hors triage. Topbar back → le feed.                                                                                    |
 | `/content-ideas/:id`           | `research-feed.js`     | Le feed d'un stream : une liste groupée par âge + panneau article. `?fresh=1` joue le loader de génération (~1,6 s) ; le back du topbar l'omet délibérément.          |
 | `/welcome-alt`                 | `welcome-alt.js`       | Onboarding first-time. Redirige vers une session transitoire. Body en `.onboarding` (full-bleed).                                                                     |
 | `/welcome-alt/recap`           | `welcome-alt-recap.js` | Recap final du Playbook construit pendant l'onboarding.                                                                                                               |
@@ -75,16 +75,16 @@ if (payload) {
 
 ### Handoffs actifs (consumés au mount de `session.js`)
 
-| Clé                          | Posé par                                                                   | Consommé par →                                                                                        |
-| ---------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `pendingStartFlow`           | dashboard / new chat with a Playbook                                       | `startActionPickerFlow`                                                                               |
-| `pendingDraftIdeaId`         | idea card "Draft post"                                                     | `askProfileQuestion` (`draft-flow`)                                                                   |
-| `pendingAskSource`           | source card "Ask"                                                          | `askWhatToKnow`                                                                                       |
-| `pendingAskConnector`        | connectors gallery / modal "Try in chat"                                   | `askConnector` (`connector-ask`)                                                                      |
-| `pendingTopicChat`           | topic card / dialog "Start a chat"                                         | `startTopicChat` (`topic-flow`)                                                                       |
-| `pendingBriefChat`           | « Use in chat » d'une Idea (carte, footer du panneau, modal Past versions) | `attachBriefToChat` (`brief-flow`) — porte `briefId` **+ `versionId`** quand c'est une version passée |
-| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt                                   | `context-builder` (création)                                                                          |
-| `pendingStartPlaybookEditor` | `/contexts` card edit                                                      | `playbook-editor`                                                                                     |
+| Clé                          | Posé par                                                                          | Consommé par →                                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pendingStartFlow`           | dashboard / new chat with a Playbook                                              | `startActionPickerFlow`                                                                               |
+| `pendingDraftIdeaId`         | idea card "Draft post"                                                            | `askProfileQuestion` (`draft-flow`)                                                                   |
+| `pendingAskSource`           | source card "Ask"                                                                 | `askWhatToKnow`                                                                                       |
+| `pendingAskConnector`        | connectors gallery / modal "Try in chat"                                          | `askConnector` (`connector-ask`)                                                                      |
+| `pendingTopicChat`           | topic card / dialog "Start a chat"                                                | `startTopicChat` (`topic-flow`)                                                                       |
+| `pendingBriefChat`           | « Use in chat » d'une Inspiration (carte, footer du panneau, modal Past versions) | `attachBriefToChat` (`brief-flow`) — porte `briefId` **+ `versionId`** quand c'est une version passée |
+| `pendingStartContextBuilder` | `/contexts` "New Playbook" + welcome-alt                                          | `context-builder` (création)                                                                          |
+| `pendingStartPlaybookEditor` | `/contexts` card edit                                                             | `playbook-editor`                                                                                     |
 
 ## Navigation interne — patterns
 

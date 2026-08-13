@@ -1000,7 +1000,7 @@ function renderPillarSources(sources) {
   return `<ol class="recap__pilmodal-sources">${sources
     .map(
       (srcItem) => `<li class="recap__pilmodal-source">
-        <span class="recap__pilmodal-source-head">${esc(srcItem.headline || "Untitled Idea")}</span>
+        <span class="recap__pilmodal-source-head">${esc(srcItem.headline || "Untitled Inspiration")}</span>
         ${srcItem.when ? `<span class="recap__pilmodal-source-when">${esc(srcItem.when)}</span>` : ""}
       </li>`,
     )
@@ -1078,7 +1078,7 @@ function renderPillarModal(p, i, edit) {
           <span class="recap__refedit-flabel">Your notes</span>
           ${
             edit
-              ? `<textarea data-recap-pillar-notes data-recap-pillar-index="${i}" rows="4" placeholder="Anything Archie should follow that the Ideas don't say — angles to avoid, who signs off, the format that works…">${esc(
+              ? `<textarea data-recap-pillar-notes data-recap-pillar-index="${i}" rows="4" placeholder="Anything Archie should follow that the Inspirations don't say — angles to avoid, who signs off, the format that works…">${esc(
                   p.notes || "",
                 )}</textarea>`
               : p.notes
@@ -1094,7 +1094,7 @@ function renderPillarModal(p, i, edit) {
              built from — not something you act on, so it sits below the fields you
              do act on rather than between them. -->
         <div class="recap__refmodal-sec">
-          <span class="recap__refedit-flabel">Ideas that fed this pillar</span>
+          <span class="recap__refedit-flabel">Inspirations that fed this pillar</span>
           ${renderPillarSources(sources)}
         </div>
       </div>
@@ -1645,7 +1645,7 @@ function renderPillarCard(p, i, edit) {
   const srcCount = Array.isArray(p.sources) ? p.sources.length : 0;
   const assetCount = Array.isArray(p.assets) ? p.assets.length : 0;
   const meta = [
-    srcCount ? `${srcCount} ${srcCount === 1 ? "Idea" : "Ideas"}` : "",
+    srcCount ? `${srcCount} ${srcCount === 1 ? "Inspiration" : "Inspirations"}` : "",
     assetCount ? `${assetCount} ${assetCount === 1 ? "asset" : "assets"}` : "",
   ]
     .filter(Boolean)
@@ -1700,7 +1700,7 @@ function renderStrategyPanel(data, edit) {
               </button>`
            : ""
        }`
-    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept an Idea into the strategy.</p>`;
+    : `<p class="recap__cmp-empty">No content pillars yet — Archie adds one every time you accept an Inspiration into the strategy.</p>`;
 
   const body = `${approachBlock}${renderRow("Content pillars", pillarsBlock)}`;
 
@@ -2544,7 +2544,7 @@ function onClick(event) {
       // this is recoverable from the Used cards.
       body:
         `Removing "${pillar.title || "this pillar"}" means I'll no longer use it to help draft content. ` +
-        `You can add it back anytime from the Used cards in Idea streams.`,
+        `You can add it back anytime from the Used cards in Inspiration feeds.`,
       confirmLabel: "Delete pillar",
       danger: true,
       onConfirm: () => {

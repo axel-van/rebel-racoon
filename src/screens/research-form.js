@@ -10,7 +10,7 @@
 //   | thing   | create                  | settings                |
 //   |---------|-------------------------|-------------------------|
 //   | header  | "New content research"  | "Feed settings" + back  |
-//   | save    | "Save Idea stream"       | "Save changes"          |
+//   | save    | "Save Inspiration feed"       | "Save changes"          |
 //   | on save | append → loader → feed  | return to feed          |
 //
 // Source gating: only Competitors is live. Every other toggle opens the
@@ -20,7 +20,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=401";
+import { renderTopbar } from "../components/topbar.js?v=402";
 import { isFlagOn } from "../feature-flags.js?v=21";
 import { getContexts, getContextById } from "../contexts-store.js?v=73";
 import { getLaneById, addLane, updateLane } from "../research-store.js?v=41";
@@ -139,11 +139,11 @@ function renderPage() {
   return html`<div class="research-form__body">
       <div class="research-form__inner">
         <header class="research-form__head">
-          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New Idea stream"}</h1>
+          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New Inspiration feed"}</h1>
           <p class="ap-body research-form__lead">
             ${settings
-              ? "What I watch for this Idea stream, and how often I check it."
-              : "Pick a Playbook and sources to get ideas."}
+              ? "What I watch for this Inspiration feed, and how often I check it."
+              : "Pick a Playbook and sources to get inspiration."}
           </p>
         </header>
         ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}
@@ -160,10 +160,10 @@ function renderScope() {
   const contexts = getContexts();
   const selected = getContextById(draft.playbookId);
   return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Idea stream scope"))}
+    ${raw(renderSectionLabel("Inspiration feed scope"))}
     <div class="research-form__card research-form__card--stack">
       <label class="research-form__field">
-        <span class="research-form__field-label">Idea stream name</span>
+        <span class="research-form__field-label">Inspiration feed name</span>
         <input
           type="text"
           class="research-form__input"
@@ -194,7 +194,7 @@ function renderScope() {
 
 function renderSources() {
   return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Idea sources"))}
+    ${raw(renderSectionLabel("Inspiration sources"))}
     <div class="research-form__sources">${raw(RESEARCH_SOURCES.map(renderSourceCard).join(""))}</div>
   </section>`;
 }
@@ -324,8 +324,8 @@ function renderOther() {
     <div class="research-form__card">
       <h4 class="research-form__setting-title">Refresh frequency</h4>
       <p class="research-form__setting-desc">
-        How often I scan your sources for new Ideas. More frequent scans keep you close to live trends; less frequent
-        ones return a more aggregated, high-level overview.
+        How often I scan your sources for new Inspirations. More frequent scans keep you close to live trends; less
+        frequent ones return a more aggregated, high-level overview.
       </p>
       <!-- Segmented control composed from primitives: the installed DS ships no
            segmented-control CSS-UI class (0 occurrences in ds/css-ui/index.css),
@@ -351,16 +351,16 @@ function renderOther() {
     ${raw(
       renderSwitchCard(
         "notify",
-        "Notify me about new Ideas",
-        "Get notified after a new scan with new Ideas.",
+        "Notify me about new Inspirations",
+        "Get notified after a new scan with new Inspirations.",
         draft.notify,
       ),
     )}
     ${raw(
       renderSwitchCard(
         "showTrending",
-        "Show Ideas that need attention",
-        "Tell me in the feed when an Idea is trending or its story has moved, and give them their own page.",
+        "Show Inspirations that need attention",
+        "Tell me in the feed when an Inspiration is trending or its story has moved, and give them their own page.",
         draft.showTrending,
       ),
     )}
@@ -391,7 +391,7 @@ function renderFooter() {
       data-form-save
       ${raw(ready ? "" : 'aria-disabled="true"')}
     >
-      <span>${mode() === "settings" ? "Save changes" : "Save Idea stream"}</span>
+      <span>${mode() === "settings" ? "Save changes" : "Save Inspiration feed"}</span>
     </button>
   </footer>`;
 }

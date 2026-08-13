@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=401";
+import { renderTopbar } from "../components/topbar.js?v=402";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=48";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=21";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=12";
 import { getLaneById } from "../research-store.js?v=41";
-import * as contextBuilder from "../context-builder.js?v=368";
+import * as contextBuilder from "../context-builder.js?v=369";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -110,7 +110,7 @@ import {
 import { renderClipCard } from "../components/clip-card.js?v=51";
 import { onFeedbackClick } from "../components/feedback-control.js?v=3";
 import { showToast } from "../components/toast.js?v=21";
-// The composer's Add menu reaches Idea streams through this picker; the catalog
+// The composer's Add menu reaches Inspiration feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
 import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=99";
 import { findResearchSource } from "../research-catalog.js?v=18";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=535";
+} from "../components/right-panel.js?v=536";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=34";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1262,19 +1262,19 @@ function renderPlaybookControl(ctx, selectable) {
 // plain template literal, not html``, so a raw() wrapper stringifies to
 // "[object Object]". Same call shape as renderConnectorsSubmenu right below it.
 //
-// The composer's way into Idea streams. Same folder icon the sidebar's nav row
+// The composer's way into Inspiration feeds. Same folder icon the sidebar's nav row
 // uses, so the two read as one destination, and the same flag gates both — with
 // contentResearch OFF this item disappears rather than opening an empty picker.
 //
 // It sits with "Top performing posts" below the divider: those two are the items
 // that pick from something the app already holds, where everything above the
 // divider brings something in from outside.
-// Directly under "Pick from Idea streams", because the two are the same gesture
+// Directly under "Pick from Inspiration feeds", because the two are the same gesture
 // at two altitudes: a topic is one observation, a pillar is the standing theme
 // several of them fed. Same flag gates both — a pillar only exists because a topic
 // was filed into one, so with contentResearch off there is nothing to pick.
 //
-// The antenna, matching the sidebar's Idea streams row rather than the folder
+// The antenna, matching the sidebar's Inspiration feeds row rather than the folder
 // this item's sibling still uses; the folder is the older icon and the nav row
 // moved off it.
 // ─── PARKED: Post about a Content Pillar ───────────────────────────────────
@@ -1300,7 +1300,7 @@ function renderContentIdeasItem() {
     <i class="ap-icon-folder"></i>
     <div class="ap-action-dropdown-item-text">
       <div class="ap-action-dropdown-item-label-container">
-        <span class="ap-action-dropdown-item-label">Pick from Idea streams</span>
+        <span class="ap-action-dropdown-item-label">Pick from Inspiration feeds</span>
       </div>
     </div>
   </button>`;
@@ -1967,9 +1967,9 @@ function removeSlashToken(input) {
 // inline inside this hero). The previous inline AI question flow
 // ("Quick — which context?") was removed — the composer picker is now
 // the single, always-visible context affordance.
-// ── The Idea streams carousel on the new-session page ──────────────────────
+// ── The Inspiration feeds carousel on the new-session page ──────────────────────
 //
-// One Idea at a time, from the same briefs the /content-ideas feed shows. It is
+// One Inspiration at a time, from the same briefs the /content-ideas feed shows. It is
 // its own block ABOVE the workflow grid, under its own label, at the width of
 // all three workflow cards. It was the grid's first cell for a while; the block
 // is what the carousel needs — a cell can't carry a nav row under it without
@@ -1997,7 +1997,7 @@ let starterTopicSession = null;
 // The wait before the first topic appears. Purely theatrical — nothing is
 // actually being fetched — but it is the one moment the prototype can show that
 // topics ARRIVE rather than sit there waiting to be found, which is the whole
-// premise of Idea streams. Three seconds is long enough to read the line and
+// premise of Inspiration feeds. Three seconds is long enough to read the line and
 // short enough that nobody sits through it twice.
 const STARTER_TOPIC_COUNTDOWN = 3;
 let starterTopicCountdown = STARTER_TOPIC_COUNTDOWN;
@@ -2065,7 +2065,7 @@ function renderStarterTopicCard(brief) {
     pb
       ? `<span class="starter-topic__pb">${escapeHtml(pb.name)}</span><span class="starter-topic__sep" aria-hidden="true">›</span>`
       : ""
-  }<span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Idea streams")}</span></span>`;
+  }<span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Inspiration feeds")}</span></span>`;
   // The marks are the feed's own components (trending-mark.css), not a second
   // drawing of the same idea — the accent says "something is up with this one"
   // and the mark says which.
@@ -2096,13 +2096,13 @@ function renderStarterTopicCard(brief) {
       <span class="starter-card__title"
         >${escapeHtml(brief.headline)}${mark ? ` ${mark}` : ""}</span
       >
-      <!-- The Idea's summary, in the feed's own .topics-card__summary — same class,
+      <!-- The Inspiration's summary, in the feed's own .topics-card__summary — same class,
            not a copy of it: one object, one summary treatment (15px prose, the
            620px measure from --topics-measure, three lines then an ellipsis). It
            also earns the width this card gained; at a third of the row the
            headline filled the card, at full width it was one line over a hole.
            NOT .starter-card__subtitle, which is the workflow cards' 12px caption
-           and would read as a label under a title rather than as the Idea's own
+           and would read as a label under a title rather than as the Inspiration's own
            first paragraph. -->
       <span class="topics-card__summary">${escapeHtml(brief.summary || "")}</span>
       <span class="starter-card__cta ap-link standalone small"
@@ -2121,7 +2121,7 @@ function renderStarterTopicCard(brief) {
 // already lands — the top-left, level with every other card's title — and the
 // animation should own the space you go on looking at.
 //
-// "Finalizing your first custom post ideas" — present participle, so it reads as
+// "Finalizing your first inspirations" — present participle, so it reads as
 // work in progress rather than a promise about timing, which is the same reason
 // the countdown became a spinner.
 //
@@ -2137,7 +2137,7 @@ function renderStarterTopicCard(brief) {
 function renderStarterTopicWaiting() {
   return `
     <div class="starter-card starter-card--topic starter-topic--waiting">
-      <span class="starter-card__title">Finalizing your first custom post ideas</span>
+      <span class="starter-card__title">Finalizing your first inspirations</span>
       <!-- .starter-card__subtitle, the same sub-header the workflow cards and the
            empty state use — the waiting card was the only one of the three
            without one. It sits between the message and the spinner so the three
@@ -2152,12 +2152,12 @@ function renderStarterTopicWaiting() {
 }
 
 // The LAST SLIDE of the carousel — the one after the queue, never on first paint,
-// where a user with no Ideas gets no block at all rather than an empty one.
+// where a user with no Inspirations gets no block at all rather than an empty one.
 //
 // It used to be the dead end you fell into by flipping past the last card, so it
 // said "that's everything for now". As a slide with a dot of its own it is a
-// destination instead: the carousel shows four Ideas short, and everything about
-// them — the full write-up, the posts behind it, the streams they came from — is
+// destination instead: the carousel shows four Inspirations short, and everything about
+// them — the full write-up, the posts behind it, the feeds they came from — is
 // one click away. So it says what is over there, and the subtitle answers the two
 // questions that follow: what the full view adds, and when more arrive.
 //
@@ -2174,9 +2174,9 @@ function renderStarterTopicEmpty() {
   return `
     <div class="starter-card starter-card--topic starter-topic--empty">
       <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
-      <span class="starter-card__title">Get the full details into your Idea streams</span>
+      <span class="starter-card__title">Get the full details into your Inspiration feeds</span>
       <span class="starter-card__subtitle"
-        >Every idea in full, with the posts behind it. I refresh them weekly.</span
+        >Browse all your inspiration feeds in one place, deep dive into ideas.</span
       >
       <a class="starter-card__cta ap-link standalone small" href="#/content-ideas"
         >Explore more ideas<i class="ap-icon-arrow-right" aria-hidden="true"></i
@@ -2185,7 +2185,7 @@ function renderStarterTopicEmpty() {
   `;
 }
 
-/** Slides in the carousel: one per queued Idea, plus the closing card. */
+/** Slides in the carousel: one per queued Inspiration, plus the closing card. */
 function starterTopicSlideCount(queue) {
   return queue.length + 1;
 }
@@ -2199,14 +2199,14 @@ function renderStarterTopicSlot(sessionId) {
   if (!isFlagOn("contentResearch")) return "";
   if (sessionId) syncStarterTopicSession(sessionId);
   const queue = getStarterTopics();
-  // No Ideas at all (new-alt mode): no block, not a closing card. "Everything is
-  // in Idea streams" is an answer to "I've read these", not to "there was never
+  // No Inspirations at all (new-alt mode): no block, not a closing card. "Everything is
+  // in Inspiration feeds" is an answer to "I've read these", not to "there was never
   // anything here".
   if (!queue.length) return "";
   const waiting = starterTopicCountdown > 0;
   const total = starterTopicSlideCount(queue);
   // Clamped on READ as well as on write: the queue is recomputed from the store
-  // on every render, so triaging an Idea elsewhere can shorten it under a
+  // on every render, so triaging an Inspiration elsewhere can shorten it under a
   // position that was valid when it was set.
   const index = Math.min(starterTopicIndex, total - 1);
   const brief = waiting ? null : queue[index] || null;
@@ -2227,7 +2227,7 @@ function renderStarterTopicSlot(sessionId) {
 // class of their own, .active on the current one.
 //
 // The arrows are DS icon buttons, and NEITHER is ever disabled: the carousel wraps
-// both ways. Next off the last slide lands on the first Idea, Previous off the first
+// both ways. Next off the last slide lands on the first Inspiration, Previous off the first
 // lands on the closing card. Five slides in a ring, reachable from either direction.
 //
 // Two plain chevrons, unchanged on every slide. A glyph that swapped to `history` at
@@ -2239,9 +2239,9 @@ function renderStarterTopicSlot(sessionId) {
 // where either is a dead end, so there is nothing for a label to warn about.
 function renderStarterTopicNavInner(index, total) {
   const dots = Array.from({ length: total }, (_, i) => {
-    // The last slide is not an Idea, so it cannot be labelled as one. Everything
-    // else is "Idea N of <queue length>" — total minus that closing slide.
-    const label = i === total - 1 ? "Everything else, in Idea streams" : `Idea ${i + 1} of ${total - 1}`;
+    // The last slide is not an Inspiration, so it cannot be labelled as one. Everything
+    // else is "Inspiration N of <queue length>" — total minus that closing slide.
+    const label = i === total - 1 ? "Everything else, in Inspiration feeds" : `Inspiration ${i + 1} of ${total - 1}`;
     return `<button type="button"${i === index ? ' class="active"' : ""} data-starter-topic-go="${i}" aria-label="${label}"${
       i === index ? ' aria-current="true"' : ""
     }></button>`;
@@ -2277,7 +2277,7 @@ function renderStarterTopicNav(index, total) {
 // either — the double-click race the old 75ms timer needed a mounted-check for
 // cannot happen.
 //
-// Reads the queue fresh and re-clamps: triaging an Idea elsewhere can shorten it
+// Reads the queue fresh and re-clamps: triaging an Inspiration elsewhere can shorten it
 // under a position that was valid when it was set.
 function repaintStarterTopicSlot(slot) {
   if (!slot || !document.body.contains(slot)) return;
@@ -2294,12 +2294,12 @@ function repaintStarterTopicSlot(slot) {
 
 // Label + carousel, or nothing at all. One function so the label can't outlive
 // the block it names — renderStarterTopicSlot returns "" in three cases (flag
-// off, no Ideas, new-alt), and a heading with nothing under it would be worse
+// off, no Inspirations, new-alt), and a heading with nothing under it would be worse
 // than no heading.
 function renderStarterTopicBlock(sessionId) {
   const slot = renderStarterTopicSlot(sessionId);
   if (!slot) return "";
-  return `<h2 class="empty-chat__starter-label" id="starterTopicLabel">Ideas waiting for you</h2>${slot}`;
+  return `<h2 class="empty-chat__starter-label" id="starterTopicLabel">Inspirations waiting for you</h2>${slot}`;
 }
 
 // Both halves of "a topic opens its own chat" now live in brief-flow.js, because
@@ -2358,9 +2358,9 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
         Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>
       ${raw(composerMarkup)}
-      <!-- Idea streams FIRST, then the workflows. Both blocks answer "what now?",
-           but only one of them knows anything about you: these four Ideas came out
-           of your own streams this week, where the workflows are the same three on
+      <!-- Inspiration feeds FIRST, then the workflows. Both blocks answer "what now?",
+           but only one of them knows anything about you: these four Inspirations came out
+           of your own feeds this week, where the workflows are the same three on
            every chat. The "Or" on the workflow label below is what ties the two
            together — this, or failing that, one of these.
            It was the grid's first cell (see renderStarterTopicBlock for why the
@@ -4029,7 +4029,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     setTimeout(() => startTopicChat(session.id, pendingTopic.topicId), 150);
   }
 
-  // Hand-off from a Idea streams topic — the new-chat starter card or the
+  // Hand-off from an Inspiration feed topic — the new-chat starter card or the
   // composer's Pick-a-topic modal. Attach only: unlike /topics this posts no
   // echo and no question picker, because the source-intake card already names
   // the topic and the composer is right there.
@@ -4956,7 +4956,7 @@ function bindSession(root, session) {
       // setting `action` on the mock. The "open-video-clips" action opens the
       // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
       // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
-      // ── The Idea streams carousel ──────────────────────────────────────
+      // ── The Inspiration feeds carousel ──────────────────────────────────────
       // Paging: work out the next index, then repaint the stage and the nav in
       // place (repaintStarterTopicSlot). No animation, no timer, no reduced-motion
       // branch to keep in step with a stylesheet — the card you asked for is on
@@ -4974,7 +4974,7 @@ function bindSession(root, session) {
         if (!slot || !slot.querySelector("[data-starter-topic-stage]")) return;
         // Recomputed here rather than trusted from the markup: the queue is
         // derived from the store, so it can be shorter than it was when this nav
-        // was painted (triaging one of these Ideas in another tab of the app).
+        // was painted (triaging one of these Inspirations in another tab of the app).
         const total = starterTopicSlideCount(getStarterTopics());
         const wanted = step
           ? starterTopicIndex + Number(step.dataset.starterTopicStep)
@@ -5486,7 +5486,7 @@ function bindSession(root, session) {
           topPostsFlow.startTopPostsInline(session.id);
           return;
         }
-        // A Idea streams topic arrives as an already-processed SOURCE, exactly as
+        // An Inspiration feed topic arrives as an already-processed SOURCE, exactly as
         // topic-flow lands one from /topics: intake-lifecycle then posts a
         // source-intake turn for it, so the pick shows up in the thread as a card
         // and every existing affordance (Extract ideas, Draft, Ask) lights up on

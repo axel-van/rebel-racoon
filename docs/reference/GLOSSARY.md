@@ -8,8 +8,8 @@
 Source  →  Idea  →  Draft  →  Schedule
 (input)    (insight) (post)    (calendar slot)
    ▲
-   ├── Topic             (optionnel, en amont — flag `topics`)
-   └── Idea (d'un stream) (optionnel, en amont — flag `contentResearch`)
+   ├── Topic         (optionnel, en amont — flag `topics`)
+   └── Inspiration   (optionnel, en amont — flag `contentResearch`)
 ```
 
 1. **Source** — un input brut (PDF, URL, vidéo, audio, video clip, ou une réponse de connecteur). Stocké global cross-session dans `sources-stream.js`.
@@ -17,9 +17,9 @@ Source  →  Idea  →  Draft  →  Schedule
 3. **Draft** — un post généré depuis une (ou plusieurs) idea(s), pour un réseau spécifique (LinkedIn, X, …).
 4. **Schedule** — un draft posté dans le queue du calendrier.
 
-En amont, **optionnellement** : un **Topic** ou une **Idea d'un stream**. Les deux entrent dans le pipeline comme **Source**. Une Idea de pipeline peut toujours venir directement d'une Source.
+En amont, **optionnellement** : un **Topic** ou une **Inspiration**. Les deux entrent dans le pipeline comme **Source**. Une Idea peut toujours venir directement d'une Source.
 
-> ⚠️ **« Idea » nomme deux objets.** L'Idea du pipeline (extraite d'une source, panneau de droite, `library.js`, `idea-card`) et l'Idea d'un **Idea stream** (`briefs-store`, `brief-card`). Les deux sont visibles par l'utilisateur : **nommer la surface** dès que l'un ou l'autre est possible — « une Idea de ce stream », jamais un « Idea » nu. En code ils ne se touchent jamais : stores, modules de carte et routes différents.
+> ✅ **Chaque mot ne nomme plus qu'un objet.** Le renommage Idea→**Inspiration** a levé la dernière ambiguïté : **Idea** ne désigne plus que l'insight extrait d'une source que vous avez fournie (panneau de droite, `library.js`, `idea-card`, la pill Ideas du topbar) ; une carte d'**Inspiration feed** est une **Inspiration** (`briefs-store`, `brief-card`). La frontière : une Inspiration vient de l'extérieur (concurrents, influenceurs, tendances — c'est Archie qui l'a trouvée), une Idea est extraite de vos propres sources. En code ils ne se touchent toujours pas : stores, modules de carte et routes différents.
 
 ### Topic
 
@@ -35,23 +35,25 @@ Un **Topic** est un dossier qu'Archie assemble à partir du listening Agorapulse
 | `ageDays`            | **La** source de vérité de l'âge : groupe le feed et dérive chaque libellé |
 | `unseen` `dismissed` | Badge de la sidebar / masqué du feed (jamais supprimé, pour l'Undo)        |
 
-Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. C'est désormais le **seul** objet appelé Topic dans l'UI : les **Idea streams**, qui appelaient leurs cartes des Topics, disent **Idea** depuis le renommage (voir plus bas). `topic` reste **banni comme synonyme d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
+Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. C'est désormais le **seul** objet appelé Topic dans l'UI : les **Inspiration feeds**, qui appelaient leurs cartes des Topics puis des Ideas, disent **Inspiration** depuis le dernier renommage (voir plus bas). `topic` reste **banni comme synonyme d'Inspiration ou d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
 
 Deux actions, pas plus : **Start a chat** (le topic entre dans le chat comme Source, donc tout le pipeline existant s'allume) et **Dismiss**. Voir [`FEATURES.md`](FEATURES.md) §17.
 
-### Idea stream + Idea
+### Inspiration feed + Inspiration
 
-Un **Idea stream** est une **requête permanente nommée** : un Playbook × un jeu de sources × une cadence. Archie y dépose des **Ideas** : une accroche, un résumé, un article complet (avec ses versions successives) et les posts sociaux qui la fondent, chacune triée **New / Saved / Used / Ignored** et éventuellement flaguée **Trending** ou **Updated**.
+Un **Inspiration feed** est une **requête permanente nommée** : un Playbook × un jeu de sources × une cadence. Archie y dépose des **Inspirations** : une accroche, un résumé, un article complet (avec ses versions successives) et les posts sociaux qui la fondent, chacune triée **New / Saved / Used / Ignored** et éventuellement flaguée **Trending** ou **Updated**.
 
-| UI           | Code                                                                            |
-| ------------ | ------------------------------------------------------------------------------- |
-| Idea streams | `research-*` (`/content-ideas`, `research-store`, `screens/research-*.js`)      |
-| Idea stream  | **lane** (`laneId`, `getLanes`, `research-store.js`)                            |
-| Idea         | **brief** (`briefs-store.js`, `brief-card.js`, `data-brief-*`, `.topics-*` CSS) |
+| UI                | Code                                                                            |
+| ----------------- | ------------------------------------------------------------------------------- |
+| Inspiration feeds | `research-*` (`/content-ideas`, `research-store`, `screens/research-*.js`)      |
+| Inspiration feed  | **lane** (`laneId`, `getLanes`, `research-store.js`)                            |
+| Inspiration       | **brief** (`briefs-store.js`, `brief-card.js`, `data-brief-*`, `.topics-*` CSS) |
 
 Le split UI/code est le même que Playbook/Context, avec une contrainte de plus : `briefs-store` **ne peut pas** être renommé `topics-store`, qui est la feature ci-dessus. Les classes CSS sont `.topics-*` au pluriel pour la même raison — `.topic-card` au singulier appartient déjà au dossier de listening.
 
-Une Idea offre trois actions : **Use in chat** (elle entre comme Source, comme un Topic), **Save for later**, **Ignore Idea**. Voir [`FEATURES.md`](FEATURES.md) §18.
+Une Inspiration offre trois actions : **Use in chat** (elle entre comme Source, comme un Topic), **Save for later**, **Ignore**. Voir [`FEATURES.md`](FEATURES.md) §18.
+
+Deux libellés gardent volontairement le mot « idea », parce qu'ils nomment autre chose que l'objet : le type de carte **« Ideas for later »** (la route que prend la carte, face à « Draft-ready ») et la source **« Internal team ideas »** (les idées de votre équipe, lues dans les outils MCP connectés).
 
 ## Concepts clés
 
@@ -103,7 +105,7 @@ Géré par [`src/sources-stream.js`](../../src/sources-stream.js) — le seul st
 
 ### Idea du pipeline (kind taxonomy)
 
-Celle-ci, pas celle d'un Idea stream (voir plus haut). Une idée est typée selon une de ces 5 kinds :
+Celle-ci, pas celle d'un Inspiration feed (voir plus haut). Une idée est typée selon une de ces 5 kinds :
 
 | Kind        | Description                                     |
 | ----------- | ----------------------------------------------- |

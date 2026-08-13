@@ -46,7 +46,7 @@ import { findReviewStatus, findResearchType, typeTagColor } from "../research-ca
 // paragraph, became one line, and is now the shortest thing that still carries the
 // rule: ignoring is not deleting, and a spike overrides it.
 //
-// "this list", not "feed": the user is standing in ONE Idea stream when they read
+// "this list", not "feed": the user is standing in ONE Inspiration feed when they read
 // it, and that is the scope of what ignoring does. "Feed" was ambiguous with the
 // /topics feed, which is a different surface with a different object in it.
 // "Baseline" went earlier for length; the full version still lives where the
@@ -357,9 +357,9 @@ export function renderUseButtons(brief) {
               type="button"
               class="ap-button ghost red"
               data-brief-ignore="${escapeAttr(brief.id)}"
-              aria-label="Ignore Idea. ${IGNORE_HINT}"
+              aria-label="Ignore Inspiration. ${IGNORE_HINT}"
             >
-              <span>Ignore Idea</span>
+              <span>Ignore</span>
             </button>
             <span class="ap-tooltip top-right topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
           </span>`,
@@ -408,7 +408,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
       data-brief-use-menu="${escapeAttr(menuKey)}"
       aria-haspopup="true"
       aria-expanded="${menuOpen ? "true" : "false"}"
-      aria-label="More options for this Idea"
+      aria-label="More options for this Inspiration"
     >
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>
@@ -435,7 +435,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
            With Add-to-strategy parked there is only one alternate verb left, so
            the menu carries exactly one row above Ignore and the no-duplication
            rule decides which: a Draft-ready topic leads with Save for later (its
-           main segment is Use in chat), an Ideas-for-later topic leads with Use in
+           main segment is Use in chat), an Inspirations-for-later topic leads with Use in
            chat (its main segment is now Save for later). -->
       ${raw(
         ready
@@ -469,7 +469,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
               data-brief-ignore="${escapeAttr(brief.id)}"
             >
               <span class="topics-use__item-text">
-                <span>Ignore Idea</span>
+                <span>Ignore</span>
                 <span class="topics-use__item-desc">${IGNORE_HINT}</span>
               </span>
             </button>`,
