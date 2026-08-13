@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=407";
+import { renderTopbar } from "../components/topbar.js?v=408";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -71,11 +71,11 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getBriefById, getStarterTopics } from "../briefs-store.js?v=50";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=23";
+import { getBriefById, getStarterTopics, subscribe as subscribeBriefs } from "../briefs-store.js?v=51";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=24";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=13";
 import { getLaneById } from "../research-store.js?v=42";
-import * as contextBuilder from "../context-builder.js?v=374";
+import * as contextBuilder from "../context-builder.js?v=375";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -112,7 +112,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=3";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=104";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=105";
 import { findResearchSource } from "../research-catalog.js?v=19";
 import {
   openDrafts as openDraftsPanel,
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=541";
+} from "../components/right-panel.js?v=542";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=35";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2173,7 +2173,7 @@ function renderStarterTopicEmpty() {
 // How many Topics the list shows before the closing card. Must match STARTER_MAX in
 // briefs-store — the store decides how many exist, this decides how many are drawn,
 // and if they disagree the list silently truncates or the cap does nothing.
-const STARTER_TOPIC_LIMIT = 8;
+const STARTER_TOPIC_LIMIT = 6;
 
 // A SCROLLING LIST, not a carousel. It was one card at a time with prev/next and a
 // dot stepper, which is the right shape when the set is small and each one is meant
@@ -2197,7 +2197,9 @@ function renderStarterTopicSlot(sessionId) {
   if (!queue.length) return "";
   const waiting = starterTopicCountdown > 0;
   if (waiting) startStarterTopicCountdown();
-  const rows = queue.slice(0, STARTER_TOPIC_LIMIT).map(renderStarterTopicCard).join("");
+  const visible = queue.slice(0, STARTER_TOPIC_LIMIT);
+  const shown = visible.length;
+  const rows = visible.map(renderStarterTopicCard).join("");
   // tabindex on the scroller: a keyboard user has to be able to reach the overflow,
   // and the rows inside it are buttons, so focusing one of those scrolls the box
   // anyway — this covers reading without tabbing through every row.
@@ -2206,11 +2208,40 @@ function renderStarterTopicSlot(sessionId) {
       ${
         waiting
           ? renderStarterTopicWaiting()
-          : `<div class="starter-topic__list" tabindex="0">${rows}${renderStarterTopicEmpty()}</div>`
+          : `<div class="starter-topic__list" tabindex="0">${rows}${renderStarterTopicEmpty()}</div>
+             <span class="starter-topic__hint">${shown} shown · scroll for more</span>`
       }
     </div>
   `;
 }
+
+// Acting on a Topic anywhere takes it out of this list. Use / Save / Ignore in the
+// article dialog all write a status through briefs-store, and getStarterTopics only
+// returns `new` — so a repaint is enough to drop the row, and the next queued Topic
+// moves up into the space.
+//
+// Subscribed ONCE at module scope rather than per render: the store notifies on every
+// triage change from any surface (the feed does it too), and the guard below is what
+// makes that free — no slot on screen, nothing to do. A per-render subscription would
+// need a teardown that renderEmptyHero has no hook for, and would leak one listener
+// per paint of the hero.
+function refreshStarterTopicList() {
+  const slot = document.querySelector("[data-starter-topic-slot]");
+  if (!slot || !document.body.contains(slot)) return;
+  const host = slot.parentElement;
+  const holder = document.createElement("div");
+  holder.innerHTML = renderStarterTopicSlot();
+  const fresh = holder.querySelector("[data-starter-topic-slot]");
+  // The block can legitimately render to nothing — the last Topic just left the queue.
+  // Removing it takes the label with it, or the heading outlives what it names.
+  if (!fresh) {
+    slot.previousElementSibling?.remove();
+    return slot.remove();
+  }
+  host.replaceChild(fresh, slot);
+}
+
+subscribeBriefs(refreshStarterTopicList);
 
 // Label + list, or nothing at all. One function so the label can't outlive
 // the block it names — renderStarterTopicSlot returns "" in three cases (flag
@@ -2219,7 +2250,7 @@ function renderStarterTopicSlot(sessionId) {
 function renderStarterTopicBlock(sessionId) {
   const slot = renderStarterTopicSlot(sessionId);
   if (!slot) return "";
-  return `<h2 class="empty-chat__starter-label" id="starterTopicLabel">Topics waiting for you</h2>${slot}`;
+  return `<h2 class="empty-chat__starter-label" id="starterTopicLabel">Fresh topics to review</h2>${slot}`;
 }
 
 // Both halves of "a topic opens its own chat" now live in brief-flow.js, because

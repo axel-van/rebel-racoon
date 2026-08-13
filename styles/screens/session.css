@@ -858,6 +858,17 @@
   flex: 0 0 auto;
 }
 
+/* The count line. It says how many are on screen rather than how many exist, because
+   the number that matters to a reader deciding whether to scroll is the one in front
+   of them — and the total is what the feed is for. */
+.starter-topic__hint {
+  align-self: flex-start;
+  margin-top: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
 .starter-topic__list:focus-visible {
   outline: 2px solid var(--ref-color-electric-blue-100);
   outline-offset: 2px;

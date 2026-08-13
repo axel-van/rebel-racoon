@@ -126,14 +126,15 @@ export function ageGroupOf(brief) {
   return AGE_GROUPS.find((g) => days <= g.maxDays) || AGE_GROUPS[AGE_GROUPS.length - 1];
 }
 
-// How many the new-session list can hold. It was four, sized for a carousel showing
-// one card at a time; the list shows several at once, so the cap is what stops the
-// section from turning the new-chat page into the feed. The list renders the closing
-// card after these, and its own cap has to match this one.
-const STARTER_MAX = 8;
+// How many the new-session list can hold. Four when it was a carousel showing one
+// card at a time, then eight for the list, now six: eight filled the section past the
+// point where the eye takes it in as one group, and the closing row is a better answer
+// than a longer scroll. The list renders the closing row after these, and its own cap
+// has to match this one.
+const STARTER_MAX = 6;
 
 /**
- * Up to eight briefs for the new-session page's Topics list, in the order
+ * Up to six briefs for the new-session page's Topics list, in the order
  * they are shown: the trending one, the updated one, then two plain New ones.
  *
  * The order is the point. The card shows one topic at a time, so the first one
