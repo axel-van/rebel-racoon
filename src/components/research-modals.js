@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=17";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=18";
 import {
   ageMinutes,
   getBriefById,
@@ -30,8 +30,8 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=47";
-import { getLanes } from "../research-store.js?v=40";
+} from "../briefs-store.js?v=48";
+import { getLanes } from "../research-store.js?v=41";
 import {
   getContexts,
   getContextById,
@@ -42,13 +42,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=72";
+} from "../contexts-store.js?v=73";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=20";
-import { renderBriefCard } from "./brief-card.js?v=44";
-import { renderSocialPostCard } from "./social-post-card.js?v=28";
+import { openBriefInChat } from "../brief-flow.js?v=21";
+import { renderBriefCard } from "./brief-card.js?v=45";
+import { renderSocialPostCard } from "./social-post-card.js?v=29";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -840,10 +840,10 @@ export function openPlaybookList({ playbookId, kind }) {
   );
 }
 
-// ─── 6. Pick a topic (composer Add → Content Ideas) ─────────────────────────
+// ─── 6. Pick a topic (composer Add → Idea streams) ─────────────────────────
 //
 // The composer's Add menu can reach every other source kind but had no way into
-// Content Ideas, so a topic you had already triaged could only be used from its
+// Idea streams, so a topic you had already triaged could only be used from its
 // own feed. This is that door.
 //
 // Grouped by lane rather than shown flat: a topic only means something next to
@@ -981,7 +981,7 @@ function renderPlaybookStep(ctx) {
               .join(""),
           )}
         </div>`
-      : html`<p class="research-pick__empty muted">No Ideas yet. Content Ideas fills up once a stream has run.</p>`,
+      : html`<p class="research-pick__empty muted">No Ideas yet. Your Idea streams fill up once one has run.</p>`,
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
       <span>Cancel</span>
     </button>`,

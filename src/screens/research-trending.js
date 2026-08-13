@@ -1,4 +1,4 @@
-// Content Ideas — the attention page, route /content-ideas/:id/attention.
+// Idea streams — the attention page, route /content-ideas/:id/attention.
 //
 // The file is still research-trending.js. The route was renamed when the page
 // grew to carry both signals; the module name lags, the same split as
@@ -22,14 +22,14 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=397";
-import { isFlagOn } from "../feature-flags.js?v=20";
-import { renderBriefCard } from "../components/brief-card.js?v=44";
-import { openFullResearch } from "../components/research-modals.js?v=98";
-import { openBriefInChat } from "../brief-flow.js?v=20";
-import { getLaneById } from "../research-store.js?v=40";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=47";
-import { findResearchSource, findCadence } from "../research-catalog.js?v=17";
+import { renderTopbar } from "../components/topbar.js?v=398";
+import { isFlagOn } from "../feature-flags.js?v=21";
+import { renderBriefCard } from "../components/brief-card.js?v=45";
+import { openFullResearch } from "../components/research-modals.js?v=99";
+import { openBriefInChat } from "../brief-flow.js?v=21";
+import { getLaneById } from "../research-store.js?v=41";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=48";
+import { findResearchSource, findCadence } from "../research-catalog.js?v=18";
 
 let laneId = null;
 let unsubscribe = null;
@@ -102,7 +102,7 @@ function renderPage() {
   // Same recap__header shape as the feed, minus the monogram: this page belongs
   // to one lane you have already identified by arriving from it, and the orange
   // mark is the thing that should carry the eye. Back is the topbar's, via
-  // backTargetFor() — no in-page button on any Content Ideas detail view.
+  // backTargetFor() — no in-page button on any Idea streams detail view.
   return html`<div class="research-feed__body">
     <div class="research-trending__inner">
       <header class="research-feed__header research-feed__header--trending">

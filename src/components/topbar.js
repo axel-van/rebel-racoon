@@ -14,26 +14,26 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=531";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=86";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=94";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=88";
+} from "./right-panel.js?v=532";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=87";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=95";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=89";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=67";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=324";
+} from "./conversation-status-card.js?v=325";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=72";
-import { getLaneById } from "../research-store.js?v=40";
-import { isFlagOn } from "../feature-flags.js?v=20";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=73";
+import { getLaneById } from "../research-store.js?v=41";
+import { isFlagOn } from "../feature-flags.js?v=21";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=114";
+} from "../top-posts-flow.js?v=115";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -492,7 +492,7 @@ function backTargetFor(path) {
       label: lane ? `Back to ${lane.name}` : "Back to Idea streams",
     };
   }
-  // Every other Content Ideas view — a stream's Idea list, and /content-ideas/new — goes
+  // Every other Idea streams view — a stream's Idea list, and /content-ideas/new — goes
   // back to the list of streams. Deliberately WITHOUT ?fresh=1: that param runs the
   // generating loader, and a back button should not spend 1.6s pretending to fetch
   // a list you were just looking at.
@@ -550,7 +550,7 @@ function currentTitle() {
   // lane. Registering these is also what let the lane list drop its in-page
   // bordered bar — that bar only existed because this map had no entry and the
   // topbar fell through to "Archie".
-  if (path.startsWith("/content-ideas")) return "Content Ideas";
+  if (path.startsWith("/content-ideas")) return "Idea streams";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

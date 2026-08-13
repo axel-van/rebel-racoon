@@ -1,4 +1,4 @@
-// Launches the in-chat interaction for a Content Ideas topic.
+// Launches the in-chat interaction for a Idea streams topic.
 //
 // "Use in chat" is the forward action on a topic, and it now means the same thing
 // from every surface that offers it: the topic opens a chat of its own with itself
@@ -30,10 +30,10 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { addReadySource } from "./sources-stream.js?v=86";
-import { getBriefById, getBriefVersions } from "./briefs-store.js?v=47";
-import { getLaneById } from "./research-store.js?v=40";
-import { findResearchSource } from "./research-catalog.js?v=17";
+import { addReadySource } from "./sources-stream.js?v=87";
+import { getBriefById, getBriefVersions } from "./briefs-store.js?v=48";
+import { getLaneById } from "./research-store.js?v=41";
+import { findResearchSource } from "./research-catalog.js?v=18";
 
 export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
 

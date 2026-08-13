@@ -117,26 +117,27 @@ export const FLAGS = Object.freeze([
   },
   {
     id: "contentResearch",
-    label: "Content Ideas (Idea streams)",
+    label: "Idea streams",
     default: false,
     hides:
-      "When OFF (default), hides everything Content Ideas: the /content-ideas " +
+      "When OFF (default), hides everything Idea streams: the /content-ideas " +
       "routes (stream list, form, feed, trending page), its sidebar nav row, and " +
-      "the composer Add → 'Content Ideas' picker. A stale deep link bounces " +
+      "the composer Add → 'Pick from Idea streams' picker. A stale deep link bounces " +
       "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
       "a named IDEA STREAM, and Archie returns Ideas — a headline, a " +
       "summary, a full write-up and the social posts behind it — each triaged " +
       "New / Saved / Used / Ignored. Ideas whose volume runs above their own " +
       "baseline are additionally flagged Trending (an independent boolean, " +
       "never a status), surfaced by a notice plus a dedicated page. " +
-      "\n\nNAMING: the UI says Content Ideas, calls each stream an IDEA STREAM " +
-      "and each card an IDEA. Everything underneath still says research / brief / " +
+      "\n\nNAMING: the UI says IDEA STREAMS for the section and the list, and " +
+      "IDEA for each card. It said Content Ideas until the rename; nothing a user " +
+      "sees does now. Everything underneath still says research / brief / " +
       "lane / topic — briefs-store, the brief-card module, data-brief-* hooks, the " +
       "/content-ideas routes and the .topics-* CSS classes — the same split as " +
       "Playbook/Context. briefs-store could not be renamed regardless: " +
       "topics-store is a different feature. " +
       "\n\nThe rename settled the old collision: the `topics` flag below owns a " +
-      "listening dossier, still called Topic, and Content Ideas no longer uses " +
+      "listening dossier, still called Topic, and no Idea-streams surface uses " +
       "that word for anything a user sees. The word Idea is now the shared one — " +
       "the pipeline's extracted Idea (Sources → Ideas → Drafts, in the right " +
       "panel) is a different object from an Idea in a stream.",

@@ -19,7 +19,7 @@ Source  →  Idea  →  Draft  →  Schedule
 
 En amont, **optionnellement** : un **Topic** ou une **Idea d'un stream**. Les deux entrent dans le pipeline comme **Source**. Une Idea de pipeline peut toujours venir directement d'une Source.
 
-> ⚠️ **« Idea » nomme deux objets.** L'Idea du pipeline (extraite d'une source, panneau de droite, `library.js`, `idea-card`) et l'Idea d'un **Idea stream** (Content Ideas, `briefs-store`, `brief-card`). Les deux sont visibles par l'utilisateur : **nommer la surface** dès que l'un ou l'autre est possible — « une Idea de ce stream », jamais un « Idea » nu. En code ils ne se touchent jamais : stores, modules de carte et routes différents.
+> ⚠️ **« Idea » nomme deux objets.** L'Idea du pipeline (extraite d'une source, panneau de droite, `library.js`, `idea-card`) et l'Idea d'un **Idea stream** (`briefs-store`, `brief-card`). Les deux sont visibles par l'utilisateur : **nommer la surface** dès que l'un ou l'autre est possible — « une Idea de ce stream », jamais un « Idea » nu. En code ils ne se touchent jamais : stores, modules de carte et routes différents.
 
 ### Topic
 
@@ -35,19 +35,19 @@ Un **Topic** est un dossier qu'Archie assemble à partir du listening Agorapulse
 | `ageDays`            | **La** source de vérité de l'âge : groupe le feed et dérive chaque libellé |
 | `unseen` `dismissed` | Badge de la sidebar / masqué du feed (jamais supprimé, pour l'Undo)        |
 
-Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. C'est désormais le **seul** objet appelé Topic dans l'UI : Content Ideas, qui appelait ses cartes des Topics, dit **Idea** depuis le renommage (voir plus bas). `topic` reste **banni comme synonyme d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
+Terme **UI et code identiques** : `topic`, `topics-store`, `topicId`. C'est désormais le **seul** objet appelé Topic dans l'UI : les **Idea streams**, qui appelaient leurs cartes des Topics, disent **Idea** depuis le renommage (voir plus bas). `topic` reste **banni comme synonyme d'Idea** (voir [`../copy/copy-principles.md`](../copy/copy-principles.md)) — un Topic est un objet distinct, en amont. Ne pas dire **dossier** dans l'UI (tournure française, et ça collisionne avec `folders-store`).
 
 Deux actions, pas plus : **Start a chat** (le topic entre dans le chat comme Source, donc tout le pipeline existant s'allume) et **Dismiss**. Voir [`FEATURES.md`](FEATURES.md) §17.
 
-### Idea stream + Idea (Content Ideas)
+### Idea stream + Idea
 
 Un **Idea stream** est une **requête permanente nommée** : un Playbook × un jeu de sources × une cadence. Archie y dépose des **Ideas** : une accroche, un résumé, un article complet (avec ses versions successives) et les posts sociaux qui la fondent, chacune triée **New / Saved / Used / Ignored** et éventuellement flaguée **Trending** ou **Updated**.
 
-| UI            | Code                                                                            |
-| ------------- | ------------------------------------------------------------------------------- |
-| Content Ideas | `research-*` (`/content-ideas`, `research-store`, `screens/research-*.js`)      |
-| Idea stream   | **lane** (`laneId`, `getLanes`, `research-store.js`)                            |
-| Idea          | **brief** (`briefs-store.js`, `brief-card.js`, `data-brief-*`, `.topics-*` CSS) |
+| UI           | Code                                                                            |
+| ------------ | ------------------------------------------------------------------------------- |
+| Idea streams | `research-*` (`/content-ideas`, `research-store`, `screens/research-*.js`)      |
+| Idea stream  | **lane** (`laneId`, `getLanes`, `research-store.js`)                            |
+| Idea         | **brief** (`briefs-store.js`, `brief-card.js`, `data-brief-*`, `.topics-*` CSS) |
 
 Le split UI/code est le même que Playbook/Context, avec une contrainte de plus : `briefs-store` **ne peut pas** être renommé `topics-store`, qui est la feature ci-dessus. Les classes CSS sont `.topics-*` au pluriel pour la même raison — `.topic-card` au singulier appartient déjà au dossier de listening.
 

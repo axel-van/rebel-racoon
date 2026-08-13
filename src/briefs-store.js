@@ -44,7 +44,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=90";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=17";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=18";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -127,7 +127,7 @@ export function ageGroupOf(brief) {
 }
 
 /**
- * Up to four briefs for the new-session page's Content Ideas card, in the order
+ * Up to four briefs for the new-session page's Idea-streams carousel, in the order
  * they are shown: the trending one, the updated one, then two plain New ones.
  *
  * The order is the point. The card shows one topic at a time, so the first one

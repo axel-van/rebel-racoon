@@ -4,9 +4,9 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=44";
+import { open as openSearchModal } from "./search-modal.js?v=45";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=17";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=18";
 import {
   getSessions,
   getSessionById,
@@ -16,17 +16,17 @@ import {
   togglePillar as togglePillarSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=38";
-import { isFlagOn } from "../feature-flags.js?v=20";
+import { isFlagOn } from "../feature-flags.js?v=21";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=88";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=72";
+import { clearSession as clearLibrarySession } from "../library.js?v=89";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=73";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=59";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=27";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=40";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=531";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=94";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=41";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=532";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=95";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=67";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=86";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=87";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -620,7 +620,7 @@ const NAV = [
     // tech still separate them — but if the collapsed rail ever needs to be
     // scannable on its own, this is the pair that breaks it.
     icon: "ap-icon-antenna",
-    label: "Content Ideas",
+    label: "Idea streams",
     flag: "contentResearch",
     // Prefix, so the row stays lit on a lane's feed, form and trending page.
     match: (p) => p.startsWith("/content-ideas"),

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=397";
+import { renderTopbar } from "../components/topbar.js?v=398";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -11,11 +11,11 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=61";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=41";
+} from "../social-profiles.js?v=62";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=42";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=72";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=73";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -36,31 +36,31 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=94";
+} from "../assistant.js?v=95";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=88";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=77";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=89";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=78";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=62";
+} from "../composer-mentions.js?v=63";
 import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=67";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=92";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=74";
-import * as topPostsFlow from "../top-posts-flow.js?v=114";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=93";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=75";
+import * as topPostsFlow from "../top-posts-flow.js?v=115";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=122";
+} from "../components/top-post-card.js?v=124";
 import { getTopPost } from "../top-posts-store.js?v=83";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import * as sidebarWizard from "../sidebar-wizard.js?v=84";
 import * as inlineQuestion from "../inline-question.js?v=48";
-import * as clipStudio from "../clip-studio.js?v=58";
+import * as clipStudio from "../clip-studio.js?v=59";
 import * as batchStudio from "../batch-studio.js?v=4";
 import { askConnector } from "../connector-ask.js?v=39";
 import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=59";
@@ -70,12 +70,12 @@ import {
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
-import { isFlagOn } from "../feature-flags.js?v=20";
-import { getBriefById, getStarterTopics } from "../briefs-store.js?v=47";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=20";
-import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=11";
-import { getLaneById } from "../research-store.js?v=40";
-import * as contextBuilder from "../context-builder.js?v=364";
+import { isFlagOn } from "../feature-flags.js?v=21";
+import { getBriefById, getStarterTopics } from "../briefs-store.js?v=48";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=21";
+import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=12";
+import { getLaneById } from "../research-store.js?v=41";
+import * as contextBuilder from "../context-builder.js?v=365";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -86,9 +86,9 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=89";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=96";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=97";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=90";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=97";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=98";
 import { open as openConnectorsModal } from "../components/connectors-modal.js?v=43";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
@@ -106,27 +106,27 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
   addReadySource,
-} from "../sources-stream.js?v=86";
-import { renderClipCard } from "../components/clip-card.js?v=50";
+} from "../sources-stream.js?v=87";
+import { renderClipCard } from "../components/clip-card.js?v=51";
 import { onFeedbackClick } from "../components/feedback-control.js?v=3";
 import { showToast } from "../components/toast.js?v=21";
-// The composer's Add menu reaches Content Ideas through this picker; the catalog
+// The composer's Add menu reaches Idea streams through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=98";
-import { findResearchSource } from "../research-catalog.js?v=17";
+import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=99";
+import { findResearchSource } from "../research-catalog.js?v=18";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=531";
+} from "../components/right-panel.js?v=532";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
-import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=33";
+import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=34";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=52";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=60";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=75";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=53";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=61";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=76";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -1262,19 +1262,19 @@ function renderPlaybookControl(ctx, selectable) {
 // plain template literal, not html``, so a raw() wrapper stringifies to
 // "[object Object]". Same call shape as renderConnectorsSubmenu right below it.
 //
-// The composer's way into Content Ideas. Same folder icon the sidebar's nav row
+// The composer's way into Idea streams. Same folder icon the sidebar's nav row
 // uses, so the two read as one destination, and the same flag gates both — with
 // contentResearch OFF this item disappears rather than opening an empty picker.
 //
 // It sits with "Top performing posts" below the divider: those two are the items
 // that pick from something the app already holds, where everything above the
 // divider brings something in from outside.
-// Directly under "Pick from Content Ideas", because the two are the same gesture
+// Directly under "Pick from Idea streams", because the two are the same gesture
 // at two altitudes: a topic is one observation, a pillar is the standing theme
 // several of them fed. Same flag gates both — a pillar only exists because a topic
 // was filed into one, so with contentResearch off there is nothing to pick.
 //
-// The antenna, matching the sidebar's Content Ideas row rather than the folder
+// The antenna, matching the sidebar's Idea streams row rather than the folder
 // this item's sibling still uses; the folder is the older icon and the nav row
 // moved off it.
 // ─── PARKED: Post about a Content Pillar ───────────────────────────────────
@@ -1300,7 +1300,7 @@ function renderContentIdeasItem() {
     <i class="ap-icon-folder"></i>
     <div class="ap-action-dropdown-item-text">
       <div class="ap-action-dropdown-item-label-container">
-        <span class="ap-action-dropdown-item-label">Pick from Content Ideas</span>
+        <span class="ap-action-dropdown-item-label">Pick from Idea streams</span>
       </div>
     </div>
   </button>`;
@@ -1967,7 +1967,7 @@ function removeSlashToken(input) {
 // inline inside this hero). The previous inline AI question flow
 // ("Quick — which context?") was removed — the composer picker is now
 // the single, always-visible context affordance.
-// ── The Content Ideas carousel on the new-session page ──────────────────────
+// ── The Idea streams carousel on the new-session page ──────────────────────
 //
 // One Idea at a time, from the same briefs the /content-ideas feed shows. It is
 // its own block ABOVE the workflow grid, under its own label, at the width of
@@ -1997,7 +1997,7 @@ let starterTopicSession = null;
 // The wait before the first topic appears. Purely theatrical — nothing is
 // actually being fetched — but it is the one moment the prototype can show that
 // topics ARRIVE rather than sit there waiting to be found, which is the whole
-// premise of Content Ideas. Three seconds is long enough to read the line and
+// premise of Idea streams. Three seconds is long enough to read the line and
 // short enough that nobody sits through it twice.
 const STARTER_TOPIC_COUNTDOWN = 3;
 let starterTopicCountdown = STARTER_TOPIC_COUNTDOWN;
@@ -2065,7 +2065,7 @@ function renderStarterTopicCard(brief) {
     pb
       ? `<span class="starter-topic__pb">${escapeHtml(pb.name)}</span><span class="starter-topic__sep" aria-hidden="true">›</span>`
       : ""
-  }<span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Content Ideas")}</span></span>`;
+  }<span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Idea streams")}</span></span>`;
   // The marks are the feed's own components (trending-mark.css), not a second
   // drawing of the same idea — the accent says "something is up with this one"
   // and the mark says which.
@@ -2165,7 +2165,7 @@ function renderStarterTopicEmpty() {
   return `
     <div class="starter-card starter-card--topic starter-topic--empty">
       <i class="starter-card__art ap-icon-note" aria-hidden="true"></i>
-      <span class="starter-card__title">Get the full details into your Content Ideas</span>
+      <span class="starter-card__title">Get the full details into your Idea streams</span>
       <span class="starter-card__subtitle"
         >Every idea in full, with the posts behind it. I refresh them weekly.</span
       >
@@ -2191,7 +2191,7 @@ function renderStarterTopicSlot(sessionId) {
   if (sessionId) syncStarterTopicSession(sessionId);
   const queue = getStarterTopics();
   // No Ideas at all (new-alt mode): no block, not a closing card. "Everything is
-  // in Content Ideas" is an answer to "I've read these", not to "there was never
+  // in Idea streams" is an answer to "I've read these", not to "there was never
   // anything here".
   if (!queue.length) return "";
   const waiting = starterTopicCountdown > 0;
@@ -2232,7 +2232,7 @@ function renderStarterTopicNav(index, total) {
   const dots = Array.from({ length: total }, (_, i) => {
     // The last slide is not an Idea, so it cannot be labelled as one. Everything
     // else is "Idea N of <queue length>" — total minus that closing slide.
-    const label = i === total - 1 ? "Everything else, in Content Ideas" : `Idea ${i + 1} of ${total - 1}`;
+    const label = i === total - 1 ? "Everything else, in Idea streams" : `Idea ${i + 1} of ${total - 1}`;
     return `<button type="button"${i === index ? ' class="active"' : ""} data-starter-topic-go="${i}" aria-label="${label}"${
       i === index ? ' aria-current="true"' : ""
     }></button>`;
@@ -2316,7 +2316,7 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
         Drop a source — I'll turn it into a batch of ready-to-schedule posts, all from one chat.
       </div>
       ${raw(composerMarkup)}
-      <!-- Content Ideas FIRST, then the workflows. Both blocks answer "what now?",
+      <!-- Idea streams FIRST, then the workflows. Both blocks answer "what now?",
            but only one of them knows anything about you: these four Ideas came out
            of your own streams this week, where the workflows are the same three on
            every chat. The "Or" on the workflow label below is what ties the two
@@ -3987,7 +3987,7 @@ function wireAssistantPanel(root, session, attachedContext) {
     setTimeout(() => startTopicChat(session.id, pendingTopic.topicId), 150);
   }
 
-  // Hand-off from a Content Ideas topic — the new-chat starter card or the
+  // Hand-off from a Idea streams topic — the new-chat starter card or the
   // composer's Pick-a-topic modal. Attach only: unlike /topics this posts no
   // echo and no question picker, because the source-intake card already names
   // the topic and the composer is right there.
@@ -4914,7 +4914,7 @@ function bindSession(root, session) {
       // setting `action` on the mock. The "open-video-clips" action opens the
       // dedicated Clip Studio in a fresh `clip-studio-*` session (upload →
       // analyzing → clips), mirroring the welcome-alt dedicated-session pattern.
-      // ── The Content Ideas carousel ──────────────────────────────────────
+      // ── The Idea streams carousel ──────────────────────────────────────
       // Paging: animate the current card out, swap the markup at the halfway
       // point, animate the next one in. The class is driven from JS rather than
       // :target/:checked because the content changes between the two halves —
@@ -5490,7 +5490,7 @@ function bindSession(root, session) {
           topPostsFlow.startTopPostsInline(session.id);
           return;
         }
-        // A Content Ideas topic arrives as an already-processed SOURCE, exactly as
+        // A Idea streams topic arrives as an already-processed SOURCE, exactly as
         // topic-flow lands one from /topics: intake-lifecycle then posts a
         // source-intake turn for it, so the pick shows up in the thread as a card
         // and every existing affordance (Extract ideas, Draft, Ask) lights up on

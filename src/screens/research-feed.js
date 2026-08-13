@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=397";
-import { isFlagOn } from "../feature-flags.js?v=20";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=44";
+import { renderTopbar } from "../components/topbar.js?v=398";
+import { isFlagOn } from "../feature-flags.js?v=21";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=45";
 import {
   openIgnoreReason,
   openExport,
@@ -49,10 +49,10 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=98";
-import { openBriefInChat } from "../brief-flow.js?v=20";
+} from "../components/research-modals.js?v=99";
+import { openBriefInChat } from "../brief-flow.js?v=21";
 import { showToast } from "../components/toast.js?v=21";
-import { getLaneById } from "../research-store.js?v=40";
+import { getLaneById } from "../research-store.js?v=41";
 import {
   getBriefById,
   getBriefsForLane,
@@ -63,15 +63,15 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=47";
+} from "../briefs-store.js?v=48";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   RESEARCH_TYPES,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=17";
-import { getContextById } from "../contexts-store.js?v=72";
+} from "../research-catalog.js?v=18";
+import { getContextById } from "../contexts-store.js?v=73";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -638,7 +638,7 @@ function renderGenerating() {
   // was the only loader in the product that didn't.
   return html`<div class="research-generating">
     <span class="ap-loader orange size-60" aria-hidden="true"></span>
-    <p class="research-generating__caption" role="status">We are generating content ideas for you…</p>
+    <p class="research-generating__caption" role="status">We are generating ideas for you…</p>
   </div>`;
 }
 

@@ -17,8 +17,8 @@
 // so the caller can repaint the thread (intake turns derive
 // ideaCount/status live from sources-stream).
 
-import { subscribeSources, getSources as getStreamSources } from "../../sources-stream.js?v=86";
-import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=94";
+import { subscribeSources, getSources as getStreamSources } from "../../sources-stream.js?v=87";
+import { getThread, postSourceIntake, markSourceIntakeReady } from "../../assistant.js?v=95";
 
 export function startIntakeLifecycle(sessionId, { onSourcesChange, onVideoReady, onSourceReady } = {}) {
   // seenSourceIds is a snapshot baseline of the session's sources at

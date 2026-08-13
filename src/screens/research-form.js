@@ -20,18 +20,18 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=397";
-import { isFlagOn } from "../feature-flags.js?v=20";
-import { getContexts, getContextById } from "../contexts-store.js?v=72";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=40";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=98";
+import { renderTopbar } from "../components/topbar.js?v=398";
+import { isFlagOn } from "../feature-flags.js?v=21";
+import { getContexts, getContextById } from "../contexts-store.js?v=73";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=41";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=99";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=17";
+} from "../research-catalog.js?v=18";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.
@@ -143,7 +143,7 @@ function renderPage() {
           <p class="ap-body research-form__lead">
             ${settings
               ? "What I watch for this Idea stream, and how often I check it."
-              : "Pick a Playbook and sources to get content ideas."}
+              : "Pick a Playbook and sources to get ideas."}
           </p>
         </header>
         ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}

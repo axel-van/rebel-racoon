@@ -408,7 +408,7 @@ export function pillarForTopic(ctxId, briefId) {
 
 // The topic is recorded as a DENORMALISED SNAPSHOT — headline and age copied in,
 // not a live lookup by id. Two reasons, and both are load-bearing:
-//   • A pillar is Playbook-owned and has to render with the Content Ideas feature
+//   • A pillar is Playbook-owned and has to render with the Idea streams feature
 //     flag OFF. A live read would make /playbook import briefs-store, which is
 //     gated.
 //   • A re-scan can replace briefs. The pillar should still be able to say what

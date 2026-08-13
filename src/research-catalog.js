@@ -211,7 +211,7 @@ export const DEFAULT_CADENCE = "weekly";
 // seeded briefs, keys TYPE_TAG_COLOR below, and appears in the filter state the
 // URL and localStorage carry. Renaming them buys nothing a reader can see and
 // breaks all of that. This repo already runs that split deliberately elsewhere —
-// Content Research is "Content Ideas" in the UI while the code still says
+// Content Research is "Idea streams" in the UI while the code still says
 // research/brief (see CLAUDE.md) — so the pattern is the established one.
 //
 // The new labels say what the reader does next rather than what the topic is.

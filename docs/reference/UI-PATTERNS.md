@@ -269,7 +269,7 @@ serveur/utilisateur de [`briefs-store.js`](../../src/briefs-store.js).
 
 Les cartes de topics du feed n'ont **pas** d'accent de cadre (voir plus bas) : dans
 une colonne à parcourir, un liseré coloré fait crier une ligne sur dix et casse la
-lecture. La carte Content Ideas de la page nouvelle session en porte un — 4px en
+lecture. La carte d'Idea de la page nouvelle session en porte un — 4px en
 haut, orange (`--app-archie-orange`) pour Trending, menthol
 (`--ref-color-menthol-100`) pour Updated.
 
@@ -298,14 +298,14 @@ résolvent de façon imprévisible. Le motif est un wrapper `position: relative`
 contient les deux en frères, le contrôle étant positionné en absolu dans le coin.
 Même raison que la séparation body / footer de `topics-card`.
 
-La carte Content Ideas de la page nouvelle session **n'utilise plus ce motif** : ses
+La carte d'Idea de la page nouvelle session **n'utilise plus ce motif** : ses
 contrôles ont quitté la carte pour une **barre de nav sous la scène** (voir ci-dessous).
 La règle reste vraie pour la prochaine surface qui voudra poser un contrôle sur une
 carte-bouton ; simplement, ne rien poser dessus est encore mieux quand il y a la place.
 
 ### Un carrousel = `.ap-dot-stepper` + deux icon buttons, et un anneau
 
-Le carrousel Content Ideas de la page nouvelle session (`.starter-topic`) est le
+Le carrousel d'Ideas de la page nouvelle session (`.starter-topic`) est le
 précédent en place. Ce qu'il fixe :
 
 - **Les points sont le composant DS**, `.ap-dot-stepper` — sa doc dit littéralement
@@ -354,7 +354,7 @@ Deux ajustements imposés par la réutilisation :
 modal) tout en vivant dans `styles/screens/contexts.css`. Au troisième, la déplacer
 dans `styles/components/`.
 
-### Les URLs de Content Ideas
+### Les URLs des Idea streams
 
 Les routes utilisent le vocabulaire de l'UI, pas celui du code :
 `/content-ideas`, `/content-ideas/:id`, `/content-ideas/:id/settings`,
@@ -437,7 +437,7 @@ mise en page.
 ### Une seule température de page
 
 Tous les écrans peignent le fond du shell (`--app-bg` → `--ref-color-grey-bg`,
-`#F9F9FA`). Content Ideas a longtemps fait exception : la liste de topics, la page
+`#F9F9FA`). Les Idea streams ont longtemps fait exception : la liste de topics, la page
 attention et la page de réglages étaient sur `--app-paper` (`#F9F9F2`, chaud), au
 motif que « les vues de détail gardent le papier ». Sauf que `/playbook/:id` est une
 vue de détail et se trouve sur le fond du shell — la règle n'avait qu'un membre, et

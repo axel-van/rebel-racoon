@@ -21,8 +21,8 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { postAssistantMessage, sendMessage } from "./assistant.js?v=94";
-import { addReadySource } from "./sources-stream.js?v=86";
+import { postAssistantMessage, sendMessage } from "./assistant.js?v=95";
+import { addReadySource } from "./sources-stream.js?v=87";
 import * as inlineQuestion from "./inline-question.js?v=48";
 import { getTopicById, markSeen } from "./topics-store.js?v=27";
 import { findTopicSource } from "./topics-catalog.js?v=3";
