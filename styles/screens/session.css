@@ -1025,6 +1025,21 @@
    36px wrapper had squeezed to seven lines. Three rules for a control the nav row
    already had. */
 
+/* The summary borrows the feed's class, so it arrives WITHOUT the one thing every
+   text child of .starter-card carries: position: relative. That is not decoration
+   here — .starter-card::before is the absolutely-positioned tint wash that fades in
+   on hover, and a static in-flow child paints in an earlier layer than a positioned
+   sibling. So at rest the summary was fine and on hover the wash covered it, which
+   read as the text being removed. Title, subtitle, CTA and the head row all set
+   position: relative for exactly this reason; this is the fifth.
+
+   Scoped under .starter-card--topic rather than added to .topics-card__summary
+   itself: the feed's card has no wash, so it would be a rule that means nothing on
+   the surface that owns the class. */
+.starter-card--topic .topics-card__summary {
+  position: relative;
+}
+
 /* The 22ch measure on .starter-card__subtitle is sized for a workflow card at a
    third of the row. On this card, which IS the row, it wrapped a 68-character
    sentence into three 22-character lines with 700px of empty space beside them.
