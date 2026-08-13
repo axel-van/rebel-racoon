@@ -860,7 +860,7 @@
    "N rows" figure in this file 19% optimistic — "3.5 rows" was really 2.9. */
 .starter-topic__panel {
   --starter-row: 124px;
-  --starter-rows-shown: 5;
+  --starter-rows-shown: 2.2;
   --starter-foot: 45px;
   display: flex;
   flex-direction: column;
@@ -884,17 +884,18 @@
      workflow label below the fold. Measured before: in an 800px thread the label sat
      72px under it, because 3.5 rows is a fixed 364px whatever the screen is.
 
-     clamp reads outward: never shorter than 1.5 rows (below that the cut row stops
-     reading as "there is more" and starts reading as a bug), 42vh by preference, and
-     never taller than 5 rows — so a tall window shows five and gains nothing further,
-     and a short one gives the space back to what is under it.
+     2.2 rows is the CEILING, and the vh term only reduces it. That is the reverse of
+     how this read for a while: vh was the preferred value and the row count a cap that
+     almost never bound, which made the rendered height a function of the window and
+     "N rows" a number nobody could predict. Now the row count is the number you set,
+     and 40vh is a guard that gives space back on a window too short to hold it —
+     it starts biting below about 680px, where 2.2 rows would otherwise push the
+     workflow label under the fold.
 
-     5 rows, not "about 150px more": the row (104px) is this section's own module, so
-     the increase is 1.5 rows = 156px, which is the nearest thing to a round number the
-     DS scale offers here — 150 itself is on no scale. The preferred value moved with
-     it (28vh → 42vh), because on an ordinary window the vh term is what binds, not
-     the maximum. */
-  max-height: clamp(calc(var(--starter-row) * 1.5), 42vh, calc(var(--starter-row) * var(--starter-rows-shown)));
+     The half-row is deliberate. 2.2 leaves a fifth of a row cut off at the bottom,
+     which is what says "there is more" — a whole number of rows looks like the end of
+     the list. */
+  max-height: clamp(calc(var(--starter-row) * 1.5), 40vh, calc(var(--starter-row) * var(--starter-rows-shown)));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1254,7 +1255,7 @@
   /* The same clamp as the list, plus the footer — otherwise the two states diverge
      again the moment the window is short enough for the clamp to bite. */
   min-height: calc(
-    clamp(calc(var(--starter-row) * 1.5), 42vh, calc(var(--starter-row) * var(--starter-rows-shown))) +
+    clamp(calc(var(--starter-row) * 1.5), 40vh, calc(var(--starter-row) * var(--starter-rows-shown))) +
       var(--starter-foot)
   );
   border: 0;
