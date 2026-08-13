@@ -63,9 +63,10 @@ const MODAL_ID = "research";
 // to restore; pickerSplit and the group's render are both still below.
 const SHOW_HIDDEN_TRENDING = false;
 
-let backdrop, panel, titleEl, subEl, bodyEl, footEl;
+let backdrop, panel, titleEl, subEl, bodyEl, footEl, backEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
+let backTo = null; // briefId to return to, when this view was opened from the article
 // Topic-picker state. Module-level because each step re-renders through openShell,
 // which rebuilds the dialog — the step and the answer have to outlive that.
 let pickerStep = "playbooks";
@@ -89,6 +90,13 @@ const SHELL = `
 <div class="app-modal-backdrop research-modal__backdrop" id="researchModalBackdrop" hidden></div>
 <aside class="research-modal" id="researchModal" role="dialog" aria-modal="true" aria-labelledby="researchModalTitle" tabindex="-1" hidden>
   <header class="research-modal__head">
+    <!-- The back button belongs to the HEADER, not to the body, because it navigates
+         the dialog rather than the content: it is a sibling of the close button, and
+         the two together say "this view sits inside something". Hidden unless the
+         current view was opened from another one. -->
+    <button type="button" class="ap-button ghost grey research-modal__back" data-research-modal-back hidden>
+      <i class="ap-icon-chevron-left" aria-hidden="true"></i><span>Back to the topic</span>
+    </button>
     <div class="research-modal__head-text">
       <h2 class="research-modal__title" id="researchModalTitle"></h2>
       <p class="research-modal__sub"></p>
@@ -113,6 +121,7 @@ export function init() {
   subEl = panel.querySelector(".research-modal__sub");
   bodyEl = panel.querySelector(".research-modal__body");
   footEl = panel.querySelector(".research-modal__foot");
+  backEl = panel.querySelector("[data-research-modal-back]");
 
   // One delegated listener for every dialog's controls — the shell is shared, so
   // the wiring is too. Each branch reads `active` for its context.
@@ -141,7 +150,7 @@ function isOpen() {
   return !!panel && !panel.hidden;
 }
 
-function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "" }) {
+function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "", back = null }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
@@ -150,6 +159,20 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size 
   subEl.hidden = !sub;
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
+  // `back` is the id of the Topic to return to, or null. Stored on the shell rather
+  // than on the button so a view can be reopened without re-deriving it.
+  backTo = back;
+  // Hidden with BOTH the attribute and inline display, deliberately. `.ap-button` sets
+  // display: inline-flex, and a class rule beats the UA's [hidden] { display: none } —
+  // so the attribute alone left the button on screen in every view, including the ones
+  // opened from the feed's pane where there is nothing to go back to. The repo already
+  // records this trap for .ap-select-not-found (UI-PATTERNS); this is the second case.
+  // The attribute stays for assistive tech, the inline style is what actually hides it.
+  if (backEl) {
+    backEl.hidden = !back;
+    backEl.style.display = back ? "" : "none";
+  }
+  panel.classList.toggle("research-modal--nested", !!back);
   panel.classList.toggle("research-modal--wide", wide);
   // One extra width, for the step whose content sets its own. See
   // .research-modal--topics in research-modals.css.
@@ -1170,7 +1193,7 @@ function renderSources(brief) {
 }
 
 // ─── 7. Every source post behind one topic ─────────────────────────────────
-export function openSourcePosts({ briefId }) {
+export function openSourcePosts({ briefId, from = null }) {
   const brief = getBriefById(briefId);
   if (!brief) return;
   const posts = brief.posts || [];
@@ -1181,6 +1204,7 @@ export function openSourcePosts({ briefId }) {
       title: "Sources",
       sub: `Topic: ${brief.headline}`,
       wide: true,
+      back: from,
       body: html`<p class="research-sources__lede">
           Every post Archie read to write this Topic. Each one links out to the original.
         </p>
@@ -1349,13 +1373,18 @@ export function openIdeaArticle({ briefId }) {
 // has to outlive the paint.
 let versionBriefId = null;
 let versionPickedId = null;
+// Where to go back to, when this was opened from the article dialog. Module-level for
+// the same reason the selection is: paintVersions re-renders the whole shell on every
+// pick, so it has to outlive the paint.
+let versionFrom = null;
 
-export function openVersionHistory({ briefId }) {
+export function openVersionHistory({ briefId, from = null }) {
   const brief = getBriefById(briefId);
   if (!brief) return;
   const versions = getBriefVersions(briefId);
   if (!versions.length) return;
   versionBriefId = briefId;
+  versionFrom = from;
   // Opens on the CURRENT version — the first row, since the picker is newest-first.
   // It is the baseline: you compare an older draft against what the article says
   // now, so the dialog starts by showing you what "now" is, and every step down the
@@ -1412,6 +1441,7 @@ function paintVersions() {
       // picker.
       sub: `Topic: ${brief.headline}`,
       wide: true,
+      back: versionFrom,
       body: html`<div class="research-versions">
         <!-- The DS Select, built as the details/summary composition it actually is
              (see the long note in the strategy dialog above for why a native
@@ -1603,6 +1633,14 @@ function onPanelClick(event) {
     close();
     return;
   }
+  // Back re-opens the article in the SAME shell rather than closing and reopening —
+  // the dialog never leaves the screen, so it reads as going up a level rather than
+  // as dismissing one thing and summoning another.
+  if (event.target.closest("[data-research-modal-back]")) {
+    const id = backTo;
+    if (id) return openIdeaArticle({ briefId: id });
+    return close();
+  }
   if (!active) return;
 
   // The "See past versions" link inside the Full-article DIALOG. The feed's
@@ -1610,7 +1648,12 @@ function onPanelClick(event) {
   // research-feed.js — one link, two containers.
   const versionsLink = event.target.closest("[data-brief-versions]");
   if (versionsLink) {
-    return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
+    const id = versionsLink.dataset.briefVersions;
+    // Opened from inside the article dialog, so it gets a way back to it. The feed's
+    // pane wires the same attribute in research-feed.js WITHOUT a `from`, because
+    // there the article is the page behind the dialog — there is nothing to go back
+    // to that closing does not already do.
+    return openVersionHistory({ briefId: id, from: active?.kind === "idea-article" ? id : null });
   }
 
   // The article dialog's three verbs. Deliberately the SAME semantics as
@@ -1649,7 +1692,8 @@ function onPanelClick(event) {
   // past-versions link above.
   const sourcesLink = event.target.closest("[data-brief-sources]");
   if (sourcesLink) {
-    return openSourcePosts({ briefId: sourcesLink.dataset.briefSources });
+    const id = sourcesLink.dataset.briefSources;
+    return openSourcePosts({ briefId: id, from: active?.kind === "idea-article" ? id : null });
   }
 
   const pbkEdit = event.target.closest("[data-pbklist-edit]");

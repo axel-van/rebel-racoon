@@ -680,3 +680,41 @@
   font: inherit;
   text-align: left;
 }
+
+/* ── Back, in the header ──────────────────────────────────────────────────
+   The shell serves several views, and two of them (Past versions, Sources) are
+   reached FROM a third (the Topic's article). Those two get a back button in the
+   header — a sibling of the close button, because both navigate the dialog rather
+   than its content, and putting it in the body would have made it read as part of
+   the article.
+
+   It sits before the title, which is the order the reader needs: where this goes
+   back to, then where they are. The negative left margin pulls the ghost button's
+   own padding back so its LABEL lines up with the title underneath it rather than
+   its box. */
+.research-modal__back {
+  align-self: flex-start;
+  margin-left: calc(var(--ref-spacing-xs) * -1);
+  margin-bottom: var(--ref-spacing-xxs);
+}
+
+/* The head becomes a column when a back button is present: back on its own line,
+   then the title and sub. In a row the three would compete for the same band and the
+   title would lose, which is the one thing the header has to keep. */
+.research-modal--nested .research-modal__head {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* …and the close button returns to the corner it occupies in every other view.
+   The header is the positioning context, declared here rather than globally so the
+   non-nested layout keeps its plain flex row. */
+.research-modal--nested .research-modal__head {
+  position: relative;
+}
+
+.research-modal--nested .research-modal__head > [data-research-modal-close] {
+  position: absolute;
+  top: var(--ref-spacing-sm);
+  right: var(--ref-spacing-sm);
+}
