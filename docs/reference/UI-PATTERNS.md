@@ -322,15 +322,20 @@ précédent en place. Ce qu'il fixe :
   classe app pour que ce soit une décision et pas un héritage.
 - **Un anneau, pas deux culs-de-sac.** Aucune flèche désactivée : `(i + pas + n) % n`.
   Les points, eux, ne bouclent pas — chacun est une slide réelle.
-- ⚠️ **La direction vient du PAS, pas de la comparaison d'index.** Sur un anneau
-  l'index descend quand on avance (dernière → première) et monte quand on recule :
-  comparer les index animerait chaque bouclage à l'envers.
-- ⚠️ **Nettoyer la classe d'entrée avant de poser la classe de sortie.** Les deux
-  règles posent `animation` à spécificité égale, donc la dernière déclarée gagne — et
-  les règles d'entrée sont déclarées après celles de sortie. Une classe d'entrée
-  laissée sur la scène par le swap précédent fait donc **taire l'animation de
-  sortie** : la carte sortante ne bouge pas, seule l'entrante s'anime. Vérifié en
-  résolvant `animation-name` sur un élément portant les deux classes.
+- **Pas d'animation, et c'est le point d'arrivée.** La scène et la nav sont **réécrites en
+  place**, dans la frame du clic. Deux versions animées ont existé — un glissement de 24px
+  avec fondu (400ms), puis sans fondu (150ms) — et les deux sont parties : sur un contrôle
+  qu'on presse quatre fois de suite, toute durée se lit comme une attente, et le point actif
+  portait déjà l'information que le déplacement décorait. Ce que l'animation coûtait, en plus
+  du délai : un timer JS qui devait rester égal à une durée CSS, une branche
+  `prefers-reduced-motion` à tenir en phase, la direction à dériver du **pas** (sur un anneau
+  l'index descend quand on avance), et un piège de cascade — les règles d'entrée étant
+  déclarées après celles de sortie à spécificité égale, une classe d'entrée oubliée sur la
+  scène **faisait taire la sortie**.
+- **Réécrire en place, pas remplacer.** Le premier jet remplaçait tout le bloc à chaque page,
+  ce qui sortait la barre de nav du DOM et laissait son point actif en retard d'une transition.
+  Garder l'élément monté et ne réécrire que son contenu demande de séparer le rendu de la nav
+  de celui de sa boîte — une fonction pour le conteneur, une pour ses enfants.
 
 ### Un sélecteur montre la vraie carte, pas une ligne compacte
 

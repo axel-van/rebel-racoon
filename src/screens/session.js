@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=402";
+import { renderTopbar } from "../components/topbar.js?v=404";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=48";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=21";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=12";
 import { getLaneById } from "../research-store.js?v=41";
-import * as contextBuilder from "../context-builder.js?v=369";
+import * as contextBuilder from "../context-builder.js?v=371";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -112,7 +112,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=3";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Inspiration feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=99";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=101";
 import { findResearchSource } from "../research-catalog.js?v=18";
 import {
   openDrafts as openDraftsPanel,
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=536";
+} from "../components/right-panel.js?v=538";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=34";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2106,7 +2106,7 @@ function renderStarterTopicCard(brief) {
            first paragraph. -->
       <span class="topics-card__summary">${escapeHtml(brief.summary || "")}</span>
       <span class="starter-card__cta ap-link standalone small"
-        >Start drafting<i class="ap-icon-arrow-right" aria-hidden="true"></i
+        >Read the full idea<i class="ap-icon-arrow-right" aria-hidden="true"></i
       ></span>
     </button>
   `;
@@ -4993,11 +4993,15 @@ function bindSession(root, session) {
         repaintStarterTopicSlot(slot);
         return;
       }
-      // Clicking the card itself drafts from that topic — the same handoff the
-      // idea card's "Draft post" uses, so no new flow is introduced.
+      // Clicking the card OPENS THE INSPIRATION, it does not act on it. The card
+      // shows a headline and three clamped lines; deciding to draft from that is
+      // deciding on a summary. The dialog is the same article the feed's pane
+      // shows, with the same three verbs under it — so the decision is made
+      // against the full text, and "Use in chat" still exists, one click further
+      // in and after the reader has actually read the thing.
       const topicCard = event.target.closest("[data-starter-topic]");
       if (topicCard) {
-        openBriefInChat(topicCard.dataset.starterTopic);
+        openIdeaArticle({ briefId: topicCard.dataset.starterTopic });
         return;
       }
 

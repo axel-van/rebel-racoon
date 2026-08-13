@@ -30,7 +30,11 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
+  toggleSaved,
 } from "../briefs-store.js?v=48";
+// The article dialog's footer is the feed's footer — same component, same three
+// verbs — so it comes from the same module rather than being re-written here.
+import { renderUseButtons } from "./brief-card.js?v=45";
 import { getLanes } from "../research-store.js?v=41";
 import {
   getContexts,
@@ -1309,6 +1313,36 @@ export function openFullResearch({ briefId }) {
   );
 }
 
+/**
+ * The same article, with the feed's own actions under it.
+ *
+ * openFullResearch above is the READ-ONLY twin, opened from the Inspiration picker
+ * where the only sensible verb is Close. This one is opened from the new-session
+ * carousel, where the reader is deciding what to DO with the Inspiration — so it
+ * carries the identical footer the feed's article pane carries: renderUseButtons,
+ * the same component, so the three verbs cannot drift between the two surfaces.
+ *
+ * Why a dialog here and a pane there: the feed has a list to compare against and a
+ * modal would black it out (research-feed.js says so at the pane's own handler).
+ * The carousel has no list — one card is on screen — so there is nothing to keep
+ * visible, and a dialog costs no layout.
+ */
+export function openIdeaArticle({ briefId }) {
+  const brief = getBriefById(briefId);
+  if (!brief) return;
+  openShell(
+    "idea-article",
+    { briefId },
+    {
+      title: brief.headline,
+      sub: researchArticleSub(brief),
+      wide: true,
+      body: renderResearchArticle(brief),
+      foot: renderUseButtons(brief),
+    },
+  );
+}
+
 // ─── 6. Past versions of an article ────────────────────────────────────────
 //
 // A topic gets rewritten when a re-scan changes what the evidence says. The card
@@ -1582,6 +1616,36 @@ function onPanelClick(event) {
   const versionsLink = event.target.closest("[data-brief-versions]");
   if (versionsLink) {
     return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
+  }
+
+  // The article dialog's three verbs. Deliberately the SAME semantics as
+  // research-feed.js's handlers, because they are the same buttons: Use marks the
+  // Inspiration used before navigating (the status has to change while this code
+  // still runs), Save toggles and says so, Ignore hands over to the reason dialog.
+  //
+  // Use and Ignore leave this dialog — one navigates, the other replaces the
+  // dialog's contents. Save does NOT: the label flips between Save for later and
+  // Remove from saved, so the footer is re-rendered in place and the reader stays
+  // where they were.
+  const useBtn = event.target.closest("[data-brief-use]");
+  if (useBtn) {
+    const id = useBtn.dataset.briefUse;
+    setStatus(id, "used");
+    close();
+    return openBriefInChat(id);
+  }
+  const saveBtn = event.target.closest("[data-brief-save]");
+  if (saveBtn) {
+    const id = saveBtn.dataset.briefSave;
+    const next = toggleSaved(id);
+    showToast(next === "saved" ? "Saved for later" : "Removed from saved");
+    const fresh = getBriefById(id);
+    if (fresh && footEl) footEl.innerHTML = renderUseButtons(fresh);
+    return;
+  }
+  const ignoreBtn = event.target.closest("[data-brief-ignore]");
+  if (ignoreBtn) {
+    return openIgnoreReason({ briefId: ignoreBtn.dataset.briefIgnore });
   }
 
   // "See all N posts", from the Full-article DIALOG. Same markup in the feed's

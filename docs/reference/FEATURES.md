@@ -703,27 +703,38 @@ Bloc propre **au-dessus** de la grille de workflows, sous son propre `empty-chat
 
 - La file vient de `briefs-store.getStarterTopics()` : **4 Inspirations** max, ordonnées trending → updated → les plus récentes non triées. Statuts Saved / Used / Ignored exclus (déjà répondus).
 - **Slides = file + 1** : la dernière est la carte de clôture _« Get the full details into your Inspiration feeds »_ / _« Browse all your inspiration feeds in one place, deep dive into ideas. »_ + « Explore more ideas ». Elle a **son propre point**, donc chaque point correspond à une slide.
+- **La carte OUVRE, elle n'agit pas.** CTA **« Read the full idea »** ; cliquer la carte ouvre
+  l'**article en dialog** — `openIdeaArticle()` dans [`research-modals.js`](../../src/components/research-modals.js),
+  même corps que le panneau du feed (`renderResearchArticle`) et **le même pied** (`renderUseButtons`,
+  le composant du feed, donc les trois verbes ne peuvent pas diverger). La carte montre un titre et
+  trois lignes clampées : décider d'en tirer un post depuis ça, c'est décider sur un résumé.
+  **Use in chat** existe toujours, un clic plus loin, après lecture.
+  - Dialog ici et panneau là-bas : le feed a une liste à comparer qu'un modal masquerait ; le carrousel
+    n'a qu'une carte à l'écran, donc il n'y a rien à garder visible.
+  - Les trois verbes ont la **sémantique du feed** : Use marque `used` **avant** de naviguer, Save bascule
+    et lève un toast **sans fermer** (le libellé passe à « Remove from saved »), Ignore passe la main au
+    dialog de raison dans la même coquille.
 - **Nav sous la scène** : chevron gauche, `.ap-dot-stepper` (le composant DS des indicateurs de carrousel), chevron droit. Les points sont cliquables et sautent à la slide.
 - **Anneau dans les deux sens** : aucun chevron n'est jamais désactivé. Suivant depuis la dernière slide → la première Inspiration ; Précédent depuis la première → la carte de clôture. Les deux gardent leur chevron sur toutes les slides.
-- **Direction dérivée du pas**, pas de la comparaison d'index : sur un anneau l'index descend quand on avance (dernière → première) et monte quand on recule. Les points, eux, comparent (ils n'ont pas de direction).
-- ⚠️ Le handler **retire les classes `is-entering*` avant** de poser une classe `is-leaving*`. Les règles d'entrée sont déclarées après celles de sortie à spécificité égale, donc une classe d'entrée restée sur la scène gagne la cascade et **la sortie ne joue pas** (vérifié : `« is-entering-back is-leaving »` résout `animation-name` en `starter-topic-in-back`).
+- **Aucune animation** : `repaintStarterTopicSlot()` réécrit la carte de la scène et le contenu de la nav **en place**, dans la frame du clic. Ni la scène ni la barre de nav ne sont remplacées, donc la nav reste à l'écran en continu et son point actif n'est jamais en retard d'une transition. Un glissement de 24px (d'abord avec fondu, puis sans) a existé et a été retiré : sur un contrôle qu'on presse quatre fois de suite, toute durée se lit comme une attente, et le point actif portait déjà l'information que le déplacement décorait. Sont partis avec : un timer JS qui devait rester égal à une durée CSS, un piège de cascade (les règles d'entrée battent celles de sortie à spécificité égale), et une branche `prefers-reduced-motion`.
 - Avant la 1ʳᵉ Inspiration : carte d'attente (3 s, spinner DS). Aucune Inspiration du tout (`new-alt`) : **pas de bloc**, ni libellé ni carte de clôture.
 
 ### Critères d'acceptation
 
-| #   | Critère                                                                                                                                                  | Vérifié le 2026-08-13                                        |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 1   | `/content-ideas` affiche H1 « Inspiration feeds » et le sub compte feeds + Inspirations en attente                                                       | ✅ 4 feeds · 24 Inspirations                                 |
-| 2   | Tout retour vers la liste dit **« Back to Inspiration feeds »** (y compris le fallback d'un feed supprimé) ; un retour scopé à un feed garde **son nom** | ✅ `/content-ideas/:id`, `/new`, `/…/attention`              |
-| 3   | Le feed ouvre sur New + Saved ; le badge Filters est vide au repos                                                                                       | ✅ 9 cartes au défaut (11 avec les 4 statuts)                |
-| 4   | Chaque statut a son icône à droite de l'âge, avec tooltip, et les mêmes glyphes en légende du groupe replié                                              | ✅                                                           |
-| 5   | Le titre du panneau est identique à celui de la carte                                                                                                    | ✅ même `topics-card__headline`                              |
-| 6   | Le carrousel fait la largeur des trois starter cards et s'aligne avec elles                                                                              | ✅ 462→1478 px, identique à `.starter-grid`                  |
-| 7   | 5 points pour 4 Inspirations + la carte de clôture ; un point = une slide                                                                                | ✅                                                           |
-| 8   | L'anneau tourne dans les deux sens, aucun chevron désactivé, chevrons inchangés sur toutes les slides                                                    | ✅ 0→prev→4→next→0→prev→4→prev→3                             |
-| 9   | Une transition ne porte qu'**une** classe de direction                                                                                                   | ✅ mesuré à 90 ms : `["is-leaving"]` / `["is-leaving-back"]` |
-| 10  | « Start drafting » ouvre un chat avec l'Inspiration attachée en Source                                                                                   | ✅ turn source-intake                                        |
-| 11  | Flag OFF : aucune surface Inspiration feeds, deep-link périmé → `/`                                                                                      | ✅                                                           |
+| #   | Critère                                                                                                                                                  | Vérifié le 2026-08-13                                                                                                   |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1   | `/content-ideas` affiche H1 « Inspiration feeds » et le sub compte feeds + Inspirations en attente                                                       | ✅ 4 feeds · 24 Inspirations                                                                                            |
+| 2   | Tout retour vers la liste dit **« Back to Inspiration feeds »** (y compris le fallback d'un feed supprimé) ; un retour scopé à un feed garde **son nom** | ✅ `/content-ideas/:id`, `/new`, `/…/attention`                                                                         |
+| 3   | Le feed ouvre sur New + Saved ; le badge Filters est vide au repos                                                                                       | ✅ 9 cartes au défaut (11 avec les 4 statuts)                                                                           |
+| 4   | Chaque statut a son icône à droite de l'âge, avec tooltip, et les mêmes glyphes en légende du groupe replié                                              | ✅                                                                                                                      |
+| 5   | Le titre du panneau est identique à celui de la carte                                                                                                    | ✅ même `topics-card__headline`                                                                                         |
+| 6   | Le carrousel fait la largeur des trois starter cards et s'aligne avec elles                                                                              | ✅ 462→1478 px, identique à `.starter-grid`                                                                             |
+| 7   | 5 points pour 4 Inspirations + la carte de clôture ; un point = une slide                                                                                | ✅                                                                                                                      |
+| 8   | L'anneau tourne dans les deux sens, aucun chevron désactivé, chevrons inchangés sur toutes les slides                                                    | ✅ 0→prev→4→next→0→prev→4→prev→3                                                                                        |
+| 9   | Une transition ne porte qu'**une** classe de direction                                                                                                   | ✅ mesuré à 90 ms : `["is-leaving"]` / `["is-leaving-back"]`                                                            |
+| 10  | La carte dit **« Read the full idea »** et l'ouvre en dialog : même corps et mêmes trois verbes que le panneau du feed                                   | ✅ Full Inspiration · Trend levels · Inspiration history · Sources ; pied `topics-use-flat`                             |
+| 11  | Dans le dialog : Save bascule le libellé sans fermer, Ignore ouvre le dialog de raison, Use in chat ferme, marque `used` et ouvre un chat avec la Source | ✅ toast « Saved for later » ; « Why did this Inspiration miss the mark? » ; l'Inspiration utilisée quitte le carrousel |
+| 12  | Flag OFF : aucune surface Inspiration feeds, deep-link périmé → `/`                                                                                      | ✅                                                                                                                      |
 
 ---
 
