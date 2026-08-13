@@ -1,4 +1,4 @@
-// Launches the in-chat interaction for an Inspiration feed topic.
+// Launches the in-chat interaction for a Topic feed topic.
 //
 // "Use in chat" is the forward action on a topic, and it now means the same thing
 // from every surface that offers it: the topic opens a chat of its own with itself
@@ -30,10 +30,10 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { addReadySource } from "./sources-stream.js?v=87";
-import { getBriefById, getBriefVersions } from "./briefs-store.js?v=48";
-import { getLaneById } from "./research-store.js?v=41";
-import { findResearchSource } from "./research-catalog.js?v=18";
+import { addReadySource } from "./sources-stream.js?v=88";
+import { getBriefById, getBriefVersions } from "./briefs-store.js?v=49";
+import { getLaneById } from "./research-store.js?v=42";
+import { findResearchSource } from "./research-catalog.js?v=19";
 
 export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
 
@@ -84,7 +84,7 @@ export function attachBriefToChat(sessionId, briefId, versionId = null) {
   addReadySource(sessionId, {
     id: past ? `${brief.id}-${version.id}` : brief.id,
     filename: past ? `${brief.headline} (${version.when})` : brief.headline,
-    kind: past ? "Inspiration · past version" : "Inspiration",
+    kind: past ? "Topic · past version" : "Topic",
     preview: past ? version.paragraphs[0] || version.title : brief.summary,
     iconClass: src?.icon || "ap-icon-folder",
   });

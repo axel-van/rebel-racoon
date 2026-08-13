@@ -104,7 +104,7 @@ export const RESEARCH_SOURCES = Object.freeze([
     howItWorks:
       "I scan your website regularly for content worth leveraging — new blog " +
       "posts, product launches, customer success stories — and turn what I find " +
-      "into inspirations you can post.",
+      "into topics you can post.",
   },
   {
     id: "brand-feedback",
@@ -211,7 +211,7 @@ export const DEFAULT_CADENCE = "weekly";
 // seeded briefs, keys TYPE_TAG_COLOR below, and appears in the filter state the
 // URL and localStorage carry. Renaming them buys nothing a reader can see and
 // breaks all of that. This repo already runs that split deliberately elsewhere —
-// Content Research is "Inspiration feeds" in the UI while the code still says
+// Content Research is "Topic feeds" in the UI while the code still says
 // research/brief (see CLAUDE.md) — so the pattern is the established one.
 //
 // The new labels say what the reader does next rather than what the topic is.
@@ -226,7 +226,7 @@ export const DEFAULT_CADENCE = "weekly";
 // export's `needs_strategy`, and it spent a while as `needs-assets` — naming the
 // blocker rather than the decision.
 export const RESEARCH_TYPES = Object.freeze([
-  { id: "content-strategy", label: "Ideas for later" },
+  { id: "content-strategy", label: "Topics for later" },
   { id: "ready-to-post", label: "Draft-ready" },
 ]);
 

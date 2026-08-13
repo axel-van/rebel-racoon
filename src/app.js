@@ -1,57 +1,57 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
-import { isFlagOn } from "./feature-flags.js?v=21";
+import { isFlagOn } from "./feature-flags.js?v=22";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=405";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=372";
-import { init as initRightPanel } from "./components/right-panel.js?v=539";
-import { init as initScheduleModal } from "./components/schedule-modal.js?v=91";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=406";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=373";
+import { init as initRightPanel } from "./components/right-panel.js?v=540";
+import { init as initScheduleModal } from "./components/schedule-modal.js?v=92";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
-import { init as initImageStudioModal } from "./components/image-studio/index.js?v=106";
-import { init as initImageStudioV2Modal } from "./components/image-studio-v2/index.js?v=84";
-import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=90";
-import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=97";
-import { init as initAddSourceModal } from "./components/add-source-modal.js?v=98";
+import { init as initImageStudioModal } from "./components/image-studio/index.js?v=107";
+import { init as initImageStudioV2Modal } from "./components/image-studio-v2/index.js?v=85";
+import { init as initVideoClipsModal } from "./components/video-clips-modal.js?v=91";
+import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v=98";
+import { init as initAddSourceModal } from "./components/add-source-modal.js?v=99";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=43";
-import { init as initTopicModal } from "./components/topic-modal.js?v=37";
-import { init as initResearchModals } from "./components/research-modals.js?v=102";
+import { init as initTopicModal } from "./components/topic-modal.js?v=38";
+import { init as initResearchModals } from "./components/research-modals.js?v=103";
 import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=40";
-import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=49";
+import { init as initAnalyzeProfilesModal } from "./components/analyze-profiles-modal.js?v=50";
 import { init as initFillDocumentModal } from "./components/fill-document-modal.js?v=5";
-import { init as initSearchModal } from "./components/search-modal.js?v=45";
+import { init as initSearchModal } from "./components/search-modal.js?v=46";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=332";
-import { renderDashboard } from "./screens/dashboard.js?v=88";
-import { renderSession } from "./screens/session.js?v=637";
-import { renderContexts } from "./screens/contexts.js?v=366";
-import { renderConnectors } from "./screens/connectors.js?v=305";
-import { renderTopics } from "./screens/topics.js?v=174";
-import { renderTopicsSettings } from "./screens/topics-settings.js?v=165";
-import { renderResearch } from "./screens/research.js?v=143";
-import { renderResearchForm } from "./screens/research-form.js?v=141";
-import { renderResearchFeed } from "./screens/research-feed.js?v=162";
-import { renderResearchTrending } from "./screens/research-trending.js?v=146";
+} from "./components/conversation-status-card.js?v=333";
+import { renderDashboard } from "./screens/dashboard.js?v=89";
+import { renderSession } from "./screens/session.js?v=638";
+import { renderContexts } from "./screens/contexts.js?v=367";
+import { renderConnectors } from "./screens/connectors.js?v=306";
+import { renderTopics } from "./screens/topics.js?v=175";
+import { renderTopicsSettings } from "./screens/topics-settings.js?v=166";
+import { renderResearch } from "./screens/research.js?v=144";
+import { renderResearchForm } from "./screens/research-form.js?v=142";
+import { renderResearchFeed } from "./screens/research-feed.js?v=163";
+import { renderResearchTrending } from "./screens/research-trending.js?v=147";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=363";
-import { renderPlaybook } from "./screens/playbook.js?v=377";
-import * as __capAddSource from "./components/add-source-modal.js?v=98";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=364";
+import { renderPlaybook } from "./screens/playbook.js?v=378";
+import * as __capAddSource from "./components/add-source-modal.js?v=99";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
-import * as __capChatPicker from "./components/chat-picker-modal.js?v=97";
-import * as __capSearch from "./components/search-modal.js?v=45";
+import * as __capChatPicker from "./components/chat-picker-modal.js?v=98";
+import * as __capSearch from "./components/search-modal.js?v=46";
 import {
   openDrafts as __capOpenDrafts,
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=539";
+} from "./components/right-panel.js?v=540";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
@@ -67,15 +67,15 @@ route("/topics", renderTopics);
 // you set your listening sources once and then read topics for months.
 route("/topics/settings", renderTopicsSettings);
 // Content Research. ORDER MATTERS here, unlike the /topics pair above: match()
-// returns the FIRST matching route, and /content-ideas/:id would happily swallow
-// "/content-ideas/new" with id="new". The literal has to be registered first.
+// returns the FIRST matching route, and /topic-feeds/:id would happily swallow
+// "/topic-feeds/new" with id="new". The literal has to be registered first.
 // The /settings and /attention siblings carry an extra segment, so the anchored
-// ^…$ regex keeps them distinct from /content-ideas/:id on its own.
-route("/content-ideas", renderResearch);
-route("/content-ideas/new", renderResearchForm);
-route("/content-ideas/:id/settings", renderResearchForm);
-route("/content-ideas/:id/attention", renderResearchTrending);
-route("/content-ideas/:id", renderResearchFeed);
+// ^…$ regex keeps them distinct from /topic-feeds/:id on its own.
+route("/topic-feeds", renderResearch);
+route("/topic-feeds/new", renderResearchForm);
+route("/topic-feeds/:id/settings", renderResearchForm);
+route("/topic-feeds/:id/attention", renderResearchTrending);
+route("/topic-feeds/:id", renderResearchFeed);
 // First-time ALT — thin redirect that mints a transient
 // /session/welcome-alt-{ts} session. The conversational Playbook
 // builder (3-question chat: URL → profile → optional documents) runs

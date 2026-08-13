@@ -25,32 +25,34 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 
 ### Routes (declared in `src/app.js`)
 
-| Route                          | Screen                 | Notes                                                                                             |
-| ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `/`                            | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
-| `/session/:id`                 | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
-| `/contexts`                    | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
-| `/playbook/:id`                | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
-| `/connectors`                  | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
-| `/topics`                      | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
-| `/topics/settings`             | `topics-settings.js`   | **Topics settings** — the six listening sources + cadence for one Playbook (`?pb=`); topbar back  |
-| `/content-ideas`               | `research.js`          | **Inspiration feeds** list (H1 "Inspiration feeds") — gated by `contentResearch`                  |
-| `/content-ideas/new`           | `research-form.js`     | Create a feed. Registered BEFORE `/content-ideas/:id`, which would swallow "new"                  |
-| `/content-ideas/:id`           | `research-feed.js`     | One feed's Inspirations + article pane; `?fresh=1` plays the generating loader                    |
-| `/content-ideas/:id/settings`  | `research-form.js`     | The same form in settings mode; topbar back keeps the feed's own name                             |
-| `/content-ideas/:id/attention` | `research-trending.js` | The flagged Inspirations (trending / updated), outside triage                                     |
-| `/welcome-alt`                 | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
-| `/welcome-alt/recap`           | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
+| Route                        | Screen                 | Notes                                                                                             |
+| ---------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `/`                          | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
+| `/session/:id`               | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
+| `/contexts`                  | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
+| `/playbook/:id`              | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
+| `/connectors`                | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
+| `/topics`                    | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
+| `/topics/settings`           | `topics-settings.js`   | **Topics settings** — the six listening sources + cadence for one Playbook (`?pb=`); topbar back  |
+| `/topic-feeds`               | `research.js`          | **Topic feeds** list (H1 "Topic feeds") — gated by `contentResearch`                              |
+| `/topic-feeds/new`           | `research-form.js`     | Create a feed. Registered BEFORE `/topic-feeds/:id`, which would swallow "new"                    |
+| `/topic-feeds/:id`           | `research-feed.js`     | One feed's Topics + article pane; `?fresh=1` plays the generating loader                          |
+| `/topic-feeds/:id/settings`  | `research-form.js`     | The same form in settings mode; topbar back keeps the feed's own name                             |
+| `/topic-feeds/:id/attention` | `research-trending.js` | The flagged Topics (trending / updated), outside triage                                           |
+| `/welcome-alt`               | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
+| `/welcome-alt/recap`         | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
 
 There is **no `/settings` route** — it was removed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
-> **Vocabulary — UI label vs code name.** A saved AI context is a **Playbook** in the UI but a **Context** in code (`contexts-store`, `contextId`). Content Research is **Inspiration feeds** in the UI: the section and its list are **Inspiration feeds**, a lane is an **Inspiration feed**, and each card in it is an **Inspiration**. Everything in code still says research / brief / lane / topic (`briefs-store`, `brief-card`, `data-brief-*`, `/content-ideas` routes, `.topics-*` classes) — same split as Playbook/Context, and `briefs-store` could not be renamed regardless because `topics-store` is a different feature. Source → Idea → Draft (post) → Schedule is the content pipeline.
+> **Vocabulary — UI label vs code name.** A saved AI context is a **Playbook** in the UI but a **Context** in code (`contexts-store`, `contextId`). Content Research is **Topic feeds** in the UI: the section and its list are **Topic feeds**, a lane is an **Topic feed**, and each card in it is an **Topic**. Everything in code still says research / brief / lane / topic (`briefs-store`, `brief-card`, `data-brief-*`, `/topic-feeds` routes, `.topics-*` classes) — same split as Playbook/Context, and `briefs-store` could not be renamed regardless because `topics-store` is a different feature. Source → Idea → Draft (post) → Schedule is the content pipeline.
 >
-> ✅ **Every word in this area now names exactly one object.** Two renames got here: Topic→Idea freed **Topic** for the listening dossier (`topics-store` + `/topics`, flag `topics`), and Idea→**Inspiration** freed **Idea** for the pipeline's extracted Idea (right panel, `library.js`, `idea-card`, the topbar's Ideas pill). A card in an Inspiration feed is an **Inspiration** (`briefs-store`, `brief-card`) — never an Idea, never a Topic. The line between the two: an **Inspiration** comes from outside (competitors, influencers, trends — Archie found it), an **Idea** is extracted from a source you supplied. They still never touch in code: different stores, different card modules, different routes.
+> ⚠️ **"Topic" names TWO objects again — by decision, not by accident.** The listening dossier (`topics-store`, `/topics`, flag `topics`) and a card in a Topic feed (`briefs-store`, `brief-card`, `/topic-feeds`, flag `contentResearch`). Earlier renames (Topic→Idea, then Idea→Inspiration) existed to separate exactly these two; Inspiration→Topic puts them back under one word. When both are possible in one sentence, **name the surface** — "a Topic in this feed", never a bare "Topic". They never touch in code: different stores, different card modules, different routes. Both flags default OFF, so the clash is invisible in the default demo, and `/topics` vs `/topic-feeds` keeps the routes distinct.
 >
-> Two labels deliberately keep the older word, because they name something other than the object: the card type **"Ideas for later"** (the route a card takes, vs "Draft-ready") and the source **"Internal team ideas"** (your team's own ideas, read from connected MCP tools).
+> **Idea**, by contrast, now names one thing: the pipeline's extracted Idea (right panel, `library.js`, `idea-card`, the topbar's Ideas pill), from a source you supplied. A Topic comes from outside — competitors, influencers, trends, Archie found it.
+>
+> One label deliberately keeps the older word, because it names something other than the object: the source **"Internal team ideas"** (your team's own ideas, read from connected MCP tools). The card type that was "Ideas for later" is now **"Topics for later"** — it names the route this object takes, and the object is a Topic now.
 
 ### Source layout
 
@@ -202,7 +204,7 @@ A topic offers exactly two actions: **Start a chat** and **Dismiss**. Start-a-ch
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 12 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (**ON** — the prompt-at-the-bottom redesign in `components/image-studio-v2/` is the Image Studio; OFF falls back to the previous one), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog), `contentResearch` (OFF — gates the whole Inspiration-feeds feature: the `/content-ideas*` routes, the nav row + counter, the composer's "Pick from Inspiration feeds" picker, and the new-session carousel). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 12 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (**ON** — the prompt-at-the-bottom redesign in `components/image-studio-v2/` is the Image Studio; OFF falls back to the previous one), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog), `contentResearch` (OFF — gates the whole Topic-feeds feature: the `/topic-feeds*` routes, the nav row + counter, the composer's "Pick from Topic feeds" picker, and the new-session carousel). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 

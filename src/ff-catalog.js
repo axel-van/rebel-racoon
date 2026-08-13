@@ -117,30 +117,30 @@ export const FLAGS = Object.freeze([
   },
   {
     id: "contentResearch",
-    label: "Inspiration feeds",
+    label: "Topic feeds",
     default: false,
     hides:
-      "When OFF (default), hides everything Inspiration feeds: the /content-ideas " +
+      "When OFF (default), hides everything Topic feeds: the /topic-feeds " +
       "routes (feed list, form, feed, trending page), its sidebar nav row, and " +
-      "the composer Add → 'Pick from Inspiration feeds' picker. A stale deep link bounces " +
+      "the composer Add → 'Pick from Topic feeds' picker. A stale deep link bounces " +
       "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
       "a named INSPIRATION FEED, and Archie returns INSPIRATIONS — a headline, a " +
       "summary, a full write-up and the social posts behind it — each triaged " +
-      "New / Saved / Used / Ignored. Inspirations whose volume runs above their own " +
+      "New / Saved / Used / Ignored. Topics whose volume runs above their own " +
       "baseline are additionally flagged Trending (an independent boolean, " +
       "never a status), surfaced by a notice plus a dedicated page. " +
       "\n\nNAMING: the UI says INSPIRATION FEEDS for the section and the list, and " +
       "INSPIRATION for each card. It said Content Ideas, then Idea streams; nothing " +
       "a user sees says either now. Everything underneath still says research / " +
       "brief / lane / topic — briefs-store, the brief-card module, data-brief-* " +
-      "hooks, the /content-ideas routes and the .topics-* CSS classes — the same " +
+      "hooks, the /topic-feeds routes and the .topics-* CSS classes — the same " +
       "split as Playbook/Context. briefs-store could not be renamed regardless: " +
       "topics-store is a different feature. " +
       "\n\nTwo collisions are now settled rather than one. The `topics` flag below " +
-      "owns a listening dossier, still called Topic, and no Inspiration-feeds " +
+      "owns a listening dossier, still called Topic, and no Topic-feeds " +
       "surface uses that word for anything a user sees. IDEA is likewise back to " +
       "naming one object: the pipeline's extracted Idea (Sources → Ideas → Drafts, " +
-      "in the right panel). A card in a feed here is an Inspiration.",
+      "in the right panel). A card in a feed here is a Topic.",
   },
   {
     id: "playbookCompetitors",

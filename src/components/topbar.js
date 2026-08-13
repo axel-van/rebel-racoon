@@ -14,26 +14,26 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=539";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=87";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=95";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=89";
+} from "./right-panel.js?v=540";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=88";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=96";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=90";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=67";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=332";
+} from "./conversation-status-card.js?v=333";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=73";
-import { getLaneById } from "../research-store.js?v=41";
-import { isFlagOn } from "../feature-flags.js?v=21";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=74";
+import { getLaneById } from "../research-store.js?v=42";
+import { isFlagOn } from "../feature-flags.js?v=22";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=115";
+} from "../top-posts-flow.js?v=116";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -482,21 +482,21 @@ function backTargetFor(path) {
   // is why the label carries the lane's own name. Settings shares the target with
   // the form's Cancel (research-form.exitPath), deliberately: two exits from one
   // screen that disagree is how a user loses work.
-  const laneSub = /^\/content-ideas\/([^/]+)\/(settings|attention)$/.exec(path);
+  const laneSub = /^\/topic-feeds\/([^/]+)\/(settings|attention)$/.exec(path);
   if (laneSub) {
     const lane = getLaneById(decodeURIComponent(laneSub[1]));
     return {
-      to: `/content-ideas/${laneSub[1]}`,
+      to: `/topic-feeds/${laneSub[1]}`,
       // A deleted lane can still be deep-linked; fall back rather than render
       // "Back to undefined".
-      label: lane ? `Back to ${lane.name}` : "Back to Inspiration feeds",
+      label: lane ? `Back to ${lane.name}` : "Back to Topic feeds",
     };
   }
-  // Every other Inspiration feeds view — a feed's Inspiration list, and /content-ideas/new — goes
+  // Every other Topic feeds view — a feed's Topic list, and /topic-feeds/new — goes
   // back to the list of feeds. Deliberately WITHOUT ?fresh=1: that param runs the
   // generating loader, and a back button should not spend 1.6s pretending to fetch
   // a list you were just looking at.
-  if (/^\/content-ideas\/[^/]+/.test(path)) return { to: "/content-ideas", label: "Back to Inspiration feeds" };
+  if (/^\/topic-feeds\/[^/]+/.test(path)) return { to: "/topic-feeds", label: "Back to Topic feeds" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.
@@ -550,7 +550,7 @@ function currentTitle() {
   // lane. Registering these is also what let the lane list drop its in-page
   // bordered bar — that bar only existed because this map had no entry and the
   // topbar fell through to "Archie".
-  if (path.startsWith("/content-ideas")) return "Inspiration feeds";
+  if (path.startsWith("/topic-feeds")) return "Topic feeds";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

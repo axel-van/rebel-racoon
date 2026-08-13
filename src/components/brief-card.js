@@ -40,13 +40,13 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=18";
+import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=19";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the
 // rule: ignoring is not deleting, and a spike overrides it.
 //
-// "this list", not "feed": the user is standing in ONE Inspiration feed when they read
+// "this list", not "feed": the user is standing in ONE Topic feed when they read
 // it, and that is the scope of what ignoring does. "Feed" was ambiguous with the
 // /topics feed, which is a different surface with a different object in it.
 // "Baseline" went earlier for length; the full version still lives where the
@@ -357,7 +357,7 @@ export function renderUseButtons(brief) {
               type="button"
               class="ap-button ghost red"
               data-brief-ignore="${escapeAttr(brief.id)}"
-              aria-label="Ignore Inspiration. ${IGNORE_HINT}"
+              aria-label="Ignore Topic. ${IGNORE_HINT}"
             >
               <span>Ignore</span>
             </button>
@@ -408,7 +408,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
       data-brief-use-menu="${escapeAttr(menuKey)}"
       aria-haspopup="true"
       aria-expanded="${menuOpen ? "true" : "false"}"
-      aria-label="More options for this Inspiration"
+      aria-label="More options for this Topic"
     >
       <i class="ap-icon-chevron-down" aria-hidden="true"></i>
     </button>
@@ -435,7 +435,7 @@ export function renderUseSplit(brief, menuOpen, { menuKey = brief.id, modifier =
            With Add-to-strategy parked there is only one alternate verb left, so
            the menu carries exactly one row above Ignore and the no-duplication
            rule decides which: a Draft-ready topic leads with Save for later (its
-           main segment is Use in chat), an Inspirations-for-later topic leads with Use in
+           main segment is Use in chat), a Topics-for-later topic leads with Use in
            chat (its main segment is now Save for later). -->
       ${raw(
         ready

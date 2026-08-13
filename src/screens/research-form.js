@@ -1,5 +1,5 @@
-// Content Research — the research form. Routes /content-ideas/new AND
-// /content-ideas/:id/settings.
+// Content Research — the research form. Routes /topic-feeds/new AND
+// /topic-feeds/:id/settings.
 //
 // ONE component serves both. Exactly three things differ — the header, the
 // cancel affordance, and the save label — and they are resolved once in mode()
@@ -10,7 +10,7 @@
 //   | thing   | create                  | settings                |
 //   |---------|-------------------------|-------------------------|
 //   | header  | "New content research"  | "Feed settings" + back  |
-//   | save    | "Save Inspiration feed"       | "Save changes"          |
+//   | save    | "Save Topic feed"       | "Save changes"          |
 //   | on save | append → loader → feed  | return to feed          |
 //
 // Source gating: only Competitors is live. Every other toggle opens the
@@ -20,18 +20,18 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=405";
-import { isFlagOn } from "../feature-flags.js?v=21";
-import { getContexts, getContextById } from "../contexts-store.js?v=73";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=41";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=102";
+import { renderTopbar } from "../components/topbar.js?v=406";
+import { isFlagOn } from "../feature-flags.js?v=22";
+import { getContexts, getContextById } from "../contexts-store.js?v=74";
+import { getLaneById, addLane, updateLane } from "../research-store.js?v=42";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=103";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=18";
+} from "../research-catalog.js?v=19";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.
@@ -51,7 +51,7 @@ export function renderResearchForm(params, target) {
     navigate("/");
     return;
   }
-  // /content-ideas/new has no :id; /content-ideas/:id/settings does. That single fact is
+  // /topic-feeds/new has no :id; /topic-feeds/:id/settings does. That single fact is
   // what selects the mode — no separate entry point, no flag argument.
   laneId = params && params.id ? params.id : null;
 
@@ -59,7 +59,7 @@ export function renderResearchForm(params, target) {
     const lane = getLaneById(laneId);
     // A stale deep link to a deleted lane's settings has nowhere to go.
     if (!lane) {
-      navigate("/content-ideas");
+      navigate("/topic-feeds");
       return;
     }
     // The saved list, verbatim — deliberately NOT run through seedWebsites(). An
@@ -139,11 +139,11 @@ function renderPage() {
   return html`<div class="research-form__body">
       <div class="research-form__inner">
         <header class="research-form__head">
-          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New Inspiration feed"}</h1>
+          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New Topic feed"}</h1>
           <p class="ap-body research-form__lead">
             ${settings
-              ? "What I watch for this Inspiration feed, and how often I check it."
-              : "Pick a Playbook and sources to get inspiration."}
+              ? "What I watch for this Topic feed, and how often I check it."
+              : "Pick a Playbook and sources to get topics."}
           </p>
         </header>
         ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}
@@ -160,10 +160,10 @@ function renderScope() {
   const contexts = getContexts();
   const selected = getContextById(draft.playbookId);
   return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Inspiration feed scope"))}
+    ${raw(renderSectionLabel("Topic feed scope"))}
     <div class="research-form__card research-form__card--stack">
       <label class="research-form__field">
-        <span class="research-form__field-label">Inspiration feed name</span>
+        <span class="research-form__field-label">Topic feed name</span>
         <input
           type="text"
           class="research-form__input"
@@ -194,7 +194,7 @@ function renderScope() {
 
 function renderSources() {
   return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Inspiration sources"))}
+    ${raw(renderSectionLabel("Topic sources"))}
     <div class="research-form__sources">${raw(RESEARCH_SOURCES.map(renderSourceCard).join(""))}</div>
   </section>`;
 }
@@ -324,8 +324,8 @@ function renderOther() {
     <div class="research-form__card">
       <h4 class="research-form__setting-title">Refresh frequency</h4>
       <p class="research-form__setting-desc">
-        How often I scan your sources for new Inspirations. More frequent scans keep you close to live trends; less
-        frequent ones return a more aggregated, high-level overview.
+        How often I scan your sources for new Topics. More frequent scans keep you close to live trends; less frequent
+        ones return a more aggregated, high-level overview.
       </p>
       <!-- Segmented control composed from primitives: the installed DS ships no
            segmented-control CSS-UI class (0 occurrences in ds/css-ui/index.css),
@@ -351,16 +351,16 @@ function renderOther() {
     ${raw(
       renderSwitchCard(
         "notify",
-        "Notify me about new Inspirations",
-        "Get notified after a new scan with new Inspirations.",
+        "Notify me about new Topics",
+        "Get notified after a new scan with new Topics.",
         draft.notify,
       ),
     )}
     ${raw(
       renderSwitchCard(
         "showTrending",
-        "Show Inspirations that need attention",
-        "Tell me in the feed when an Inspiration is trending or its story has moved, and give them their own page.",
+        "Show Topics that need attention",
+        "Tell me in the feed when a Topic is trending or its story has moved, and give them their own page.",
         draft.showTrending,
       ),
     )}
@@ -391,7 +391,7 @@ function renderFooter() {
       data-form-save
       ${raw(ready ? "" : 'aria-disabled="true"')}
     >
-      <span>${mode() === "settings" ? "Save changes" : "Save Inspiration feed"}</span>
+      <span>${mode() === "settings" ? "Save changes" : "Save Topic feed"}</span>
     </button>
   </footer>`;
 }
@@ -402,7 +402,7 @@ function renderFooter() {
  * (topbar.backTargetFor). Two exits from one screen that disagree is how a user
  * loses work. */
 function exitPath() {
-  return mode() === "settings" ? `/content-ideas/${encodeURIComponent(laneId)}` : "/content-ideas";
+  return mode() === "settings" ? `/topic-feeds/${encodeURIComponent(laneId)}` : "/topic-feeds";
 }
 
 function bind(target) {
@@ -464,12 +464,12 @@ function bind(target) {
       if (!isComplete()) return;
       if (mode() === "settings") {
         updateLane(laneId, draft);
-        navigate(`/content-ideas/${encodeURIComponent(laneId)}`);
+        navigate(`/topic-feeds/${encodeURIComponent(laneId)}`);
       } else {
         const lane = addLane(draft);
         // ?fresh=1 tells the feed this arrival is a save, so it runs the
         // generating loader. Selecting a lane from the list does the same.
-        navigate(`/content-ideas/${encodeURIComponent(lane.id)}?fresh=1`);
+        navigate(`/topic-feeds/${encodeURIComponent(lane.id)}?fresh=1`);
       }
       return;
     }

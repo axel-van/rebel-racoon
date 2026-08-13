@@ -1,4 +1,4 @@
-// Inspiration feeds — the attention page, route /content-ideas/:id/attention.
+// Topic feeds — the attention page, route /topic-feeds/:id/attention.
 //
 // The file is still research-trending.js. The route was renamed when the page
 // grew to carry both signals; the module name lags, the same split as
@@ -22,14 +22,14 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=405";
-import { isFlagOn } from "../feature-flags.js?v=21";
-import { renderBriefCard } from "../components/brief-card.js?v=45";
-import { openFullResearch } from "../components/research-modals.js?v=102";
-import { openBriefInChat } from "../brief-flow.js?v=21";
-import { getLaneById } from "../research-store.js?v=41";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=48";
-import { findResearchSource, findCadence } from "../research-catalog.js?v=18";
+import { renderTopbar } from "../components/topbar.js?v=406";
+import { isFlagOn } from "../feature-flags.js?v=22";
+import { renderBriefCard } from "../components/brief-card.js?v=46";
+import { openFullResearch } from "../components/research-modals.js?v=103";
+import { openBriefInChat } from "../brief-flow.js?v=22";
+import { getLaneById } from "../research-store.js?v=42";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=49";
+import { findResearchSource, findCadence } from "../research-catalog.js?v=19";
 
 let laneId = null;
 let unsubscribe = null;
@@ -47,7 +47,7 @@ export function renderResearchTrending(params, target) {
   // there is no notice to reach this page from, so a stale link has to bounce
   // back to the feed rather than render a surface the lane has switched off.
   if (!lane || !lane.showTrending) {
-    navigate(lane ? `/content-ideas/${encodeURIComponent(laneId)}` : "/content-ideas");
+    navigate(lane ? `/topic-feeds/${encodeURIComponent(laneId)}` : "/topic-feeds");
     return;
   }
 
@@ -102,7 +102,7 @@ function renderPage() {
   // Same recap__header shape as the feed, minus the monogram: this page belongs
   // to one lane you have already identified by arriving from it, and the orange
   // mark is the thing that should carry the eye. Back is the topbar's, via
-  // backTargetFor() — no in-page button on any Inspiration feeds detail view.
+  // backTargetFor() — no in-page button on any Topic feeds detail view.
   return html`<div class="research-feed__body">
     <div class="research-trending__inner">
       <header class="research-feed__header research-feed__header--trending">
@@ -110,9 +110,7 @@ function renderPage() {
           <span class="research-trending__mark" aria-hidden="true"><i class="ap-icon-arrow-up"></i></span>
           <div class="research-feed__id-text">
             <div class="research-feed__titlerow">
-              <h1 class="research-feed__name">
-                ${n} ${n === 1 ? "Inspiration needs" : "Inspirations need"} your attention
-              </h1>
+              <h1 class="research-feed__name">${n} ${n === 1 ? "Topic needs" : "Topics need"} your attention</h1>
             </div>
             <div class="research-feed__meta">
               <span class="research-feed__meta-item">

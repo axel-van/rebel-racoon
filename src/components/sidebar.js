@@ -4,9 +4,9 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=45";
+import { open as openSearchModal } from "./search-modal.js?v=46";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
-import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=18";
+import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=19";
 import {
   getSessions,
   getSessionById,
@@ -16,17 +16,17 @@ import {
   togglePillar as togglePillarSession,
   subscribe as subscribeSessions,
 } from "../sessions-store.js?v=38";
-import { isFlagOn } from "../feature-flags.js?v=21";
+import { isFlagOn } from "../feature-flags.js?v=22";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=89";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=73";
+import { clearSession as clearLibrarySession } from "../library.js?v=90";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=74";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=59";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=27";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=41";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=539";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=95";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=42";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=540";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=96";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=67";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=87";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=88";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -609,7 +609,7 @@ const NAV = [
   // running" is the useful number; summing unread briefs across lanes would
   // compete with the Topics badge for the same kind of attention.
   {
-    path: "/content-ideas",
+    path: "/topic-feeds",
     // Same antenna as Topics, deliberately: both rows are Agorapulse listening,
     // and a folder said "a place where things are filed" about a feature whose
     // whole point is that Archie brings things in.
@@ -620,10 +620,10 @@ const NAV = [
     // tech still separate them — but if the collapsed rail ever needs to be
     // scannable on its own, this is the pair that breaks it.
     icon: "ap-icon-antenna",
-    label: "Inspiration feeds",
+    label: "Topic feeds",
     flag: "contentResearch",
     // Prefix, so the row stays lit on a lane's feed, form and trending page.
-    match: (p) => p.startsWith("/content-ideas"),
+    match: (p) => p.startsWith("/topic-feeds"),
     count: () => getLanes().length,
   },
 ];
