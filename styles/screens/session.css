@@ -860,7 +860,7 @@
    "N rows" figure in this file 19% optimistic — "3.5 rows" was really 2.9. */
 .starter-topic__panel {
   --starter-row: 124px;
-  --starter-rows-shown: 2.2;
+  --starter-rows-shown: 2.35;
   --starter-foot: 45px;
   display: flex;
   flex-direction: column;
@@ -892,7 +892,7 @@
      it starts biting below about 680px, where 2.2 rows would otherwise push the
      workflow label under the fold.
 
-     The half-row is deliberate. 2.2 leaves a fifth of a row cut off at the bottom,
+     The fraction is deliberate. 2.35 leaves a third of a row cut off at the bottom,
      which is what says "there is more" — a whole number of rows looks like the end of
      the list. */
   max-height: clamp(calc(var(--starter-row) * 1.5), 40vh, calc(var(--starter-row) * var(--starter-rows-shown)));
