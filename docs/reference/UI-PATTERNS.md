@@ -60,7 +60,7 @@ Règle universelle (`chat.css`) : _« a light-blue wash on hover/focus (never na
 - `.drafts-card:hover` → `border-color: --ref-color-electric-blue-20` + `background: --ref-color-electric-blue-05`. Actif = `.is-active` (electric-blue-40).
 - `.top-post-card:hover`, `.clip-card` sélectionné → `border-color: --ref-color-electric-blue-100`.
 - Radius carte = `--app-radius-card` (12). Tuiles icône AI/brand = fond `--ref-color-orange-10` + glyphe orange.
-- ⛔️ **Jamais de liseré d'accent coloré sur un bord de carte** (`border-left: 3px solid …`). Règle catégorique de Matt. **L'état d'une carte va dans son contenu, pas sur son cadre** — un marqueur explicite (point + mot, ex. « • New ») dit la même chose sans repeindre la bordure. Un seul cas existait dans l'app (unseen sur `.topic-card`) et il a été retiré ; les `border-left`/`border-right` restants sont des séparateurs de panneau 1px dans la ramp sombre video-clips, pas des accents.
+- ⛔️ **Jamais de liseré d'accent coloré sur un bord de carte** (`border-left: 3px solid …`). Règle catégorique de Matt. **L'état d'une carte va dans son contenu, pas sur son cadre** — un marqueur explicite (point + mot, ex. « • New ») dit la même chose sans repeindre la bordure. Deux cas ont existé et les deux ont été retirés (unseen sur `.topic-card`, puis Trending / Updated sur la carte d'Idea de la page nouvelle session — voir plus bas) : la règle n'a **aucune** exception dans l'app. Les `border-left`/`border-right` restants sont des séparateurs de panneau 1px dans la ramp sombre video-clips, pas des accents.
 - Cartes in-bubble : `.chat-bubble-card` (grey-05, border grey-10) via `bulletsBlock()` (`_analyse-common.js`).
 
 ### Boutons / CTAs
@@ -265,30 +265,32 @@ rouvrir si un mauvais classement finit par avoir une conséquence ailleurs que s
 cette carte. Côté code, ça a aussi supprimé la seule exception au partage
 serveur/utilisateur de [`briefs-store.js`](../../src/briefs-store.js).
 
-### L'accent de cadre : interdit en colonne, permis en vedette
+### L'accent de cadre : interdit, sans exception
 
-Les cartes de topics du feed n'ont **pas** d'accent de cadre (voir plus bas) : dans
-une colonne à parcourir, un liseré coloré fait crier une ligne sur dix et casse la
-lecture. La carte d'Idea de la page nouvelle session en porte un — 4px en
-haut, orange (`--app-archie-orange`) pour Trending, menthol
-(`--ref-color-menthol-100`) pour Updated.
+**Aucune carte de l'app ne porte de liseré d'accent coloré sur un bord.** La règle
+catégorique de Matt (voir plus haut, ⛔️) n'a plus d'exception : l'état d'une carte va
+dans son **contenu**, pas sur son cadre.
 
-Ce n'est pas une contradiction, c'est la même règle appliquée à deux contextes : là
-c'est **une carte unique en vedette**, où le signal est précisément la raison d'être
-de la carte, et il n'y a aucune voisine à écraser. Une carte « New » reçoit un
-liseré **transparent** de 4px plutôt que rien, pour que la carte ne bouge pas de 3px
-entre deux tons.
+Elle en a eu une, et c'est instructif. La carte d'Idea de la page nouvelle session
+portait 4px en haut — orange (`--app-archie-orange`) pour Trending, menthol
+(`--ref-color-menthol-100`) pour Updated — au motif que c'était **une carte unique en
+vedette**, où le signal est la raison d'être de la carte et où il n'y a pas de
+voisine à écraser, contrairement à une colonne de topics où un liseré fait crier une
+ligne sur dix. L'argument tenait ; ce qui l'a emporté, c'est que le signal **était
+déjà dans le contenu** : la marque Trending / Updated vit à la fin du titre, **en
+mots**, et dit donc laquelle des deux a été levée sans demander au lecteur de se
+souvenir de ce que veut dire « menthol ».
 
-⚠️ Si une troisième surface veut un accent, réconcilier les deux règles avant de
-l'ajouter.
+Ce que l'exception coûtait, en plus de la règle : une custom property
+(`--starter-topic-accent`) pour que le survol puisse restituer la couleur, une règle
+`:hover` de même spécificité placée après la règle de base (parce que
+`.starter-card:hover` pose `border-color` en raccourci et repeignait le liseré en
+bleu, donnant l'impression que la carte changeait de catégorie sous le curseur), et
+un liseré **transparent** de 4px sur les tons non signalés pour que le contenu ne
+bouge pas de 3px d'une carte à l'autre. Trois contournements pour une décoration.
 
-**Au survol, l'accent garde sa couleur.** `.starter-card:hover` pose
-`border-color` en raccourci — les quatre côtés — ce qui repeignait le liseré de 4px
-en bleu et donnait l'impression que la carte changeait de catégorie sous le curseur.
-L'accent est donc stocké dans une custom property (`--starter-topic-accent`) et une
-règle `:hover` de même spécificité, placée **après** la règle de base, le restaure
-sur le seul bord haut. Les trois autres bords prennent le survol standard, et le
-reste du traitement (lavis teinté, filigrane) ne change pas.
+⚠️ Une surface qui veut un accent de cadre n'a plus de précédent à invoquer : il faut
+rouvrir la règle elle-même, pas s'appuyer sur ce cas.
 
 ### Un contrôle par-dessus une carte-bouton est un FRÈRE, pas un enfant
 

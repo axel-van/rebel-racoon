@@ -863,41 +863,21 @@
   align-items: stretch;
 }
 
-/* The accent, held in a custom property so the hover rule below can restore it
-   without restating the tone.
+/* No frame accent on this card. It carried a 4px top border — orange for Trending,
+   menthol for Updated — as the app's one sanctioned exception to the categorical
+   rule that a card's state goes in its CONTENT, not on its frame
+   (UI-PATTERNS.md). The exception is withdrawn, so the rule has no exceptions
+   left.
 
-   It is drawn ONLY on the two signalled tones. Every other topic card — plain,
-   waiting, empty — keeps .starter-card's ordinary 1px border on all four sides,
-   which is what makes the hover highlight a uniform electric-blue frame instead
-   of a 4px blue bar across the top. A transparent 4px border used to sit on all
-   of them, to keep the content from shifting 3px between a flagged card and a
-   plain one; that shift is invisible now that the cell is a fixed-height grid
-   row and the flip animates the swap, so it isn't worth a blue slab on hover. */
-.starter-topic--trending,
-.starter-topic--updated {
-  border-top: 4px solid var(--starter-topic-accent);
-}
+   Nothing is lost: the state was never only in the border. The Trending / Updated
+   mark rides at the end of the headline, in words, where it says which signal
+   fired instead of asking the reader to remember what menthol means. Every slide
+   now takes .starter-card's ordinary 1px border and the same uniform
+   electric-blue hover, which is also what the border rule and its
+   equal-specificity hover partner existed to work around.
 
-.starter-topic--trending {
-  --starter-topic-accent: var(--app-archie-orange);
-}
-
-.starter-topic--updated {
-  --starter-topic-accent: var(--ref-color-menthol-100);
-}
-
-/* Hover: every topic card takes the standard starter-card highlight — an
-   electric-blue border plus the tint wash — and the two signalled tones keep
-   their accent on top rather than letting the blue overwrite it.
-
-   Equal specificity to .starter-card:hover, so this wins on source order and has
-   to stay after it. */
-.starter-topic--trending:hover,
-.starter-topic--trending:focus-visible,
-.starter-topic--updated:hover,
-.starter-topic--updated:focus-visible {
-  border-top-color: var(--starter-topic-accent);
-}
+   Gone with it: --starter-topic-accent, and the .starter-topic--trending /
+   --updated selectors, which now style nothing. `tone` still drives the mark. */
 
 /* Crumb + signal mark on one line above the title. Two children, not four: the
    wide gap here separates the LABEL from the MARK, and the crumb owns the tight
