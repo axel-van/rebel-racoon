@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=398";
+import { renderTopbar } from "../components/topbar.js?v=399";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=48";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=21";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=12";
 import { getLaneById } from "../research-store.js?v=41";
-import * as contextBuilder from "../context-builder.js?v=365";
+import * as contextBuilder from "../context-builder.js?v=366";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=532";
+} from "../components/right-panel.js?v=533";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=34";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2096,6 +2096,15 @@ function renderStarterTopicCard(brief) {
       <span class="starter-card__title"
         >${escapeHtml(brief.headline)}${mark ? ` ${mark}` : ""}</span
       >
+      <!-- The Idea's summary, in the feed's own .topics-card__summary — same class,
+           not a copy of it: one object, one summary treatment (15px prose, the
+           620px measure from --topics-measure, three lines then an ellipsis). It
+           also earns the width this card gained; at a third of the row the
+           headline filled the card, at full width it was one line over a hole.
+           NOT .starter-card__subtitle, which is the workflow cards' 12px caption
+           and would read as a label under a title rather than as the Idea's own
+           first paragraph. -->
+      <span class="topics-card__summary">${escapeHtml(brief.summary || "")}</span>
       <span class="starter-card__cta ap-link standalone small"
         >Start drafting<i class="ap-icon-arrow-right" aria-hidden="true"></i
       ></span>

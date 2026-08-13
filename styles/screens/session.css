@@ -843,6 +843,14 @@
 
 .starter-card--topic {
   width: 100%;
+  /* One height for every slide, so paging never resizes the block or shoves the
+     nav row and the workflow grid down. 218px is measured, not chosen: the
+     tallest a live slide can be is crumb + a TWO-line headline + a 3-line
+     summary + the CTA + the card's own padding, and at this width (983px of
+     title measure) a 230-character headline still only reaches two lines. A
+     1-line slide and the closing card spend the difference as air in the middle,
+     because the CTA pins itself to the bottom. */
+  min-height: 218px;
   gap: var(--ref-spacing-xxs);
   /* stretch, overriding .starter-card's align-items: flex-start. That default
      sizes each child to its CONTENT, which is invisible on a workflow card whose
@@ -986,11 +994,14 @@
   color: var(--ref-color-grey-60);
 }
 
-/* Three lines, then an ellipsis. A topic headline is a real sentence, and at one
-   column the longest ones ran to five lines — which set the height of the whole
-   grid row and stretched the workflow cards beside it to match. Three is what
-   fits without the row growing; the full headline is one click away, and the
-   summary already lives in the topic's own dialog.
+/* TWO lines, then an ellipsis. It was three, sized for the card at one column of
+   the workflow grid, where the longest headlines ran to five. At the carousel's
+   full width the third line is unreachable — a 230-character headline measured at
+   two — so the clamp's job here is to GUARANTEE that: it is what makes the 218px
+   above a ceiling rather than a lucky observation about today's seed data.
+
+   The full headline is one click away, and the summary underneath now carries the
+   substance the clamp used to cost.
 
    Same -webkit-box mechanism as .topics-card__summary: line-clamp alone is still
    not honoured everywhere, and overflow:hidden is what actually draws the
@@ -998,8 +1009,8 @@
 .starter-card--topic .starter-card__title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 
