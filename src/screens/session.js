@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=395";
+import { renderTopbar } from "../components/topbar.js?v=397";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=90";
 import {
   getConnectedProfiles,
@@ -75,7 +75,7 @@ import { getBriefById, getStarterTopics } from "../briefs-store.js?v=47";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=20";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=11";
 import { getLaneById } from "../research-store.js?v=40";
-import * as contextBuilder from "../context-builder.js?v=362";
+import * as contextBuilder from "../context-builder.js?v=364";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -120,7 +120,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=529";
+} from "../components/right-panel.js?v=531";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=33";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2217,18 +2217,17 @@ function renderStarterTopicSlot(sessionId) {
 // .ap-stepper only for numbered multi-step flows) — bare <button> children, no
 // class of their own, .active on the current one.
 //
-// The arrows are DS icon buttons. Previous is DISABLED on the first slide, because
-// there is nothing before it. The trailing one is never disabled: on the last slide
-// it CIRCLES BACK to the first Idea, which is what closes the carousel.
+// The arrows are DS icon buttons, and NEITHER is ever disabled: the carousel wraps
+// both ways. Next off the last slide lands on the first Idea, Previous off the first
+// lands on the closing card. Five slides in a ring, reachable from either direction.
 //
-// One button, two jobs, and it says which it is doing: on the last slide the glyph
-// becomes `history` and the label becomes "Back to the first idea". A chevron
-// pointing right would promise another slide after this one, and the dots have
-// already said there isn't. `history` was picked against the alternatives rendered
-// side by side — refresh means "fetch again" everywhere else in this app (Reset
-// filters, Refresh now) and nothing is re-fetched; rotate-left is the
-// image-rotation glyph, a square with a corner arrow; arrow-left and chevron-left
-// are Previous, and this is not one step back.
+// Two plain chevrons, unchanged on every slide. A glyph that swapped to `history` at
+// the ends was tried and dropped: it made one control look like two, and it is not
+// needed — the dots already say where the ring ends, so a chevron promises the next
+// slide rather than a slide that doesn't exist.
+//
+// Labels stay "Previous idea" / "Next idea" throughout. With a ring there is no state
+// where either is a dead end, so there is nothing for a label to warn about.
 function renderStarterTopicNav(index, total) {
   const dots = Array.from({ length: total }, (_, i) => {
     // The last slide is not an Idea, so it cannot be labelled as one. Everything
@@ -2238,26 +2237,14 @@ function renderStarterTopicNav(index, total) {
       i === index ? ' aria-current="true"' : ""
     }></button>`;
   }).join("");
-  const looping = index === total - 1;
   return `
     <div class="starter-topic__nav">
-      <button
-        type="button"
-        class="ap-icon-button ghost grey"
-        data-starter-topic-step="-1"
-        aria-label="Previous idea"
-        ${index === 0 ? "disabled" : ""}
-      >
+      <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="-1" aria-label="Previous idea">
         <i class="ap-icon-chevron-left" aria-hidden="true"></i>
       </button>
       <div class="ap-dot-stepper starter-topic__dots">${dots}</div>
-      <button
-        type="button"
-        class="ap-icon-button ghost grey"
-        data-starter-topic-step="1"
-        aria-label="${looping ? "Back to the first idea" : "Next idea"}"
-      >
-        <i class="${looping ? "ap-icon-history" : "ap-icon-chevron-right"}" aria-hidden="true"></i>
+      <button type="button" class="ap-icon-button ghost grey" data-starter-topic-step="1" aria-label="Next idea">
+        <i class="ap-icon-chevron-right" aria-hidden="true"></i>
       </button>
     </div>
   `;
@@ -4951,24 +4938,26 @@ function bindSession(root, session) {
         const wanted = step
           ? starterTopicIndex + Number(step.dataset.starterTopicStep)
           : Number(goDot.dataset.starterTopicGo);
-        // Forward off the end WRAPS to the first slide — that is the loop, and it is
-        // the only way the index ever moves backwards while still going forwards.
-        // Everything else clamps: Previous is disabled on the first slide, so there
-        // is nothing to wrap the other way, and a dot is always a real slide.
-        const wrapping = !!step && wanted > total - 1;
-        const nextIndex = wrapping ? 0 : Math.max(0, Math.min(total - 1, wanted));
-        // Nothing to animate — a disabled arrow that still got clicked, or the dot
-        // you are already on. Returning here also stops the 180ms swap from
-        // running and re-rendering the block for no reason.
+        // The arrows WRAP; the dots don't need to, since every dot is a real slide.
+        // Off the end lands on the first slide, off the start lands on the last —
+        // (i + step + total) % total, which is the ring in one expression. A dot is
+        // still clamped, defensively: a stale nav can name an index the shortened
+        // queue no longer has.
+        const nextIndex = step ? (wanted + total) % total : Math.max(0, Math.min(total - 1, wanted));
+        // Nothing to animate — the dot you are already on, or an arrow on a
+        // one-slide ring. Returning here also stops the 180ms swap from running and
+        // re-rendering the block for no reason.
         if (nextIndex === starterTopicIndex) return;
         // Direction, so going back reads as going back: out to the right and in
         // from the left, the mirror of forwards. A carousel that always slides one
         // way makes Previous feel like another Next.
         //
-        // A wrap is FORWARD motion even though the index drops, so it keeps the
-        // forward animation — sliding right-to-left on the way round is what makes
-        // it read as a loop rather than as four Previouses at once.
-        const back = !wrapping && nextIndex < starterTopicIndex;
+        // Taken from the STEP, not from the indexes, now that both ends wrap: on a
+        // ring the index can fall while you travel forwards (last → first) and rise
+        // while you travel backwards (first → last), so comparing the two would
+        // animate every wrap the wrong way round. A dot has no direction of its own,
+        // so it still compares.
+        const back = step ? Number(step.dataset.starterTopicStep) < 0 : nextIndex < starterTopicIndex;
         starterTopicIndex = nextIndex;
         const swap = () => {
           // Re-check that the slot we captured on the click is still in the
@@ -4991,6 +4980,15 @@ function bindSession(root, session) {
           swap();
           return;
         }
+        // Clear the ENTERING class before adding a leaving one, or the leave never
+        // plays. Both rules set `animation` at equal specificity, so the later one in
+        // session.css wins — and the entering rules are declared after the
+        // leaving ones. The stage still carries the entering class from the swap that
+        // painted it (a finished animation with no fill, so nothing looks wrong at
+        // rest), which meant the outgoing card sat still while only the incoming one
+        // animated. Measured, not guessed: the class list at 60ms after a click read
+        // ["is-entering-back", "is-leaving"].
+        stage.classList.remove("is-entering", "is-entering-back", "is-leaving", "is-leaving-back");
         stage.classList.add(back ? "is-leaving-back" : "is-leaving");
         window.setTimeout(() => {
           swap();

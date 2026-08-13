@@ -1,5 +1,5 @@
 import { html, raw, escapeText, escapeAttr } from "../utils.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=395";
+import { renderTopbar } from "../components/topbar.js?v=397";
 import {
   getContexts,
   subscribe as subscribeContexts,
