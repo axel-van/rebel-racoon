@@ -856,7 +856,7 @@
    the first Topic lands. */
 .starter-topic__panel {
   --starter-row: 104px;
-  --starter-rows-shown: 3.5;
+  --starter-rows-shown: 5;
   --starter-foot: 45px;
   display: flex;
   flex-direction: column;
@@ -881,10 +881,15 @@
      72px under it, because 3.5 rows is a fixed 364px whatever the screen is.
 
      clamp reads outward: never shorter than 1.5 rows (below that the cut row stops
-     reading as "there is more" and starts reading as a bug), 28vh by preference, and
-     never taller than the 3.5 rows this was designed at — so a tall window shows the
-     full 3.5 and gains nothing further, and a short one gives the space back to what
-     is under it. */
+     reading as "there is more" and starts reading as a bug), 42vh by preference, and
+     never taller than 5 rows — so a tall window shows five and gains nothing further,
+     and a short one gives the space back to what is under it.
+
+     5 rows, not "about 150px more": the row (104px) is this section's own module, so
+     the increase is 1.5 rows = 156px, which is the nearest thing to a round number the
+     DS scale offers here — 150 itself is on no scale. The preferred value moved with
+     it (28vh → 42vh), because on an ordinary window the vh term is what binds, not
+     the maximum. */
   max-height: clamp(calc(var(--starter-row) * 1.5), 28vh, calc(var(--starter-row) * var(--starter-rows-shown)));
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -902,6 +907,21 @@
   padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   border-top: 1px solid var(--app-border);
   background: var(--ref-color-grey-bg);
+}
+
+/* The same nudge the workflow cards' CTA has (see .starter-card__cta i above): the
+   arrow steps 3px right on hover. Written against the LINK's own hover rather than a
+   parent's, because unlike a card the whole footer is not the target — only the link
+   is, so the arrow should move when the thing that moves is what you are pointing at.
+   Same duration, easing and distance as the cards, so the two read as one gesture. */
+.starter-topic__foot a i {
+  font-size: var(--sys-icon-css-sm);
+  transition: transform var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.starter-topic__foot a:hover i,
+.starter-topic__foot a:focus-visible i {
+  transform: translateX(3px);
 }
 
 .starter-topic__count {
@@ -1230,7 +1250,7 @@
   /* The same clamp as the list, plus the footer — otherwise the two states diverge
      again the moment the window is short enough for the clamp to bite. */
   min-height: calc(
-    clamp(calc(var(--starter-row) * 1.5), 28vh, calc(var(--starter-row) * var(--starter-rows-shown))) +
+    clamp(calc(var(--starter-row) * 1.5), 42vh, calc(var(--starter-row) * var(--starter-rows-shown))) +
       var(--starter-foot)
   );
   border: 0;
