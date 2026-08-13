@@ -853,9 +853,13 @@
 
    The three heights live here and are shared: a row, how many show, and the footer.
    The waiting state reads them too, so the block is the same height before and after
-   the first Topic lands. */
+   the first Topic lands.
+
+   --starter-row is MEASURED, not guessed: a row is 124px (source line, headline, two
+   clamped lines of summary, 12/16 padding). It said 104 for a while, which made every
+   "N rows" figure in this file 19% optimistic — "3.5 rows" was really 2.9. */
 .starter-topic__panel {
-  --starter-row: 104px;
+  --starter-row: 124px;
   --starter-rows-shown: 5;
   --starter-foot: 45px;
   display: flex;
@@ -890,7 +894,7 @@
      DS scale offers here — 150 itself is on no scale. The preferred value moved with
      it (28vh → 42vh), because on an ordinary window the vh term is what binds, not
      the maximum. */
-  max-height: clamp(calc(var(--starter-row) * 1.5), 28vh, calc(var(--starter-row) * var(--starter-rows-shown)));
+  max-height: clamp(calc(var(--starter-row) * 1.5), 42vh, calc(var(--starter-row) * var(--starter-rows-shown)));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -985,8 +989,8 @@
   /* A ROW now, not a slide. The carousel pinned every card to 218px so paging
      could not resize the block; in a list that height is the whole problem —
      eight of them would run 1700px and bury the workflow grid. The row is as tall
-     as its content (about 104px: source line, headline, two lines of summary) and
-     --starter-row in the scroller above is kept equal to it. */
+     as its content — 124px measured: source line, headline, two clamped lines of
+     summary — and --starter-row in the panel above is kept equal to it. */
   min-height: 0;
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   gap: var(--ref-spacing-xxs);
