@@ -1087,6 +1087,40 @@
   flex: 0 0 auto;
 }
 
+/* The pillar, at the end of the crumb. In WORDS here, not the feed card's glyph
+   plus tooltip: this whole card is one button, so a hoverable trigger inside it
+   would be a focusable element in a button — the nesting the feed's card avoids
+   by other means. The pill separates it from the two path segments before it, so
+   the crumb reads "Playbook › feed" and then, separately, "and it is filed
+   here". */
+.starter-topic__pillar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-left: var(--ref-spacing-xxs);
+  padding: 1px var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-pill);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-150);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  max-width: 180px;
+  min-width: 0;
+}
+
+.starter-topic__pillar > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.starter-topic__pillar > i {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
 .starter-topic__lane {
   flex: 1 1 0;
 }
@@ -2220,6 +2254,63 @@
    the dropdown rows, matching the /contexts cards and sidebar rows. */
 body.hide-playbook-colors .composer-context__dot {
   display: none;
+}
+
+/* ── Content-pillar control ────────────────────────────────────────────────
+   Sits beside the Playbook control and behaves identically: same widget, same
+   upward dropdown, same clamped width. Everything below is either a repeat of a
+   .composer-playbook rule (the DS ships the trigger full-width and with a native
+   marker, so both controls need the same two corrections) or the one thing that
+   differs — a glyph instead of a word as the inline label, because "Playbook
+   Noba Fashion" reads as a sentence and "Pillar Sustainable wardrobe" reads as
+   two nouns colliding. */
+.composer-pillar {
+  position: relative;
+  display: inline-flex;
+}
+
+.composer-pillar__trigger {
+  width: auto;
+}
+
+.composer-pillar[open] > summary,
+.composer-pillar__trigger {
+  user-select: none;
+}
+
+.composer-pillar > summary::-webkit-details-marker {
+  display: none;
+}
+
+.composer-pillar > summary {
+  list-style: none;
+}
+
+.composer-pillar .ap-select-inline-icon {
+  color: var(--ref-color-electric-blue-100);
+  font-size: var(--sys-text-style-body-size);
+  flex-shrink: 0;
+}
+
+.composer-pillar__dropdown {
+  position: absolute;
+  top: auto;
+  right: auto;
+  left: 0;
+  bottom: calc(100% + var(--ref-spacing-xxs));
+  min-width: 240px;
+  width: max-content;
+  max-width: 360px;
+  margin-top: 0;
+  z-index: var(--app-z-overlay);
+  text-align: left;
+}
+
+/* No pillars in this Playbook: a stated fact, not a row you can press. */
+.composer-pillar__empty {
+  color: var(--sys-text-color-light);
+  cursor: default;
+  pointer-events: none;
 }
 
 /* ---------- Workspace ---------- */

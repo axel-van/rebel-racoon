@@ -149,10 +149,13 @@ export const FLAGS = Object.freeze([
     hides:
       "When OFF (default), hides everything Content-strategy: the " +
       "/content-strategy and /pillar/:id routes, the sidebar nav row and its " +
-      "counter, the New-pillar dialog, and — on a Topic feed — the pillar mark " +
-      "in a topic card's source row plus the 'Unlink from this pillar' row in " +
-      "that card's menu. A stale deep link bounces to /, like /topics. The " +
-      "seeded pillars ride along in the data either way. " +
+      "counter, the New-pillar dialog, the composer's content-pillar picker, " +
+      "and the pillar mark wherever a topic carries one — the feed card's " +
+      "source row (plus the 'Unlink from this pillar' row in that card's menu) " +
+      "and the new-session 'Fresh topics to review' list. A stale deep link " +
+      "bounces to /, like /topics. The seeded pillars ride along in the data " +
+      "either way — TWO PER TOPIC FEED, each linked only to topics from its own " +
+      "feed. " +
       "\n\nWhen ON, a PILLAR is a theme the brand keeps coming back to: a " +
       "condensed context Archie carries into a chat, the assets you attach to " +
       "it, and the audit trail of every topic, chat and note that fed it. " +

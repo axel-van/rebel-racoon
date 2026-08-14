@@ -144,10 +144,84 @@
   border-color: var(--ref-color-electric-blue-20);
 }
 
+/* The ghost tile — the /contexts "Create a Playbook" card, same shape and same
+   reasoning. It is a <button>, so the WHOLE tile is the target: as a card with a
+   button inside it, only the corner responded and a click on the tile did
+   nothing. Values mirror .contexts-card--ghost deliberately; if that one moves,
+   move this with it. */
 .strategy-card--new {
-  border: 1px dashed var(--sys-color-border-color-default);
-  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+  text-align: center;
+  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+  min-height: 186px;
   background: transparent;
+  border: 2px dashed var(--app-border-soft);
+  border-radius: var(--ref-border-radius-md);
+  cursor: pointer;
+  color: var(--ref-color-grey-100);
+  font-family: inherit;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    background-color var(--ref-animation-short) var(--app-ease-out),
+    transform var(--ref-animation-short) var(--app-ease-out);
+}
+
+.strategy-card--new:hover,
+.strategy-card--new:focus-visible {
+  outline: none;
+  border-color: var(--app-archie-mark);
+  background: var(--app-butter);
+  transform: translateY(-1px);
+}
+
+.strategy-card--new__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-circle);
+  background: var(--app-butter);
+  color: var(--app-archie-mark);
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-out),
+    color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.strategy-card--new__glyph i {
+  font-size: var(--sys-icon-css-md);
+}
+
+/* Hover: the tile turns brand orange and the logo flips to white — the mask
+   paints in currentColor, so `color` is what drives it. */
+.strategy-card--new:hover .strategy-card--new__glyph,
+.strategy-card--new:focus-visible .strategy-card--new__glyph {
+  background: var(--app-archie-mark);
+  color: var(--ref-color-white);
+}
+
+.strategy-card--new__title {
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.strategy-card--new__sub {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-weight);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+  max-width: 240px;
+}
+
+/* The facet, beside the CTA. Same control as the Topic-feeds list header. */
+.strategy-view__filter {
+  min-width: 200px;
 }
 
 .strategy-card__more {
@@ -490,6 +564,26 @@
   font-weight: 700;
   line-height: 1.4;
   color: var(--app-convo-navy);
+  text-align: left;
+}
+
+/* The title that goes somewhere. No permanent underline — the row is dense and
+   nine underlined titles would read as a link farm; the pointer plus the
+   hover/focus underline is the affordance, which is how the app's other
+   in-list titles behave. */
+.pillar-row__title--link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.pillar-row__title--link:hover,
+.pillar-row__title--link:focus-visible {
+  color: var(--ref-color-electric-blue-150);
+  text-decoration: underline;
+  outline: none;
 }
 
 .pillar-row__when {

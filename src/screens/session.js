@@ -71,6 +71,12 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=22";
+import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=1";
+
+// sessionId → pillarId attached in the composer. Module state rather than a
+// store: like the composer's @mentions it describes what THIS composer is about
+// to send, not a property of the chat, and it dies with the page.
+const composerPillarBySession = new Map();
 import {
   getBriefById,
   getStarterTopics,
@@ -1258,6 +1264,80 @@ function renderPlaybookControl(ctx, selectable) {
   `;
 }
 
+// The content-pillar picker, beside the Playbook one and modelled on it: the
+// same `<details class="ap-select">` widget, the same trigger with an inline
+// label, the same option rows.
+//
+// ── Only this Playbook's pillars are selectable ────────────────────────────
+// A pillar belongs to a Playbook, so the list is scoped to whichever Playbook is
+// attached, and the control does not render at all when none is. Showing every
+// pillar and disabling most of them was the alternative: it explains the rule by
+// making the reader fail at it, and on an account with eight pillars it fills a
+// dropdown with things that can never be picked.
+//
+// ── The footer is a way OUT, not a way to create ───────────────────────────
+// The Playbook picker's footer creates one, because a chat with no Playbook is
+// stuck. A chat with no pillar is not stuck — the pillar is optional context —
+// so the footer navigates to the section instead. Creating a pillar mid-chat
+// would also be the wrong moment: a pillar is a standing theme, not something
+// you invent to finish one draft.
+function renderPillarControl(ctx, sessionId) {
+  if (!isFlagOn("contentStrategy") || !ctx) return "";
+  const pillars = getPillarsForPlaybook(ctx.id);
+  const activeId = composerPillarBySession.get(sessionId) || null;
+  const active = pillars.find((p) => p.id === activeId) || null;
+  const items = pillars
+    .map((p) => {
+      const on = active && p.id === active.id;
+      return `
+        <div
+          class="ap-select-option${on ? " selected" : ""}"
+          data-pillar-pick="${escapeHtml(p.id)}"
+          role="option"
+          aria-selected="${on ? "true" : "false"}"
+        >
+          <span class="ap-select-option-text">${escapeHtml(p.name)}</span>
+          ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    })
+    .join("");
+  const empty = `<div class="ap-select-option composer-pillar__empty" role="option" aria-disabled="true">
+      <span class="ap-select-option-text">No pillars in this Playbook yet</span>
+    </div>`;
+  // "None" is a real choice and has to be pickable: attaching a pillar is
+  // optional, so un-attaching it must be too.
+  const noneRow = `
+    <div
+      class="ap-select-option${active ? "" : " selected"}"
+      data-pillar-pick=""
+      role="option"
+      aria-selected="${active ? "false" : "true"}"
+    >
+      <span class="ap-select-option-text">No pillar</span>
+      ${active ? "" : `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>`}
+    </div>`;
+  const valueMarkup = active
+    ? `<span class="ap-select-value">${escapeHtml(active.name)}</span>`
+    : `<span class="ap-select-value ap-select-placeholder">No pillar</span>`;
+  return `
+    <details class="ap-select composer-pillar" data-composer-pillar>
+      <summary class="ap-select-trigger composer-pillar__trigger" title="Attach a content pillar to this chat">
+        <i class="ap-icon-stack ap-select-inline-icon" aria-hidden="true"></i>
+        ${valueMarkup}
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown composer-pillar__dropdown" role="listbox" aria-label="Choose a content pillar">
+        <div class="ap-select-options">${pillars.length ? noneRow + items : empty}</div>
+        <div class="ap-select-footer">
+          <button type="button" class="ap-select-create" data-pillar-view-all>
+            <i class="ap-icon-arrow-right ap-select-create-icon" aria-hidden="true"></i>
+            <span>View all your pillars</span>
+          </button>
+        </div>
+      </div>
+    </details>`;
+}
+
 // Composer "Add" menu — "Connected sources" is a nested submenu (Codex-style
 // "Modules d'extension ▸" flyout), not a first-level list. The flyout lists the
 // connected connectors as live sources you can query in chat (logo + name →
@@ -1682,7 +1762,7 @@ function renderComposer(attachedContext, session, selectable) {
               <i class="ap-icon-at"></i>
               <span>Reference</span>
             </button>
-            ${renderPlaybookControl(attachedContext, selectable)}
+            ${renderPlaybookControl(attachedContext, selectable)}${renderPillarControl(attachedContext, session.id)}
             <button
               type="button"
               class="ap-button primary orange session__composer-send"
@@ -2048,6 +2128,12 @@ function starterTopicTone(brief) {
 function renderStarterTopicCard(brief) {
   const lane = getLaneById(brief.laneId);
   const pb = lane ? getContextById(lane.playbookId) : null;
+  // The same mark the feed's topic card carries, said in WORDS here rather than
+  // as a glyph with a tooltip: this card has no hover surface of its own to
+  // spare (the whole card is one button, so a nested focusable tooltip trigger
+  // is the invalid nesting the feed's card avoids by other means), and the crumb
+  // it sits in is already a run of names.
+  const pillar = isFlagOn("contentStrategy") ? pillarForBrief(brief.id) : null;
   const src = findResearchSource(brief.sourceId);
   const tone = starterTopicTone(brief);
   // NB: this function builds a PLAIN template literal, not an html`` one, so
@@ -2063,7 +2149,11 @@ function renderStarterTopicCard(brief) {
     pb
       ? `<span class="starter-topic__pb">${escapeHtml(pb.name)}</span><span class="starter-topic__sep" aria-hidden="true">›</span>`
       : ""
-  }<span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Topic feeds")}</span></span>`;
+  }<span class="starter-topic__lane">${escapeHtml(lane ? lane.name : "Topic feeds")}</span>${
+    pillar
+      ? `<span class="starter-topic__pillar" title="Filed under ${escapeHtml(pillar.name)}"><i class="ap-icon-stack" aria-hidden="true"></i><span>${escapeHtml(pillar.name)}</span></span>`
+      : ""
+  }</span>`;
   // The marks are the feed's own components (trending-mark.css), not a second
   // drawing of the same idea — the accent says "something is up with this one"
   // and the mark says which.
@@ -5355,6 +5445,35 @@ function bindSession(root, session) {
         session.contextId = pbPick.dataset.playbookPick;
         const container = root.querySelector("[data-composer-playbook]");
         if (container) container.outerHTML = renderPlaybookControl(getContextById(session.contextId), true);
+        // The pillar list is scoped to the Playbook, so changing the Playbook
+        // invalidates both the list AND any pillar already picked from the old
+        // one. Drop the selection rather than carry a pillar the new Playbook
+        // does not own.
+        composerPillarBySession.delete(session.id);
+        const pillarBox = root.querySelector("[data-composer-pillar]");
+        const nextPillar = renderPillarControl(getContextById(session.contextId), session.id);
+        if (pillarBox) pillarBox.outerHTML = nextPillar;
+        else if (nextPillar && container) container.insertAdjacentHTML("afterend", nextPillar);
+        return;
+      }
+
+      // Pick a pillar for this chat. Per session and in memory only — this is
+      // the composer's own state, like the @mentions, not a fact about the chat
+      // that a store should own.
+      const pillarPick = event.target.closest("[data-pillar-pick]");
+      if (pillarPick) {
+        event.preventDefault();
+        const id = pillarPick.dataset.pillarPick || "";
+        if (id) composerPillarBySession.set(session.id, id);
+        else composerPillarBySession.delete(session.id);
+        const container = root.querySelector("[data-composer-pillar]");
+        if (container) container.outerHTML = renderPillarControl(getContextById(session.contextId), session.id);
+        return;
+      }
+
+      if (event.target.closest("[data-pillar-view-all]")) {
+        event.preventDefault();
+        navigate("/content-strategy");
         return;
       }
 

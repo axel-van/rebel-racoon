@@ -6209,8 +6209,10 @@ export const researchBriefs = [
 ];
 
 // ── Content strategy: pillars ───────────────────────────────────────────────
-// Two Playbooks' worth, plus one Archie opened himself, so every state on
-// /content-strategy has a card: reviewed, quiet, and just-opened.
+// TWO PER TOPIC FEED, and that is the rule to keep: each feed's Playbook owns
+// exactly two pillars, and every linked `briefId` belongs to that feed. A pillar
+// linked to a topic from another Playbook's feed would put a mark on a card the
+// pillar could never have matched.
 //
 // `quote` is the passage that actually fed the condensed context — not the
 // topic's summary and not a fresh paraphrase. A note is the USER's own text and
@@ -6218,6 +6220,7 @@ export const researchBriefs = [
 // `seen: false` is what the counters count. `briefId` links a source back to a
 // topic in a feed, which is what puts the mark on that topic's card.
 export const pillars = [
+  // ── Noba Fashion · Belgian multibrand competitors (topic-list-5) ──────────
   {
     id: "pil-noba-sustainable",
     playbookId: "ctx-noba",
@@ -6245,6 +6248,7 @@ export const pillars = [
       {
         id: "ps-2",
         kind: "chat",
+        chatId: "s-riverside",
         title: "Riverside customer story → 5 posts",
         quote:
           "She kept the coat six winters and had it relined twice — that is the number we should lead with, not the " +
@@ -6275,43 +6279,19 @@ export const pillars = [
       },
       {
         id: "ps-5",
-        kind: "topic",
-        briefId: "br-16",
-        title: "Showing Your Colors: How to Wear Autumn's Plum & Warm Earth Tones Trend",
-        quote: "A palette that carries across seasons is what makes last year's coat wearable this year.",
-        addedAgo: "3w ago",
-        seen: true,
-      },
-      {
-        id: "ps-6",
         kind: "chat",
+        chatId: "s-weekly-recap",
         title: "Autumn capsule launch → 4 posts",
         quote: "Eight pieces, thirty outfits — we counted them on camera rather than claiming it.",
         addedAgo: "1mo ago",
         seen: true,
       },
       {
-        id: "ps-7",
+        id: "ps-6",
         kind: "note",
         title: "Written by you",
         quote: "Returns data is ours and nobody else has it. Lead with the number, not the value.",
         addedAgo: "2mo ago",
-        seen: true,
-      },
-      {
-        id: "ps-8",
-        kind: "topic",
-        title: "Resale listings for our own pieces are holding 60% of retail",
-        quote: "Second-hand prices are the market's own verdict on how long a garment lasts.",
-        addedAgo: "2mo ago",
-        seen: true,
-      },
-      {
-        id: "ps-9",
-        kind: "chat",
-        title: "Fabric sourcing Q&A → 3 posts",
-        quote: "The mill has run the same wool for forty years, which is the whole story about consistency.",
-        addedAgo: "3mo ago",
         seen: true,
       },
     ],
@@ -6322,131 +6302,51 @@ export const pillars = [
     ],
   },
   {
-    id: "pil-noba-belgium",
+    id: "pil-noba-fullprice",
     playbookId: "ctx-noba",
-    name: "Made in Belgium",
-    about: "Where the clothes come from, told through the makers rather than the label.",
+    name: "Full price, no apology",
+    about: "Why we don't discount, said without lecturing anyone who does.",
     context:
-      "Where the clothes come from, told through the makers rather than the label. Names, workshops and how long " +
-      "someone has done the job — never a flag on a product page.",
-    contextUpdatedAgo: "6d ago",
+      "Why we don't discount. The market moved first — the multibrand wave stopped three weeks early — so the " +
+      "argument is now about what a garment is worth rather than what it was marked down from. Colour and cut that " +
+      "carry across seasons are the proof, not a promise.",
+    contextUpdatedAgo: "5d ago",
     createdBy: "you",
-    openedAgo: "3mo ago",
+    openedAgo: "2mo ago",
     sources: [
       {
-        id: "ps-10",
+        id: "ps-7",
         kind: "topic",
-        briefId: "br-13",
-        title: "Competitors are naming their factories. We name our people",
-        quote: "Two accounts published supplier lists this month. Neither named a single person who works there.",
+        briefId: "br-21",
+        title: "The multibrand discount wave has stopped, three weeks early",
+        quote:
+          "Four of the five tracked accounts pulled their sale messaging this week and went back to full-price " +
+          "editorial.",
         addedAgo: "5d ago",
         seen: false,
       },
       {
-        id: "ps-11",
-        kind: "chat",
-        title: "Atelier visit → 6 posts",
-        quote: "Forty years on the same machine, and she can hear when the tension is wrong.",
-        addedAgo: "2w ago",
-        seen: true,
-      },
-      {
-        id: "ps-12",
-        kind: "note",
-        title: "Written by you",
-        quote: "Never say 'artisanal'. Say what they actually do and how long they have done it.",
-        addedAgo: "2mo ago",
-        seen: true,
-      },
-    ],
-    assets: [{ id: "as-4", name: "atelier-portraits.jpg", kind: "image", size: "3.1 MB" }],
-  },
-  {
-    id: "pil-noba-fitting",
-    playbookId: "ctx-noba",
-    name: "The fitting-room problem",
-    about: "Sizing anxiety online, and what we do about it.",
-    context:
-      "Sizing anxiety online, and what we do about it. The honest version: our returns are mostly fit, and saying " +
-      "so buys more trust than a size chart does. Waiting on the returns breakdown before we publish numbers.",
-    contextUpdatedAgo: "6w ago",
-    createdBy: "you",
-    openedAgo: "4mo ago",
-    sources: [
-      {
-        id: "ps-13",
-        kind: "note",
-        title: "Written by you",
-        quote: "Do not publish a returns rate until we can show the fit breakdown next to it.",
-        addedAgo: "6w ago",
-        seen: true,
-      },
-      {
-        id: "ps-14",
-        kind: "chat",
-        title: "Size guide rewrite → 2 posts",
-        quote: "Measurements in centimetres beside a photo of the garment flat — that is the whole guide.",
-        addedAgo: "2mo ago",
-        seen: true,
-      },
-    ],
-    assets: [],
-  },
-  // The one Archie opened. `createdBy: "archie"` is what puts the label on the
-  // card; `reviewed` flips the moment someone opens it, which is what takes the
-  // label off — it marks "you have not vetted this yet", not "a machine made it".
-  {
-    id: "pil-noba-care",
-    playbookId: "ctx-noba",
-    name: "Care and repair",
-    about: "Keeping clothes alive: repairs, aftercare, resale.",
-    context:
-      "Keeping clothes alive: repairs, aftercare, resale. Four topics landed outside every existing pillar over a " +
-      "month, all of them about what happens to a garment after it is sold rather than before.",
-    contextUpdatedAgo: "3d ago",
-    createdBy: "archie",
-    reviewed: false,
-    openedAgo: "3d ago",
-    openedBecause: "Four topics kept landing outside your other pillars over the last month.",
-    sources: [
-      {
-        id: "ps-15",
+        id: "ps-8",
         kind: "topic",
-        briefId: "br-12",
-        title: "A competitor published their repair policy in full",
-        quote: "4,100 repairs, average turnaround nine days — published as a page, not a campaign.",
-        addedAgo: "3d ago",
-        seen: false,
-      },
-      {
-        id: "ps-16",
-        kind: "topic",
-        briefId: "br-11",
-        title: "Aftercare posts are outperforming product posts on two competitor accounts",
-        quote: "The washing-instructions reel has three times the saves of anything they sold that week.",
-        addedAgo: "1w ago",
-        seen: false,
-      },
-      {
-        id: "ps-17",
-        kind: "topic",
-        briefId: "br-10",
-        title: "Resale platforms are quoting our pieces by name",
-        quote: "Listings name the season and the fabric, which means the buyer already knows the product.",
+        briefId: "br-16",
+        title: "Showing Your Colors: How to Wear Autumn's Plum & Warm Earth Tones Trend",
+        quote: "A palette that carries across seasons is what makes last year's coat wearable this year.",
         addedAgo: "3w ago",
         seen: true,
       },
       {
-        id: "ps-18",
-        kind: "chat",
-        title: "Repairs page copy → 3 posts",
-        quote: "We already do free repairs for the first two years and have never said so anywhere.",
-        addedAgo: "4w ago",
+        id: "ps-9",
+        kind: "note",
+        title: "Written by you",
+        quote: "Never name a competitor's markdown. We are making a case, not running a comparison.",
+        addedAgo: "2mo ago",
         seen: true,
       },
     ],
-    assets: [],
+    assets: [{ id: "as-4", name: "aw26-palette.jpg", kind: "image", size: "1.8 MB" }],
   },
+
+  // ── The Dwelling Company · Modular & timber competitors (topic-list-7) ────
   {
     id: "pil-dwelling-running-cost",
     playbookId: "ctx-dwelling",
@@ -6461,7 +6361,7 @@ export const pillars = [
     openedAgo: "2mo ago",
     sources: [
       {
-        id: "ps-20",
+        id: "ps-10",
         kind: "topic",
         briefId: "br-40",
         title: "Timber accounts own 'sustainable material'. Nobody owns 'cheaper to live in'",
@@ -6470,7 +6370,16 @@ export const pillars = [
         seen: false,
       },
       {
-        id: "ps-21",
+        id: "ps-11",
+        kind: "topic",
+        briefId: "br-41",
+        title: "A competitor argues AGAINST finishing in the factory. That argument has a number",
+        quote: "They are asking buyers to trade weeks on site for flexibility. Nobody has priced those weeks.",
+        addedAgo: "4d ago",
+        seen: false,
+      },
+      {
+        id: "ps-12",
         kind: "note",
         title: "Written by you",
         quote: "Energy Star and ZERH are operating-cost standards. Use them as the proof, not as a badge.",
@@ -6479,5 +6388,238 @@ export const pillars = [
       },
     ],
     assets: [{ id: "as-5", name: "energy-model-2026.pdf", kind: "doc", size: "1.2 MB" }],
+  },
+  {
+    id: "pil-dwelling-factory",
+    playbookId: "ctx-dwelling",
+    name: "The factory, on camera",
+    about: "A controlled line is a better story than a muddy site — and it never takes July off.",
+    context:
+      "A controlled line is a better story than a muddy site. Competitors are filming builds; a factory floor is the " +
+      "same footage with weather, delay and mess removed, and it keeps running through the month everyone else " +
+      "closes.",
+    contextUpdatedAgo: "1w ago",
+    createdBy: "you",
+    openedAgo: "6w ago",
+    sources: [
+      {
+        id: "ps-13",
+        kind: "topic",
+        briefId: "br-42",
+        title: "Two competitors are filming the build. A factory line is a better episode than a muddy site",
+        quote: "Both accounts are running build diaries. Neither can show a week that isn't weather-dependent.",
+        addedAgo: "1w ago",
+        seen: false,
+      },
+      {
+        id: "ps-14",
+        kind: "topic",
+        briefId: "br-44",
+        title: "Half the industry closed for July. A factory does not take a building holiday",
+        quote: "Site accounts went quiet for four weeks. Ours is the only line that kept producing.",
+        addedAgo: "3w ago",
+        seen: true,
+      },
+      {
+        id: "ps-15",
+        kind: "chat",
+        chatId: "s-state-of-social",
+        title: "Factory tour script → 3 posts",
+        quote: "Show the jig, not the crane. The jig is why the tolerance holds.",
+        addedAgo: "5w ago",
+        seen: true,
+      },
+    ],
+    assets: [{ id: "as-6", name: "line-walkthrough.mp4", kind: "video", size: "24 MB" }],
+  },
+
+  // ── Alliance Jiu Jitsu Carlsbad · Carlsbad competitors (topic-list-4) ─────
+  {
+    id: "pil-bjj-parents",
+    playbookId: "ctx-alliance-bjj",
+    name: "What parents actually get",
+    about: "Confidence, composure and a routine — said the same way to families of girls and boys.",
+    context:
+      "Confidence, composure and a routine. Competitors split the pitch by gender — confidence to girls, character " +
+      "to boys — and we say the same thing to every family, because it is the same thing. Belts are milestones in " +
+      "that story, never the story.",
+    contextUpdatedAgo: "3d ago",
+    createdBy: "you",
+    openedAgo: "3mo ago",
+    sources: [
+      {
+        id: "ps-16",
+        kind: "topic",
+        briefId: "br-25",
+        title: "Competitors sell confidence to girls and character to boys",
+        quote: "The same programme, described two ways depending on who is being sold to.",
+        addedAgo: "3d ago",
+        seen: false,
+      },
+      {
+        id: "ps-17",
+        kind: "topic",
+        briefId: "br-10",
+        title: "Beyond the mats: how BJJ builds resilient, confident kids",
+        quote: "The part parents notice first is not the technique, it is that their child stopped flinching.",
+        addedAgo: "1w ago",
+        seen: false,
+      },
+      {
+        id: "ps-18",
+        kind: "topic",
+        briefId: "br-11",
+        title: "What do BJJ belt promotions really mean for your child's growth?",
+        quote: "A stripe is a receipt for showing up, and that is worth explaining rather than ceremonialising.",
+        addedAgo: "2w ago",
+        seen: true,
+      },
+      {
+        id: "ps-19",
+        kind: "note",
+        title: "Written by you",
+        quote: "Never say self-defence to a parent of a six-year-old. Say focus, say routine, say they sleep better.",
+        addedAgo: "3mo ago",
+        seen: true,
+      },
+    ],
+    assets: [{ id: "as-7", name: "kids-class-photos.jpg", kind: "image", size: "3.6 MB" }],
+  },
+  {
+    id: "pil-bjj-return",
+    playbookId: "ctx-alliance-bjj",
+    name: "Coming back to the mats",
+    about: "For the adult who trained once, stopped, and thinks the door has closed.",
+    context:
+      "For the adult who trained once and stopped. The blocker is never fitness, it is the fear of being the worst " +
+      "person in the room — so the answer is what happens between rounds, and the fact that consistency, not " +
+      "talent, is the only thing every promotion here has in common.",
+    contextUpdatedAgo: "6d ago",
+    createdBy: "you",
+    openedAgo: "2mo ago",
+    sources: [
+      {
+        id: "ps-20",
+        kind: "topic",
+        briefId: "br-12",
+        title: "Returning to the mats: how to restart your BJJ journey safely",
+        quote: "The comeback is a scheduling problem dressed up as a fitness problem.",
+        addedAgo: "6d ago",
+        seen: false,
+      },
+      {
+        id: "ps-21",
+        kind: "topic",
+        briefId: "br-23",
+        title: "The best coaching in the room happens between rounds",
+        quote: "Thirty seconds with a training partner beats the technique of the day, every session.",
+        addedAgo: "2w ago",
+        seen: true,
+      },
+      {
+        id: "ps-22",
+        kind: "topic",
+        briefId: "br-22",
+        title: "Consistency is the only thing every promotion in this town has in common",
+        quote: "Nobody in the room got their belt in a hurry, and every one of them turned up on bad weeks.",
+        addedAgo: "1mo ago",
+        seen: true,
+      },
+    ],
+    assets: [],
+  },
+
+  // ── Agorapulse · Competitor product moves (topic-list-6) ─────────────────
+  {
+    id: "pil-agp-takes-work-off",
+    playbookId: "ctx-agorapulse",
+    name: "AI that takes work off your plate",
+    about: "Not what the model is — what stops landing in someone's inbox because of it.",
+    context:
+      "Not what the model is, what it removes. Everyone is shipping an agent and describing the technology; nobody " +
+      "is naming the task that stops arriving. MCP is being explained to engineers and to nobody who runs a social " +
+      "inbox, which is the same gap in a different vocabulary.",
+    contextUpdatedAgo: "2d ago",
+    createdBy: "you",
+    openedAgo: "6w ago",
+    sources: [
+      {
+        id: "ps-23",
+        kind: "topic",
+        briefId: "br-27",
+        title: "Everyone is shipping an agent. Nobody says what it takes off your plate",
+        quote: "Five launches this month, and not one names a task that stops being done by a person.",
+        addedAgo: "2d ago",
+        seen: false,
+      },
+      {
+        id: "ps-24",
+        kind: "topic",
+        briefId: "br-28",
+        title: "MCP is being explained to engineers. Nobody has explained it to a social media manager",
+        quote: "Every explainer starts at the protocol. None of them starts at the job.",
+        addedAgo: "1w ago",
+        seen: false,
+      },
+      {
+        id: "ps-25",
+        kind: "chat",
+        chatId: "s-acme-launch",
+        title: "Q2 launch announcement → 6 posts",
+        quote: "Lead with the hour it gives back, not the model it runs on.",
+        addedAgo: "3w ago",
+        seen: true,
+      },
+    ],
+    assets: [],
+  },
+  // The one Archie opened. `createdBy: "archie"` is what puts the label on the
+  // card; `reviewed` flips the moment someone opens it or dismisses the label,
+  // which is what takes it off — it marks "you have not vetted this yet", not
+  // "a machine made it".
+  {
+    id: "pil-agp-proof",
+    playbookId: "ctx-agorapulse",
+    name: "The number that ends the argument",
+    about: "Reporting as a way to settle a debate, not a wall of metrics.",
+    context:
+      "Reporting as a way to settle a debate. The competitive argument is not more metrics, it is which single " +
+      "number closes a conversation with a client — and the same instinct is why an approval workflow is everyone's " +
+      "screenshot and nobody's argument.",
+    contextUpdatedAgo: "4d ago",
+    createdBy: "archie",
+    reviewed: false,
+    openedAgo: "4d ago",
+    openedBecause: "Three topics kept landing outside your other pillars over the last month.",
+    sources: [
+      {
+        id: "ps-26",
+        kind: "topic",
+        briefId: "br-29",
+        title: "The argument isn't more metrics. It's which number ends an argument",
+        quote: "Four competitors added dashboards this quarter. None of them said which line to read first.",
+        addedAgo: "4d ago",
+        seen: false,
+      },
+      {
+        id: "ps-27",
+        kind: "topic",
+        briefId: "br-37",
+        title: "The approval workflow is everyone's screenshot and nobody's argument",
+        quote: "It appears in every product tour and in nobody's positioning.",
+        addedAgo: "1w ago",
+        seen: false,
+      },
+      {
+        id: "ps-28",
+        kind: "topic",
+        briefId: "br-34",
+        title: "Buffer publishes head-to-head comparisons. We publish feature pages",
+        quote: "They answer the question a buyer actually types. We answer the one we wish they typed.",
+        addedAgo: "2w ago",
+        seen: true,
+      },
+    ],
+    assets: [],
   },
 ];

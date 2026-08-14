@@ -345,6 +345,19 @@ export function renderResearchFeed(params, target) {
   filters = defaultFilters();
   view = freshView();
 
+  // ?topic=<briefId> — arrive with one topic already open, from a pillar's trail.
+  // Two things have to give way for it: the auto-open (which would pick the
+  // newest instead) and the default status filter, because a topic that has been
+  // Used or Ignored is not in the default view and the pane would open onto a
+  // card the list does not show.
+  const wanted = parseHashParams().get("topic");
+  const wantedBrief = wanted ? getBriefById(wanted) : null;
+  if (wantedBrief) {
+    filters = { ...filters, statuses: REVIEW_STATUSES.map((st) => st.id) };
+    view.articleId = wantedBrief.id;
+    view.articleAuto = true;
+  }
+
   const fresh = parseHashParams().get("fresh") === "1";
   if (fresh) {
     view.generating = true;

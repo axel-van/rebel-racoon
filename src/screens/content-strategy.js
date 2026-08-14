@@ -26,7 +26,7 @@ import { navigate } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=415";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=74";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=74";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
 import { open as openPillarModal } from "../components/pillar-modal.js?v=1";
 import {
@@ -117,11 +117,47 @@ function renderHead(total) {
         <p class="strategy-view__sub">${escapeAttr(summary)}</p>
       </div>
       <div class="strategy-view__actions">
+        ${renderPlaybookFilter(getContexts(), view.playbook)}
         <button type="button" class="ap-button primary blue" data-strategy-new>
           <i class="ap-icon-plus"></i><span>New pillar</span>
         </button>
       </div>
     </header>`;
+}
+
+// The Playbook facet, as the DS select — `<details class="ap-select">` with a
+// summary trigger and a dropdown of `.ap-select-option` rows. Copied wholesale
+// from research.renderPlaybookFilter rather than re-derived, because the two are
+// the same control on two sibling list pages and the note there is the one that
+// matters: `.ap-select` styles a DETAILS/SUMMARY widget, and the DS styles no
+// bare `<select>` anywhere. A native select wearing these classes collapses to a
+// 21px box beside its 36px neighbours.
+function renderPlaybookFilter(contexts, active) {
+  const activeName =
+    active === "all" ? "All Playbooks" : contexts.find((c) => c.id === active)?.name || "All Playbooks";
+  const option = (id, label) => {
+    const on = active === id;
+    return `<div
+      class="ap-select-option${on ? " selected" : ""}"
+      data-strategy-playbook="${escapeAttr(id)}"
+      role="option"
+      aria-selected="${on ? "true" : "false"}"
+    >
+      <span class="ap-select-option-text">${escapeAttr(label)}</span>
+      ${on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+    </div>`;
+  };
+  return `<details class="ap-select strategy-view__filter">
+    <summary class="ap-select-trigger">
+      <span class="ap-select-value">${escapeAttr(activeName)}</span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown" role="listbox" aria-label="Filter by Playbook">
+      <div class="ap-select-options">
+        ${option("all", "All Playbooks")}${contexts.map((c) => option(c.id, c.name)).join("")}
+      </div>
+    </div>
+  </details>`;
 }
 
 function renderEmpty() {
@@ -157,7 +193,18 @@ function renderCard(p) {
     <article class="ap-card strategy-card${auto ? " strategy-card--auto" : ""}" data-pillar-card="${escapeAttr(p.id)}">
       <div class="strategy-card__head">
         <span class="strategy-card__name">${escapeAttr(p.name)}</span>
-        ${auto ? `<span class="ap-tag blue"><span>New — I made this</span></span>` : ""}
+        ${
+          auto
+            ? // A CLICKABLE tag, which the DS allows (.ap-tag:is(button)) — the label
+              // means "you have not vetted this yet", so acknowledging it is the one
+              // thing it should be able to do. Opening the pillar clears it too; both
+              // are the same single click the label is waiting for.
+              `<button type="button" class="ap-tag blue strategy-card__auto" data-pillar-ack="${escapeAttr(p.id)}"
+                 title="Dismiss this label">
+                 <span>Automatically created</span>
+               </button>`
+            : ""
+        }
       </div>
       <p class="strategy-card__body">${escapeAttr(p.about || p.context || "")}</p>
       <div class="strategy-card__meta">
@@ -225,20 +272,20 @@ function renderCardMenu(p) {
     </div>`;
 }
 
+// The ghost tile, in the /contexts "Create a Playbook" shape — same glyph, same
+// centred stack, same butter hover. It was a card with a button inside it, and
+// that was the bug behind "the new-pillar button is broken": the tile LOOKED
+// like a target, but only the small button in its corner was one, so a click
+// anywhere else did nothing. The whole tile is the button now.
 function renderNewTile() {
   return `
-    <article class="ap-card strategy-card strategy-card--new">
-      <span class="strategy-card__name strategy-card__name--dim">Start a pillar</span>
-      <p class="strategy-card__body">
-        A theme you keep coming back to. I'll file matching topics into it as they arrive, and keep its context in
-        one place.
-      </p>
-      <div class="strategy-card__foot">
-        <button type="button" class="ap-button stroked blue" data-strategy-new>
-          <i class="ap-icon-plus"></i><span>New pillar</span>
-        </button>
-      </div>
-    </article>`;
+    <button type="button" class="strategy-card--new" data-strategy-new aria-label="Create a new pillar">
+      <span class="strategy-card--new__glyph"><i class="ap-icon-archie-official"></i></span>
+      <span class="strategy-card--new__title">Start a pillar</span>
+      <span class="strategy-card--new__sub">
+        A theme you keep coming back to — I'll file matching topics into it as they arrive.
+      </span>
+    </button>`;
 }
 
 // ─── Bind ──────────────────────────────────────────────────────────────────
@@ -258,6 +305,21 @@ function bind(target) {
       view.menuFor = null;
       if (hadMenu) paint(target);
       openPillarModal({ playbookId: view.playbook === "all" ? null : view.playbook });
+      return;
+    }
+    const facet = event.target.closest("[data-strategy-playbook]");
+    if (facet) {
+      view.playbook = facet.getAttribute("data-strategy-playbook");
+      // Close the <details> by hand: paint() rebuilds the tree, so the open
+      // attribute would otherwise survive into the next render.
+      const details = facet.closest("details");
+      if (details) details.open = false;
+      paint(target);
+      return;
+    }
+    const ack = event.target.closest("[data-pillar-ack]");
+    if (ack) {
+      updatePillar(ack.getAttribute("data-pillar-ack"), { reviewed: true });
       return;
     }
     const more = event.target.closest("[data-pillar-more]");

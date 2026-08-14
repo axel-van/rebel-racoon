@@ -35,6 +35,7 @@ import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { getContextById } from "../contexts-store.js?v=74";
+import { getBriefById } from "../briefs-store.js?v=52";
 import { open as openPillarModal } from "../components/pillar-modal.js?v=1";
 import {
   getPillarById,
@@ -241,13 +242,30 @@ function renderTrailEmpty() {
 
 const KIND_LABEL = { topic: "Topic", chat: "Chat", note: "Note" };
 
+// The title is a LINK BACK to wherever the source came from — a topic opens its
+// feed with that topic already selected, a chat opens the chat. Without it the
+// trail is a list of things you can only delete: the excerpt tells you what the
+// pillar took, and this is how you go and read the rest of it.
+//
+// A note has no destination: it was written here, and there is nowhere else for
+// it to be. So it stays plain text rather than a button that goes nowhere.
+//
+// A <button>, not a link, and NOT wrapping the whole row: the row also carries
+// Remove, and a button inside a button is the invalid nesting the topic card's
+// body/footer split exists to avoid.
 function renderSourceRow(s) {
   const note = s.kind === "note";
+  const titleText = note ? "Written by you · quoted in full" : s.title;
+  const canOpen = (s.kind === "topic" && s.briefId) || (s.kind === "chat" && s.chatId);
+  const title = canOpen
+    ? `<button type="button" class="pillar-row__title pillar-row__title--link" data-source-open="${escapeAttr(s.id)}"
+         title="${s.kind === "topic" ? "Open this topic in its feed" : "Open this chat"}">${escapeAttr(titleText)}</button>`
+    : `<span class="pillar-row__title">${escapeAttr(titleText)}</span>`;
   return `
     <article class="pillar-row ${isRecent(s) ? "pillar-row--recent" : ""}" data-source-row="${escapeAttr(s.id)}">
       <div class="pillar-row__top">
         <span class="pillar-row__kind pillar-row__kind--${escapeAttr(s.kind)}">${KIND_LABEL[s.kind] || "Source"}</span>
-        <span class="pillar-row__title">${escapeAttr(note ? "Written by you · quoted in full" : s.title)}</span>
+        ${title}
         <span class="pillar-row__when">Added ${escapeAttr(s.addedAgo)}</span>
         <button type="button" class="ap-button ghost grey pillar-row__x" data-source-remove="${escapeAttr(s.id)}">
           <i class="ap-icon-close"></i><span>Remove</span>
@@ -311,6 +329,23 @@ function bind(target) {
     }
     if (event.target.closest("[data-pillar-share]")) {
       showToast("Share link copied");
+      return;
+    }
+    const openSrc = event.target.closest("[data-source-open]");
+    if (openSrc) {
+      const p = getPillarById(view.id);
+      const src = p && p.sources.find((s) => s.id === openSrc.getAttribute("data-source-open"));
+      if (!src) return;
+      if (src.kind === "chat" && src.chatId) {
+        navigate(`/session/${src.chatId}`);
+        return;
+      }
+      // A topic goes back to ITS FEED with itself selected — not to a modal.
+      // The feed is where the topic lives and where its siblings are; the lane
+      // comes off the brief rather than off the pillar, because a pillar spans a
+      // Playbook and a Playbook can own more than one feed.
+      const brief = src.briefId ? getBriefById(src.briefId) : null;
+      if (brief && brief.laneId) navigate(`/topic-feeds/${brief.laneId}?topic=${encodeURIComponent(brief.id)}`);
       return;
     }
     const rm = event.target.closest("[data-source-remove]");
