@@ -624,21 +624,12 @@
   color: var(--sys-text-color-light);
 }
 
-/* The dialog is 840 wide but the description is prose — it keeps a measure of
-   its own rather than running the full width, which is the same reason the
-   pillar page caps .pillar-sec__prose. The single-line name field follows it so
-   the two fields share a left AND a right edge. */
-/* Capped for readability AND centred in the wider dialog. Left-aligned at 74ch
-   inside 840px left a column of fields hugging one edge with dead space beside
-   it — the cap is about the measure, not about which side of the dialog the
-   form lives on. */
-.pillar-modal__content .ap-form-field,
-.pillar-modal__note {
-  max-width: 74ch;
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-}
+/* No measure cap here, on purpose. The description is prose and wants ~70
+   characters, so the DIALOG was narrowed to that (700 in modals.css) instead of
+   capping the fields inside a wider one. Header, content and footer all use the
+   DS's own --ref-spacing-lg inset, which is what makes every row share a left
+   and a right edge — the earlier version capped each block at 74ch and centred
+   it, and the three centred boxes never quite agreed with each other. */
 
 /* Last thing before the footer, and visually separated from the fields it is not
    part of: it describes what happens after Create, not how to fill anything in. */

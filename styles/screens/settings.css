@@ -49,37 +49,68 @@
   overflow-y: auto;
 }
 
-/* Same shape as the sidebar's nav rows — a settings rail that behaved
-   differently from the app rail two panes to its left would be a second
-   navigation vocabulary in one screen. */
+/* ── A row, matched to the DS Nav Selector's leaf ──────────────────────────
+   Values taken from ap-nav-selector-leaf in `style-menu` (agorapulse/design,
+   libs/ui-components/nav-selector), which is the component this rail is: a
+   36px row, 8px padding and gap, 4px radius, and a 14px REGULAR caption that
+   ellipsises on one line.
+
+   The first pass invented its own: 7px padding, a body-size label at weight
+   800 when active, and a grey hover. Each is a small deviation and together
+   they made the rail read as a different kind of list from the one the
+   product ships. */
 .settings-nav__item {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  padding: 7px var(--ref-spacing-xxs);
+  height: 36px;
+  flex-shrink: 0;
+  padding: 0 var(--ref-spacing-xxs);
   border: 0;
-  border-radius: var(--app-radius-sm);
+  border-radius: var(--ref-border-radius-sm);
   background: none;
   font-family: inherit;
-  font-size: var(--sys-text-style-body-size);
-  color: var(--ref-color-grey-80);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  font-weight: var(--ref-font-weight-regular);
+  color: var(--ref-color-grey-100);
   text-align: left;
   cursor: pointer;
 }
 
 .settings-nav__item > i {
+  flex-shrink: 0;
   font-size: var(--sys-icon-css-sm);
-  color: var(--sys-text-color-light);
+  color: var(--ref-color-grey-80);
 }
 
+/* One line, ellipsised — the leaf's `.caption` rule. */
+.settings-nav__item > span {
+  flex: 1 0 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* electric-blue-10 on hover, -20 when selected: the leaf's own two steps. The
+   selected row changes COLOUR rather than weight — the reference reserves bold
+   for its detail-selected state, and a weight change here made rows jump. */
 .settings-nav__item:hover {
-  background: var(--ref-color-grey-05);
+  background: var(--ref-color-electric-blue-10);
+}
+
+.settings-nav__item:focus-visible {
+  outline: none;
+  background: var(--ref-color-electric-blue-10);
+  box-shadow:
+    0 0 0 1px var(--ref-color-white),
+    0 0 0 3px var(--ref-color-electric-blue-100);
 }
 
 .settings-nav__item.is-active {
-  background: var(--ref-color-electric-blue-10);
+  background: var(--ref-color-electric-blue-20);
   color: var(--ref-color-electric-blue-150);
-  font-weight: 800;
 }
 
 .settings-nav__item.is-active > i {

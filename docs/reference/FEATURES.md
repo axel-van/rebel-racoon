@@ -918,7 +918,9 @@ Un chat **existant** garde le Playbook dans lequel il a été créé : un chat e
 
 ### Deux segments, et le type devient la vue
 
-Le type d'un Topic n'est plus une étiquette qu'on lit sur chaque carte : c'est **la vue dans laquelle on se trouve**. Un **segmented control** dans le topbar, à gauche de Filters / Export, avec le compte de chaque segment.
+Le type d'un Topic n'est plus une étiquette qu'on lit sur chaque carte : c'est **la vue dans laquelle on se trouve**. Un **segmented control** dans le topbar, **à droite du titre** (`app-topbar__left`), avec le compte de chaque segment.
+
+Il est à gauche et non avec Filters / Export parce qu'il ne fait pas le même travail : Filters et Export **agissent** sur la liste, le segment **dit laquelle** on regarde — c'est un complément du titre, pas une action. `setTopbarActions(actions, lead)` porte donc deux créneaux, un par bord.
 
 | Segment              | Ce qu'il contient                                                    |
 | -------------------- | -------------------------------------------------------------------- |
@@ -957,7 +959,7 @@ Le fil d'ariane « Playbook › Topic feed » a disparu du `starter-topic__head`
 
 Le switcher est le **seul** point d'entrée du Playbook : la ligne de nav qui pointait sur le même objet était une seconde porte vers une seule pièce, et les deux se disputaient le même clic.
 
-Il **ne fait qu'une chose** — changer de marque — et son menu n'a **pas de pied** : les lignes sont le contrôle. Un pied de deux autres verbes faisait passer un switcher pour un menu et mettait une destination là où se trouve un choix. On atteint les réglages par le **cog du pied de la barre latérale**, où « Settings » est désormais la première ligne (la seule qui soit un LIEU). Idem dans la table : le bouton « Switch to » a disparu — changer de marque est le travail du switcher, visible depuis n'importe quel écran, et deux contrôles pour un même geste sont un de trop.
+Il **ne fait qu'une chose** — changer de marque — et son menu ne porte qu'**un seul verbe en pied** : « Manage Playbooks ». Il y en avait deux (« Open this Playbook » + « Manage Playbooks ») : deux destinations sous une liste de choix faisaient passer le switcher pour un menu de navigation. Une seule reste, parce que sans elle `/settings` n'est atteignable que par le rouage d'un feed — le switcher est la porte du Playbook, il doit mener à l'endroit où on les gère. Idem dans la table : le bouton « Switch to » a disparu — changer de marque est le travail du switcher, visible depuis n'importe quel écran, et deux contrôles pour un même geste sont un de trop.
 
 ⚠️ **`.ap-select` est livré en `width: 100%`**, ce qui se résout sur la largeur du rail et **ignore les marges de l'élément** : le switcher dépassait de 11px. `width: auto` sur un `<details>` de niveau bloc remplit ce qui reste après les marges — ce que font déjà les lignes de nav en dessous.
 
@@ -966,9 +968,13 @@ Forme reprise des réglages **Automated moderation** de l'inbox (`agorapulse/pla
 | Section         | Table                                                                                    |
 | --------------- | ---------------------------------------------------------------------------------------- |
 | **Playbooks**   | Playbook · piliers · feed · actions (Switch to / ouvrir / supprimer). CTA : New Playbook |
-| **Topic feeds** | Une ligne par Playbook — sources, cadence, en attente, Edit sources                      |
+| **Topic feeds** | Une ligne par Playbook — sources, dernier refresh, actions (crayon / corbeille)          |
 
 ⚠️ **Deux entrées, et ça reste deux.** CLAUDE.md porte la règle « une surface de réglages ne doit pas AGRÉGER », acquise après trois reverts. Celle-ci passe par la **seconde clause** — « ou sur une route scopée à UNE fonctionnalité » : depuis que le Playbook est le scope de l'app, « quelles marques existent et ce que le feed de chacune écoute » est une seule fonctionnalité vue de deux façons. Une troisième entrée qui ne serait ni un Playbook ni son feed est le signal que ça a recommencé à agréger. Les champs du Playbook restent sur `/playbook/:id`, que la table **lie** au lieu de les dupliquer.
+
+Les lignes du rail sont l'**`ap-nav-selector-leaf` du DS en `style-menu`** (`agorapulse/design`, `libs/ui-components/nav-selector`) : 36px de haut, 8px de padding et de gap, rayon 4px, et un label caption 14px **regular** ellipsé sur une ligne — survol electric-blue-10, sélection electric-blue-20 avec le texte en -150. La première version en avait inventé une autre (7px de padding, label body en poids 800 quand actif, survol gris) : chaque écart était minime, et ensemble ils faisaient lire le rail comme une autre espèce de liste que celle du produit. La sélection change de **couleur** et non de graisse — la référence réserve le gras à son état detail-selected, et un changement de graisse faisait sauter les lignes.
+
+La colonne d'actions des deux tables est la **même paire d'icônes** (crayon + corbeille), pour qu'une ligne veuille dire la même chose dans l'une et dans l'autre. Côté feed la corbeille **vide** au lieu de supprimer : un feed est implicite dans son Playbook, donc « supprimer » ne peut signifier que « arrête d'écouter » — la ligne reste, sans sources.
 
 Le rail se met en **`flex-direction: row` explicitement** : `.screen` impose `column` à toute racine d'écran, donc sans ça le rail s'empile au-dessus du panneau et se lit comme un en-tête que personne n'a demandé.
 
@@ -997,11 +1003,15 @@ Vérifiés le 2026-08-14 dans Chrome, flags `contentStrategy` + `contentResearch
 | S15 | Aucune erreur console sur 12 routes                                                                                       | ✅                                                                          |
 | S16 | **Aucune ligne de nav Playbook** — le switcher est le seul point d'entrée                                                 | ✅ nav = New chat · Search · Content strategy · Topic feeds                 |
 | S17 | Le switcher ne porte plus `.ap-select-trigger` (36px imposés), s'aligne sur l'inset des lignes de nav, chevron qui pivote | ✅                                                                          |
-| S18 | Le pied du menu offre **Open this Playbook** et **Manage Playbooks**                                                      | ✅                                                                          |
+| S18 | Le pied du menu offre **une seule** ligne, « Manage Playbooks »                                                           | ✅                                                                          |
 | S19 | `/settings` redirige vers `/settings/playbooks` ; une section inconnue retombe sur la première                            | ✅                                                                          |
-| S20 | La table des Playbooks liste nom · piliers · feed, marque la ligne active, et **Switch to** change le scope               | ✅ toast « Now working in … » ; le switcher suit                            |
+| S20 | La table des Playbooks liste nom · piliers · feed et marque la ligne active ; ses actions sont crayon + corbeille         | ✅                                                                          |
 | S21 | La table des Topic feeds liste une ligne par Playbook avec ses sources en `.ap-tag`                                       | ✅ « Competitors » — `name`, pas `label`, sinon les chips sont vides        |
 | S22 | Le **rouage du feed** ouvre `/settings/topic-feeds`                                                                       | ✅                                                                          |
+| S23 | Le segmented control est dans `app-topbar__left`, à droite du titre                                                       | ✅ « Ready to draft 5 » / « Topics for later 4 »                            |
+| S24 | Les lignes du rail de réglages font 36px, label regular, sélection en electric-blue-20                                    | ✅                                                                          |
+| S25 | La table des Topic feeds n'a **plus** de colonne « en attente » et offre crayon + corbeille                               | ✅ 7 lignes, corbeille désactivée sur les 3 Playbooks sans lane             |
+| S26 | Le dialog **New pillar** fait 700px et tous ses blocs partagent un inset de 32px                                          | ✅ titre / champs / infobox / pied à 32                                     |
 
 ⚠️ **Donnée modifiée avec le code** : `recentSessions[].contextId` a été réassigné pour que chaque chat cité comme source d'un pilier vive dans le Playbook de ce pilier. Le rail filtrant sur ce champ, un chat cité par un pilier mais rangé sous une autre marque était invisible depuis le pilier qui le nomme.
 

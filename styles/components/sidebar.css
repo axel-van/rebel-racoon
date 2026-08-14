@@ -793,7 +793,11 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   /* Same horizontal inset as the nav rows below, and a divider under it: the
      switcher governs everything beneath, so the line says "scope above,
      scoped below" rather than leaving it floating. */
-  margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
+  /* Room ABOVE as well as below. It sat flush under the brand row, which read as
+     the switcher being part of the header rather than as the first thing the
+     rail is scoped by. (A separate margin-top above this line would lose: the
+     shorthand comes later in the rule and resets it.) */
+  margin: var(--ref-spacing-xxs) var(--ref-spacing-xs) var(--ref-spacing-xs);
   padding-bottom: var(--ref-spacing-xs);
   border-bottom: 1px solid var(--app-border-soft);
 }

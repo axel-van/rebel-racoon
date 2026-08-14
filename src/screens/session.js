@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=427";
+import { renderTopbar } from "../components/topbar.js?v=428";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=91";
 import {
   getConnectedProfiles,
@@ -72,7 +72,7 @@ import {
 } from "../composer-connector.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=14";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=15";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -87,7 +87,7 @@ import {
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=29";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=14";
 import { getLaneById, getLanes } from "../research-store.js?v=44";
-import * as contextBuilder from "../context-builder.js?v=394";
+import * as contextBuilder from "../context-builder.js?v=395";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -132,7 +132,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=561";
+} from "../components/right-panel.js?v=562";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=36";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

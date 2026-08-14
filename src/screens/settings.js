@@ -24,15 +24,15 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=427";
+import { renderTopbar } from "../components/topbar.js?v=428";
 import { showToast } from "../components/toast.js?v=21";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
 import { getContexts, getContextById, deleteContext, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=44";
+import { getLanes, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=44";
 import { getPillars, subscribe as subscribePillars } from "../pillars-store.js?v=6";
 import { subscribe as subscribeBriefs } from "../briefs-store.js?v=56";
 import { findCadence, findResearchSource } from "../research-catalog.js?v=20";
-import { getActivePlaybookId, setActivePlaybook, subscribe as subscribeScope } from "../active-playbook.js?v=14";
+import { getActivePlaybookId, setActivePlaybook, subscribe as subscribeScope } from "../active-playbook.js?v=15";
 
 // One entry per thing you can configure. Two, and it stays two — see the note at
 // the top of this file about what a third one would mean.
@@ -228,9 +228,20 @@ function renderFeeds() {
         </td>
         <td><span class="ap-table-cell-text">${cadence ? escapeAttr(cadence.label) : "—"}</span></td>
         <td class="right">
+          <!-- The same two icons the Playbooks table uses, for the same reason:
+               one action set across both tables, so a row means the same thing
+               in either. Delete CLEARS the feed rather than deleting an object —
+               a feed is implicit in its Playbook, so "delete" can only mean
+               "stop listening", and the row stays with no sources. -->
           <div class="ap-table-cell-actions">
-            <button type="button" class="ap-button ghost grey" data-settings-edit-feed="${escapeAttr(c.id)}">
-              <span>Edit sources</span>
+            <button type="button" class="ap-icon-button ghost grey" data-settings-edit-feed="${escapeAttr(c.id)}"
+              title="Edit sources" aria-label="Edit sources for ${escapeAttr(c.name)}">
+              <i class="ap-icon-pen"></i>
+            </button>
+            <button type="button" class="ap-icon-button ghost grey settings-table__delete"
+              data-settings-clear-feed="${escapeAttr(c.id)}" ${lane ? "" : "disabled"}
+              title="Stop listening" aria-label="Stop listening for ${escapeAttr(c.name)}">
+              <i class="ap-icon-trash"></i>
             </button>
           </div>
         </td>
@@ -309,6 +320,25 @@ function bind(target) {
         onConfirm: () => {
           deleteContext(c.id);
           showToast(`Deleted “${c.name}”`);
+        },
+      });
+      return;
+    }
+
+    const clearFeed = event.target.closest("[data-settings-clear-feed]");
+    if (clearFeed) {
+      const pbId = clearFeed.getAttribute("data-settings-clear-feed");
+      const c = getContextById(pbId);
+      const lane = getLanes().find((l) => l.playbookId === pbId);
+      if (!c || !lane) return;
+      openConfirm({
+        title: "Stop listening for this Playbook?",
+        body: `${c.name}'s feed stops watching every source it has. Topics already in it stay, and you can pick sources again whenever you like.`,
+        confirmLabel: "Stop listening",
+        danger: true,
+        onConfirm: () => {
+          deleteLane(lane.id);
+          showToast(`${c.name}'s feed stopped`);
         },
       });
       return;

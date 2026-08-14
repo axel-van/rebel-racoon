@@ -156,7 +156,7 @@ src/
 
 ### The active Playbook is the app's one scope
 
-The switcher is the **only** entry point to the Playbook — the nav row that pointed at the same object was a second door to one room and is gone. Its dropdown footer carries both verbs: **Open this Playbook** (`/playbook/:id`) and **Manage Playbooks** (`/settings/playbooks`).
+The switcher is the **only** entry point to the Playbook — the nav row that pointed at the same object was a second door to one room and is gone. Its dropdown footer carries one verb — **Manage Playbooks** (`/settings/playbooks`) — because without it `/settings` is only reachable from a feed's gear; "Open this Playbook" was the second, and two destinations under a list of choices made the switcher read as a nav menu.
 
 `active-playbook.js` holds **one** Playbook id, chosen from the switcher pinned above the nav in the sidebar and persisted in `localStorage` (`archie-active-playbook`). Everything below the switcher inherits it: Content strategy, the Topic feed, the new-session "Fresh topics to review" list, the recent-chats list, both nav counters, and a **new chat's** `contextId`.
 

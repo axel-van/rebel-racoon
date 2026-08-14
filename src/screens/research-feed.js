@@ -36,7 +36,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=427";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=428";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=52";
 import {
@@ -53,8 +53,8 @@ import {
 import { openBriefInChat } from "../brief-flow.js?v=29";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=14";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=6";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=15";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=7";
 import { getLaneById, getLanes } from "../research-store.js?v=44";
 import {
   getBriefById,
@@ -537,7 +537,11 @@ function teardown() {
 }
 
 function pushTopbarActions() {
-  setTopbarActions(renderTopbarActions(narrowedGroupCount(filters)));
+  // The segments go LEFT, beside the section title: they say WHICH LIST you are
+  // looking at, which is the same question the title answers — where Filters and
+  // Export act ON that list. Grouping them with the actions made "Ready to
+  // draft" read as a third button rather than as the name of the view.
+  setTopbarActions(renderTopbarActions(narrowedGroupCount(filters)), renderSegments());
 }
 
 function paint(target) {
@@ -787,8 +791,7 @@ function renderGenerating() {
 
 // The topbar cluster: Filters (with its panel), Export, Feed settings.
 function renderTopbarActions(narrowed) {
-  return html`${raw(renderSegments())}
-    <div class="research-filters">
+  return html`<div class="research-filters">
       <button
         type="button"
         class="ap-button stroked grey"

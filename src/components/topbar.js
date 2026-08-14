@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=561";
+} from "./right-panel.js?v=562";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=89";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=97";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=91";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=354";
+} from "./conversation-status-card.js?v=355";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=39";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
@@ -69,16 +69,22 @@ import {
 // The screen owns the teardown. Nothing clears this automatically, because a
 // route change repaints the topbar before the outgoing screen's cleanup runs and
 // an auto-clear would race it.
+// Two slots. `actions` sit on the right where the session pills sit; `lead`
+// sits on the LEFT, immediately after the route title — for controls that name
+// WHICH view you are in rather than act on it.
 let screenActions = "";
+let screenLead = "";
 
-export function setTopbarActions(htmlString = "") {
+export function setTopbarActions(htmlString = "", leadHtml = "") {
   screenActions = htmlString || "";
+  screenLead = leadHtml || "";
   renderTopbar();
 }
 
 export function clearTopbarActions() {
-  if (!screenActions) return;
+  if (!screenActions && !screenLead) return;
   screenActions = "";
+  screenLead = "";
   renderTopbar();
 }
 
@@ -115,7 +121,7 @@ export function renderTopbar(_options = {}) {
   // the session title.
   const left = back ? renderBack(back) : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
   el.innerHTML = html`
-    <div class="app-topbar__left">${raw(left)}</div>
+    <div class="app-topbar__left">${raw(left)}${raw(onSession ? "" : screenLead)}</div>
     <div class="app-topbar__right">${raw(rightSide)}</div>
   `;
 }
