@@ -22,12 +22,12 @@
 
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coordinator.js?v=21";
 import { showToast } from "../toast.js?v=21";
-import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=68";
-import { getSessionById } from "../../sessions-store.js?v=39";
-import { getContextById } from "../../contexts-store.js?v=75";
+import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=69";
+import { getSessionById } from "../../sessions-store.js?v=40";
+import { getContextById } from "../../contexts-store.js?v=76";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=59";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "../image-studio/canvas.js?v=2";
-import { renderStudio } from "./stage-view.js?v=87";
+import { renderStudio } from "./stage-view.js?v=88";
 import {
   openFilePicker,
   openLogoPicker,

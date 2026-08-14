@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=432";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=433";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=54";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=55";
 import {
   openIgnoreReason,
   openVersionHistory,
@@ -48,13 +48,13 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=118";
-import { openBriefInChat } from "../brief-flow.js?v=30";
+} from "../components/research-modals.js?v=119";
+import { openBriefInChat } from "../brief-flow.js?v=31";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=19";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=11";
-import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=45";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=7";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=21";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=12";
+import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=46";
 import {
   getBriefById,
   getBriefsForLane,
@@ -64,9 +64,9 @@ import {
   narrowedGroupCount,
   setStatus,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=56";
+} from "../briefs-store.js?v=57";
 import { RESEARCH_SOURCES, REVIEW_STATUSES, findResearchSource, findCadence } from "../research-catalog.js?v=20";
-import { getContextById } from "../contexts-store.js?v=75";
+import { getContextById } from "../contexts-store.js?v=76";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -315,6 +315,12 @@ let timer = null;
 let unsubscribe = null;
 let unsubscribePillars = null;
 let unsubscribeScope = null;
+// Guards the scope callback against re-entering its own mount. store-utils now
+// iterates a copy of its subscriber set, so the infinite loop this screen caused
+// cannot happen there any more; this is the second lock on the same door,
+// because re-running a full mount from inside a store notification is exactly
+// the shape that produced it.
+let remounting = false;
 let fromScope = false;
 let mountedParams = null;
 let mountedTarget = null;
@@ -360,9 +366,7 @@ export function renderResearchFeed(params, target) {
     teardown();
     renderTopbar();
     paintNoFeed(target);
-    unsubscribeScope = subscribeScope(() => {
-      if (fromScope) renderResearchFeed(mountedParams, mountedTarget);
-    });
+    unsubscribeScope = subscribeScope(onScopeChange);
     return teardown;
   }
 
@@ -399,9 +403,7 @@ export function renderResearchFeed(params, target) {
   unsubscribe = subscribeBriefs(() => paint(target));
   // Unlinking a topic from a pillar repaints the card that carries the mark.
   unsubscribePillars = subscribePillars(() => paint(target));
-  unsubscribeScope = subscribeScope(() => {
-    if (fromScope) renderResearchFeed(mountedParams, mountedTarget);
-  });
+  unsubscribeScope = subscribeScope(onScopeChange);
   return teardown;
 }
 
@@ -487,6 +489,20 @@ function renderSegments() {
   return `<div class="ap-segmented-control research-segments" role="group" aria-label="Which topics to show">
       ${seg("ready", "Ready to draft")}${seg("later", "Topics for later")}
     </div>`;
+}
+
+// Switching brand re-resolves the feed: /topic-feeds carries no id, so its lane
+// is a function of the active Playbook and the router has no hash change to react
+// to. Re-mounting is the honest way to do that — it re-runs every step, including
+// the filters and the pane — so the guard is what keeps it from re-entering.
+function onScopeChange() {
+  if (!fromScope || remounting) return;
+  remounting = true;
+  try {
+    renderResearchFeed(mountedParams, mountedTarget);
+  } finally {
+    remounting = false;
+  }
 }
 
 function firstLaneForScope() {
@@ -800,16 +816,36 @@ function renderPage() {
           listOpensWithLabel(briefs, view.shown) ? " is-labelled" : "",
         )}"
       >
-        ${raw(
-          briefs.length
-            ? renderList(briefs, view)
-            : html`<p class="research-feed__empty muted">
-                No Topics match these filters. Try widening them, or reset to the defaults.
-              </p>`,
-        )}
+        ${raw(briefs.length ? renderList(briefs, view) : renderEmpty())}
         ${raw(article ? renderArticlePane(article, entering) : "")}
       </div>
     </div>
+  </div>`;
+}
+
+// Two different emptinesses, and calling them the same thing is a lie one way or
+// the other. A feed that has NEVER returned anything — a Playbook whose feed was
+// just provisioned, listening to competitors and waiting for its first scan — is
+// not a filter problem, and telling that reader to widen their filters sends them
+// to a panel where nothing is narrowed. The filter message is kept for the case
+// it actually describes: topics exist, and the current narrowing hides them all.
+function renderEmpty() {
+  const anyAtAll = getBriefsForLane(laneId, null).length > 0;
+  if (anyAtAll) {
+    return html`<p class="research-feed__empty muted">
+      No Topics match these filters. Try widening them, or reset to the defaults.
+    </p>`;
+  }
+  return html`<div class="research-feed__empty research-feed__empty--fresh">
+    <span class="research-feed__nofeed-mark"><i class="ap-icon-antenna"></i></span>
+    <h2 class="ap-h3">Nothing has landed yet</h2>
+    <p class="muted">
+      I'm listening on this Playbook's sources. Topics show up here as they arrive — add more sources if you want me
+      watching wider.
+    </p>
+    <button type="button" class="ap-button stroked grey" data-feed-empty-settings>
+      <i class="ap-icon-cog" aria-hidden="true"></i><span>Feed settings</span>
+    </button>
   </div>`;
 }
 
@@ -1027,6 +1063,8 @@ function bind(target) {
     // and it opens /topic-feeds/settings — this feed's own sources form.
     if (event.target.closest("[data-feed-trending]"))
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
+
+    if (event.target.closest("[data-feed-empty-settings]")) return navigate("/topic-feeds/settings");
 
     if (event.target.closest("[data-feed-resume]")) {
       toggleLanePause(laneId);

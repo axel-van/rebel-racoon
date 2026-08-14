@@ -14,9 +14,9 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=48";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=97";
-import * as rightPanel from "./components/right-panel.js?v=566";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=75";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=98";
+import * as rightPanel from "./components/right-panel.js?v=567";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=76";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=25";
 import { connectors as connectorMocks } from "./mocks.js?v=91";
 import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=64";

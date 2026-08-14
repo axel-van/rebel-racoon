@@ -7,9 +7,9 @@
 // and the edit canvas + action bar to edit-view.
 
 import { html, raw, escapeHtml } from "../../utils.js?v=21";
-import { getPosts } from "../../posts-store.js?v=68";
+import { getPosts } from "../../posts-store.js?v=69";
 import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=64";
-import { renderPostCard } from "../post-card.js?v=109";
+import { renderPostCard } from "../post-card.js?v=110";
 import { KEY, ctx } from "./context.js?v=69";
 import { generateControls } from "./compose-view.js?v=81";
 import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=83";

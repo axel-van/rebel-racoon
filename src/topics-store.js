@@ -32,7 +32,7 @@
 
 import { topics as seed, topicScanPool as scanSeed } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
-import { createNotifier } from "./store-utils.js?v=2";
+import { createNotifier } from "./store-utils.js?v=3";
 
 // First-time user mode starts empty so /topics renders its empty state and the
 // sidebar counter stays absent. Returning user keeps the mock seed. Same guard

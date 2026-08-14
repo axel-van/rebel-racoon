@@ -10,7 +10,7 @@
 
 import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
-import { createNotifier } from "./store-utils.js?v=2";
+import { createNotifier } from "./store-utils.js?v=3";
 import { detectUrlService } from "./url-services.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=22";
 

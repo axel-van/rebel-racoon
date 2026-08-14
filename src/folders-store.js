@@ -11,7 +11,7 @@
 
 import { draftFolders as seed } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
-import { createNotifier } from "./store-utils.js?v=2";
+import { createNotifier } from "./store-utils.js?v=3";
 
 const folders = isNewUser() ? [] : seed.map((f) => ({ ...f }));
 const notifier = createNotifier("folders-store");

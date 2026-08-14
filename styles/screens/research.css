@@ -1720,3 +1720,23 @@
 .research-form__error {
   margin-bottom: var(--ref-spacing-sm);
 }
+
+/* The never-had-anything empty state. Centred in the list column — not the whole
+   screen — because the pane may be open beside it. Same mark as the no-sources
+   state, which is its neighbour in meaning: one has nothing to listen to, this
+   one is listening and has not heard anything yet. */
+.research-feed__empty--fresh {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxl) var(--ref-spacing-md);
+  max-width: 46ch;
+  margin: 0 auto;
+}
+
+.research-feed__empty--fresh > p {
+  margin: 0;
+  line-height: 1.6;
+}

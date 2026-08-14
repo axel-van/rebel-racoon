@@ -29,8 +29,21 @@ export function createNotifier(label) {
       subscribers.add(fn);
       return () => subscribers.delete(fn);
     },
+    // Iterates a SNAPSHOT of the set, not the set itself.
+    //
+    // A Set iterator visits entries added while it is running. A subscriber that
+    // re-subscribes during a notify — which is what any screen re-running its own
+    // mount from a store callback does — therefore appends a fresh entry that the
+    // same loop then calls, which mounts again, which appends again. It never
+    // ends and it never throws: the tab simply freezes, which is how it reached
+    // a user as "switching Playbooks breaks the page completely".
+    //
+    // Copying also means a subscriber that UNSUBSCRIBES during a notify still
+    // gets this one call. That is the lesser of the two evils — one extra call
+    // into a screen that is tearing down, against an infinite loop — and every
+    // teardown here is idempotent.
     notify(snapshot) {
-      for (const fn of subscribers) {
+      for (const fn of Array.from(subscribers)) {
         try {
           fn(snapshot);
         } catch (err) {

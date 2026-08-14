@@ -4,7 +4,7 @@ import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=47";
+import { open as openSearchModal } from "./search-modal.js?v=48";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=19";
 import {
@@ -15,26 +15,26 @@ import {
   togglePin as togglePinSession,
   togglePillar as togglePillarSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=39";
+} from "../sessions-store.js?v=40";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=91";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=60";
-import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=28";
-import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=6";
+import { clearSession as clearLibrarySession } from "../library.js?v=92";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=76";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=61";
+import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=29";
+import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=7";
 import {
   getActivePlaybook,
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=19";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=45";
-import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=56";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=566";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
+} from "../active-playbook.js?v=21";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=46";
+import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=57";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=567";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=98";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=69";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=90";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
