@@ -508,6 +508,7 @@ body.has-modal {
 .bug-report-modal .ap-dialog-content,
 .feedback-modal .ap-dialog-content,
 .chat-picker-modal .ap-dialog-content,
+.pillar-modal .ap-dialog-content,
 .add-source-modal .ap-dialog-content {
   flex: 1;
   overflow-y: auto;

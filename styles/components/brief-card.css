@@ -225,7 +225,12 @@
   top: 44px;
   right: 10px;
   z-index: var(--app-z-overlay);
-  min-width: 300px;
+  /* 360, not 300: the unlink row names the pillar in its LABEL now, and the DS
+     label container is nowrap + ellipsis — at 300 "Unlink for Sustainable
+     wardrobe content pillar" cut mid-word — the row spends 56px on padding,
+     the glyph and its gap before the label gets any. A long enough pillar name
+     still ellipsises; this fits the ones a brand actually writes. */
+  min-width: 360px;
 }
 
 /* Trending is .trending-mark, in styles/components/trending-mark.css — the lane

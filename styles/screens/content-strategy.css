@@ -21,11 +21,21 @@
 
 .strategy-view__head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-md);
   border-bottom: 1px solid var(--sys-color-border-color-default);
   padding-bottom: var(--ref-spacing-sm);
+}
+
+/* min-width:0 is the whole fix behind "the New pillar button is cut off".
+   Without it the heading takes its full natural width, the actions have nowhere
+   to go, and the row overflows — which .ap-button turns into a CUT LABEL rather
+   than a visible overflow, because it ships overflow:hidden. The heading is the
+   part that should yield: a section title can ellipsise, a CTA cannot. */
+.strategy-view__heading {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .strategy-view__title {
@@ -43,13 +53,28 @@
 
 .strategy-view__actions {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--ref-spacing-sm);
   flex: 0 0 auto;
 }
 
-.strategy-view__facet {
-  min-width: 200px;
+/* .ap-button ships overflow:hidden, so a squeezed button cuts its own LABEL
+   rather than wrapping — "New pillar" rendered as "New pilla". The default
+   flex-shrink:1 was doing the squeezing: the facet beside it declares a
+   min-width and the button had none, so the button gave way first. */
+.strategy-view__actions > * {
+  flex: 0 0 auto;
+}
+
+/* A DEFINITE width, not a min-width — the same fix .research-view__filter
+   carries and for the same reason. The DS ships .ap-select at width:100%, so as a
+   flex child with only a min-width it claims the whole actions row and pushes the
+   CTA out of it; .ap-button then cuts its own label rather than overflowing
+   visibly, because it ships overflow:hidden. A fixed basis removes the fight. */
+.strategy-view__filter {
+  flex: 0 0 auto;
+  width: 200px;
+  max-width: 100%;
 }
 
 .strategy-view__foot {
@@ -59,96 +84,47 @@
   max-width: 96ch;
 }
 
+/* Same track sizing and gutter as .research-grid, since the cards are now the
+   same card — a pillar card narrower than a lane card would ellipsise its title
+   at a different point from its twin one section away. */
 .strategy-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
-  gap: var(--ref-spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--ref-spacing-md);
 }
 
-.strategy-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-sm);
-  min-height: 186px;
-}
+/* The pillar card is .research-card (styles/screens/research.css) — the lane
+   card, reused whole. Only what is genuinely strategy-specific lives here. */
 
-.strategy-card__head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  flex-wrap: wrap;
-  /* Clears the kebab's corner, same reservation as the topic card's meta run. */
-  padding-right: 30px;
-}
-
-.strategy-card__name {
-  font-size: var(--sys-text-style-body-bold-size);
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--app-convo-navy);
-}
-
-.strategy-card__name--dim {
-  color: var(--sys-text-color-light);
-}
-
-.strategy-card__body {
-  margin: 0;
+/* The pillar's own sentence, between the meta line and the signals. The lane
+   card has no equivalent because a lane's name IS its description; a pillar has
+   a point of view that has to be readable at a glance. Two lines then an
+   ellipsis, so a long one cannot push the footer around. */
+.strategy-card__about {
+  margin: var(--ref-spacing-xxs) 0 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: 1.5;
   color: var(--sys-text-color-light);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.strategy-card__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
-}
-
-/* The one line that gives anyone a reason to open the card. Emphasised only when
-   something actually arrived — the store returns "updated 3w ago" otherwise and
-   that reads as plain meta. */
-.strategy-card--auto .strategy-card__when,
-.strategy-card__when:not(:empty) {
-  color: var(--sys-text-color-light);
-}
-
-.strategy-card__foot {
-  margin-top: auto;
-  display: flex;
-}
-
-.strategy-card__foot .ap-button.ghost {
-  padding-left: 0;
-}
-
-/* Arrow nudge on hover, the same affordance "Reuse a winner" and "See more
-   topics in your feed" carry. */
-.strategy-card__open i {
-  transition: transform var(--ref-animation-short) var(--app-ease-standard);
-}
-
-.strategy-card__open:hover i,
-.strategy-card__open:focus-visible i {
-  transform: translateX(3px);
-}
-
-/* A pillar Archie opened. A border tint plus the .ap-tag in the header — no
-   fill: this is "you have not vetted this yet", not a warning, and it stops
-   being true the moment someone opens it. */
-.strategy-card--auto {
-  border-color: var(--ref-color-electric-blue-20);
+/* Sits in .research-card__signals beside the DS Badge, so it inherits that
+   row's wrap and centring. Reset only what a <button> brings and a <span>
+   would not. */
+.strategy-card__auto {
+  cursor: pointer;
+  font-family: inherit;
 }
 
 /* The ghost tile — the /contexts "Create a Playbook" card, same shape and same
    reasoning. It is a <button>, so the WHOLE tile is the target: as a card with a
    button inside it, only the corner responded and a click on the tile did
-   nothing. Values mirror .contexts-card--ghost deliberately; if that one moves,
-   move this with it. */
+   nothing, which is the whole of "the new-pillar button is broken". Values
+   mirror .contexts-card--ghost deliberately; if that one moves, move this with
+   it. The min-height matches .research-card, its neighbour in the grid. */
 .strategy-card--new {
   display: flex;
   flex-direction: column;
@@ -157,10 +133,10 @@
   gap: var(--ref-spacing-xs);
   text-align: center;
   padding: var(--ref-spacing-lg) var(--ref-spacing-md);
-  min-height: 186px;
+  min-height: 200px;
   background: transparent;
   border: 2px dashed var(--app-border-soft);
-  border-radius: var(--ref-border-radius-md);
+  border-radius: var(--app-radius-card);
   cursor: pointer;
   color: var(--ref-color-grey-100);
   font-family: inherit;
@@ -216,26 +192,7 @@
   font-weight: var(--sys-text-style-caption-weight);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
-  max-width: 240px;
-}
-
-/* The facet, beside the CTA. Same control as the Topic-feeds list header. */
-.strategy-view__filter {
-  min-width: 200px;
-}
-
-.strategy-card__more {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-
-.strategy-card__menu {
-  position: absolute;
-  top: 40px;
-  right: 8px;
-  z-index: var(--app-z-overlay);
-  min-width: 260px;
+  max-width: 260px;
 }
 
 /* ── Empty state ────────────────────────────────────────────────────────── */

@@ -33,7 +33,6 @@ import {
   getPillars,
   getPillarById,
   deletePillar,
-  mergePillar,
   updatePillar,
   unseenCountFor,
   subscribe as subscribePillars,
@@ -42,7 +41,7 @@ import {
 // The Playbook facet lives in module state, not the URL, for the same reason the
 // Topic-feeds list keeps its own: nothing downstream needs this scope, and a
 // pillar's page carries its own id.
-let view = { playbook: "all", menuFor: null };
+let view = { playbook: "all" };
 
 let unsubscribePillars = null;
 let unsubscribeContexts = null;
@@ -59,7 +58,7 @@ export function renderContentStrategy(_params, target) {
   }
   renderTopbar();
   teardown();
-  view = { playbook: "all", menuFor: null };
+  view = { playbook: "all" };
   paint(target);
   bind(target);
   unsubscribePillars = subscribePillars(() => paint(target));
@@ -178,112 +177,91 @@ function renderEmpty() {
     </div>`;
 }
 
+// The pillar card IS the Topic-feeds lane card — .research-card and its parts,
+// reused rather than re-derived. Both are "a standing thing that collects, with a
+// count of what has arrived and a way in", and the two drifted apart within a
+// week when they were separate: a bespoke card had to reinvent the title button,
+// the meta line, the signal row and the footer, and got each of them slightly
+// wrong. Same precedent as .topics-card__summary being shared by the feed and
+// the new-session list — one kind of object, one treatment.
+//
+// What is strategy-specific and therefore additive: the "Automatically created"
+// tag, and nothing else.
 function renderCard(p) {
   const ctx = p.playbookId ? getContextById(p.playbookId) : null;
   const arrived = unseenCountFor(p.id);
   const auto = p.createdBy === "archie" && !p.reviewed;
-  const menuOpen = view.menuFor === p.id;
-  // "N filed this week" is the only line on this card that gives anyone a reason
-  // to open it. When nothing arrived it says so plainly rather than going blank —
-  // a quiet pillar is a fact, not a missing value.
-  const when = arrived
-    ? `${arrived} filed since you last looked`
-    : `updated ${escapeAttr(p.contextUpdatedAgo || "a while ago")}`;
+  const sourceCount = `${p.sources.length} ${p.sources.length === 1 ? "source" : "sources"}`;
   return `
-    <article class="ap-card strategy-card${auto ? " strategy-card--auto" : ""}" data-pillar-card="${escapeAttr(p.id)}">
-      <div class="strategy-card__head">
-        <span class="strategy-card__name">${escapeAttr(p.name)}</span>
-        ${
-          auto
-            ? // A CLICKABLE tag, which the DS allows (.ap-tag:is(button)) — the label
-              // means "you have not vetted this yet", so acknowledging it is the one
-              // thing it should be able to do. Opening the pillar clears it too; both
-              // are the same single click the label is waiting for.
-              `<button type="button" class="ap-tag blue strategy-card__auto" data-pillar-ack="${escapeAttr(p.id)}"
-                 title="Dismiss this label">
-                 <span>Automatically created</span>
-               </button>`
-            : ""
-        }
-      </div>
-      <p class="strategy-card__body">${escapeAttr(p.about || p.context || "")}</p>
-      <div class="strategy-card__meta">
-        <span>${p.sources.length} source${p.sources.length === 1 ? "" : "s"}${ctx ? ` · ${escapeAttr(ctx.name)}` : ""}</span>
-        <span class="strategy-card__when">${when}</span>
-      </div>
-      <div class="strategy-card__foot">
-        <button type="button" class="ap-button ghost blue strategy-card__open" data-pillar-open="${escapeAttr(p.id)}">
-          <span>Review</span><i class="ap-icon-arrow-right"></i>
+    <article class="research-card strategy-card" data-pillar-card="${escapeAttr(p.id)}">
+      <div class="research-card__head">
+        <button type="button" class="research-card__title" data-pillar-open="${escapeAttr(p.id)}">
+          ${escapeAttr(p.name)}
         </button>
+        <!-- Rename + Delete as a hover panel, exactly as the lane card does it —
+             which is also what retired the kebab and its dropdown. Merge lived in
+             that dropdown and is out for now; when it returns it needs a target
+             picker, so it will not fit in a two-icon panel and the menu comes
+             back with it. -->
+        <span class="research-card__hover">
+          <button type="button" class="ap-icon-button ghost grey" data-pillar-rename="${escapeAttr(p.id)}"
+            title="Rename" aria-label="Rename ${escapeAttr(p.name)}">
+            <i class="ap-icon-pen" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="ap-icon-button ghost grey research-card__delete"
+            data-pillar-delete="${escapeAttr(p.id)}" title="Delete" aria-label="Delete ${escapeAttr(p.name)}">
+            <i class="ap-icon-trash" aria-hidden="true"></i>
+          </button>
+        </span>
       </div>
-      <button
-        type="button"
-        class="ap-icon-button transparent strategy-card__more"
-        data-pillar-more="${escapeAttr(p.id)}"
-        aria-haspopup="menu"
-        aria-expanded="${menuOpen ? "true" : "false"}"
-        aria-label="More actions for ${escapeAttr(p.name)}"
-      >
-        <i class="ap-icon-more"></i>
+      <p class="research-card__meta">
+        <span class="research-card__meta-pb">
+          <i class="ap-icon-target" aria-hidden="true"></i>
+          <span class="sr-only">Playbook</span>${escapeAttr(ctx ? ctx.name : "No Playbook")}
+        </span>
+        <span class="research-card__meta-sep" aria-hidden="true">·</span>
+        <span>${sourceCount}</span>
+      </p>
+      <p class="strategy-card__about">${escapeAttr(p.about || p.context || "")}</p>
+      ${
+        arrived || auto
+          ? `<div class="research-card__signals">
+              ${
+                auto
+                  ? // A CLICKABLE tag, which the DS allows (.ap-tag:is(button)) — the
+                    // label means "you have not vetted this yet", so acknowledging it
+                    // is the one thing it should be able to do. Opening the pillar
+                    // clears it too; both are the same single click it waits for.
+                    `<button type="button" class="ap-tag blue strategy-card__auto" data-pillar-ack="${escapeAttr(p.id)}"
+                       title="Dismiss this label"><span>Automatically created</span></button>`
+                  : ""
+              }
+              ${
+                arrived
+                  ? // The DS Badge, same component and same reasoning as the lane
+                    // card's: an orange, system-generated marker for "I brought you
+                    // something", carrying the count so one element answers both
+                    // "is there anything" and "how much".
+                    `<span class="ap-badge orange" aria-label="${arrived} filed since you last looked">${arrived} to review</span>`
+                  : ""
+              }
+            </div>`
+          : ""
+      }
+      <button type="button" class="research-card__open" data-pillar-open="${escapeAttr(p.id)}">
+        <span>Review</span>
+        <i class="ap-icon-arrow-right" aria-hidden="true"></i>
       </button>
-      ${menuOpen ? renderCardMenu(p) : ""}
     </article>`;
 }
 
-// Rename · Merge · Delete. Merge is the one that matters and the reason this
-// menu exists at all: the common failure of a pillar Archie opened is a
-// near-duplicate of one that already exists, and without merge the only recovery
-// is deleting it and losing everything it collected.
-function renderCardMenu(p) {
-  const siblings = getPillars().filter((x) => x.id !== p.id && x.playbookId === p.playbookId);
-  return `
-    <div class="ap-action-dropdown strategy-card__menu" role="menu" data-pillar-menu="${escapeAttr(p.id)}">
-      <button type="button" role="menuitem" class="ap-action-dropdown-item" data-pillar-rename="${escapeAttr(p.id)}">
-        <i class="ap-icon-pen"></i>
-        <div class="ap-action-dropdown-item-text">
-          <div class="ap-action-dropdown-item-label-container">
-            <span class="ap-action-dropdown-item-label">Rename</span>
-          </div>
-        </div>
-      </button>
-      ${siblings
-        .map(
-          (s) => `
-      <button type="button" role="menuitem" class="ap-action-dropdown-item has-description" data-pillar-merge="${escapeAttr(p.id)}" data-pillar-merge-into="${escapeAttr(s.id)}">
-        <i class="ap-icon-stack"></i>
-        <div class="ap-action-dropdown-item-text">
-          <div class="ap-action-dropdown-item-label-container">
-            <span class="ap-action-dropdown-item-label">Merge into ${escapeAttr(s.name)}</span>
-          </div>
-          <span class="ap-action-dropdown-item-description">Moves every source and asset across</span>
-        </div>
-      </button>`,
-        )
-        .join("")}
-      <div class="ap-action-dropdown-divider"></div>
-      <button type="button" role="menuitem" class="ap-action-dropdown-item red-mode" data-pillar-delete="${escapeAttr(p.id)}">
-        <i class="ap-icon-trash"></i>
-        <div class="ap-action-dropdown-item-text">
-          <div class="ap-action-dropdown-item-label-container">
-            <span class="ap-action-dropdown-item-label">Delete pillar</span>
-          </div>
-        </div>
-      </button>
-    </div>`;
-}
-
-// The ghost tile, in the /contexts "Create a Playbook" shape — same glyph, same
-// centred stack, same butter hover. It was a card with a button inside it, and
-// that was the bug behind "the new-pillar button is broken": the tile LOOKED
-// like a target, but only the small button in its corner was one, so a click
-// anywhere else did nothing. The whole tile is the button now.
 function renderNewTile() {
   return `
-    <button type="button" class="strategy-card--new" data-strategy-new aria-label="Create a new pillar">
+    <button type="button" class="strategy-card--new" data-strategy-new aria-label="Create a Content pillar">
       <span class="strategy-card--new__glyph"><i class="ap-icon-archie-official"></i></span>
-      <span class="strategy-card--new__title">Start a pillar</span>
+      <span class="strategy-card--new__title">Create a Content pillar</span>
       <span class="strategy-card--new__sub">
-        A theme you keep coming back to — I'll file matching topics into it as they arrive.
+        Create a context hub to create rich posts from topics, chats and your own assets.
       </span>
     </button>`;
 }
@@ -299,11 +277,6 @@ function bind(target) {
       return;
     }
     if (event.target.closest("[data-strategy-new]")) {
-      // Close any open card menu first — a dropdown left standing behind a modal
-      // is the classic one-overlay-at-a-time miss.
-      const hadMenu = view.menuFor !== null;
-      view.menuFor = null;
-      if (hadMenu) paint(target);
       openPillarModal({ playbookId: view.playbook === "all" ? null : view.playbook });
       return;
     }
@@ -322,17 +295,9 @@ function bind(target) {
       updatePillar(ack.getAttribute("data-pillar-ack"), { reviewed: true });
       return;
     }
-    const more = event.target.closest("[data-pillar-more]");
-    if (more) {
-      const id = more.getAttribute("data-pillar-more");
-      view.menuFor = view.menuFor === id ? null : id;
-      paint(target);
-      return;
-    }
     const rename = event.target.closest("[data-pillar-rename]");
     if (rename) {
       const p = getPillarById(rename.getAttribute("data-pillar-rename"));
-      view.menuFor = null;
       if (p) {
         openPillarModal({
           mode: "edit",
@@ -342,22 +307,9 @@ function bind(target) {
       } else paint(target);
       return;
     }
-    const merge = event.target.closest("[data-pillar-merge]");
-    if (merge) {
-      const fromId = merge.getAttribute("data-pillar-merge");
-      const intoId = merge.getAttribute("data-pillar-merge-into");
-      const from = getPillarById(fromId);
-      const into = getPillarById(intoId);
-      view.menuFor = null;
-      mergePillar(fromId, intoId);
-      if (from && into) showToast(`Merged “${from.name}” into “${into.name}”`);
-      return;
-    }
     const del = event.target.closest("[data-pillar-delete]");
     if (del) {
       const p = getPillarById(del.getAttribute("data-pillar-delete"));
-      view.menuFor = null;
-      paint(target);
       if (!p) return;
       // A confirm, not an undo snackbar: a pillar carries a condensed context and
       // an audit trail that cannot be rebuilt from a toast.
@@ -372,12 +324,6 @@ function bind(target) {
         },
       });
       return;
-    }
-    // Click anywhere else closes an open card menu, the same one-open-at-a-time
-    // rule every other card menu in the app follows.
-    if (view.menuFor) {
-      view.menuFor = null;
-      paint(target);
     }
   };
   target.addEventListener("click", boundClick);

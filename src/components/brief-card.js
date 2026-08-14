@@ -142,10 +142,11 @@ function renderPillarMark(pillar) {
     <i
       class="ap-icon-stack"
       role="img"
-      aria-label="Filed under ${pillar.name}. This pillar's context goes with the topic into chat."
+      aria-label="Linked with the ${pillar.name} content pillar. The pillar's context will be included if you use this topic in chat."
     ></i>
     <span class="ap-tooltip bottom-left topics-card__pillar-tip" aria-hidden="true">
-      <strong>${pillar.name}</strong> — I matched this topic to that pillar. Its context goes with the topic into chat.
+      Linked with <strong>${pillar.name}</strong> content pillar. The pillar's context will be included if you use this
+      topic in chat.
     </span>
   </span>`;
 }
@@ -378,25 +379,30 @@ function menuRow(briefId, { attr, icon, label }) {
   </button>`;
 }
 
-// The pillar NAME goes in the description, not the label: the label container is
-// nowrap + ellipsis, so "Unlink from Sustainable wardrobe" truncated at every
-// realistic menu width.
+// One line, naming the pillar. It carried a description ("Keeps the topic, drops
+// …'s context") and the name lived down there because the label container is
+// nowrap + ellipsis — but the row now says WHICH pillar in the label itself,
+// which is the thing a reader needs before pressing it, and the consequence is
+// evident from the verb.
 //
-// `has-description` is required, not decorative — the base dropdown item is a
-// FIXED 40px and a description without it overlaps the row below.
+// `has-description` goes with the description: that class exists only to un-fix
+// the row's 40px height for a second line, so keeping it would leave a 50px row
+// holding one line of text.
+//
+// The label still ellipsises on a very long pillar name. The menu is 300px and
+// the alternative — the name in a description nobody reads — was worse.
 function unlinkRow(briefId, pillar) {
   return html`<button
     type="button"
     role="menuitem"
-    class="ap-action-dropdown-item has-description"
+    class="ap-action-dropdown-item"
     data-brief-unlink="${escapeAttr(briefId)}"
   >
     <i class="ap-icon-link"></i>
     <div class="ap-action-dropdown-item-text">
       <div class="ap-action-dropdown-item-label-container">
-        <span class="ap-action-dropdown-item-label">Unlink from this pillar</span>
+        <span class="ap-action-dropdown-item-label">Unlink for ${pillar.name} content pillar</span>
       </div>
-      <span class="ap-action-dropdown-item-description">Keeps the topic, drops ${pillar.name}'s context</span>
     </div>
   </button>`;
 }
