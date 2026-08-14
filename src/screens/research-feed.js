@@ -36,7 +36,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=424";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=425";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=51";
 import {
@@ -53,8 +53,8 @@ import {
 import { openBriefInChat } from "../brief-flow.js?v=27";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=11";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=3";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=12";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=4";
 import { getLaneById, getLanes } from "../research-store.js?v=43";
 import {
   getBriefById,
@@ -430,7 +430,10 @@ function paintNoFeed(target) {
 }
 
 function onNoFeedClick(event) {
-  if (event.target.closest("[data-feed-settings]")) navigate("/settings/topic-feeds");
+  // Straight into THIS Playbook's feed settings, not the table of every feed.
+  // The user is one click from an empty screen and wants to fix that screen —
+  // a table is a detour that makes them find their own row first.
+  if (event.target.closest("[data-feed-settings]")) navigate("/topic-feeds/settings");
 }
 
 function firstLaneForScope() {

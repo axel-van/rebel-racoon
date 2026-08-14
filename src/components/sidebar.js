@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=11";
+} from "../active-playbook.js?v=12";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=43";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=558";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=559";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
@@ -206,18 +206,9 @@ export function initSidebar() {
       else if (here.startsWith("/playbook/")) navigate(`/playbook/${scopePick.dataset.scopePick}`);
       return;
     }
-    if (event.target.closest("[data-scope-open]")) {
+    if (event.target.closest("[data-sidebar-settings]")) {
       event.preventDefault();
-      const details = event.target.closest("details");
-      if (details) details.open = false;
-      const id = getActivePlaybookId();
-      navigate(id ? `/playbook/${id}` : "/settings/playbooks");
-      return;
-    }
-    if (event.target.closest("[data-scope-manage]")) {
-      event.preventDefault();
-      const details = event.target.closest("details");
-      if (details) details.open = false;
+      setMenuOpen(false);
       navigate("/settings/playbooks");
       return;
     }
@@ -585,6 +576,19 @@ function renderFootMenu({ collapsed }) {
         data-sidebar-foot-menu
         hidden
       >
+        <!-- Settings leads: it is the only row here that is a PLACE. The scope
+             switcher above dropped its footer — it switches brand and nothing
+             else — so this is now the way to the Playbooks and Topic-feeds
+             tables. -->
+        <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-settings>
+          <i class="ap-icon-cog"></i>
+          <div class="ap-action-dropdown-item-text">
+            <div class="ap-action-dropdown-item-label-container">
+              <span class="ap-action-dropdown-item-label">Settings</span>
+            </div>
+          </div>
+        </button>
+        <div class="ap-action-dropdown-divider" role="separator"></div>
         <button type="button" role="menuitem" class="ap-action-dropdown-item" data-sidebar-feedback>
           <i class="ap-icon-single-chat-bubble"></i>
           <div class="ap-action-dropdown-item-text">
@@ -683,19 +687,10 @@ function renderScopeSwitcher() {
     </summary>
     <div class="ap-select-dropdown app-scope__dropdown" role="listbox" aria-label="Switch Playbook">
       <div class="ap-select-options">${raw(rows)}</div>
-      <div class="ap-select-footer">
-        <!-- Two exits, and they are different verbs. "Open" goes to THIS
-             Playbook's page — the thing the removed nav row used to do. "Manage"
-             goes to the settings table, which is where every Playbook lives. -->
-        <button type="button" class="ap-select-create" data-scope-open>
-          <i class="ap-icon-target ap-select-create-icon" aria-hidden="true"></i>
-          <span>Open this Playbook</span>
-        </button>
-        <button type="button" class="ap-select-create" data-scope-manage>
-          <i class="ap-icon-cog ap-select-create-icon" aria-hidden="true"></i>
-          <span>Manage Playbooks</span>
-        </button>
-      </div>
+      <!-- No footer. This control does ONE thing — switch brand — and the rows
+           are that thing; a footer of two other verbs made a switcher look like
+           a menu and put a destination where a choice belongs. Reaching a
+           Playbook's page or the settings table is the sidebar footer's job. -->
     </div>
   </details>`;
 }

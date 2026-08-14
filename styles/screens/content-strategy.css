@@ -107,7 +107,12 @@
 /* Sits in .research-card__signals beside the DS Badge, so it inherits that
    row's wrap and centring. Reset only what a <button> brings and a <span>
    would not. */
+/* align-self, because the card is a flex COLUMN and a stretched child fills its
+   width — the tag ran edge to edge under the title and read as a banner. It also
+   no longer sits in .research-card__signals, which used to supply the shrink. */
 .strategy-card__auto {
+  align-self: flex-start;
+  margin-top: var(--ref-spacing-xxxs);
   cursor: pointer;
   font-family: inherit;
 }
@@ -623,9 +628,16 @@
    its own rather than running the full width, which is the same reason the
    pillar page caps .pillar-sec__prose. The single-line name field follows it so
    the two fields share a left AND a right edge. */
+/* Capped for readability AND centred in the wider dialog. Left-aligned at 74ch
+   inside 840px left a column of fields hugging one edge with dead space beside
+   it — the cap is about the measure, not about which side of the dialog the
+   form lives on. */
 .pillar-modal__content .ap-form-field,
 .pillar-modal__note {
   max-width: 74ch;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Last thing before the footer, and visually separated from the fields it is not

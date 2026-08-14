@@ -24,15 +24,15 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=424";
+import { renderTopbar } from "../components/topbar.js?v=425";
 import { showToast } from "../components/toast.js?v=21";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
 import { getContexts, getContextById, deleteContext, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=43";
 import { getPillars, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
+import { subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
 import { findCadence, findResearchSource } from "../research-catalog.js?v=19";
-import { getActivePlaybookId, setActivePlaybook, subscribe as subscribeScope } from "../active-playbook.js?v=11";
+import { getActivePlaybookId, setActivePlaybook, subscribe as subscribeScope } from "../active-playbook.js?v=12";
 
 // One entry per thing you can configure. Two, and it stays two — see the note at
 // the top of this file about what a third one would mean.
@@ -149,13 +149,10 @@ function renderPlaybooks() {
         <td><span class="ap-table-cell-text">${lane ? `${lane.sources.length} ${lane.sources.length === 1 ? "source" : "sources"}` : "No feed yet"}</span></td>
         <td class="right">
           <div class="ap-table-cell-actions">
-            ${
-              isActive
-                ? ""
-                : `<button type="button" class="ap-button ghost grey" data-settings-activate="${escapeAttr(c.id)}">
-                     <span>Switch to</span>
-                   </button>`
-            }
+            <!-- No "Switch to". Switching brand is the rail's switcher and
+                 nothing else; a second control for it here was two places doing
+                 one job, and the rail's is visible from every screen. The row
+                 still SHOWS which Playbook is active. -->
             <button type="button" class="ap-icon-button ghost grey" data-settings-edit-pb="${escapeAttr(c.id)}"
               title="Open Playbook" aria-label="Open ${escapeAttr(c.name)}">
               <i class="ap-icon-pen"></i>
@@ -208,7 +205,6 @@ function renderFeeds() {
             // and the empty chips this produced were invisible in the markup.
             .map((s) => s.name)
         : [];
-      const pending = lane ? countNewForLane(lane.id) : 0;
       const isActive = c.id === activeId;
       return `
       <tr${isActive ? ' class="selected"' : ""}>
@@ -231,7 +227,6 @@ function renderFeeds() {
           }
         </td>
         <td><span class="ap-table-cell-text">${cadence ? escapeAttr(cadence.label) : "—"}</span></td>
-        <td><span class="ap-table-cell-text">${pending ? `${pending} new` : "—"}</span></td>
         <td class="right">
           <div class="ap-table-cell-actions">
             <button type="button" class="ap-button ghost grey" data-settings-edit-feed="${escapeAttr(c.id)}">
@@ -251,12 +246,11 @@ function renderFeeds() {
           <th>Playbook</th>
           <th>Sources</th>
           <th>Refreshed</th>
-          <th>Waiting</th>
           <th class="right"></th>
         </tr>
       </thead>
       <tbody>
-        ${rows || `<tr><td colspan="5"><div class="ap-table-empty">No Playbooks yet</div></td></tr>`}
+        ${rows || `<tr><td colspan="4"><div class="ap-table-empty">No Playbooks yet</div></td></tr>`}
       </tbody>
     </table>`;
 }
@@ -288,15 +282,6 @@ function bind(target) {
     if (go) return navigate(go.getAttribute("data-settings-go"));
 
     if (event.target.closest("[data-settings-back]")) return navigate("/");
-
-    const activate = event.target.closest("[data-settings-activate]");
-    if (activate) {
-      const id = activate.getAttribute("data-settings-activate");
-      setActivePlaybook(id);
-      const c = getContextById(id);
-      if (c) showToast(`Now working in “${c.name}”`);
-      return;
-    }
 
     const editPb = event.target.closest("[data-settings-edit-pb]");
     if (editPb) return navigate(`/playbook/${editPb.getAttribute("data-settings-edit-pb")}`);

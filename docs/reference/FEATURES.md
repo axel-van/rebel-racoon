@@ -931,7 +931,11 @@ Le fil d'ariane « Playbook › Topic feed » a disparu du `starter-topic__head`
 
 ### `/settings` — le rail de gauche et la table
 
-Le switcher est le **seul** point d'entrée du Playbook : la ligne de nav qui pointait sur le même objet était une seconde porte vers une seule pièce, et les deux se disputaient le même clic. Le pied du menu porte les deux verbes — **Open this Playbook** (`/playbook/:id`) et **Manage Playbooks** (`/settings/playbooks`).
+Le switcher est le **seul** point d'entrée du Playbook : la ligne de nav qui pointait sur le même objet était une seconde porte vers une seule pièce, et les deux se disputaient le même clic.
+
+Il **ne fait qu'une chose** — changer de marque — et son menu n'a **pas de pied** : les lignes sont le contrôle. Un pied de deux autres verbes faisait passer un switcher pour un menu et mettait une destination là où se trouve un choix. On atteint les réglages par le **cog du pied de la barre latérale**, où « Settings » est désormais la première ligne (la seule qui soit un LIEU). Idem dans la table : le bouton « Switch to » a disparu — changer de marque est le travail du switcher, visible depuis n'importe quel écran, et deux contrôles pour un même geste sont un de trop.
+
+⚠️ **`.ap-select` est livré en `width: 100%`**, ce qui se résout sur la largeur du rail et **ignore les marges de l'élément** : le switcher dépassait de 11px. `width: auto` sur un `<details>` de niveau bloc remplit ce qui reste après les marges — ce que font déjà les lignes de nav en dessous.
 
 Forme reprise des réglages **Automated moderation** de l'inbox (`agorapulse/platform`, `conversation/automated-moderation`) : rail de 224px, panneau scrollable, et une `.ap-table` du DS (`outer-border header-background striped`). Tailles et teintes viennent de la recette settings du DS (`--sys-settings-*`).
 

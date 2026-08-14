@@ -22,7 +22,7 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=424";
+import { renderTopbar } from "../components/topbar.js?v=425";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { renderBriefCard } from "../components/brief-card.js?v=51";
 import { openFullResearch } from "../components/research-modals.js?v=114";

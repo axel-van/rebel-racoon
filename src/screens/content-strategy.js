@@ -23,13 +23,13 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=424";
+import { renderTopbar } from "../components/topbar.js?v=425";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
-import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=11";
+import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=12";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=11";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=12";
 import {
   getPillars,
   getPillarById,
@@ -192,19 +192,24 @@ function renderCard(p) {
            and therefore the same on every card on this page, and the source count,
            which moved to the signals row where the counts already live. A meta
            line whose every value is identical across a grid is decoration. -->
+      ${
+        auto
+          ? // Directly under the title, above the sentence — it qualifies the
+            // PILLAR ("you have not vetted this one yet"), where the signals row
+            // below counts what has arrived IN it. In that row it read as a third
+            // count and sat beside a badge it has nothing to do with.
+            //
+            // A CLICKABLE tag, which the DS allows (.ap-tag:is(button)):
+            // acknowledging the label is the one thing it should be able to do.
+            // Opening the pillar clears it too — both are the single click it
+            // waits for.
+            `<button type="button" class="ap-tag blue strategy-card__auto" data-pillar-ack="${escapeAttr(p.id)}"
+               title="Dismiss this label"><span>Automatically created</span></button>`
+          : ""
+      }
       <p class="strategy-card__about">${escapeAttr(p.about || p.context || "")}</p>
       <div class="research-card__signals">
         <span class="strategy-card__count">${sourceCount}</span>
-        ${
-          auto
-            ? // A CLICKABLE tag, which the DS allows (.ap-tag:is(button)) — the
-              // label means "you have not vetted this yet", so acknowledging it
-              // is the one thing it should be able to do. Opening the pillar
-              // clears it too; both are the same single click it waits for.
-              `<button type="button" class="ap-tag blue strategy-card__auto" data-pillar-ack="${escapeAttr(p.id)}"
-                       title="Dismiss this label"><span>Automatically created</span></button>`
-            : ""
-        }
         ${
           arrived
             ? // The DS Badge, same component and same reasoning as the lane

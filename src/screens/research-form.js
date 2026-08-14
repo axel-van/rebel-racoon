@@ -10,7 +10,7 @@
 //   | thing   | create                  | settings                |
 //   |---------|-------------------------|-------------------------|
 //   | header  | "New content research"  | "Feed settings" + back  |
-//   | save    | "Save Topic feed"       | "Save changes"          |
+//   | save    | "Save changes"          | "Save changes"          |  (see below)
 //   | on save | append → loader → feed  | return to feed          |
 //
 // Source gating: only Competitors is live. Every other toggle opens the
@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=424";
+import { renderTopbar } from "../components/topbar.js?v=425";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { getContexts, getContextById } from "../contexts-store.js?v=75";
 import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=43";
-import { getActivePlaybookId } from "../active-playbook.js?v=11";
+import { getActivePlaybookId } from "../active-playbook.js?v=12";
 import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=114";
 import {
   RESEARCH_SOURCES,
@@ -153,12 +153,14 @@ function renderPage() {
   return html`<div class="research-form__body">
       <div class="research-form__inner">
         <header class="research-form__head">
-          <h1 class="ap-h1 research-form__title">${settings ? "Feed settings" : "New Topic feed"}</h1>
-          <p class="ap-body research-form__lead">
-            ${settings
-              ? "What I watch for this Topic feed, and how often I check it."
-              : "Pick a Playbook and sources to get topics."}
-          </p>
+          <!-- One heading, both modes. "New Topic feed" is gone from the copy
+               because a feed is no longer something a user creates — it is
+               implicit in a Playbook, and this form is where its sources get
+               chosen the first time as well as every time after. The MODE still
+               differs underneath (create writes a lane, settings updates one);
+               only the words stopped announcing which one you are in. -->
+          <h1 class="ap-h1 research-form__title">Feed settings</h1>
+          <p class="ap-body research-form__lead">What I watch for this Playbook, and how often I check it.</p>
         </header>
         ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}
       </div>
@@ -405,7 +407,7 @@ function renderFooter() {
       data-form-save
       ${raw(ready ? "" : 'aria-disabled="true"')}
     >
-      <span>${mode() === "settings" ? "Save changes" : "Save Topic feed"}</span>
+      <span>Save changes</span>
     </button>
   </footer>`;
 }

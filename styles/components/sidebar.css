@@ -785,6 +785,11 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
    A DS .ap-select (details/summary + option rows), sized for the rail. */
 .app-sidebar__scope {
   position: relative;
+  /* The DS ships .ap-select at width:100%, which resolves against the rail's
+     full width and IGNORES this element's own margins — so the control ran 11px
+     past the rail's right edge. `auto` lets a block-level <details> fill what is
+     left after the margins, which is what the nav rows below already do. */
+  width: auto;
   /* Same horizontal inset as the nav rows below, and a divider under it: the
      switcher governs everything beneath, so the line says "scope above,
      scoped below" rather than leaving it floating. */
