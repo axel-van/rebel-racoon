@@ -14,26 +14,25 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=549";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=88";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=96";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=90";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=67";
+} from "./right-panel.js?v=553";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=89";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=97";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=91";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=68";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=342";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
+} from "./conversation-status-card.js?v=346";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=39";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=74";
-import { getLaneById } from "../research-store.js?v=42";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=116";
+} from "../top-posts-flow.js?v=117";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -54,6 +53,34 @@ import {
 // Lot 11 — they now live in the sidebar footer popmenu (cf. sidebar.js).
 // The "?" key shortcut for the keyboard legend stays globally bound so
 // power users keep their muscle memory.
+
+// ── Screen actions in the topbar ───────────────────────────────────────────
+// A screen can hand the topbar its own controls, which then sit where the
+// session pills sit. This is a COMPOSITION, not a new component: what goes in is
+// unmodified `.ap-button`s, and the topbar is an app-level shell element rather
+// than anything the DS ships.
+//
+// It exists because a page-level toolbar under the topbar spent a full row of
+// vertical space repeating what the topbar already said. The rule that keeps it
+// honest: only controls that act on the WHOLE screen belong here — a filter, an
+// export, a settings gear. Anything scoped to one object on the page stays with
+// that object.
+//
+// The screen owns the teardown. Nothing clears this automatically, because a
+// route change repaints the topbar before the outgoing screen's cleanup runs and
+// an auto-clear would race it.
+let screenActions = "";
+
+export function setTopbarActions(htmlString = "") {
+  screenActions = htmlString || "";
+  renderTopbar();
+}
+
+export function clearTopbarActions() {
+  if (!screenActions) return;
+  screenActions = "";
+  renderTopbar();
+}
 
 export function renderTopbar(_options = {}) {
   const el = document.getElementById("topbar");
@@ -82,7 +109,7 @@ export function renderTopbar(_options = {}) {
     ? renderWelcomeAltExit()
     : onSession
       ? `${renderSessionPills(rpMode, draftCount, isEmpty, ideaCount)}${renderStatusCardToggle(statusCardAvailable)}`
-      : "";
+      : screenActions;
   // On the repurposing winner board (profile-first mode), the topbar leads with
   // a "Change profile" back — the app's standard back affordance — in place of
   // the session title.
@@ -483,21 +510,11 @@ function backTargetFor(path) {
   // is why the label carries the lane's own name. Settings shares the target with
   // the form's Cancel (research-form.exitPath), deliberately: two exits from one
   // screen that disagree is how a user loses work.
-  const laneSub = /^\/topic-feeds\/([^/]+)\/(settings|attention)$/.exec(path);
-  if (laneSub) {
-    const lane = getLaneById(decodeURIComponent(laneSub[1]));
-    return {
-      to: `/topic-feeds/${laneSub[1]}`,
-      // A deleted lane can still be deep-linked; fall back rather than render
-      // "Back to undefined".
-      label: lane ? `Back to ${lane.name}` : "Back to Topic feeds",
-    };
-  }
-  // Every other Topic feeds view — a feed's Topic list, and /topic-feeds/new — goes
-  // back to the list of feeds. Deliberately WITHOUT ?fresh=1: that param runs the
-  // generating loader, and a back button should not spend 1.6s pretending to fetch
-  // a list you were just looking at.
-  if (/^\/topic-feeds\/[^/]+/.test(path)) return { to: "/topic-feeds", label: "Back to Topic feeds" };
+  // There is ONE feed now — the active Playbook's — so every Topic-feeds sub-view
+  // goes back to the same place and the label no longer names a lane. It used to,
+  // because you could be looking at any of several feeds' settings; with one per
+  // Playbook the name would repeat the rail's scope switcher.
+  if (/^\/topic-feeds\/.+/.test(path)) return { to: "/topic-feeds", label: "Back to the feed" };
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.

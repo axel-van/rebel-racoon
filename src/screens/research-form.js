@@ -20,11 +20,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=415";
+import { renderTopbar } from "../components/topbar.js?v=419";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getContexts, getContextById } from "../contexts-store.js?v=74";
-import { getLaneById, addLane, updateLane } from "../research-store.js?v=42";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=109";
+import { getContexts, getContextById } from "../contexts-store.js?v=75";
+import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=43";
+import { getActivePlaybookId } from "../active-playbook.js?v=6";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=112";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -42,8 +43,20 @@ let boundTarget = null;
 let boundClick = null;
 let boundInput = null;
 
+// SETTINGS ONLY. Feed creation is gone — a feed is implicit in a Playbook now,
+// so what this form does is change which sources the Playbook's feed listens to.
+// The create mode survives in this function and in the copy branches below,
+// unreachable, because bringing feeds back as first-class objects would need it
+// again and rebuilding it from the settings path would lose the distinctions it
+// draws (the save label, the cancel target, the seeded website list).
 function mode() {
   return laneId ? "settings" : "create";
+}
+
+function laneForActivePlaybook() {
+  const scopeId = getActivePlaybookId();
+  const mine = scopeId ? getLanes().filter((l) => l.playbookId === scopeId) : getLanes();
+  return mine.length ? mine[0].id : null;
 }
 
 export function renderResearchForm(params, target) {
@@ -51,9 +64,10 @@ export function renderResearchForm(params, target) {
     navigate("/");
     return;
   }
-  // /topic-feeds/new has no :id; /topic-feeds/:id/settings does. That single fact is
-  // what selects the mode — no separate entry point, no flag argument.
-  laneId = params && params.id ? params.id : null;
+  // /topic-feeds/settings carries no :id — it means "the active Playbook's feed",
+  // resolved the same way the feed itself resolves it. /topic-feeds/:id/settings
+  // still names one, which is what deep links and the attention page use.
+  laneId = params && params.id ? params.id : laneForActivePlaybook();
 
   if (laneId) {
     const lane = getLaneById(laneId);
@@ -402,7 +416,8 @@ function renderFooter() {
  * (topbar.backTargetFor). Two exits from one screen that disagree is how a user
  * loses work. */
 function exitPath() {
-  return mode() === "settings" ? `/topic-feeds/${encodeURIComponent(laneId)}` : "/topic-feeds";
+  // Always back to THE feed — there is one, and it is the active Playbook's.
+  return "/topic-feeds";
 }
 
 function bind(target) {

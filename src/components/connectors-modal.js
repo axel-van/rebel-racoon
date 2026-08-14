@@ -18,9 +18,9 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordin
 import { navigate } from "../router.js?v=30";
 import { showToast } from "./toast.js?v=21";
 import { setHandoff } from "../handoff.js?v=20";
-import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=59";
-import { renderGalleryBody, renderDetailBody } from "../connectors-view.js?v=41";
-import { askConnector } from "../connector-ask.js?v=39";
+import { findConnector, setConnectorStatus, subscribe as subscribeConnectors } from "../connectors-store.js?v=60";
+import { renderGalleryBody, renderDetailBody } from "../connectors-view.js?v=42";
+import { askConnector } from "../connector-ask.js?v=40";
 
 const MODAL_ID = "connectors";
 

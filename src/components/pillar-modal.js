@@ -22,25 +22,13 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
-import { getContexts } from "../contexts-store.js?v=74";
-import { addPillar, assetKindFor } from "../pillars-store.js?v=1";
+import { getActivePlaybookId } from "../active-playbook.js?v=6";
+import { addPillar, assetKindFor } from "../pillars-store.js?v=3";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "pillar";
 
-let backdrop,
-  modal,
-  titleEl,
-  nameEl,
-  aboutEl,
-  playbookEl,
-  playbookField,
-  saveBtn,
-  cancelBtn,
-  closeBtn,
-  dropzone,
-  fileInput,
-  fileList;
+let backdrop, modal, titleEl, nameEl, aboutEl, saveBtn, cancelBtn, closeBtn, dropzone, fileInput, fileList;
 let initialized = false;
 let state = { assets: [], onDone: null };
 
@@ -66,10 +54,6 @@ const HTML = `
       <div class="ap-input-group">
         <input type="text" id="pillarName" placeholder="Sustainable wardrobe" />
       </div>
-    </div>
-    <div class="ap-form-field" id="pillarPlaybookField">
-      <label for="pillarPlaybook">Playbook</label>
-      <select class="pillar-modal__select" id="pillarPlaybook"></select>
     </div>
     <div class="ap-form-field">
       <label for="pillarAbout">What is this pillar about?</label>
@@ -122,8 +106,6 @@ function injectOnce() {
   titleEl = document.getElementById("pillarModalTitle");
   nameEl = document.getElementById("pillarName");
   aboutEl = document.getElementById("pillarAbout");
-  playbookEl = document.getElementById("pillarPlaybook");
-  playbookField = document.getElementById("pillarPlaybookField");
   saveBtn = document.getElementById("pillarSave");
   cancelBtn = document.getElementById("pillarCancel");
   closeBtn = document.getElementById("pillarClose");
@@ -212,10 +194,12 @@ function submit() {
   const name = nameEl.value.trim();
   if (!name) return;
   const about = aboutEl.value.trim();
-  const playbookId = playbookEl.value || null;
+  // The Playbook is not asked here any more: a pillar belongs to whichever brand
+  // the rail is scoped to, and asking again would let the dialog disagree with
+  // the switcher two inches to its left.
   const { onDone, assets } = state;
   close();
-  addPillar({ name, about, playbookId, assets });
+  addPillar({ name, about, playbookId: getActivePlaybookId(), assets });
   showToast(`Created “${name}”`);
   if (typeof onDone === "function") onDone();
 }
@@ -229,15 +213,6 @@ export function open({ playbookId = null, onDone = null } = {}) {
   requestOpen(MODAL_ID, close);
 
   state = { assets: [], onDone };
-
-  const contexts = getContexts();
-  playbookEl.innerHTML = contexts
-    .map((c) => `<option value="${escapeAttr(c.id)}">${escapeAttr(c.name)}</option>`)
-    .join("");
-  const wanted = playbookId || (contexts[0] && contexts[0].id) || "";
-  playbookEl.value = wanted;
-  playbookField.hidden = contexts.length <= 1;
-  playbookField.style.display = contexts.length <= 1 ? "none" : "";
 
   titleEl.textContent = "New pillar";
   saveBtn.textContent = "Create pillar";

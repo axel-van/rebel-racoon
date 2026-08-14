@@ -43,7 +43,7 @@
 //   unlinkBrief(briefId)              → clears the mark only
 //   subscribe(fn)                     → unsubscribe
 
-import { pillars as seed } from "./mocks.js?v=90";
+import { pillars as seed } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 
@@ -119,8 +119,11 @@ export function unseenCountFor(pillarId) {
   return p ? p.sources.filter((s) => !s.seen).length : 0;
 }
 
-export function unseenCount() {
-  return pillars.reduce((n, p) => n + p.sources.filter((s) => !s.seen).length, 0);
+/** Unseen across every pillar, or across one Playbook's when `playbookId` is given. */
+export function unseenCount(playbookId = null) {
+  return pillars
+    .filter((p) => !playbookId || p.playbookId === playbookId)
+    .reduce((n, p) => n + p.sources.filter((s) => !s.seen).length, 0);
 }
 
 export function markPillarSeen(pillarId) {

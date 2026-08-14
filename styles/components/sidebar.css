@@ -776,3 +776,120 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   gap: var(--ref-spacing-xxs);
   padding: var(--ref-spacing-xs) var(--ref-spacing-xxs);
 }
+
+/* ── The Playbook scope switcher ───────────────────────────────────────────
+   The one control above the nav. Everything below it in the rail is this
+   brand's, so its whole job is to be readable WITHOUT being opened — a scope
+   that hides things is only safe while it is legible.
+
+   A DS .ap-select (details/summary + option rows), sized for the rail. */
+.app-sidebar__scope {
+  position: relative;
+  margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
+}
+
+.app-sidebar__scope > summary {
+  list-style: none;
+}
+
+.app-sidebar__scope > summary::-webkit-details-marker {
+  display: none;
+}
+
+.app-scope {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  width: 100%;
+  height: auto;
+  padding: 6px var(--ref-spacing-xxs);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* The brand's initial. Not an avatar component: an avatar means a PERSON
+   everywhere else in this app, and a Playbook is not one. */
+.app-scope__mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-archie-mark);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 800;
+}
+
+.app-scope__mark > i {
+  font-size: var(--sys-text-style-body-size);
+}
+
+.app-scope__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-scope__label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--sys-text-color-light);
+}
+
+/* The name ellipsises. The rail is 240px and a brand name is user text — with a
+   nowrap name the chevron was pushed out of the control entirely. */
+.app-scope__name {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 700;
+  color: var(--app-convo-navy);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-scope--empty {
+  border: 1px dashed var(--app-border-soft);
+  border-radius: var(--app-radius-sm);
+  background: none;
+  font-family: inherit;
+}
+
+.app-scope--empty .app-scope__mark {
+  background: var(--app-butter);
+  color: var(--app-archie-mark);
+}
+
+.app-scope__dropdown {
+  position: absolute;
+  top: calc(100% + var(--ref-spacing-xxxs));
+  left: 0;
+  right: auto;
+  min-width: 100%;
+  width: max-content;
+  max-width: 320px;
+  z-index: var(--app-z-overlay);
+  text-align: left;
+}
+
+/* The initial again, at option size, so a row in the list reads as the same
+   object as the trigger above it. */
+.app-scope__dot {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  margin-right: var(--ref-spacing-xxs);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-100);
+  font-size: 11px;
+  font-weight: 800;
+}

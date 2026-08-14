@@ -31,11 +31,11 @@ import {
   ignoreBrief,
   setStatus,
   toggleSaved,
-} from "../briefs-store.js?v=52";
+} from "../briefs-store.js?v=54";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=47";
-import { getLanes } from "../research-store.js?v=42";
+import { renderUseButtons } from "./brief-card.js?v=49";
+import { getLanes } from "../research-store.js?v=43";
 import {
   getContexts,
   getContextById,
@@ -46,13 +46,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=74";
+} from "../contexts-store.js?v=75";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=25";
-import { renderBriefCard } from "./brief-card.js?v=47";
-import { renderSocialPostCard } from "./social-post-card.js?v=30";
+import { openBriefInChat } from "../brief-flow.js?v=27";
+import { renderBriefCard } from "./brief-card.js?v=49";
+import { renderSocialPostCard } from "./social-post-card.js?v=31";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";

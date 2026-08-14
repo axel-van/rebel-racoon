@@ -1,10 +1,10 @@
-import { html, raw, escapeHtml } from "../utils.js?v=21";
+import { html, raw, escapeHtml, escapeAttr } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
 import { open as openBugReportModal } from "./bug-report-modal.js?v=24";
 import { open as openFeedbackModal } from "./feedback-modal.js?v=26";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { open as openSearchModal } from "./search-modal.js?v=46";
+import { open as openSearchModal } from "./search-modal.js?v=47";
 import { toggle as toggleShortcutLegend } from "./shortcut-legend.js?v=22";
 import { renderAdminMenu, applyUserMode, toggleFlag } from "../admin-menu.js?v=19";
 import {
@@ -15,19 +15,26 @@ import {
   togglePin as togglePinSession,
   togglePillar as togglePillarSession,
   subscribe as subscribeSessions,
-} from "../sessions-store.js?v=38";
+} from "../sessions-store.js?v=39";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { isNewUser } from "../user-mode.js?v=22";
-import { clearSession as clearLibrarySession } from "../library.js?v=90";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=74";
-import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=59";
-import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=27";
-import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=1";
-import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=42";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=549";
-import { clearSession as clearAssistantSession } from "../assistant.js?v=96";
-import { clearSession as clearPostsSession } from "../posts-store.js?v=67";
-import { clearSession as clearSourcesSession } from "../sources-stream.js?v=88";
+import { clearSession as clearLibrarySession } from "../library.js?v=91";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
+import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=60";
+import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=28";
+import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=3";
+import {
+  getActivePlaybook,
+  getActivePlaybookId,
+  setActivePlaybook,
+  subscribe as subscribeScope,
+} from "../active-playbook.js?v=6";
+import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=43";
+import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=553";
+import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
+import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
+import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
 
 // Global app sidebar — Brand / + New conversation / Recent chats / User footer.
 // Rendered once at boot into #sidebar; re-rendered on every route change so the
@@ -184,9 +191,45 @@ export function initSidebar() {
       openSearchModal();
       return;
     }
+    // ── The scope switcher ────────────────────────────────────────────────
+    const scopePick = event.target.closest("[data-scope-pick]");
+    if (scopePick) {
+      event.preventDefault();
+      const details = scopePick.closest("details");
+      if (details) details.open = false;
+      setActivePlaybook(scopePick.dataset.scopePick);
+      // Straight to the section you were already in, in the new brand — not to
+      // the object you had open, which belongs to the brand you just left.
+      const here = getPath();
+      if (here.startsWith("/pillar/")) navigate("/content-strategy");
+      else if (here.startsWith("/topic-feeds/")) navigate("/topic-feeds");
+      else if (here.startsWith("/playbook/")) navigate("/playbook/active");
+      return;
+    }
+    if (event.target.closest("[data-scope-manage]")) {
+      event.preventDefault();
+      const details = event.target.closest("details");
+      if (details) details.open = false;
+      navigate("/contexts");
+      return;
+    }
+    if (event.target.closest("[data-scope-create]")) {
+      event.preventDefault();
+      navigate("/contexts");
+      return;
+    }
+
     const navItem = event.target.closest("[data-sidebar-nav]");
     if (navItem) {
-      navigate(navItem.dataset.sidebarNav);
+      const to = navItem.dataset.sidebarNav;
+      // "/playbook/active" is a rail-only alias — the row names the CURRENT
+      // Playbook, and the id it resolves to changes with the switcher.
+      if (to === "/playbook/active") {
+        const id = getActivePlaybookId();
+        navigate(id ? `/playbook/${id}` : "/contexts");
+        return;
+      }
+      navigate(to);
       return;
     }
     // Rename action — opens the inline-rename input on the row.
@@ -330,6 +373,11 @@ export function initSidebar() {
   // The Content strategy row shows unseen filed sources, so opening a pillar
   // (which marks them seen) or removing one has to repaint the rail.
   subscribePillars(() => renderSidebar());
+  // The switcher, the chat list and every counter below it are scoped, so a
+  // brand change repaints the whole rail.
+  subscribeScope(() => renderSidebar());
+  // The Topic-feeds counter is untriaged topics now, so triaging one repaints.
+  subscribeBriefs(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -465,6 +513,8 @@ export function renderSidebar() {
       </button>
     </div>
 
+    ${raw(renderScopeSwitcher())}
+
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
 
     ${raw(renderOrganizeHeader())}
@@ -579,13 +629,94 @@ function renderFootMenu({ collapsed }) {
 // recent-conversations list below is the canonical entry point for
 // session navigation.
 // `flag` gates the row declaratively (was a hardcoded `if` on /connectors).
+// The scope switcher. Everything below it in the rail is this Playbook's.
+//
+// A <details class="ap-select">, the same widget the composer's pickers use —
+// but sized for the rail and carrying the brand's initial, because the one job
+// this control has is to be readable without being opened. A scope that hides
+// things is only safe while it is legible.
+//
+// There is deliberately no "All Playbooks" row. An escape hatch would turn the
+// guarantee ("everything you see is this brand") back into a filter ("everything
+// you see MIGHT be this brand"), and every surface below would have to name its
+// Playbook again — which is the thing this removed.
+function renderScopeSwitcher() {
+  const active = getActivePlaybook();
+  const all = getContexts();
+  if (!active) {
+    // No Playbooks at all (new-alt). The switcher becomes the way to make one
+    // rather than an empty control claiming a scope that does not exist.
+    return html`<div class="app-sidebar__scope">
+      <button type="button" class="app-scope app-scope--empty" data-scope-create>
+        <span class="app-scope__mark"><i class="ap-icon-plus"></i></span>
+        <span class="app-scope__text">
+          <span class="app-scope__label">Playbook</span>
+          <span class="app-scope__name">Create your first</span>
+        </span>
+      </button>
+    </div>`;
+  }
+  const rows = all
+    .map((c) => {
+      const on = c.id === active.id;
+      return html`<div
+        class="ap-select-option${raw(on ? " selected" : "")}"
+        data-scope-pick="${escapeAttr(c.id)}"
+        role="option"
+        aria-selected="${on ? "true" : "false"}"
+      >
+        <span class="app-scope__dot">${initialOf(c.name)}</span>
+        <span class="ap-select-option-text">${c.name}</span>
+        ${raw(on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+      </div>`;
+    })
+    .join("");
+  return html`<details class="ap-select app-sidebar__scope" data-scope-switcher>
+    <summary class="ap-select-trigger app-scope">
+      <span class="app-scope__mark">${initialOf(active.name)}</span>
+      <span class="app-scope__text">
+        <span class="app-scope__label">Playbook</span>
+        <span class="app-scope__name">${active.name}</span>
+      </span>
+      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+    </summary>
+    <div class="ap-select-dropdown app-scope__dropdown" role="listbox" aria-label="Switch Playbook">
+      <div class="ap-select-options">${raw(rows)}</div>
+      <div class="ap-select-footer">
+        <button type="button" class="ap-select-create" data-scope-manage>
+          <i class="ap-icon-target ap-select-create-icon" aria-hidden="true"></i>
+          <span>Manage Playbooks</span>
+        </button>
+      </div>
+    </div>
+  </details>`;
+}
+
+function countNewForScope() {
+  const scopeId = getActivePlaybookId();
+  return getLanes()
+    .filter((l) => !scopeId || l.playbookId === scopeId)
+    .reduce((n, l) => n + countNewForLane(l.id), 0);
+}
+
+function initialOf(name) {
+  return String(name || "?")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+}
+
 const NAV = [
+  // The active Playbook itself — singular, and it goes to that Playbook's page.
+  // The plural list moved into the switcher's footer: with a scope switcher the
+  // rail's job is the CURRENT brand's work, and "all my brands" is a management
+  // task rather than a place you navigate to while working.
   {
-    path: "/contexts",
+    path: "/playbook/active",
     icon: "ap-icon-target",
-    label: "Playbooks",
-    match: (p) => p === "/contexts",
-    count: () => getContexts().length,
+    label: "Playbook",
+    match: (p) => p.startsWith("/playbook/") || p === "/contexts",
+    count: () => 0,
   },
   {
     path: "/connectors",
@@ -621,7 +752,9 @@ const NAV = [
     flag: "contentStrategy",
     // Prefix on both routes: the row stays lit on a pillar's own page.
     match: (p) => p.startsWith("/content-strategy") || p.startsWith("/pillar/"),
-    count: () => getUnseenPillarSources(),
+    // Scoped, like the section it counts. A global total under a scoped rail is
+    // the worst of both: it promises work that the page it opens will not show.
+    count: () => getUnseenPillarSources(getActivePlaybookId()),
     notif: true,
   },
   // The counter is the number of LANES, not briefs: unlike Topics this row is
@@ -642,9 +775,14 @@ const NAV = [
     icon: "ap-icon-antenna",
     label: "Topic feeds",
     flag: "contentResearch",
-    // Prefix, so the row stays lit on a lane's feed, form and trending page.
+    // Prefix, so the row stays lit on the feed, its settings and its trending
+    // page.
     match: (p) => p.startsWith("/topic-feeds"),
-    count: () => getLanes().length,
+    // Untriaged topics in THIS Playbook's feed. It counted LANES before, which
+    // was navigation ("how many operations do I have running"); with one feed
+    // per Playbook that number is always 1 and says nothing. What is worth a
+    // counter now is whether the feed has anything in it.
+    count: () => countNewForScope(),
   },
 ];
 
@@ -829,7 +967,11 @@ function renderOrganizeHeader() {
 // Pinned + Recent groups. Search lives in a dedicated modal now
 // (./search-modal.js) — the sidebar always renders the full list.
 function renderRecentLists(activeSessionId) {
-  const allSessions = getSessions();
+  // The chat list inherits the scope like everything else below the switcher.
+  // A chat with no Playbook at all still shows — it belongs to nobody, so
+  // hiding it would strand it — but a chat belonging to ANOTHER brand does not.
+  const scopeId = getActivePlaybookId();
+  const allSessions = scopeId ? getSessions().filter((s) => !s.contextId || s.contextId === scopeId) : getSessions();
   if (isNewUser() || allSessions.length === 0) {
     // FIND-E4: first-run anchor for the recent-conversations list. The
     // bare "No conversations yet" was a dead end — anchor a soft hint

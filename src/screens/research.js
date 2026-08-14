@@ -1,3 +1,15 @@
+// ⚠️ UNREACHABLE — no route points here any more.
+//
+// This was the Topic-feed LIST, at /topic-feeds. With the rail's Playbook scope
+// switcher there is one feed per Playbook, so /topic-feeds renders that feed
+// directly (research-feed.js) and there is nothing to list. Feed creation went
+// with it: a feed is implicit in a Playbook now.
+//
+// Kept rather than deleted because it carries the reasoning for the list shape —
+// why the section resets here rather than into the last-opened feed, and why a
+// list of named operations beat a merged stream. If several feeds per Playbook
+// ever come back, this is the screen, not a rebuild.
+//
 // Content Research — the Topic-feed list, route /topic-feeds.
 //
 // VOCABULARY: an TOPIC FEED in the UI is a LANE in code, and an IDEA is a brief.
@@ -23,12 +35,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=415";
+import { renderTopbar } from "../components/topbar.js?v=419";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=74";
-import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=42";
-import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=52";
+import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
+import { getLanes, duplicateLane, deleteLane, subscribe as subscribeLanes } from "../research-store.js?v=43";
+import { countNewForLane, countTrendingForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
 
 // Local view state. The Playbook facet lives here rather than in the URL: unlike
 // /topics, whose `?pb=` scope has to survive the round trip to a per-Playbook

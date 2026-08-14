@@ -41,7 +41,7 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=90";
+import { researchBriefs as seed } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=19";
@@ -157,15 +157,24 @@ const isFresh = (b) => ageMinutes(b.ageLabel) <= FRESH_DAYS * DAY;
  * the list. Counting all statuses is also what keeps M ≥ N: the list only draws
  * fresh `new` ones, which is a subset of this.
  */
-export function countFreshTopics() {
-  return briefs.filter(isFresh).length;
+export function countFreshTopics(laneIds = null) {
+  return briefs.filter((b) => isFresh(b) && (!laneIds || laneIds.includes(b.laneId))).length;
 }
 
-export function getStarterTopics() {
+/**
+ * The new-session list.
+ *
+ * `laneIds` scopes it to the active Playbook's feeds — the caller resolves them,
+ * because this store knows about lanes but not about which Playbook owns one.
+ * Passing null means every lane, which is what the screen did before the rail
+ * gained a scope switcher.
+ */
+export function getStarterTopics(laneIds = null) {
   // Fresh only, to match the section's own label. A `new` Topic older than a week
   // used to qualify, which made "Fresh topics to review" false and could push the
   // shown count above the fresh total.
-  const all = briefs.map(withTriage).filter((b) => b.status === "new" && isFresh(b));
+  const inScope = laneIds ? (b) => laneIds.includes(b.laneId) : () => true;
+  const all = briefs.map(withTriage).filter((b) => b.status === "new" && isFresh(b) && inScope(b));
   const byAge = (a, b) => ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel);
   const trending = all.filter((b) => b.isTrending).sort(byAge)[0] || null;
   const updated = all.filter((b) => b.isUpdated && b !== trending).sort(byAge)[0] || null;

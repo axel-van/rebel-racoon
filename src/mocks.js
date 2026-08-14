@@ -4,33 +4,37 @@
 // Per-session sources / ideas / drafts live in their own bySession maps
 // below. Source counts, idea counts and draft counts are derived from
 // those stores at render time — never declared here.
+// ⚠️ `contextId` is now the SCOPE these chats live under — the rail filters the
+// list on it — so each one sits in the Playbook whose pillars quote it. A chat
+// cited as a pillar source but filed under another brand was invisible from the
+// pillar that named it, which is the one link this data has to keep.
 export const recentSessions = [
   {
     id: "s-acme-launch",
     name: "Q2 launch announcement",
     lastActivity: "2 hours ago",
-    contextId: "ctx-acme",
+    contextId: "ctx-agorapulse",
     pinned: true,
   },
   {
     id: "s-riverside",
     name: "Riverside customer story → 5 posts",
     lastActivity: "Yesterday",
-    contextId: "ctx-customer",
+    contextId: "ctx-noba",
     pinned: false,
   },
   {
     id: "s-state-of-social",
     name: "State of Social → thought leadership",
     lastActivity: "2 days ago",
-    contextId: "ctx-founder-voice",
+    contextId: "ctx-dwelling",
     pinned: false,
   },
   {
     id: "s-weekly-recap",
     name: "Weekly engagement recap",
     lastActivity: "5 days ago",
-    contextId: "ctx-acme",
+    contextId: "ctx-noba",
     pinned: false,
   },
 ];

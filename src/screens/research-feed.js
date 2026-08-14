@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=415";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=419";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=47";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=49";
 import {
   openIgnoreReason,
   openExport,
@@ -49,11 +49,12 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=109";
-import { openBriefInChat } from "../brief-flow.js?v=25";
+} from "../components/research-modals.js?v=112";
+import { openBriefInChat } from "../brief-flow.js?v=27";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=1";
-import { getLaneById } from "../research-store.js?v=42";
+import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=3";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=6";
+import { getLaneById, getLanes } from "../research-store.js?v=43";
 import {
   getBriefById,
   getBriefsForLane,
@@ -64,7 +65,7 @@ import {
   setStatus,
   toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=52";
+} from "../briefs-store.js?v=54";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -72,7 +73,7 @@ import {
   findResearchSource,
   findCadence,
 } from "../research-catalog.js?v=19";
-import { getContextById } from "../contexts-store.js?v=74";
+import { getContextById } from "../contexts-store.js?v=75";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -317,6 +318,7 @@ let timer = null;
 
 let unsubscribe = null;
 let unsubscribePillars = null;
+let topbarEl = null;
 let boundTarget = null;
 let boundClick = null;
 let boundInput = null;
@@ -333,11 +335,25 @@ export function renderResearchFeed(params, target) {
     navigate("/");
     return;
   }
-  laneId = params.id;
+  // ── One feed per Playbook ────────────────────────────────────────────────
+  // /topic-feeds carries no id: the feed IS the active Playbook's, resolved
+  // here. The id form survives for deep links — a pillar's trail links straight
+  // to `/topic-feeds/:laneId?topic=…` — and for the attention page.
+  //
+  // A Playbook with more than one lane shows its first: the mocks give each
+  // brand exactly one, and the moment that stops being true this is the seam
+  // where the briefs of several lanes get merged into one list.
+  laneId = params.id || firstLaneForScope();
   const lane = getLaneById(laneId);
   if (!lane) {
-    navigate("/topic-feeds");
-    return;
+    // No lane for this Playbook. NOT a redirect: /topic-feeds is where this
+    // resolves from, so bouncing there would loop. With feed creation gone the
+    // feed is implicit — every Playbook has one — so the honest state is "it has
+    // no sources yet", and the way out is its settings.
+    teardown();
+    renderTopbar();
+    paintNoFeed(target);
+    return teardown;
   }
 
   renderTopbar();
@@ -376,6 +392,36 @@ export function renderResearchFeed(params, target) {
   return teardown;
 }
 
+function paintNoFeed(target) {
+  target.innerHTML = html`<section class="screen research-feed">
+    <div class="research-feed__nofeed">
+      <span class="research-feed__nofeed-mark"><i class="ap-icon-antenna"></i></span>
+      <h1 class="ap-h3">No sources yet</h1>
+      <p>
+        This Playbook's feed has nothing to listen to. Pick the competitors, influencers and trends I should watch, and
+        topics start arriving on their own.
+      </p>
+      <button type="button" class="ap-button primary blue" data-feed-settings>
+        <i class="ap-icon-cog"></i><span>Choose sources</span>
+      </button>
+    </div>
+  </section>`;
+  target.addEventListener("click", onNoFeedClick);
+  boundTarget = target;
+  boundClick = onNoFeedClick;
+}
+
+function onNoFeedClick(event) {
+  if (event.target.closest("[data-feed-settings]")) navigate("/topic-feeds/settings");
+}
+
+function firstLaneForScope() {
+  const scopeId = getActivePlaybookId();
+  const lanes = getLanes();
+  const mine = scopeId ? lanes.filter((l) => l.playbookId === scopeId) : lanes;
+  return mine.length ? mine[0].id : null;
+}
+
 function teardown() {
   if (unsubscribe) {
     unsubscribe();
@@ -400,6 +446,9 @@ function teardown() {
     moreTimer = null;
   }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
+  if (topbarEl && boundClick) topbarEl.removeEventListener("click", boundClick);
+  topbarEl = null;
+  clearTopbarActions();
   if (boundTarget && boundInput) {
     boundTarget.removeEventListener("input", boundInput);
     boundTarget.removeEventListener("change", boundInput);
@@ -422,6 +471,10 @@ function teardown() {
   boundInput = null;
 }
 
+function pushTopbarActions() {
+  setTopbarActions(renderTopbarActions(narrowedGroupCount(filters)));
+}
+
 function paint(target) {
   // Every action in this feed repaints the whole screen, and innerHTML wipes the
   // scroll container with it. Without carrying scrollTop across the swap, using
@@ -430,6 +483,10 @@ function paint(target) {
   const prev = target.querySelector(".research-feed__body");
   const scrollTop = prev ? prev.scrollTop : 0;
   target.innerHTML = html`<section class="screen research-feed">${raw(renderPage())}</section>`;
+  // The cluster lives outside #app, so it is repainted here rather than by the
+  // innerHTML above — the Filters badge tracks the filter state and would go
+  // stale on the first narrowing otherwise.
+  pushTopbarActions();
   if (scrollTop) {
     const next = target.querySelector(".research-feed__body");
     if (next) {
@@ -626,7 +683,7 @@ function renderPage() {
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
-      ${raw(renderFeedHeader(lane))} ${raw(showNotice ? renderAttentionNotice(attention) : "")}
+      ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       <!-- The split starts HERE, below the header and the chips, so neither of
            them changes width when an article opens.
 
@@ -663,83 +720,33 @@ function renderGenerating() {
   </div>`;
 }
 
-// Mirrors recap__header — the prototype's established detail-view header:
-//
-//   __id ( __monogram + __id-text ( __titlerow(h1 + inline affordance) + __meta ) )
-//   opposite __header-actions
-//
-// It replaces a bordered bar that carried its own back button and captioned
-// itself, matching no other detail screen. Back now lives in the global topbar
-// via backTargetFor(), exactly as /playbook's does.
-//
-// Own class names rather than reusing recap__*: those belong to the Playbook
-// render engine, and sharing them would mean restyling one detail view silently
-// restyles the other.
-function renderFeedHeader(lane) {
-  const narrowed = narrowedGroupCount(filters);
-  const ctx = getContextById(lane.playbookId);
-  const cadence = findCadence(lane.cadence);
-  const n = lane.sources.length;
-
-  // The Playbook's monogram, same idea as recap__monogram: it says which brand
-  // this research belongs to before you read a word. Tinted by a CLASS, not an
-  // inline hex — a lane has a semantic colour key, where /playbook has real
-  // extracted brand colours to interpolate.
-  const color = ctx?.color || "orange";
-  const initials = ((ctx?.brandName || ctx?.name || "?").trim()[0] || "?").toUpperCase();
-
-  const meta = [
-    ctx
-      ? html`<span class="research-feed__meta-item"><i class="ap-icon-target" aria-hidden="true"></i>${ctx.name}</span>`
-      : "",
-    html`<span class="research-feed__meta-item">${n} ${n === 1 ? "source" : "sources"}</span>`,
-    cadence ? html`<span class="research-feed__meta-item">Refreshed ${cadence.adverb}</span>` : "",
-  ]
-    .filter(Boolean)
-    .join("");
-
-  return html`<header class="research-feed__header">
-    <div class="research-feed__id">
-      <span class="research-feed__monogram research-feed__monogram--${color}" aria-hidden="true">${initials}</span>
-      <div class="research-feed__id-text">
-        <div class="research-feed__titlerow">
-          <h1 class="research-feed__name">${lane.name}</h1>
-        </div>
-        <div class="research-feed__meta">${raw(meta)}</div>
-      </div>
-    </div>
-    <div class="research-feed__header-actions">
-      <div class="research-filters">
-        <button
-          type="button"
-          class="ap-button stroked grey"
-          data-feed-filters
-          aria-expanded="${view.panelOpen ? "true" : "false"}"
-        >
-          <i class="ap-icon-filter" aria-hidden="true"></i>
-          <span>Filters</span>
-          ${raw(narrowed ? html`<span class="research-filters__badge">${narrowed}</span>` : "")}
-        </button>
-        ${raw(view.panelOpen ? renderFilterPanel() : "")}
-      </div>
-      <button type="button" class="ap-button stroked grey" data-feed-export>
-        <i class="ap-icon-upload" aria-hidden="true"></i><span>Export</span>
-      </button>
-      <!-- Last in the cluster, to the right of Export. It sat inline beside the
-           name as recap's rename pen does, but the handoff puts the settings gear
-           at the end of the toolbar and that is where it reads as the lane's
-           own control rather than as a rename. -->
+// The topbar cluster: Filters (with its panel), Export, Feed settings.
+function renderTopbarActions(narrowed) {
+  return html`<div class="research-filters">
       <button
         type="button"
-        class="ap-icon-button stroked grey"
-        data-feed-settings
-        title="Feed settings"
-        aria-label="Feed settings"
+        class="ap-button stroked grey"
+        data-feed-filters
+        aria-expanded="${view.panelOpen ? "true" : "false"}"
       >
-        <i class="ap-icon-cog"></i>
+        <i class="ap-icon-filter" aria-hidden="true"></i>
+        <span>Filters</span>
+        ${raw(narrowed ? html`<span class="research-filters__badge">${narrowed}</span>` : "")}
       </button>
+      ${raw(view.panelOpen ? renderFilterPanel() : "")}
     </div>
-  </header>`;
+    <button type="button" class="ap-button stroked grey" data-feed-export>
+      <i class="ap-icon-upload" aria-hidden="true"></i><span>Export</span>
+    </button>
+    <button
+      type="button"
+      class="ap-icon-button stroked grey"
+      data-feed-settings
+      title="Feed settings"
+      aria-label="Feed settings"
+    >
+      <i class="ap-icon-cog"></i>
+    </button>`;
 }
 
 // Group order is fixed: Topic status, Sources, Topic type. Topic type is
@@ -1079,6 +1086,11 @@ function bind(target) {
     }
   };
   target.addEventListener("click", boundClick);
+  // …and again on the topbar, because the Filters / Export / Settings cluster
+  // now renders there, outside #app. Same handler, so the three actions cannot
+  // drift apart depending on where they were pressed.
+  topbarEl = document.getElementById("topbar");
+  if (topbarEl) topbarEl.addEventListener("click", boundClick);
 
   boundInput = (event) => {
     const box = event.target.closest("[data-feed-filter]");

@@ -34,15 +34,17 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | `/connectors`                | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
 | `/topics`                    | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |
 | `/topics/settings`           | `topics-settings.js`   | **Topics settings** — the six listening sources + cadence for one Playbook (`?pb=`); topbar back  |
-| `/topic-feeds`               | `research.js`          | **Topic feeds** list (H1 "Topic feeds") — gated by `contentResearch`                              |
-| `/topic-feeds/new`           | `research-form.js`     | Create a feed. Registered BEFORE `/topic-feeds/:id`, which would swallow "new"                    |
-| `/topic-feeds/:id`           | `research-feed.js`     | One feed's Topics + article pane; `?fresh=1` plays the generating loader                          |
-| `/topic-feeds/:id/settings`  | `research-form.js`     | The same form in settings mode; topbar back keeps the feed's own name                             |
+| `/topic-feeds`               | `research-feed.js`     | **THE feed** — the active Playbook's, resolved from the rail's scope. One feed per Playbook       |
+| `/topic-feeds/settings`      | `research-form.js`     | Which sources that feed listens to. Registered BEFORE `/topic-feeds/:id`                          |
+| `/topic-feeds/:id`           | `research-feed.js`     | One feed by id — deep links (a pillar's trail) and the attention page                             |
+| `/topic-feeds/:id/settings`  | `research-form.js`     | The same form, feed named by id                                                                   |
 | `/topic-feeds/:id/attention` | `research-trending.js` | The flagged Topics (trending / updated), outside triage                                           |
 | `/content-strategy`          | `content-strategy.js`  | **Content strategy** — the pillar list (gated by `contentStrategy`)                               |
 | `/pillar/:id`                | `pillar.js`            | One pillar: Context & assets · What went into it. Topbar back → `/content-strategy`               |
 | `/welcome-alt`               | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
 | `/welcome-alt/recap`         | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
+
+`research.js` (the feed LIST) and `/topic-feeds/new` are gone: with one feed per Playbook there is nothing to list and nothing to create. The file is kept and marked unreachable — it carries the reasoning for the list shape, if several feeds per Playbook ever come back.
 
 There is **no `/settings` route** — it was removed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
 
@@ -149,6 +151,23 @@ src/
 
   modal-coordinator.js    one-overlay-at-a-time: requestOpen / notifyClose / bindOverlayDismissal
 ```
+
+### The active Playbook is the app's one scope
+
+`active-playbook.js` holds **one** Playbook id, chosen from the switcher pinned above the nav in the sidebar and persisted in `localStorage` (`archie-active-playbook`). Everything below the switcher inherits it: Content strategy, the Topic feed, the new-session "Fresh topics to review" list, the recent-chats list, both nav counters, and a **new chat's** `contextId`.
+
+**This replaced four pickers** — the composer's Playbook select, the Topic-feed form's, the New-pillar dialog's, and the Playbook facet on `/content-strategy`. Each asked the same question in a different place, and any two could disagree.
+
+Two rules that keep it honest:
+
+- **No "All Playbooks".** An escape hatch turns the guarantee (_everything you see is this brand_) back into a filter (_everything you see might be_), and every surface below would have to name its Playbook again — which is what this removed. Cross-brand views were the price.
+- **A global scope HIDES.** Anything outside it is invisible rather than empty, so the switcher is permanent and always shows the brand name: the scope is only safe while it is legible.
+
+An existing chat keeps whichever Playbook it was created in — a chat is a record, and re-scoping old records on a brand switch would rewrite history rather than filter it. Switching brand from a pillar or a feed lands on the **section**, never on another brand's object.
+
+### The topbar can carry a screen's own controls
+
+`topbar.setTopbarActions(html)` / `clearTopbarActions()`. Used by the Topic feed for Filters · Export · Feed settings, which retired an in-page header costing ~96px above the fold. It is a **composition**, not a new component: what goes in is unmodified `.ap-button`s. The rule — only controls acting on the **whole screen** belong there. The screen owns the teardown, and must bind its own click listener on `#topbar`: that node is outside `#app`, so a screen's delegated handler does not reach it.
 
 ### State management
 
