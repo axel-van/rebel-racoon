@@ -2267,6 +2267,10 @@ body.hide-playbook-colors .composer-context__dot {
 .composer-pillar {
   position: relative;
   display: inline-flex;
+  /* Shrinkable, unlike the toolbar's icon-text buttons which are pinned at
+     flex-shrink: 0 — this control carries user text and is the right thing to
+     give way when the composer column is narrow. */
+  min-width: 0;
 }
 
 .composer-pillar__trigger {
@@ -2286,10 +2290,29 @@ body.hide-playbook-colors .composer-context__dot {
   list-style: none;
 }
 
+/* The glyph is quiet, not accent: it sits in a row of grey toolbar icons (Add,
+   Reference) and an electric-blue one read as the only live control there. Same
+   value those buttons' icons resolve to — grey-80 via --sys-text-color-light. */
 .composer-pillar .ap-select-inline-icon {
-  color: var(--ref-color-electric-blue-100);
+  color: var(--sys-text-color-light);
   font-size: var(--sys-text-style-body-size);
   flex-shrink: 0;
+}
+
+/* The toolbar is nowrap, so without a cap a long pillar name pushes Send past
+   the composer card's edge. The trigger is allowed to shrink and the NAME is
+   what gives — the inline glyph and the chevron are fixed, and losing either
+   would cost more than losing the tail of a name the user just chose. */
+.composer-pillar__trigger {
+  max-width: 220px;
+  min-width: 0;
+}
+
+.composer-pillar__trigger .ap-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .composer-pillar__dropdown {

@@ -1318,7 +1318,10 @@ function renderPillarControl(ctx, sessionId) {
     </div>`;
   const valueMarkup = active
     ? `<span class="ap-select-value">${escapeHtml(active.name)}</span>`
-    : `<span class="ap-select-value ap-select-placeholder">No pillar</span>`;
+    : // A prompt, not a state — the same shape as the Playbook control's
+      // "Select a playbook". The dropdown's own row keeps saying "No pillar",
+      // because there it is a CHOICE (detach) rather than an invitation.
+      `<span class="ap-select-value ap-select-placeholder">Select a Pillar</span>`;
   return `
     <details class="ap-select composer-pillar" data-composer-pillar>
       <summary class="ap-select-trigger composer-pillar__trigger" title="Attach a content pillar to this chat">
