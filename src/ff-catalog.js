@@ -143,6 +143,27 @@ export const FLAGS = Object.freeze([
       "in the right panel). A card in a feed here is a Topic.",
   },
   {
+    id: "contentStrategy",
+    label: "Content strategy (pillars)",
+    default: false,
+    hides:
+      "When OFF (default), hides everything Content-strategy: the " +
+      "/content-strategy and /pillar/:id routes, the sidebar nav row and its " +
+      "counter, the New-pillar dialog, and — on a Topic feed — the pillar mark " +
+      "in a topic card's source row plus the 'Unlink from this pillar' row in " +
+      "that card's menu. A stale deep link bounces to /, like /topics. The " +
+      "seeded pillars ride along in the data either way. " +
+      "\n\nWhen ON, a PILLAR is a theme the brand keeps coming back to: a " +
+      "condensed context Archie carries into a chat, the assets you attach to " +
+      "it, and the audit trail of every topic, chat and note that fed it. " +
+      "\n\nTHE DECISION IT ENCODES: matching is TRUSTED and reviewed " +
+      "AFTERWARDS. There is no approval queue and no pending state — Archie " +
+      "files what matches, each row is stamped with when it arrived, and the " +
+      "only verb is Remove (which re-condenses the context without it). Archie " +
+      "also OPENS pillars on his own when topics keep landing outside every " +
+      "existing one; those are labelled until someone opens them.",
+  },
+  {
     id: "playbookCompetitors",
     label: "Playbook competitors",
     default: false,

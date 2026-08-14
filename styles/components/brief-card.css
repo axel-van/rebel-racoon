@@ -33,6 +33,10 @@
   background: var(--ref-color-white);
   border: 1px solid var(--ref-color-grey-10);
   border-radius: 14px;
+  /* The kebab is absolutely positioned into the top-right corner and is a
+     SIBLING of the body button — it cannot be inside it (button-in-button). This
+     is the containing block for it. */
+  position: relative;
 }
 
 /* No .topics-card--trending frame treatment, deliberately. A trending card used
@@ -137,6 +141,11 @@
   gap: 8px;
   max-width: var(--topics-measure);
   margin-bottom: 10px;
+  /* Right padding reserves the kebab's corner. flex-wrap because the run now
+     carries one more item (the pillar mark) than it was measured for and a long
+     source name plus two attention marks can overflow the measure. */
+  flex-wrap: wrap;
+  padding-right: 34px;
 }
 
 .topics-card__source {
@@ -163,17 +172,60 @@
   flex: 1;
 }
 
-/* The route tag. Geometry only — .ap-tag brings the fill, the border, the radius
-   and the type, and the DS caps a tag at 180px with an ellipsis, which is what
-   keeps "Competitive intelligence" from stretching the row.
+/* .topics-card__route is GONE with renderRouteTag() — brief-card.js has the why.
+   Nothing else in this file styles a tag inside the meta run; if a route label
+   ever returns, it needs flex: 0 0 auto or the source name will not give way to
+   it. */
 
-   A small nudge off the age label so the meta run reads as
-   source · age — [route] rather than as one run-on string. flex-shrink is
-   disabled because the tag is the shortest thing in the row and the source name
-   should give way first. */
-.topics-card__route {
+/* ── The pillar mark ───────────────────────────────────────────────────────
+   The tooltip is display:none until hover, positioned by .ap-tooltip bottom-left
+   and un-shouted here (the DS tooltip inherits the meta row's uppercase caption
+   styling otherwise). Identical construction to __status-tip above, on purpose:
+   two glyph-plus-tooltip pairs in the same row that behaved differently would be
+   the bug. */
+.topics-card__pillar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
-  margin-left: var(--ref-spacing-xxxs);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.topics-card__pillar > i {
+  font-size: 15px;
+}
+
+.topics-card__pillar-tip {
+  display: none;
+  top: calc(100% + var(--ref-spacing-xxs));
+  left: 0;
+  width: max-content;
+  max-width: 280px;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.topics-card__pillar:hover > .topics-card__pillar-tip {
+  display: block;
+}
+
+/* ── The card's kebab + its menu ───────────────────────────────────────────
+   The trailing __spacer keeps the meta run clear of this corner; without it a
+   long source name runs under the trigger. z-index because the menu overlaps the
+   headline and the summary beneath it. */
+.topics-card__more {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.topics-card__more-menu {
+  position: absolute;
+  top: 44px;
+  right: 10px;
+  z-index: var(--app-z-overlay);
+  min-width: 300px;
 }
 
 /* Trending is .trending-mark, in styles/components/trending-mark.css — the lane

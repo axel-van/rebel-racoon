@@ -747,6 +747,91 @@ C'était un **carrousel** (une carte, chevrons, dot stepper). La liste l'a rempl
 
 ---
 
+## 19. Content strategy — les piliers (flag `contentStrategy`, défaut OFF)
+
+Un **pilier** est un thème sur lequel la marque revient : un _contexte condensé_ qu'Archie emporte en chat, les **assets** qu'on y attache, et la **piste d'audit** de tout ce qui l'a nourri. Entrée de menu à part, en aval du Playbook et en amont des feeds. **Entièrement optionnel** — beaucoup de marques n'en ont pas.
+
+### La décision que tout le reste suit
+
+**Le classement est fait d'office et relu APRÈS.** Pas de file d'attente, pas d'état « en attente », pas de statut sur une source : Archie classe ce qui correspond, la ligne dit **quand** c'est arrivé, et le seul verbe utilisateur est **Remove** (qui **recondense** le contexte sans elle). Une file de validation était l'alternative : elle transforme en corvée une fonctionnalité que personne n'est obligé d'utiliser, et une file non relue empêche silencieusement le pilier d'apprendre quoi que ce soit.
+
+Deux conséquences dont dépendent toutes les vues :
+
+- Les sources sont **toujours du plus récent au plus ancien**, chacune datée. Cet ordre **EST** le mécanisme de relecture — « qu'est-ce qui est arrivé depuis » est le haut de la liste, pas un autre endroit.
+- Retirer une source **recondense**. Une suppression qui laisse la prose intacte est le mode d'échec : on a dit à l'utilisateur que le contexte était reconstruit, il ne vérifiera pas. `recondense()` dans [`pillars-store.js`](../../src/pillars-store.js) est la couture où branche un vrai prompt.
+
+### `/content-strategy` — la liste ([`screens/content-strategy.js`](../../src/screens/content-strategy.js))
+
+Une carte par pilier : nom, ce qu'il couvre, nombre de sources + Playbook, et **la seule ligne qui donne une raison de l'ouvrir** — « N filed since you last looked », ou « updated 3w ago » quand rien n'est arrivé (un pilier calme est un fait, pas une valeur manquante).
+
+- **Rien ici n'est une file.** Aucun badge à vider, aucune carte ne porte d'action « occupe-toi de moi » : _Review_ est de la navigation, pas du triage.
+- Menu kebab par carte : **Rename · Merge into <autre pilier> · Delete**. **Merge est celui qui compte** — l'échec courant d'un pilier ouvert par Archie n'est pas un mauvais pilier mais le **quasi-doublon** d'un existant, et sans fusion la seule issue est de le supprimer en perdant tout ce qu'il a collecté.
+- Suppression = **confirm**, pas un snackbar Undo : un pilier porte un contexte condensé et une piste d'audit qu'un toast ne reconstruit pas.
+- **Pas de facette Playbook.** Le DS Select est un composant JS (trigger + popover, cf. `topics-settings.renderPlaybookSelect`) ; un `<select>` natif portant `.ap-select-trigger` est de la dérive, et chaque carte nomme déjà son Playbook. À revoir quand une marque en aura vingt.
+- État vide : un **haussement d'épaules**, pas une tâche de configuration — « Plenty of brands never need one » et un seul bouton.
+
+### Les piliers qu'Archie ouvre seul
+
+Quand des Topics atterrissent régulièrement **hors de tout pilier existant**, Archie en ouvre un : il **existe**, il collecte déjà, et il porte un `ap-tag blue` « New — I made this ».
+
+Ce n'est **pas** une proposition, pas un dialog, pas un message de chat. Le label signifie **« tu ne l'as pas encore validé »**, pas « une machine l'a fait » : il disparaît dès que quelqu'un ouvre le pilier. Les piliers proposés **à la création du Playbook** étaient l'idée précédente et c'était le mauvais moment — à la mise en route personne ne connaît ses piliers, et une liste de trois suppositions récolte un haussement d'épaules. Après quatre Topics empilés hors des piliers existants, la même affirmation a des preuves derrière elle et atterrit là où on peut la juger.
+
+### `/pillar/:id` — deux onglets ([`screens/pillar.js`](../../src/screens/pillar.js))
+
+| Onglet                | Contenu                                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Context & assets**  | la prose condensée qu'Archie emporte en chat + les fichiers attachés au pilier. **Par défaut.**       |
+| **What went into it** | la piste d'audit : chaque Topic, chat et note, du plus récent au plus ancien, **cité** et supprimable |
+
+- **Pourquoi la coupure** : le travail d'un pilier est de porter un point de vue ; la piste sert à l'**auditer**, ce qui est un besoin de second rang. Les deux sur une page donnaient une page essentiellement journal, et ce que le pilier dit vraiment sortait par le haut.
+- **Le compteur de l'onglet est la SEULE annonce de la fonctionnalité.** Le bandeau qui surplombait le contexte (« 3 things were added this week ») a disparu : une page dont la prémisse est l'ajout automatique n'a pas besoin d'un avis disant que des ajouts ont eu lieu. `ap-counter notif` quand quelque chose est arrivé, `normal grey` avec le total sinon — un badge d'attention sur un delta nul réclamerait de l'attention pour un journal.
+- **Chaque ligne cite.** Un titre dit qu'un Topic a été classé ; un extrait dit **quelle partie** le pilier a avalée, seule chose réellement jugeable. Une **note est citée entière** et marquée _« Written by you · quoted in full »_ — c'est le texte de l'utilisateur, et c'est le seul endroit de la fonctionnalité où un modèle n'a pas le droit de reformuler l'entrée.
+- **Vu / pas vu se vide en ouvrant LE PILIER**, jamais la section : vider depuis la liste effacerait un badge dont personne n'a regardé le contenu. Le compte est **gelé à l'entrée** (`arrivedOnEntry`) — sinon le nombre disparaît à l'instant où il devient utile.
+- **Assets** : images, vidéos, PDF, docs, sur l'onglet Context parce qu'ils décrivent ce que le pilier **a**, pas comment il a été construit. C'est **la seule étagère entièrement à l'utilisateur** — rien n'y est jamais classé automatiquement, et le dire en surface est ce qui rend le reste du comportement automatique supportable. Ils ne nourrissent **pas** le contexte condensé et n'apparaissent pas dans la piste ; c'est de la matière à rédaction. Upload par le `.ap-dropzone` partagé (le DS n'en fournit pas ; il vit dans `ds-patches.css`).
+- **Remove** = snackbar avec **Undo** (petit, répété, refaisable à la main), là où supprimer un pilier demande un confirm.
+- ⚠️ **La piste défile dans une page qui défile.** `flex: 0 0 auto` sur les lignes est porteur : dans une colonne flex avec `max-height`, les enfants rétrécissent et une ligne rétrécie écrase sa citation à **zéro** hauteur — le bug exact de la liste de Topics de la page nouvelle session. Pagination par `IntersectionObserver` sur une sentinelle **plus** un listener `scroll` : un IO ne tourne pas quand `document.visibilityState === "hidden"` (onglet en arrière-plan, session automatisée), et sans le repli la liste s'arrête de paginer et paraît cassée.
+
+### Ce qu'un pilier change sur une carte de Topic ([`components/brief-card.js`](../../src/components/brief-card.js))
+
+Trois changements, dont **deux ne sont pas gatés** par ce flag : ils appartiennent à Topic feeds et partent avec lui.
+
+1. **La marque de pilier** (gatée) — `ap-icon-stack` dans le `topics-card__source-row`, après le glyphe de statut : source · âge · statut est le dossier propre du Topic, le pilier est une **relation** vers autre chose. `ap-icon-stack` et **surtout pas** `ap-icon-bookmark`, qui signifie déjà le statut **Saved** sur cette même carte. Tooltip DS au survol ; jamais un lien, car c'est **dans** le `<button>` du corps de carte et un élément focusable là-dedans est l'imbrication invalide que la séparation corps/pied existe pour éviter.
+2. **Le kebab de carte** (non gaté) — frère du bouton de corps, jamais dedans (bouton dans bouton = HTML invalide, même raison que l'ancien pied). Il porte les trois verbes du pied d'article (`renderUseButtons`) **plus** _Unlink from this pillar_ (cette ligne-là, gatée). Ordre **piloté par la route**, exactement comme le split button garé : _Ready to post_ mène avec Use in chat, _Content strategy_ avec Save for later. **Ni sur le picker** (la carte **est** le contrôle) **ni sur la page trending** (elle répond « qu'est-ce qui monte », pas « où j'en suis » — trois des quatre lignes sont du triage).
+3. **Le tag de route a disparu** (non gaté) — `renderRouteTag()` est supprimé. Il existait pour dire quel verbe le **split button** mènerait ; le split est parti avec le pied de carte, et le menu montre désormais tous les verbes d'un coup. Les marques **Trending / Updated** prennent sa place dans le fil de gauche. **La ligne n'a plus de côté droit** : le kebab occupe le coin, donc tout court à gauche et le `__spacer` final est de l'espace mort qui **réserve** ce coin. Ce qui se perd, et ce n'est pas gratuit : la route pilote toujours l'**ordre** des lignes du menu, et c'est maintenant invisible tant que le menu n'est pas ouvert.
+
+**Unlink ne défait que la MARQUE.** Le Topic garde sa place dans le feed, son statut et sa ligne dans la piste du pilier. Le retirer du pilier est une action séparée, sur la page du pilier : confondre les deux laisserait un clic dans un feed réécrire en silence le contexte condensé d'un pilier.
+
+### Critères d'acceptation
+
+Vérifiés le 2026-08-14 sur `#/content-strategy`, `#/pillar/pil-noba-sustainable` et `#/topic-feeds/topic-list-5`, flags `contentStrategy` + `contentResearch` ON.
+
+| #   | Critère                                                                                                                                                   | Vérifié                                                                     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1   | Ligne de nav **Content strategy** entre Playbooks et Topic feeds, avec un `ap-counter notif` des sources non vues, toutes marques confondues              | ✅ badge « 7 » ; libellés de nav dans l'ordre attendu                       |
+| 2   | La liste affiche une carte par pilier + la tuile « Start a pillar » ; le sous-titre reprend en mots ce que le badge dit en chiffres                       | ✅ 5 piliers + tuile ; « 5 pillars · 7 things filed since you last looked » |
+| 3   | Un pilier ouvert par Archie porte `ap-tag blue` « New — I made this », et **le perd** une fois le pilier ouvert                                           | ✅ « Care and repair » ; tag absent au retour                               |
+| 4   | Kebab de carte : Rename · **Merge into <chaque autre pilier du même Playbook>** · Delete                                                                  | ✅ 5 lignes, 3 cibles de fusion                                             |
+| 5   | Supprimer un pilier demande une **confirmation** nommant le nombre de sources perdues                                                                     | ✅ confirm-modal, `danger`                                                  |
+| 6   | Ouvrir un pilier **vide son compteur** et celui de la nav diminue d'autant                                                                                | ✅ 7 → 4 après ouverture de « Sustainable wardrobe » (3 non vues)           |
+| 7   | Le pilier ouvre sur **Context & assets** ; l'onglet est dans l'URL (`?tab=sources`) et le retour navigateur fonctionne                                    | ✅ défaut sans paramètre                                                    |
+| 8   | Le compteur d'onglet est `notif` quand quelque chose est arrivé, `normal grey` avec le total sinon                                                        | ✅ « 3 » orange ; « 9 » gris sur un pilier calme                            |
+| 9   | **Aucun bandeau** au-dessus du contexte annonçant des ajouts                                                                                              | ✅ 0 `.ap-infobox` sur la page                                              |
+| 10  | La piste est **du plus récent au plus ancien**, chaque ligne datée, celles de moins de 7 jours teintées                                                   | ✅ 2d → 3mo ; 3 lignes `--recent`                                           |
+| 11  | **Chaque ligne cite**, et une note est marquée « Written by you · quoted in full » avec un filet distinct                                                 | ✅ `blockquote` sur 9/9 ; 2 notes en `--full`                               |
+| 12  | La piste **pagine** : 8 lignes puis une sentinelle « Loading more… », qui charge la suite en fin de course                                                | ✅ 8 → 9, sentinelle disparue                                               |
+| 13  | Retirer une source la fait disparaître, **recondense** (le tampon passe à « just now ») et propose **Undo** qui la remet                                  | ✅ 9 → 8 → 9 ; « context rewritten just now »                               |
+| 14  | Assets : tuiles image/vidéo/doc + dropzone partagé ; la mention dit qu'Archie n'y touche jamais                                                           | ✅ 3 tuiles + `.ap-dropzone--compact`                                       |
+| 15  | Le dialog **New pillar** demande nom + Playbook + sujet, porte l'infobox « You don't have to fill this » et **aucun** sélecteur de seed                   | ✅ 4 champs ; Create désactivé tant que le nom est vide                     |
+| 16  | Une carte de Topic classée porte la marque de pilier, avec tooltip nommant le pilier                                                                      | ✅ 3 marques sur 4 cartes ; tooltip 280×70, casse normale                   |
+| 17  | Le kebab de carte ouvre Use in chat · Save for later · Unlink from this pillar · Ignore, et se ferme sur un clic extérieur                                | ✅ 4 lignes, `has-description` sur les deux qui en portent une              |
+| 18  | **Unlink** retire la marque avec un toast et **ne touche pas** à la ligne du pilier                                                                       | ✅ 3 → 2 marques ; piste inchangée                                          |
+| 19  | **Aucun `topics-card__route`** nulle part                                                                                                                 | ✅ 0 dans le DOM et dans le code                                            |
+| 20  | Flag OFF : pas de ligne de nav, deep-link `/content-strategy` → `/`, **aucune marque** sur les cartes — mais le kebab reste (il appartient à Topic feeds) | ✅ nav absente ; 0 marque ; 4 kebabs                                        |
+
+⚠️ **Non vérifié dans ce navigateur** : le déclenchement par `IntersectionObserver` (l'onglet piloté rapporte `visibilityState: "hidden"`, ce qui suspend les IO). C'est le repli `scroll` qui a été exercé pour le critère 12 — et c'est précisément pourquoi le repli existe.
+
+---
+
 ## Voir aussi
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — le _comment_ technique

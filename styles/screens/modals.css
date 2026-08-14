@@ -49,6 +49,7 @@ body.has-modal {
 .topic-modal,
 .confirm-modal,
 .rename-modal,
+.pillar-modal,
 .save-folder-modal,
 .analyze-profiles-modal,
 .fill-document-modal,
@@ -97,6 +98,13 @@ body.has-modal {
 
 .rename-modal {
   width: min(calc(100% - 32px), 440px);
+}
+
+/* 560, not the rename dialog's 440: this one carries a textarea, an infobox and
+   a dropzone, and at 440 the infobox's two sentences ran to five lines. */
+.pillar-modal {
+  width: min(calc(100% - 32px), 560px);
+  flex-direction: column;
 }
 
 /* ── Analyze social profiles modal ─────────────────────────── */
@@ -473,6 +481,7 @@ body.has-modal {
 .topic-modal.open,
 .confirm-modal.open,
 .rename-modal.open,
+.pillar-modal.open,
 .save-folder-modal.open,
 .analyze-profiles-modal.open,
 .fill-document-modal.open,

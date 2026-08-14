@@ -39,6 +39,8 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | `/topic-feeds/:id`           | `research-feed.js`     | One feed's Topics + article pane; `?fresh=1` plays the generating loader                          |
 | `/topic-feeds/:id/settings`  | `research-form.js`     | The same form in settings mode; topbar back keeps the feed's own name                             |
 | `/topic-feeds/:id/attention` | `research-trending.js` | The flagged Topics (trending / updated), outside triage                                           |
+| `/content-strategy`          | `content-strategy.js`  | **Content strategy** — the pillar list (gated by `contentStrategy`)                               |
+| `/pillar/:id`                | `pillar.js`            | One pillar: Context & assets · What went into it. Topbar back → `/content-strategy`               |
 | `/welcome-alt`               | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
 | `/welcome-alt/recap`         | `welcome-alt-recap.js` | Onboarding recap reveal of the built Playbook                                                     |
 
@@ -49,6 +51,8 @@ There is **no `/settings` route** — it was removed. The prototype Admin contro
 > **Vocabulary — UI label vs code name.** A saved AI context is a **Playbook** in the UI but a **Context** in code (`contexts-store`, `contextId`). Content Research is **Topic feeds** in the UI: the section and its list are **Topic feeds**, a lane is an **Topic feed**, and each card in it is an **Topic**. Everything in code still says research / brief / lane / topic (`briefs-store`, `brief-card`, `data-brief-*`, `/topic-feeds` routes, `.topics-*` classes) — same split as Playbook/Context, and `briefs-store` could not be renamed regardless because `topics-store` is a different feature. Source → Idea → Draft (post) → Schedule is the content pipeline.
 >
 > ⚠️ **"Topic" names TWO objects again — by decision, not by accident.** The listening dossier (`topics-store`, `/topics`, flag `topics`) and a card in a Topic feed (`briefs-store`, `brief-card`, `/topic-feeds`, flag `contentResearch`). Earlier renames (Topic→Idea, then Idea→Inspiration) existed to separate exactly these two; Inspiration→Topic puts them back under one word. When both are possible in one sentence, **name the surface** — "a Topic in this feed", never a bare "Topic". They never touch in code: different stores, different card modules, different routes. Both flags default OFF, so the clash is invisible in the default demo, and `/topics` vs `/topic-feeds` keeps the routes distinct.
+>
+> **Pillar** is the third object in this family and does not collide with either: a theme the brand keeps coming back to, living in **Content strategy** (`pillars-store`, `/content-strategy`, `/pillar/:id`, flag `contentStrategy`). It is called a Pillar in the UI **and** in code — the one object in this app whose two names match. A Topic can be _filed into_ a pillar; a pillar is never a Topic.
 >
 > **Idea**, by contrast, now names one thing: the pipeline's extracted Idea (right panel, `library.js`, `idea-card`, the topbar's Ideas pill), from a source you supplied. A Topic comes from outside — competitors, influencers, trends, Archie found it.
 >
@@ -80,6 +84,7 @@ src/
   sources-stream.js     — GLOBAL sources + uploads + processing state machine
   schedule-store.js     — scheduled-post queue (calendar)
   topics-store.js       — GLOBAL listening dossiers + the mock scan (flag `topics`)
+  pillars-store.js      — GLOBAL content pillars: condensed context, dated sources, assets (flag `contentStrategy`)
   topics-catalog.js     — the six listening sources + cadences (CONFIG, like ff-catalog)
   composer-mentions.js  — per-session @mention pills in the composer
   composer-connector.js — composer's "Connected sources" submenu (feature-flagged)
@@ -112,6 +117,7 @@ src/
   screens/
     dashboard.js, session.js, ideas.js, contexts.js, playbook.js,
     connectors.js, topics.js, topics-settings.js,
+    content-strategy.js, pillar.js,
     welcome-alt.js, welcome-alt-recap.js
     _analyse-common.js  — shared "chat bubble + numbered picker bar" wizard primitives
     session/
@@ -160,6 +166,7 @@ src/
 | `schedule-store.js`    | scheduled-post queue                                                       | `getQueue`, `getQueueOn`, `addToQueue`, `removeFromQueue`, `busyCountsByDay`, `subscribe`                                                                                                                                                                  |
 | `composer-mentions.js` | per-session composer mentions                                              | `addMention`, `removeMention`, `renderInto`, `subscribe(sid, fn)`                                                                                                                                                                                          |
 | `topics-store.js`      | **global** listening dossiers + the mock scan (flag `topics`)              | `getTopics`, `getTopicById`, `getUnseenCount`, `countBySource`, `markSeen`, `dismissTopic`, `restoreTopic`, `refreshTopics`, `hasMoreToScan`, `topicWhen`, `subscribe`                                                                                     |
+| `pillars-store.js`     | **global** content pillars (flag `contentStrategy`)                        | `getPillars`, `getPillarById`, `addPillar`, `updatePillar`, `deletePillar`, `mergePillar`, `removeSource`/`restoreSource`, `addAsset`/`removeAsset`, `unseenCount`/`unseenCountFor`/`markPillarSeen`, `pillarForBrief`, `unlinkBrief`, `subscribe`         |
 
 `sources-stream` is the only **global** store. `library.js` subscribes to sources-stream and re-emits per-session so any session's content surfaces repaint when a source lands. **No localStorage persistence of app state** — only `archie-user-mode`, the feature-flag keys, sidebar collapse state, and the single-use `sessionStorage` handoff keys.
 
@@ -204,7 +211,7 @@ A topic offers exactly two actions: **Start a chat** and **Dismiss**. Start-a-ch
 
 ### Admin / user mode (prototype controls)
 
-The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 12 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (**ON** — the prompt-at-the-bottom redesign in `components/image-studio-v2/` is the Image Studio; OFF falls back to the previous one), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog), `contentResearch` (OFF — gates the whole Topic-feeds feature: the `/topic-feeds*` routes, the nav row + counter, the composer's "Pick from Topic feeds" picker, and the new-session Topics list). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
+The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototype control panel: switch user mode and toggle feature flags (each change reloads so stores re-seed). `user-mode.js`: `getUserMode()` returns `"returning"` (populated mocks, default) or `"new-alt"` (empty stores + first-time onboarding); `isNewUser()`/`isNewUserAlt()` test for `new-alt`. Feature flags live in `ff-catalog.js` (`FLAGS`, each with a `default`) and are read via `isFlagOn()`. The 13 flags: `draftInlineEdit` (OFF), `playbookDefault` (OFF), `connectors` (OFF — gates the whole connectors feature), `conversationStatusCard` (OFF), `statusActionSnackbars` (OFF), `playbookColors` (OFF — colors hidden by default), `manyProfiles` (OFF — demo seed of ~40 connected profiles), `multilingualPlaybook` (OFF), `playbookCompetitors` (OFF — gates the Playbook's Competitors section), `imageStudioV2` (**ON** — the prompt-at-the-bottom redesign in `components/image-studio-v2/` is the Image Studio; OFF falls back to the previous one), `topics` (OFF — gates the whole Topics feature: the `/topics` feed, `/topics/settings`, the nav row, and the dossier dialog), `contentResearch` (OFF — gates the whole Topic-feeds feature: the `/topic-feeds*` routes, the nav row + counter, the composer's "Pick from Topic feeds" picker, and the new-session Topics list), `contentStrategy` (OFF — gates Content strategy: the `/content-strategy` and `/pillar/:id` routes, the nav row + counter, the New-pillar dialog, and on a topic card the pillar mark plus the "Unlink from this pillar" menu row. NOT gated by it, because they belong to Topic feeds: the topic card's kebab menu itself, and the removal of the route tag). Full table + gates: [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md#14-admin-feature-flags--user-modes).
 
 ### Module loading
 
@@ -252,7 +259,8 @@ styles/
   ds-patches.css    — the only legitimate place to touch .ap-* selectors
   chat.css          — composer + thread chrome
   screens/          — dashboard, session, ideas, contexts, connectors, topics,
-                      topics-settings, posts, analyse, modals, sources, welcome
+                      topics-settings, content-strategy (list + pillar + dialog),
+                      posts, analyse, modals, sources, welcome
   components/       — sidebar, right-panel, conversation-status-card,
                       add-source-modal, connectors-modal, schedule-modal,
                       video-clips-modal, clip-card, archie-loader,

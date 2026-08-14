@@ -40,7 +40,9 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus, findResearchType, typeTagColor } from "../research-catalog.js?v=19";
+import { findReviewStatus } from "../research-catalog.js?v=19";
+import { isFlagOn } from "../feature-flags.js?v=22";
+import { pillarForBrief } from "../pillars-store.js?v=1";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the
@@ -54,28 +56,24 @@ import { findReviewStatus, findResearchType, typeTagColor } from "../research-ca
 // (research-modals.openIgnoreReason).
 const IGNORE_HINT = "Kept off this list unless trending or updated";
 
-// The ROUTE, as a DS Tag.
+// ── The ROUTE TAG WAS HERE, and it is gone ─────────────────────────────────
+// `renderRouteTag()` drew an .ap-tag naming the topic's type (Ready to post /
+// Content strategy) on the left of the meta run. It existed to tell you which
+// verb the card's SPLIT BUTTON would lead with — and the split button went when
+// the card lost its footer. The card's menu now shows every verb at once, so the
+// label predicted nothing.
 //
-// Why a tag and not a second pill: choosing-components.md §1 draws the line by
-// how much of the object the marker describes. A marker that is single and
-// describes the whole row is a Status; one of several classifiable markers that
-// coexist is a Tag. Review status is the former — one value, whole card. The
-// route is the latter: it coexists with all four statuses and with both
-// attention signals, so three markers can sit in this row at once.
+// The argument it carried is worth keeping because it was right about its own
+// question: with exactly two types, labelling only the exception costs more than
+// the extra chip saves, because reading a route off an ABSENCE is work. If a
+// route label ever comes back — on a filter chip, in the menu header, anywhere —
+// label both types, not just one.
 //
-// Both types are labelled. Tagging only the exception was tried and reverted: with
-// exactly two types, the tag is what tells you which action the footer offers, and
-// reading that off an ABSENCE costs more than the extra chip saves.
-//
-// A <span>, not a <button>: tag.md says a static tag is a span and only a
-// clickable one is a button. Rerouting lives in the footer menu, not here — a
-// clickable tag inside the card's body button would be a button in a button,
-// the same invalid nesting the body/footer split exists to avoid.
-function renderRouteTag(researchType) {
-  const meta = findResearchType(researchType);
-  if (!meta) return "";
-  return html`<span class="ap-tag ${typeTagColor(researchType)} topics-card__route">${meta.label}</span>`;
-}
+// What is lost, and is not free: the route still drives the ORDER of the menu
+// rows, and that is now invisible until the menu is open. `typeTagColor` in
+// research-catalog.js now has NO callers — left in place beside the catalogue it
+// belongs to rather than deleted, because it is the colour half of the mapping
+// and a route label returning without it would be reinvented wrong.
 
 // The status, as one glyph. It was a filled pill carrying the word.
 //
@@ -125,6 +123,33 @@ function renderUpdatedMark() {
   </span>`;
 }
 
+// The pillar mark — "this topic is filed under one of your pillars".
+//
+// `ap-icon-stack`, deliberately NOT `ap-icon-bookmark`: bookmark already means
+// the SAVED review status on this exact card, and one glyph may mean one thing.
+// (Stack is the closest thing the DS ships; it reads as "a list" more than "a
+// theme" and is a placeholder until there is a real pillar glyph. What it must
+// not be is bookmark.)
+//
+// A span with a tooltip, never a link: this sits inside topics-card__body, which
+// IS a button, and a focusable element in there is the invalid nesting the
+// body/footer split exists to avoid. The words live in the icon's aria-label so
+// a display:none tooltip is not the only place they exist — the same
+// construction, and the same reason, as the status glyph above. Getting TO the
+// pillar is a menu row, not this glyph.
+function renderPillarMark(pillar) {
+  return html`<span class="topics-card__pillar">
+    <i
+      class="ap-icon-stack"
+      role="img"
+      aria-label="Filed under ${pillar.name}. This pillar's context goes with the topic into chat."
+    ></i>
+    <span class="ap-tooltip bottom-left topics-card__pillar-tip" aria-hidden="true">
+      <strong>${pillar.name}</strong> — I matched this topic to that pillar. Its context goes with the topic into chat.
+    </span>
+  </span>`;
+}
+
 function renderTrendingMark() {
   return html`<span class="trending-mark">
     <i class="ap-icon-arrow-up" aria-hidden="true"></i>
@@ -139,8 +164,12 @@ export function renderBriefCard(
   if (!brief) return "";
   const trendingPage = variant === "trending";
   const picker = variant === "picker";
-  const feed = !trendingPage && !picker;
   const ignored = brief.status === "ignored";
+  // Resolved here rather than passed in: unlike `source`, which the screen
+  // already has in hand, the pillar link is one Map lookup and threading it
+  // through three call sites bought nothing. Flag-gated, so with Content
+  // strategy off this card is byte-for-byte what it was.
+  const pillar = isFlagOn("contentStrategy") ? pillarForBrief(brief.id) : null;
 
   return html`<article
     class="topics-card${raw(picker ? " topics-card--picker" : "")}${raw(articleOpen ? " is-reading" : "")}"
@@ -196,16 +225,24 @@ export function renderBriefCard(
              Never on the trending page, which shows no triage controls at all — see
              the variant note at the top of this file. -->
         ${raw(trendingPage ? "" : renderStatusIcon(brief.status))}
-        <!-- The route sits on the LEFT of the meta run, with the source and the
-             age. The left side answers "what is this"; the right side, past the
-             spacer, answers "where am I with it" — signals then status. Putting
-             the tag on the right would have made it the fourth chip in a huddle
-             and implied it was another thing the user had done. Feed only: the
-             attention page shows no triage controls and the picker's card IS a
-             control, so neither needs to be told which queue a topic is in. -->
-        ${raw(feed ? renderRouteTag(brief.researchType) : "")}
-        <span class="topics-card__spacer"></span>
+        <!-- The pillar mark, after the triage glyph: source · age · status is the
+             topic's own record, and the pillar is a RELATIONSHIP to something
+             else — so it reads last in the facts group and before the signals.
+             Gated with the feature, and never on the picker, where the card IS a
+             control rather than something to read. -->
+        ${raw(pillar && !picker ? renderPillarMark(pillar) : "")}
+        <!-- Trending / Updated, in the slot the route tag used to hold.
+             THE ROW NO LONGER HAS A RIGHT-HAND SIDE. It used to: everything
+             before the spacer answered "what is this", everything after it
+             answered "where am I with it". The kebab now occupies the card's
+             top-right corner, so nothing else can live out there — the meta run
+             is one left-aligned line and the trailing spacer is dead space
+             RESERVING that corner, which is why it is still here.
+             The marks moved into it because they are the two things in this row
+             a reader genuinely cannot know without being told; on the far right
+             they were the last thing scanned. -->
         ${raw(brief.isTrending ? renderTrendingMark() : "")}${raw(brief.isUpdated ? renderUpdatedMark() : "")}
+        <span class="topics-card__spacer"></span>
       </span>
 
       <span class="topics-card__headline">${brief.headline}</span>
@@ -246,7 +283,122 @@ export function renderBriefCard(
          underneath would have been a second, different answer to the same click. The
          feed and the trending page did, and both lose it here along with the hairline
          separator that divided it from the summary. -->
+    <!-- …but there IS a kebab, and it is a SIBLING of the body button, never
+         inside it: the body is one big button and nesting a second button is
+         invalid HTML, which is the same reason the old footer was a sibling too.
+         It carries the article footer's three verbs (renderUseButtons) plus
+         Unlink, so the reader who does not want to open the full read is not
+         forced to. Not a footer by the back door: four rows behind one trigger
+         is a menu — if a fifth verb turns up, revisit rather than grow it.
+
+         Not on the picker, where the card IS the control, and NOT on the
+         trending page: that page answers "what's spiking", not "what have I
+         triaged", and three of these four rows are triage. The pillar mark above
+         still shows there — it is a fact about the topic, not something the user
+         did. Same rule the reduced trending variant already followed. -->
+    ${raw(picker || trendingPage ? "" : renderCardMore(brief, pillar, menuOpen))}
   </article>`;
+}
+
+// The card's kebab + its menu.
+//
+// Row order is ROUTE-DRIVEN, exactly as the parked split button decided: a
+// Ready-to-post topic leads with Use in chat, a Content-strategy one leads with
+// Save for later, and whichever verb leads is not repeated below. That rule is
+// now invisible until the menu opens — the price of dropping the route tag.
+//
+// Unlink sits third because it is about the PILLAR, not the topic; Ignore last,
+// after a divider, and hidden once already ignored (a second press has nothing
+// to do — the same rule the old menu row followed).
+function renderCardMore(brief, pillar, menuOpen) {
+  const saved = brief.status === "saved";
+  const ignored = brief.status === "ignored";
+  const ready = brief.researchType === "ready-to-post";
+  const savedLabel = saved ? "Remove from saved" : "Save for later";
+  const rows = ready
+    ? [
+        { attr: "data-brief-use", icon: "ap-icon-single-chat-bubble", label: "Use in chat" },
+        { attr: "data-brief-save", icon: "ap-icon-bookmark", label: savedLabel },
+      ]
+    : [
+        { attr: "data-brief-save", icon: "ap-icon-bookmark", label: savedLabel },
+        { attr: "data-brief-use", icon: "ap-icon-single-chat-bubble", label: "Use in chat" },
+      ];
+  return html`<button
+      type="button"
+      class="ap-icon-button transparent topics-card__more"
+      data-brief-more="${escapeAttr(brief.id)}"
+      aria-haspopup="menu"
+      aria-expanded="${menuOpen ? "true" : "false"}"
+      aria-label="More actions"
+    >
+      <i class="ap-icon-more"></i>
+    </button>
+    ${raw(
+      menuOpen
+        ? html`<div class="ap-action-dropdown topics-card__more-menu" role="menu">
+            ${raw(rows.map((r) => menuRow(brief.id, r)).join(""))} ${raw(pillar ? unlinkRow(brief.id, pillar) : "")}
+            ${raw(
+              ignored
+                ? ""
+                : html`<div class="ap-action-dropdown-divider"></div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="ap-action-dropdown-item red-mode has-description"
+                      data-brief-ignore="${escapeAttr(brief.id)}"
+                    >
+                      <i class="ap-icon-eye-off"></i>
+                      <div class="ap-action-dropdown-item-text">
+                        <div class="ap-action-dropdown-item-label-container">
+                          <span class="ap-action-dropdown-item-label">Ignore</span>
+                        </div>
+                        <span class="ap-action-dropdown-item-description">${IGNORE_HINT}</span>
+                      </div>
+                    </button>`,
+            )}
+          </div>`
+        : "",
+    )}`;
+}
+
+function menuRow(briefId, { attr, icon, label }) {
+  return html`<button
+    type="button"
+    role="menuitem"
+    class="ap-action-dropdown-item"
+    ${raw(`${attr}="${escapeAttr(briefId)}"`)}
+  >
+    <i class="${icon}"></i>
+    <div class="ap-action-dropdown-item-text">
+      <div class="ap-action-dropdown-item-label-container">
+        <span class="ap-action-dropdown-item-label">${label}</span>
+      </div>
+    </div>
+  </button>`;
+}
+
+// The pillar NAME goes in the description, not the label: the label container is
+// nowrap + ellipsis, so "Unlink from Sustainable wardrobe" truncated at every
+// realistic menu width.
+//
+// `has-description` is required, not decorative — the base dropdown item is a
+// FIXED 40px and a description without it overlaps the row below.
+function unlinkRow(briefId, pillar) {
+  return html`<button
+    type="button"
+    role="menuitem"
+    class="ap-action-dropdown-item has-description"
+    data-brief-unlink="${escapeAttr(briefId)}"
+  >
+    <i class="ap-icon-link"></i>
+    <div class="ap-action-dropdown-item-text">
+      <div class="ap-action-dropdown-item-label-container">
+        <span class="ap-action-dropdown-item-label">Unlink from this pillar</span>
+      </div>
+      <span class="ap-action-dropdown-item-description">Keeps the topic, drops ${pillar.name}'s context</span>
+    </div>
+  </button>`;
 }
 
 // Feed: a split button. The main segment carries the action the topic's ROUTE

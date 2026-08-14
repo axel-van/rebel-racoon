@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=548";
+} from "./right-panel.js?v=549";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=88";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=96";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=90";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=341";
+} from "./conversation-status-card.js?v=342";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=38";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=74";
@@ -475,6 +475,7 @@ function isSessionRoute() {
 // Routes that lead with a back control instead of a title, and where they go.
 function backTargetFor(path) {
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
+  if (/^\/pillar\//.test(path)) return { to: "/content-strategy", label: "Back to Content strategy" };
   // A lane's own sub-pages — its SETTINGS and its ATTENTION page — go back to that
   // lane, not to the list. You reach both from one topic list (the gear, and the
   // notice's CTA), so the list is not where you came from. These are the only
@@ -551,6 +552,10 @@ function currentTitle() {
   // bordered bar — that bar only existed because this map had no entry and the
   // topbar fell through to "Archie".
   if (path.startsWith("/topic-feeds")) return "Topic feeds";
+  // Same rule for Content strategy: the topbar names the SECTION, the pillar's
+  // own header names the pillar.
+  if (path === "/content-strategy") return "Content strategy";
+  if (path.startsWith("/pillar/")) return "Content strategy";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);
   if (sessionMatch) {
     const id = sessionMatch[1];

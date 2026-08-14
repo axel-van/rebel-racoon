@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=414";
+import { renderTopbar } from "../components/topbar.js?v=415";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=46";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=47";
 import {
   openIgnoreReason,
   openExport,
@@ -49,9 +49,10 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=108";
+} from "../components/research-modals.js?v=109";
 import { openBriefInChat } from "../brief-flow.js?v=25";
 import { showToast } from "../components/toast.js?v=21";
+import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=1";
 import { getLaneById } from "../research-store.js?v=42";
 import {
   getBriefById,
@@ -315,6 +316,7 @@ let view = freshView();
 let timer = null;
 
 let unsubscribe = null;
+let unsubscribePillars = null;
 let boundTarget = null;
 let boundClick = null;
 let boundInput = null;
@@ -356,6 +358,8 @@ export function renderResearchFeed(params, target) {
   paint(target);
   bind(target);
   unsubscribe = subscribeBriefs(() => paint(target));
+  // Unlinking a topic from a pillar repaints the card that carries the mark.
+  unsubscribePillars = subscribePillars(() => paint(target));
   return teardown;
 }
 
@@ -363,6 +367,10 @@ function teardown() {
   if (unsubscribe) {
     unsubscribe();
     unsubscribe = null;
+  }
+  if (unsubscribePillars) {
+    unsubscribePillars();
+    unsubscribePillars = null;
   }
   if (timer) {
     window.clearTimeout(timer);
@@ -926,6 +934,29 @@ function bind(target) {
     }
 
     // ── Brief actions ───────────────────────────────────────────────────
+    // The card's own kebab. Shares `view.openMenu` with the (parked) split
+    // button's key on purpose — one open menu at a time across the whole feed,
+    // and the click-outside handler at the bottom of this file already closes it.
+    const moreBtn = event.target.closest("[data-brief-more]");
+    if (moreBtn) {
+      const id = moreBtn.dataset.briefMore;
+      view.openMenu = view.openMenu === id ? null : id;
+      return paint(target);
+    }
+
+    // Unlink clears the MARK only — the topic keeps its place in the feed, its
+    // status and its row in the pillar's trail. Removing it from the pillar is a
+    // separate action on the pillar page, and conflating them would let a click
+    // in a feed quietly rewrite a pillar's condensed context.
+    const unlink = event.target.closest("[data-brief-unlink]");
+    if (unlink) {
+      view.openMenu = null;
+      const pillar = unlinkBrief(unlink.dataset.briefUnlink);
+      if (pillar) showToast(`Unlinked from “${pillar.name}”`);
+      else paint(target);
+      return;
+    }
+
     const menuBtn = event.target.closest("[data-brief-use-menu]");
     if (menuBtn) {
       const id = menuBtn.dataset.briefUseMenu;
@@ -942,6 +973,7 @@ function bind(target) {
     // status has to change before the navigation because this screen unmounts.
     const use = event.target.closest("[data-brief-use]");
     if (use) {
+      view.openMenu = null;
       setStatus(use.dataset.briefUse, "used");
       openBriefInChat(use.dataset.briefUse);
       return;
@@ -973,7 +1005,10 @@ function bind(target) {
     // correction survives a repaint and a remount — it is a fact about the topic
     // now, not a state of this screen.
     const ignore = event.target.closest("[data-brief-ignore]");
-    if (ignore) return openIgnoreReason({ briefId: ignore.dataset.briefIgnore });
+    if (ignore) {
+      view.openMenu = null;
+      return openIgnoreReason({ briefId: ignore.dataset.briefIgnore });
+    }
 
     // ── The article opens IN THE PAGE, beside the list ──────────────────────
     // Not a modal (it blacks out the list you are comparing against) and no
@@ -1055,7 +1090,17 @@ function bind(target) {
   // panel by definition.
   boundDocClick = (event) => {
     if (!view.panelOpen && !view.openMenu) return;
-    if (event.target.closest(".research-filters") || event.target.closest(".topics-use")) return;
+    // The card's kebab and its menu are exempt for the same reason .topics-use
+    // was: the click that OPENS a menu is itself an outside click by this
+    // handler's definition, so without the exemption the menu opens and closes in
+    // the same event.
+    if (
+      event.target.closest(".research-filters") ||
+      event.target.closest(".topics-use") ||
+      event.target.closest(".topics-card__more") ||
+      event.target.closest(".topics-card__more-menu")
+    )
+      return;
     view.panelOpen = false;
     view.openMenu = null;
     paint(target);

@@ -1,0 +1,619 @@
+/* Content strategy — the pillar list (/content-strategy) and one pillar
+   (/pillar/:id). Two routes, one stylesheet: the card on the list and the page
+   it opens are the same object at two zoom levels, and splitting them meant the
+   card's meta line and the page's meta line drifted apart twice.
+
+   Nothing here redeclares an .ap-* class. The DS brings the card, the tabs, the
+   counter, the tag, the dropdown, the tooltip and the dropzone (.ap-dropzone is
+   an app primitive and lives in ds-patches.css — the DS ships none). */
+
+/* ── The list ───────────────────────────────────────────────────────────── */
+
+.strategy-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-md);
+  padding: var(--ref-spacing-lg) var(--ref-spacing-xl) var(--ref-spacing-xxl);
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.strategy-view__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  border-bottom: 1px solid var(--sys-color-border-color-default);
+  padding-bottom: var(--ref-spacing-sm);
+}
+
+.strategy-view__title {
+  margin: 0;
+}
+
+/* The subtitle states in words what the nav badge states as a number. Both
+   describe what ARRIVED — neither is a to-do, which is why this is body text and
+   not a pill. */
+.strategy-view__sub {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-body-size);
+}
+
+.strategy-view__actions {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ref-spacing-sm);
+  flex: 0 0 auto;
+}
+
+.strategy-view__facet {
+  min-width: 200px;
+}
+
+.strategy-view__foot {
+  margin: 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-caption-size);
+  max-width: 96ch;
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: var(--ref-spacing-sm);
+}
+
+.strategy-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-sm);
+  min-height: 186px;
+}
+
+.strategy-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  flex-wrap: wrap;
+  /* Clears the kebab's corner, same reservation as the topic card's meta run. */
+  padding-right: 30px;
+}
+
+.strategy-card__name {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--app-convo-navy);
+}
+
+.strategy-card__name--dim {
+  color: var(--sys-text-color-light);
+}
+
+.strategy-card__body {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.5;
+  color: var(--sys-text-color-light);
+}
+
+.strategy-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* The one line that gives anyone a reason to open the card. Emphasised only when
+   something actually arrived — the store returns "updated 3w ago" otherwise and
+   that reads as plain meta. */
+.strategy-card--auto .strategy-card__when,
+.strategy-card__when:not(:empty) {
+  color: var(--sys-text-color-light);
+}
+
+.strategy-card__foot {
+  margin-top: auto;
+  display: flex;
+}
+
+.strategy-card__foot .ap-button.ghost {
+  padding-left: 0;
+}
+
+/* Arrow nudge on hover, the same affordance "Reuse a winner" and "See more
+   topics in your feed" carry. */
+.strategy-card__open i {
+  transition: transform var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.strategy-card__open:hover i,
+.strategy-card__open:focus-visible i {
+  transform: translateX(3px);
+}
+
+/* A pillar Archie opened. A border tint plus the .ap-tag in the header — no
+   fill: this is "you have not vetted this yet", not a warning, and it stops
+   being true the moment someone opens it. */
+.strategy-card--auto {
+  border-color: var(--ref-color-electric-blue-20);
+}
+
+.strategy-card--new {
+  border: 1px dashed var(--sys-color-border-color-default);
+  box-shadow: none;
+  background: transparent;
+}
+
+.strategy-card__more {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.strategy-card__menu {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  z-index: var(--app-z-overlay);
+  min-width: 260px;
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+/* Deliberately a shrug and not a setup task: the whole feature is optional, so
+   the empty state says "plenty of brands never need one" and offers one button.
+   Nothing here nags. */
+.strategy-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  text-align: center;
+  padding: var(--ref-spacing-xxl) var(--ref-spacing-md);
+  max-width: 62ch;
+  margin: 0 auto;
+}
+
+.strategy-empty__mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.strategy-empty__mark > i {
+  font-size: var(--sys-text-style-h1-size);
+}
+
+.strategy-empty__title {
+  margin: 0;
+}
+
+.strategy-empty__body {
+  margin: 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.6;
+}
+
+.strategy-empty__body--quiet {
+  font-size: var(--sys-text-style-caption-size);
+}
+
+/* ── One pillar ─────────────────────────────────────────────────────────── */
+
+.pillar-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-lg) var(--ref-spacing-xl) var(--ref-spacing-xxl);
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pillar-view__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+}
+
+.pillar-view__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: var(--ref-spacing-xxxs);
+}
+
+.pillar-view__title {
+  margin: 0;
+}
+
+.pillar-view__sub {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-body-size);
+}
+
+.pillar-view__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex: 0 0 auto;
+}
+
+/* The DS tab is a flex row already; this only lets the counter sit beside the
+   label with the tab's own gap rather than a space character. */
+.pillar-tabs .ap-tabs-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.pillar-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-sm);
+}
+
+.pillar-sec__title {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--sys-text-color-light);
+}
+
+/* The condensed context is the product of this page, so it gets prose treatment
+   and a measure — not the caption grey the meta around it uses. */
+.pillar-sec__prose {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.65;
+  color: var(--sys-text-color-default);
+  max-width: 74ch;
+}
+
+.pillar-sec__note {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* ── Assets ─────────────────────────────────────────────────────────────── */
+
+.pillar-assets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--ref-spacing-xs);
+}
+
+.pillar-asset {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--sys-color-border-color-default);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+}
+
+.pillar-asset__thumb {
+  display: grid;
+  place-items: center;
+  height: 64px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+  color: var(--sys-text-color-light);
+}
+
+.pillar-asset__thumb > i {
+  font-size: var(--sys-text-style-h2-size);
+}
+
+/* Three buckets, three tints. Not the topic-badge accents: those key a listening
+   SOURCE and this keys a file type, so reusing them would make an image asset
+   and a competitor-posts source look like the same kind of thing. */
+.pillar-asset__thumb--image {
+  background: var(--ref-color-purple-10);
+  color: var(--ref-color-purple-100);
+}
+
+.pillar-asset__thumb--video {
+  background: var(--ref-color-red-10);
+  color: var(--ref-color-red-100);
+}
+
+.pillar-asset__thumb--doc {
+  background: var(--ref-color-menthol-10);
+  color: var(--ref-color-menthol-150);
+}
+
+.pillar-asset__name {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 700;
+  color: var(--app-convo-navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillar-asset__meta {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+.pillar-asset__x {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short);
+}
+
+.pillar-asset:hover .pillar-asset__x,
+.pillar-asset__x:focus-visible {
+  opacity: 1;
+}
+
+/* The dropzone is the last cell of the grid, so it matches the asset tiles'
+   height rather than the .ap-dropzone default (which is sized for a modal). */
+.pillar-drop {
+  min-height: 128px;
+  justify-content: center;
+  padding: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
+}
+
+.pillar-drop .ap-dropzone__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.pillar-drop .ap-dropzone__icon > i {
+  font-size: var(--sys-text-style-body-size);
+}
+
+.pillar-drop .ap-dropzone__title {
+  font-size: var(--sys-text-style-caption-size);
+}
+
+.pillar-drop .ap-dropzone__sub {
+  font-size: var(--sys-text-style-caption-size);
+}
+
+/* ── The trail ──────────────────────────────────────────────────────────── */
+
+.pillar-trail__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  margin-top: var(--ref-spacing-sm);
+}
+
+.pillar-trail__sort {
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 700;
+  color: var(--sys-text-color-light);
+}
+
+/* A scrolling list inside a scrolling page.
+   `overscroll-behavior: contain` stops the page from taking over at the ends.
+   The rows below MUST keep flex: 0 0 auto — see the note there. */
+.pillar-trail {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sys-color-border-color-default);
+  border-radius: var(--app-radius-md);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Fills the viewport rather than taking a fixed slice of it: at 420px the
+     trail left ~170px of empty page under it on a laptop, which read as the list
+     having ended. The floor keeps two rows visible on a short window; the ceiling
+     stops it becoming the whole page on a tall one. */
+  max-height: clamp(320px, calc(100vh - 320px), 720px);
+  background: var(--ref-color-white);
+}
+
+/* flex: 0 0 auto is load-bearing, not tidiness. In a flex column with a
+   max-height, children SHRINK by default — and a shrunk row collapses its
+   quote to zero height. This is the exact bug the new-session hero hit; see
+   docs/reference/UI-PATTERNS.md. */
+.pillar-row {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  border-bottom: 1px solid var(--sys-color-border-color-default);
+}
+
+.pillar-trail > .pillar-row:last-child {
+  border-bottom: 0;
+}
+
+/* Under a week. A tint and nothing else — no badge, no word, and no read state:
+   it fades on its own with the clock. */
+.pillar-row--recent {
+  background: var(--ref-color-electric-blue-05);
+}
+
+.pillar-row--recent .pillar-row__when {
+  color: var(--ref-color-electric-blue-150);
+  font-weight: 700;
+}
+
+.pillar-row__top {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-sm);
+}
+
+.pillar-row__kind {
+  flex: 0 0 52px;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ref-color-electric-blue-150);
+}
+
+/* A chat is the user's own conversation and a note is their own words, so
+   neither is coloured like a topic Archie found. */
+.pillar-row__kind--chat {
+  color: var(--app-archie-orange);
+}
+
+.pillar-row__kind--note {
+  color: var(--sys-text-color-light);
+}
+
+.pillar-row__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--app-convo-navy);
+}
+
+.pillar-row__when {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+  white-space: nowrap;
+}
+
+.pillar-row__x {
+  flex: 0 0 auto;
+}
+
+/* The excerpt that actually fed the condense prompt. Indented to the title's
+   column so the row reads title-then-evidence rather than as two stacked
+   sentences. */
+.pillar-row__quote {
+  margin: 0 0 0 60px;
+  padding-left: var(--ref-spacing-xs);
+  border-left: 2px solid var(--sys-color-border-color-default);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.55;
+  color: var(--sys-text-color-light);
+  font-style: italic;
+  max-width: 78ch;
+}
+
+.pillar-row__quote::before {
+  content: "\201C";
+}
+
+.pillar-row__quote::after {
+  content: "\201D";
+}
+
+/* A note is quoted WHOLE and is the user's own text, so it is not greyed like a
+   model's excerpt and its rail borrows the Archie orange the CHAT kind uses. */
+.pillar-row__quote--full {
+  border-left-color: var(--app-archie-orange);
+  color: var(--sys-text-color-default);
+}
+
+.pillar-trail__more {
+  flex: 0 0 auto;
+  padding: var(--ref-spacing-sm);
+  text-align: center;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+.pillar-trail__empty {
+  margin: var(--ref-spacing-sm) 0 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+
+/* ── The dialog ─────────────────────────────────────────────────────────── */
+
+.pillar-modal__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+}
+
+.pillar-modal__opt {
+  font-weight: 400;
+  color: var(--sys-text-color-light);
+}
+
+.pillar-modal__files {
+  list-style: none;
+  margin: var(--ref-spacing-xxs) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pillar-modal__file {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-default);
+}
+
+.pillar-modal__file > i {
+  color: var(--sys-text-color-light);
+}
+
+.pillar-modal__file > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The Playbook picker is a NATIVE <select>, and deliberately not wearing
+   .ap-select-trigger: that class belongs to the DS Select's custom trigger
+   (a div + an option popover, see topics-settings.renderPlaybookSelect), and
+   putting a DS class on the wrong element is the drift this repo keeps paying
+   for. A native select inside a dialog is the smaller, honest answer — styled
+   from tokens here so it still sits in the form's rhythm. Swap it for the real
+   Select when this dialog needs search or multi-select. */
+.pillar-modal__select {
+  width: 100%;
+  /* --comp-* is off-limits in app CSS (CLAUDE.md), so the height comes from the
+     spacing scale rather than --comp-input-height. Same 40px the DS input lands
+     on; if the DS ever moves it, this is the one line to follow. */
+  height: var(--ref-spacing-xl);
+  padding: 0 var(--ref-spacing-xs);
+  border: 1px solid var(--sys-color-border-color-default);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-white);
+  color: var(--sys-text-color-default);
+  font-family: var(--ref-font-family);
+  font-size: var(--sys-text-style-body-size);
+}
+
+.pillar-modal__select:focus-visible {
+  outline: none;
+  border-color: var(--sys-border-color-active);
+}

@@ -22,8 +22,9 @@ import { clearSession as clearLibrarySession } from "../library.js?v=90";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=74";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=59";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=27";
+import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=1";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=42";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=548";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=549";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=96";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=67";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=88";
@@ -326,6 +327,9 @@ export function initSidebar() {
   // The Content Research row shows a lane count, so creating, duplicating or
   // deleting a lane has to repaint the rail.
   subscribeLanes(() => renderSidebar());
+  // The Content strategy row shows unseen filed sources, so opening a pillar
+  // (which marks them seen) or removing one has to repaint the rail.
+  subscribePillars(() => renderSidebar());
 
   // Click outside the popmenu → close.
   document.addEventListener("click", (event) => {
@@ -604,6 +608,22 @@ const NAV = [
     match: (p) => p.startsWith("/topics"),
     count: () => getUnseenTopicCount(),
   },
+  // The counter is UNSEEN sources — topics and chat extracts Archie has filed
+  // into a pillar and nobody has looked at yet. A `notif` counter promises
+  // "something needs you" and nothing here does; it is deliberate, because the
+  // whole feature runs unattended and without one signal that anything happened
+  // nobody comes back. It drains per pillar, on opening that pillar — clearing
+  // it from the section would wipe a badge whose contents were never seen.
+  {
+    path: "/content-strategy",
+    icon: "ap-icon-stack",
+    label: "Content strategy",
+    flag: "contentStrategy",
+    // Prefix on both routes: the row stays lit on a pillar's own page.
+    match: (p) => p.startsWith("/content-strategy") || p.startsWith("/pillar/"),
+    count: () => getUnseenPillarSources(),
+    notif: true,
+  },
   // The counter is the number of LANES, not briefs: unlike Topics this row is
   // navigation, not a notification. "How many research operations do I have
   // running" is the useful number; summing unread briefs across lanes would
@@ -664,7 +684,8 @@ function renderNav(path) {
   const routeItems = NAV.filter((item) => !item.flag || isFlagOn(item.flag))
     .map((item) => {
       const count = item.count ? item.count() : 0;
-      const counter = count > 0 ? `<span class="ap-counter normal grey">${count}</span>` : "";
+      const counter =
+        count > 0 ? `<span class="ap-counter ${item.notif ? "notif" : "normal grey"}">${count}</span>` : "";
       return `
       <button
         type="button"
