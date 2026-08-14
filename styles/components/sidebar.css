@@ -785,7 +785,12 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
    A DS .ap-select (details/summary + option rows), sized for the rail. */
 .app-sidebar__scope {
   position: relative;
+  /* Same horizontal inset as the nav rows below, and a divider under it: the
+     switcher governs everything beneath, so the line says "scope above,
+     scoped below" rather than leaving it floating. */
   margin: 0 var(--ref-spacing-xs) var(--ref-spacing-xs);
+  padding-bottom: var(--ref-spacing-xs);
+  border-bottom: 1px solid var(--app-border-soft);
 }
 
 .app-sidebar__scope > summary {
@@ -796,16 +801,48 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   display: none;
 }
 
+/* NOT .ap-select-trigger. That class ships a fixed 36px height and its own
+   padding, which fought a two-line control and left the chevron floating away
+   from the name — the "not implemented well" of the first pass. The details/
+   summary widget and the DROPDOWN are still the DS's; only the trigger is an
+   app composition, which is compose-over-override rather than redeclaring a
+   DS class outside ds-patches.
+   The inset matches .app-sidebar__nav-item exactly, so the switcher sits in the
+   rail's rhythm instead of on top of it. */
 .app-scope {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   width: 100%;
-  height: auto;
-  padding: 6px var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs);
+  border: 1px solid var(--app-border-soft);
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-white);
   text-align: left;
   cursor: pointer;
   user-select: none;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-out),
+    background-color var(--ref-animation-short) var(--app-ease-out);
+}
+
+.app-scope:hover,
+.app-sidebar__scope[open] > .app-scope {
+  border-color: var(--ref-color-grey-20);
+  background: var(--ref-color-grey-05);
+}
+
+/* Pinned right, which is what a select does and what every workspace switcher
+   this is modelled on does. It rotates on open so the control says whether the
+   list is showing without the list being the only evidence. */
+.app-scope__arrow {
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-body-size);
+  color: var(--sys-text-color-light);
+}
+
+.app-sidebar__scope[open] > .app-scope > .app-scope__arrow {
+  transform: rotate(180deg);
 }
 
 /* The brand's initial. Not an avatar component: an avatar means a PERSON

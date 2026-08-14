@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=553";
+} from "./right-panel.js?v=556";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=89";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=97";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=91";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=346";
+} from "./conversation-status-card.js?v=349";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=39";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
@@ -515,6 +515,8 @@ function backTargetFor(path) {
   // because you could be looking at any of several feeds' settings; with one per
   // Playbook the name would repeat the rail's scope switcher.
   if (/^\/topic-feeds\/.+/.test(path)) return { to: "/topic-feeds", label: "Back to the feed" };
+  // Settings is a place, not a step in a flow — its own back is the rail's.
+  if (/^\/settings/.test(path)) return null;
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.
@@ -571,6 +573,7 @@ function currentTitle() {
   if (path.startsWith("/topic-feeds")) return "Topic feeds";
   // Same rule for Content strategy: the topbar names the SECTION, the pillar's
   // own header names the pillar.
+  if (path.startsWith("/settings")) return "Settings";
   if (path === "/content-strategy") return "Content strategy";
   if (path.startsWith("/pillar/")) return "Content strategy";
   const sessionMatch = /^\/session\/([^/?]+)/.exec(path);

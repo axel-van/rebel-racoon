@@ -42,7 +42,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus } from "../research-catalog.js?v=19";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { pillarForBrief } from "../pillars-store.js?v=3";
+import { pillarForBrief } from "../pillars-store.js?v=4";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the

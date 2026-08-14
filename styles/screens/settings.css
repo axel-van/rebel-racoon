@@ -1,0 +1,141 @@
+/* Settings — left rail of sections, table on the right.
+   Shape lifted from the inbox's Automated-moderation settings; sizes and tints
+   come from the DS's own settings recipe (--sys-settings-*), so this page reads
+   like every other settings surface in the product rather than like this app's
+   idea of one. */
+
+/* flex-direction: row is NOT redundant — .screen (layout.css) sets `column` on
+   every screen root, so without this the rail stacks above the pane and looks
+   like a header nobody asked for. */
+.settings-view {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-height: 0;
+  background: var(--sys-settings-content-background-color);
+}
+
+/* ── The rail ────────────────────────────────────────────────────────────── */
+/* 224px and white against the pane's tint, exactly as the reference does it:
+   the section list is chrome, the pane is content, and the colour split is what
+   says so without a border doing all the work. */
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  width: 224px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--ref-color-grey-10);
+  background: var(--ref-color-white);
+}
+
+.settings-nav__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+}
+
+.settings-nav__title {
+  font-size: var(--sys-text-style-h2-size);
+  font-weight: 800;
+  color: var(--ref-color-grey-100);
+}
+
+.settings-nav__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ref-spacing-xxs);
+  overflow-y: auto;
+}
+
+/* Same shape as the sidebar's nav rows — a settings rail that behaved
+   differently from the app rail two panes to its left would be a second
+   navigation vocabulary in one screen. */
+.settings-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 7px var(--ref-spacing-xxs);
+  border: 0;
+  border-radius: var(--app-radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: var(--sys-text-style-body-size);
+  color: var(--ref-color-grey-80);
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-nav__item > i {
+  font-size: var(--sys-icon-css-sm);
+  color: var(--sys-text-color-light);
+}
+
+.settings-nav__item:hover {
+  background: var(--ref-color-grey-05);
+}
+
+.settings-nav__item.is-active {
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-150);
+  font-weight: 800;
+}
+
+.settings-nav__item.is-active > i {
+  color: var(--ref-color-electric-blue-150);
+}
+
+/* ── The pane ────────────────────────────────────────────────────────────── */
+
+.settings-view__pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--sys-settings-content-internal-margin);
+}
+
+.settings-pane__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ref-spacing-md);
+  margin-bottom: var(--sys-settings-content-vertical-spacing);
+}
+
+.settings-pane__title {
+  margin: 0;
+}
+
+.settings-pane__sub {
+  margin: var(--ref-spacing-xxxs) 0 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-body-size);
+}
+
+/* The table is the DS's, unmodified — .ap-table with its flat modifiers
+   (outer-border, header-background, striped), the same three the reference
+   turns on. Only the two things the DS has no opinion about live here. */
+.settings-view .ap-table {
+  max-width: var(--sys-settings-content-max-width-lg);
+}
+
+/* The brand's initial, matching the rail's scope switcher so one object looks
+   like itself in both places. */
+.settings-table__mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-archie-mark);
+  color: var(--ref-color-white);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: 800;
+}
+
+.settings-table__delete:hover {
+  background: var(--ref-color-red-10);
+  color: var(--ref-color-red-100);
+}

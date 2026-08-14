@@ -22,16 +22,16 @@ import { clearSession as clearLibrarySession } from "../library.js?v=91";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=60";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=28";
-import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=3";
+import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=4";
 import {
   getActivePlaybook,
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=6";
+} from "../active-playbook.js?v=9";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=43";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=553";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=556";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
@@ -203,32 +203,33 @@ export function initSidebar() {
       const here = getPath();
       if (here.startsWith("/pillar/")) navigate("/content-strategy");
       else if (here.startsWith("/topic-feeds/")) navigate("/topic-feeds");
-      else if (here.startsWith("/playbook/")) navigate("/playbook/active");
+      else if (here.startsWith("/playbook/")) navigate(`/playbook/${scopePick.dataset.scopePick}`);
+      return;
+    }
+    if (event.target.closest("[data-scope-open]")) {
+      event.preventDefault();
+      const details = event.target.closest("details");
+      if (details) details.open = false;
+      const id = getActivePlaybookId();
+      navigate(id ? `/playbook/${id}` : "/settings/playbooks");
       return;
     }
     if (event.target.closest("[data-scope-manage]")) {
       event.preventDefault();
       const details = event.target.closest("details");
       if (details) details.open = false;
-      navigate("/contexts");
+      navigate("/settings/playbooks");
       return;
     }
     if (event.target.closest("[data-scope-create]")) {
       event.preventDefault();
-      navigate("/contexts");
+      navigate("/settings/playbooks");
       return;
     }
 
     const navItem = event.target.closest("[data-sidebar-nav]");
     if (navItem) {
       const to = navItem.dataset.sidebarNav;
-      // "/playbook/active" is a rail-only alias — the row names the CURRENT
-      // Playbook, and the id it resolves to changes with the switcher.
-      if (to === "/playbook/active") {
-        const id = getActivePlaybookId();
-        navigate(id ? `/playbook/${id}` : "/contexts");
-        return;
-      }
       navigate(to);
       return;
     }
@@ -672,19 +673,26 @@ function renderScopeSwitcher() {
     })
     .join("");
   return html`<details class="ap-select app-sidebar__scope" data-scope-switcher>
-    <summary class="ap-select-trigger app-scope">
+    <summary class="app-scope">
       <span class="app-scope__mark">${initialOf(active.name)}</span>
       <span class="app-scope__text">
         <span class="app-scope__label">Playbook</span>
         <span class="app-scope__name">${active.name}</span>
       </span>
-      <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      <i class="ap-icon-chevron-down app-scope__arrow" aria-hidden="true"></i>
     </summary>
     <div class="ap-select-dropdown app-scope__dropdown" role="listbox" aria-label="Switch Playbook">
       <div class="ap-select-options">${raw(rows)}</div>
       <div class="ap-select-footer">
-        <button type="button" class="ap-select-create" data-scope-manage>
+        <!-- Two exits, and they are different verbs. "Open" goes to THIS
+             Playbook's page — the thing the removed nav row used to do. "Manage"
+             goes to the settings table, which is where every Playbook lives. -->
+        <button type="button" class="ap-select-create" data-scope-open>
           <i class="ap-icon-target ap-select-create-icon" aria-hidden="true"></i>
+          <span>Open this Playbook</span>
+        </button>
+        <button type="button" class="ap-select-create" data-scope-manage>
+          <i class="ap-icon-cog ap-select-create-icon" aria-hidden="true"></i>
           <span>Manage Playbooks</span>
         </button>
       </div>
@@ -707,17 +715,11 @@ function initialOf(name) {
 }
 
 const NAV = [
-  // The active Playbook itself — singular, and it goes to that Playbook's page.
-  // The plural list moved into the switcher's footer: with a scope switcher the
-  // rail's job is the CURRENT brand's work, and "all my brands" is a management
-  // task rather than a place you navigate to while working.
-  {
-    path: "/playbook/active",
-    icon: "ap-icon-target",
-    label: "Playbook",
-    match: (p) => p.startsWith("/playbook/") || p === "/contexts",
-    count: () => 0,
-  },
+  // No Playbook row. The scope switcher above the nav IS the entry point — a row
+  // pointing at the same object the switcher already names was a second door to
+  // one room, and the two competed for the same click. Reaching the Playbook's
+  // own page is now the switcher's job (its footer), which is also where "all my
+  // brands" lives.
   {
     path: "/connectors",
     icon: "ap-icon-view-grid",

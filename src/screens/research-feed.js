@@ -36,7 +36,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=419";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=422";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=49";
 import {
@@ -52,8 +52,8 @@ import {
 } from "../components/research-modals.js?v=112";
 import { openBriefInChat } from "../brief-flow.js?v=27";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=3";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=6";
+import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=4";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=9";
 import { getLaneById, getLanes } from "../research-store.js?v=43";
 import {
   getBriefById,
@@ -412,7 +412,7 @@ function paintNoFeed(target) {
 }
 
 function onNoFeedClick(event) {
-  if (event.target.closest("[data-feed-settings]")) navigate("/topic-feeds/settings");
+  if (event.target.closest("[data-feed-settings]")) navigate("/settings/topic-feeds");
 }
 
 function firstLaneForScope() {
@@ -928,7 +928,11 @@ function bind(target) {
 
   boundClick = (event) => {
     if (event.target.closest("[data-feed-settings]"))
-      return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/settings`);
+      // The gear opens the SETTINGS SPACE, not this feed's form. With one feed
+      // per Playbook, "feed settings" is one row of a table that also shows
+      // every other brand's — and getting there from the feed is the only way
+      // that table is discoverable at all.
+      return navigate("/settings/topic-feeds");
     if (event.target.closest("[data-feed-trending]"))
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
 
