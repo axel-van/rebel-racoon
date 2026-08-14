@@ -247,6 +247,8 @@ The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototy
 
 ### Module loading
 
+> ⚠️ **Deleting a module can "crash" a browser that still holds an old graph.** `index.html` carries no `?v=` of its own, so a stale copy asks for an old `src/app.js?v=N`; the browser answers that from its own cache and follows the imports THAT file names. Any module deleted since then 404s, the whole ES module graph fails to instantiate, and the app renders nothing — with no console error naming the cause. A hard reload (⇧⌘R) fixes it; `serve.json` sends `Cache-Control: no-cache` for html/js/css so `npm start` can't get into that state.
+
 ES modules with `?v=N` cache-busting suffixes (`from "./assistant.js?v=40"`). **Bumping a module's version means updating every importer to the same version** — a singleton/store imported at two versions becomes two separate instances (separate state). All deps are local; no CDN/`esm.sh` imports. `package.json` exists only for the two DS npm packages + tooling (prettier/husky/lint-staged). A pre-commit hook runs `prettier --write` on staged files.
 
 ## Design System — READ FIRST before UI/CSS work
