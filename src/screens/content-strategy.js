@@ -198,14 +198,20 @@ function renderCard(p) {
         <button type="button" class="research-card__title" data-pillar-open="${escapeAttr(p.id)}">
           ${escapeAttr(p.name)}
         </button>
-        <!-- Rename + Delete as a hover panel, exactly as the lane card does it —
+        <!-- Edit + Delete as a hover panel, exactly as the lane card does it —
              which is also what retired the kebab and its dropdown. Merge lived in
              that dropdown and is out for now; when it returns it needs a target
              picker, so it will not fit in a two-icon panel and the menu comes
-             back with it. -->
+             back with it.
+
+             The pen NAVIGATES to the pillar, it does not open a dialog — the same
+             thing the lane card's pen does with feed settings. A pillar is edited
+             on its own page, beside the context, the assets and the trail it is
+             about; a modal could only ever offer a name and a sentence, which is
+             the smallest and least useful part of it. -->
         <span class="research-card__hover">
-          <button type="button" class="ap-icon-button ghost grey" data-pillar-rename="${escapeAttr(p.id)}"
-            title="Rename" aria-label="Rename ${escapeAttr(p.name)}">
+          <button type="button" class="ap-icon-button ghost grey" data-pillar-open="${escapeAttr(p.id)}"
+            title="Edit pillar" aria-label="Edit ${escapeAttr(p.name)}">
             <i class="ap-icon-pen" aria-hidden="true"></i>
           </button>
           <button type="button" class="ap-icon-button ghost grey research-card__delete"
@@ -293,18 +299,6 @@ function bind(target) {
     const ack = event.target.closest("[data-pillar-ack]");
     if (ack) {
       updatePillar(ack.getAttribute("data-pillar-ack"), { reviewed: true });
-      return;
-    }
-    const rename = event.target.closest("[data-pillar-rename]");
-    if (rename) {
-      const p = getPillarById(rename.getAttribute("data-pillar-rename"));
-      if (p) {
-        openPillarModal({
-          mode: "edit",
-          pillar: p,
-          onDone: () => showToast(`Saved “${p.name}”`),
-        });
-      } else paint(target);
       return;
     }
     const del = event.target.closest("[data-pillar-delete]");

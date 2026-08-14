@@ -282,6 +282,19 @@
   flex: 0 0 auto;
 }
 
+/* Edit mode. The title becomes an input of roughly its own width so the header
+   does not jump when the two swap — a header that resizes on entering edit mode
+   makes the Save button move under the cursor that just pressed Edit. */
+.pillar-view__name-field {
+  max-width: 520px;
+}
+
+/* The context editor stands in for the prose, so it inherits its measure: an
+   editor wider than the text it replaces makes the saved result look wrong. */
+.pillar-sec__editor {
+  max-width: 74ch;
+}
+
 /* The DS tab is a flex row already; this only lets the counter sit beside the
    label with the tab's own gap rather than a space character. */
 .pillar-tabs .ap-tabs-tab {

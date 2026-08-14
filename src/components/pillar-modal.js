@@ -1,4 +1,11 @@
-// New / edit pillar dialog.
+// New pillar dialog. CREATE ONLY — there is no edit mode and there must not be
+// one.
+//
+// Editing a pillar happens on the pillar's own page, in place, beside the
+// context, the assets and the trail it is about. A dialog could only ever offer
+// the name and one sentence, which is the smallest and least useful part of a
+// pillar; the pen on a pillar card therefore NAVIGATES rather than opening
+// anything. The Playbook page draws the same line for the same reason.
 //
 // Three fields and no seed picker. "Start it from a topic / a chat / nothing"
 // was tried and removed: matching runs from the moment the pillar exists, so
@@ -11,12 +18,12 @@
 //
 // Public API:
 //   init()
-//   open({ mode: "create"|"edit", pillar?, playbookId?, onDone? })
+//   open({ playbookId?, onDone? })
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
 import { getContexts } from "../contexts-store.js?v=74";
-import { addPillar, updatePillar, assetKindFor } from "../pillars-store.js?v=1";
+import { addPillar, assetKindFor } from "../pillars-store.js?v=1";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "pillar";
@@ -35,7 +42,7 @@ let backdrop,
   fileInput,
   fileList;
 let initialized = false;
-let state = { mode: "create", pillarId: null, assets: [], onDone: null };
+let state = { assets: [], onDone: null };
 
 const HTML = `
 <div class="app-modal-backdrop pillar-modal__backdrop" id="pillarBackdrop" hidden></div>
@@ -206,15 +213,10 @@ function submit() {
   if (!name) return;
   const about = aboutEl.value.trim();
   const playbookId = playbookEl.value || null;
-  const { mode, pillarId, onDone, assets } = state;
+  const { onDone, assets } = state;
   close();
-  if (mode === "edit" && pillarId) {
-    updatePillar(pillarId, { name, about, playbookId });
-    showToast(`Saved “${name}”`);
-  } else {
-    addPillar({ name, about, playbookId, assets });
-    showToast(`Created “${name}”`);
-  }
+  addPillar({ name, about, playbookId, assets });
+  showToast(`Created “${name}”`);
   if (typeof onDone === "function") onDone();
 }
 
@@ -222,31 +224,25 @@ export function init() {
   injectOnce();
 }
 
-export function open({ mode = "create", pillar = null, playbookId = null, onDone = null } = {}) {
+export function open({ playbookId = null, onDone = null } = {}) {
   injectOnce();
   requestOpen(MODAL_ID, close);
 
-  state = { mode, pillarId: pillar ? pillar.id : null, assets: [], onDone };
+  state = { assets: [], onDone };
 
   const contexts = getContexts();
   playbookEl.innerHTML = contexts
     .map((c) => `<option value="${escapeAttr(c.id)}">${escapeAttr(c.name)}</option>`)
     .join("");
-  const wanted = (pillar && pillar.playbookId) || playbookId || (contexts[0] && contexts[0].id) || "";
+  const wanted = playbookId || (contexts[0] && contexts[0].id) || "";
   playbookEl.value = wanted;
   playbookField.hidden = contexts.length <= 1;
   playbookField.style.display = contexts.length <= 1 ? "none" : "";
 
-  titleEl.textContent = mode === "edit" ? "Edit pillar" : "New pillar";
-  saveBtn.textContent = mode === "edit" ? "Save" : "Create pillar";
-  nameEl.value = pillar ? pillar.name : "";
-  aboutEl.value = pillar ? pillar.about || "" : "";
-  // Editing an existing pillar has its own asset shelf on the pillar page, so the
-  // dropzone here is a create-time convenience only. Two places to add the same
-  // thing, both live, is how one of them ends up out of sync.
-  const creating = mode !== "edit";
-  dropzone.closest(".ap-form-field").hidden = !creating;
-  dropzone.closest(".ap-form-field").style.display = creating ? "" : "none";
+  titleEl.textContent = "New pillar";
+  saveBtn.textContent = "Create pillar";
+  nameEl.value = "";
+  aboutEl.value = "";
   paintFiles();
   syncSave();
 

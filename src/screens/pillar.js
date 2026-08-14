@@ -36,7 +36,6 @@ import { isFlagOn } from "../feature-flags.js?v=22";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
 import { getContextById } from "../contexts-store.js?v=74";
 import { getBriefById } from "../briefs-store.js?v=52";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=1";
 import {
   getPillarById,
   removeSource,
@@ -53,7 +52,7 @@ import {
 
 const PAGE = 8;
 
-let view = { id: null, tab: "context", visible: PAGE };
+let view = { id: null, tab: "context", visible: PAGE, editing: false };
 let unsubscribe = null;
 let boundTarget = null;
 let boundClick = null;
@@ -83,6 +82,10 @@ export function renderPillar(params, target) {
     // A tab switch is a query-only change and re-runs this handler, so the paging
     // position has to survive it — resetting only when the pillar itself changes.
     visible: samePillar ? view.visible : PAGE,
+    // Edit mode never survives a tab switch or a remount: leaving the block you
+    // were editing and coming back to a live textarea is how unsaved text goes
+    // missing without anyone noticing.
+    editing: false,
   };
   if (!samePillar) arrivedOnEntry = unseenCountFor(params.id);
   renderTopbar();
@@ -127,18 +130,36 @@ function renderPage(p) {
   return `
     <header class="pillar-view__head">
       <div class="pillar-view__heading">
-        <h1 class="ap-h2 pillar-view__title">${escapeAttr(p.name)}</h1>
+        ${
+          view.editing
+            ? `<div class="ap-form-field pillar-view__name-field">
+                 <label for="pillarName">Name</label>
+                 <div class="ap-input-group">
+                   <input type="text" id="pillarName" data-pillar-name value="${escapeAttr(p.name)}" />
+                 </div>
+               </div>`
+            : `<h1 class="ap-h2 pillar-view__title">${escapeAttr(p.name)}</h1>`
+        }
         <p class="pillar-view__sub">
           ${ctx ? `${escapeAttr(ctx.name)} · ` : ""}context rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}
         </p>
       </div>
       <div class="pillar-view__actions">
-        <button type="button" class="ap-button stroked grey" data-pillar-share>
-          <i class="ap-icon-share"></i><span>Share</span>
-        </button>
-        <button type="button" class="ap-button stroked grey" data-pillar-edit>
-          <i class="ap-icon-pen"></i><span>Edit</span>
-        </button>
+        ${
+          view.editing
+            ? // Cancel + Save changes, the same pair and the same weights the
+              // Playbook page uses for an in-place edit.
+              `<button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
+               <button type="button" class="ap-button primary orange" data-pillar-save>
+                 <i class="ap-icon-check"></i><span>Save changes</span>
+               </button>`
+            : `<button type="button" class="ap-button stroked grey" data-pillar-share>
+                 <i class="ap-icon-share"></i><span>Share</span>
+               </button>
+               <button type="button" class="ap-button stroked grey" data-pillar-edit>
+                 <i class="ap-icon-pen"></i><span>Edit</span>
+               </button>`
+        }
       </div>
     </header>
     ${renderTabs(p)}
@@ -165,13 +186,26 @@ function renderTabs(p) {
     </div>`;
 }
 
+// The context is the one thing on this page a human writes rather than Archie,
+// so it is edited HERE, in place, next to the sources that produced it — not in
+// a dialog that can only show a name and a sentence. Same reasoning and the same
+// controls as the Playbook page's in-place panels.
 function renderContextTab(p) {
+  const body = view.editing
+    ? `<div class="ap-textarea-field resizable pillar-sec__editor">
+         <textarea data-pillar-context rows="5">${escapeAttr(p.context || p.about || "")}</textarea>
+       </div>`
+    : `<p class="pillar-sec__prose">${escapeAttr(p.context || p.about || "")}</p>`;
   return `
-    <section class="pillar-sec">
+    <section class="pillar-sec ${view.editing ? "is-editing" : ""}">
       <h2 class="pillar-sec__title">The context I carry</h2>
-      <p class="pillar-sec__prose">${escapeAttr(p.context || p.about || "")}</p>
+      ${body}
       <span class="pillar-sec__note">
-        Condensed from every topic, chat and note in this pillar. Rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.
+        ${
+          view.editing
+            ? "Your words win. I rewrite this when a source is added or removed — editing it now replaces what I wrote."
+            : `Condensed from every topic, chat and note in this pillar. Rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.`
+        }
       </span>
     </section>
     ${renderAssets(p)}`;
@@ -314,6 +348,7 @@ function bind(target) {
   boundClick = (event) => {
     const tab = event.target.closest("[data-pillar-tab]");
     if (tab) {
+      view.editing = false;
       const next = tab.getAttribute("data-pillar-tab");
       // Query-only navigation, so a link to the trail is shareable and Back
       // works. The default tab writes no param.
@@ -323,8 +358,30 @@ function bind(target) {
       return;
     }
     if (event.target.closest("[data-pillar-edit]")) {
-      const p = getPillarById(view.id);
-      if (p) openPillarModal({ mode: "edit", pillar: p });
+      view.editing = true;
+      paint(target);
+      const nameEl = target.querySelector("[data-pillar-name]");
+      if (nameEl) {
+        nameEl.focus();
+        nameEl.select();
+      }
+      return;
+    }
+    if (event.target.closest("[data-pillar-cancel]")) {
+      view.editing = false;
+      paint(target);
+      return;
+    }
+    if (event.target.closest("[data-pillar-save]")) {
+      const nameEl = target.querySelector("[data-pillar-name]");
+      const contextEl = target.querySelector("[data-pillar-context]");
+      const name = nameEl ? nameEl.value.trim() : "";
+      const context = contextEl ? contextEl.value.trim() : "";
+      view.editing = false;
+      // A pillar with no name is not a pillar — keep the old one rather than
+      // writing an empty title nobody can find again.
+      updatePillar(view.id, { ...(name ? { name } : {}), context });
+      showToast("Pillar saved");
       return;
     }
     if (event.target.closest("[data-pillar-share]")) {
