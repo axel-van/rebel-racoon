@@ -24,7 +24,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=430";
+import { renderTopbar } from "../components/topbar.js?v=431";
 import { showToast } from "../components/toast.js?v=21";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
 import { getContexts, getContextById, deleteContext, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
@@ -32,7 +32,7 @@ import { getLanes, toggleLanePause, subscribe as subscribeLanes } from "../resea
 import { getPillars, subscribe as subscribePillars } from "../pillars-store.js?v=6";
 import { subscribe as subscribeBriefs } from "../briefs-store.js?v=56";
 import { findCadence, findResearchSource } from "../research-catalog.js?v=20";
-import { getActivePlaybookId, setActivePlaybook, subscribe as subscribeScope } from "../active-playbook.js?v=17";
+import { getActivePlaybookId, setActivePlaybook, subscribe as subscribeScope } from "../active-playbook.js?v=18";
 
 // One entry per thing you can configure. Two, and it stays two — see the note at
 // the top of this file about what a third one would mean.

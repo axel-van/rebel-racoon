@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=430";
+import { renderTopbar } from "../components/topbar.js?v=431";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { getContexts, getContextById } from "../contexts-store.js?v=75";
 import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=45";
-import { getActivePlaybookId } from "../active-playbook.js?v=17";
+import { getActivePlaybookId } from "../active-playbook.js?v=18";
 import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=118";
 import {
   RESEARCH_SOURCES,
@@ -450,8 +450,11 @@ function renderFooter() {
  * (topbar.backTargetFor). Two exits from one screen that disagree is how a user
  * loses work. */
 function exitPath() {
-  // Always back to THE feed — there is one, and it is the active Playbook's.
-  return "/topic-feeds";
+  // The settings table, which is where the pen that opens this form lives —
+  // and the same target the topbar's back uses (topbar.backTargetFor). SAVE is
+  // the one exit that goes elsewhere, on purpose: it lands on the feed you just
+  // changed, because the point of saving is to see what it did.
+  return "/settings/topic-feeds";
 }
 
 function bind(target) {

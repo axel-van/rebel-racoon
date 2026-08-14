@@ -36,7 +36,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=430";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=431";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=54";
 import {
@@ -52,8 +52,8 @@ import {
 import { openBriefInChat } from "../brief-flow.js?v=30";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=17";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=9";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=18";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=10";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=45";
 import {
   getBriefById,

@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=564";
+} from "./right-panel.js?v=565";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=89";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=97";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=91";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=357";
+} from "./conversation-status-card.js?v=358";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=39";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
@@ -552,6 +552,14 @@ function backTargetFor(path) {
   // goes back to the same place and the label no longer names a lane. It used to,
   // because you could be looking at any of several feeds' settings; with one per
   // Playbook the name would repeat the rail's scope switcher.
+  //
+  // The SETTINGS form is the exception, and goes back to /settings/topic-feeds.
+  // You get here from the table's pen — that is where you came from, and "back"
+  // has to mean it. It also matters more than it looks: the settings space has no
+  // topbar of its own, so a back that returned to the feed left the table with no
+  // way back to it except the rail's cog, two clicks away from the row you were
+  // just editing.
+  if (/^\/topic-feeds\/.*settings$/.test(path)) return { to: "/settings/topic-feeds", label: "Back to Settings" };
   if (/^\/topic-feeds\/.+/.test(path)) return { to: "/topic-feeds", label: "Back to the feed" };
   // Settings is a place, not a step in a flow — its own back is the rail's.
   if (/^\/settings/.test(path)) return null;
