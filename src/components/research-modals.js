@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=19";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=20";
 import {
   ageMinutes,
   getBriefById,
@@ -30,12 +30,11 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-  toggleSaved,
-} from "../briefs-store.js?v=54";
+} from "../briefs-store.js?v=56";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=51";
-import { getLanes } from "../research-store.js?v=43";
+import { renderUseButtons } from "./brief-card.js?v=52";
+import { getLanes } from "../research-store.js?v=44";
 import {
   getContexts,
   getContextById,
@@ -50,8 +49,8 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=27";
-import { renderBriefCard } from "./brief-card.js?v=51";
+import { openBriefInChat } from "../brief-flow.js?v=29";
+import { renderBriefCard } from "./brief-card.js?v=52";
 import { renderSocialPostCard } from "./social-post-card.js?v=31";
 import { showToast } from "./toast.js?v=21";
 
@@ -1674,13 +1673,6 @@ function onPanelClick(event) {
     setStatus(id, "used");
     close();
     return openBriefInChat(id);
-  }
-  const saveBtn = event.target.closest("[data-brief-save]");
-  if (saveBtn) {
-    const next = toggleSaved(saveBtn.dataset.briefSave);
-    close();
-    showToast(next === "saved" ? "Saved for later" : "Removed from saved");
-    return;
   }
   const ignoreBtn = event.target.closest("[data-brief-ignore]");
   if (ignoreBtn) {

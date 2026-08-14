@@ -44,7 +44,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES, RESEARCH_TYPES } from "./research-catalog.js?v=19";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=20";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -53,7 +53,10 @@ const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 // instead of forty identical New pills.
 const triage = new Map();
 for (const b of briefs) {
-  triage.set(b.id, { status: b.seedStatus || "new", reason: b.seedReason || "", updatedAt: b.ageLabel || "" });
+  // `saved` normalises to New: the status no longer exists, and a brief carrying
+  // it would filter to nothing rather than simply appearing untriaged.
+  const seeded = b.seedStatus === "saved" ? "new" : b.seedStatus || "new";
+  triage.set(b.id, { status: seeded, reason: b.seedReason || "", updatedAt: b.ageLabel || "" });
 }
 
 const notifier = createNotifier("briefs-store");
@@ -214,7 +217,7 @@ export function defaultFilters() {
 // that meant nothing.
 export function narrowedGroupCount(filters = defaultFilters()) {
   let n = 0;
-  // Against the DEFAULT, not against all four. The default is New + Saved now, so a
+  // Against the DEFAULT, not against all four. The default is New alone now, so a
   // full-breadth comparison would read "narrowed" the moment the panel opened and pin
   // the badge to 1 forever — which is exactly the failure the types note below
   // records from when their default was two of three. The badge means "you have
@@ -226,13 +229,11 @@ export function narrowedGroupCount(filters = defaultFilters()) {
   // deviation, but not one worth a second data structure to catch in a prototype.
   if ((filters.statuses || []).length !== DEFAULT_STATUS_IDS.length) n++;
   if ((filters.sources || []).length !== ALL_SOURCE_IDS.length) n++;
-  // Types ARE counted again: the group is back inside the panel, so narrowing it
-  // is once more something the badge has to announce. This was briefly excluded,
-  // correctly, while types lived as always-visible chips — a control you can see
-  // needs no badge. The other half of that exclusion is now moot too: back then
-  // the default was two types of three, so counting it would have pinned the
-  // badge to 1 forever. There are two types now and both are default.
-  if ((filters.types || []).length !== RESEARCH_TYPES.length) n++;
+  // Types are NOT counted, and the reason is the same one that excluded them
+  // when they were always-visible chips: a control you can see needs no badge.
+  // The segmented control in the topbar is that control now, and `filters.types`
+  // no longer has a UI at all — it stays at its default forever, so counting it
+  // could only ever add zero.
   return n;
 }
 
@@ -387,6 +388,14 @@ export function setStatus(briefId, status) {
 // Save ↔ un-save. Un-saving returns to New rather than to whatever it was
 // before: "Remove from saved" reads as "put it back in the queue", and the feed
 // defaults to New, so that is where the user expects to find it again.
+/**
+ * @deprecated SAVED IS GONE — nothing calls this.
+ *
+ * "I'll come back to this" is now a VIEW (the Topics-for-later segment), not a
+ * status, and a status duplicating a view is a second answer to one question.
+ * Kept because restoring Save means restoring exactly this, and because the
+ * seed data still carries `seedStatus: "saved"` rows that normalise to New.
+ */
 export function toggleSaved(briefId) {
   const next = getStatus(briefId) === "saved" ? "new" : "saved";
   setStatus(briefId, next);

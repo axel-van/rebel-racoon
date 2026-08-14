@@ -318,12 +318,11 @@ export const REVIEW_STATUSES = Object.freeze([
   // action that sets it ("Save for later"), but a pill states a STATE and the
   // menu row states an ACTION — they don't have to read identically, and at pill
   // size the extra two words were the widest thing in the status row.
-  {
-    id: "saved",
-    label: "Saved",
-    icon: "ap-icon-bookmark",
-    hint: "Kept for later. It stays in the list until you use or ignore it.",
-  },
+  // SAVED IS GONE. It was a fourth review state meaning "I will come back to
+  // this", which is exactly what the Topics-for-later segment now means — and a
+  // status that duplicates a view is a second answer to one question. Every
+  // surface lost its Save affordance with it: the card menu, the article footer
+  // and this filter. A seeded `saved` brief reads as New.
   {
     id: "used",
     label: "Used",
@@ -349,7 +348,7 @@ export const REVIEW_STATUSES = Object.freeze([
 // it, saving a topic made it vanish the instant you triaged it, and the attention
 // notice existed largely to explain that gap. Saved stays visible here, so the act of
 // parking something never removes it from view.
-export const DEFAULT_STATUS_IDS = Object.freeze(["new", "saved"]);
+export const DEFAULT_STATUS_IDS = Object.freeze(["new"]);
 
 export function findResearchSource(id) {
   return RESEARCH_SOURCES.find((s) => s.id === id) || null;

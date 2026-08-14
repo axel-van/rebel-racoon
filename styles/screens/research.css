@@ -1695,3 +1695,65 @@
 .app-topbar .research-filters {
   position: relative;
 }
+
+/* ── The segmented control ────────────────────────────────────────────────
+   HAND-BUILT, and flagged as such: the DS ships Segmented Control only as
+   <ap-segmented-control> in Angular — the CSS-UI layer has no class for it —
+   while its own tie-breaker names a segmented control as the component for
+   flipping between two to four short co-visible views. Every value below is a
+   DS token, so this is a faithful hand-build rather than an invention. Replace
+   it with the real component the day a .ap-segmented-control lands.
+
+   It lives in the app topbar beside Filters / Export, which is where this
+   feature's screen-level controls now go. */
+.research-segments {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-grey-05);
+}
+
+.research-segments__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: 5px var(--ref-spacing-xs);
+  border: 0;
+  border-radius: var(--app-radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  color: var(--sys-text-color-light);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--ref-animation-short) var(--app-ease-standard),
+    color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+.research-segments__item:hover:not(.is-on) {
+  color: var(--app-convo-navy);
+}
+
+/* The active segment is a raised white chip on the track — the shape that says
+   "one of these is selected" without a border doing the work. */
+.research-segments__item.is-on {
+  background: var(--ref-color-white);
+  color: var(--app-convo-navy);
+  box-shadow: var(--app-shadow-low);
+}
+
+/* The count is part of the label, not a Counter component: it says how big this
+   VIEW is, where a DS Counter in this app means "how many need you". */
+.research-segments__count {
+  color: var(--sys-text-color-light);
+  font-weight: var(--sys-text-style-caption-weight);
+}
+
+.research-segments__item.is-on .research-segments__count {
+  color: var(--sys-text-color-light);
+}

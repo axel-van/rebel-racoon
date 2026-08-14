@@ -916,6 +916,30 @@ Un chat **existant** garde le Playbook dans lequel il a été créé : un chat e
 - Un Playbook sans lane rend un **état vide** (« No sources yet » → Choose sources), **pas** une redirection : `/topic-feeds` est l'endroit d'où ça se résout, donc y renvoyer bouclerait.
 - Un Playbook à plusieurs lanes affiche la première. Les mocks en donnent exactement une par marque ; `firstLaneForScope()` est la couture où fusionner les briefs de plusieurs lanes le jour où c'est faux.
 
+### Deux segments, et le type devient la vue
+
+Le type d'un Topic n'est plus une étiquette qu'on lit sur chaque carte : c'est **la vue dans laquelle on se trouve**. Un **segmented control** dans le topbar, à gauche de Filters / Export, avec le compte de chaque segment.
+
+| Segment              | Ce qu'il contient                                                    |
+| -------------------- | -------------------------------------------------------------------- |
+| **Ready to draft**   | tout le reste — y compris un Topic « for later » **lié à un pilier** |
+| **Topics for later** | un Topic `content-strategy` que **aucun pilier n'a réclamé**         |
+
+**Lier un Topic à un pilier le fait changer de segment**, et c'est exactement ce que lier veut dire : ce qui le bloquait — pas d'angle, pas de maison — est répondu, donc il est draftable. Le split n'est donc plus le `researchType` brut : le type est l'entrée, le lien de pilier la seconde moitié, le segment la réponse.
+
+⚠️ **Le contrôle est fait main, et c'est assumé.** Le DS ne livre Segmented Control qu'en `<ap-segmented-control>` Angular — la couche CSS-UI n'a aucune classe — alors que son propre arbitrage désigne le segmented control pour basculer entre deux à quatre vues courtes et co-visibles, ce qui est exactement le cas. Piste, rayon, remplissage actif et typo viennent tous de tokens DS : c'est une reconstruction fidèle, pas une invention. À remplacer par le vrai composant le jour où une `.ap-segmented-control` arrive.
+
+### Save n'existe plus
+
+Le statut **Saved** est supprimé partout : menu de carte, pied d'article, et le filtre de statut. « J'y reviendrai » est maintenant **une vue** (le segment Topics for later), et un statut qui double une vue est une seconde réponse à une seule question. Un brief semé en `saved` se lit comme **New**.
+
+Conséquences en cascade, toutes assumées :
+
+- Le pied d'article n'a plus qu'**un verbe** (Use in chat, en primary orange) et Ignore. Le partage main/alt existait pour arbitrer entre Use et Save.
+- Le menu de carte perd son **ordre piloté par la route** : il menait avec Save pour un Topic `content-strategy` et avec Use pour un `ready-to-post`. Avec un seul verbe il n'y a plus rien à ordonner.
+- Le groupe de filtres **Topic type** disparaît lui aussi : le segmented control **est** ce filtre. Les deux ensemble se contredisaient — décocher « Draft-ready » depuis le segment Ready to draft vidait la liste pendant que le segment affichait encore son compte. La règle du catalogue (« un patron par problème par surface ») tranche, et le segment gagne parce qu'il est toujours visible.
+- `filters.types` **existe toujours** et reste à son défaut : la forme de `getBriefsForLane` est inchangée, plus rien ne narrow dessus, et le badge Filters ne le compte plus (un contrôle qu'on voit n'a pas besoin de badge).
+
 ### L'en-tête du feed est parti dans le topbar
 
 `research-feed__header` portait le monogramme, le nom, la méta et trois contrôles — soit ~96px au-dessus de la ligne de flottaison, à répéter ce que le switcher dit déjà. Les trois contrôles (Filters, Export, réglages) montent dans le **topbar** via `topbar.setTopbarActions()`.

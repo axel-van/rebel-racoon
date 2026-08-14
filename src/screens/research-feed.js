@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=425";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=427";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=51";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=52";
 import {
   openIgnoreReason,
   openExport,
@@ -49,13 +49,13 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=114";
-import { openBriefInChat } from "../brief-flow.js?v=27";
+} from "../components/research-modals.js?v=116";
+import { openBriefInChat } from "../brief-flow.js?v=29";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=12";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=4";
-import { getLaneById, getLanes } from "../research-store.js?v=43";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=14";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=6";
+import { getLaneById, getLanes } from "../research-store.js?v=44";
 import {
   getBriefById,
   getBriefsForLane,
@@ -64,16 +64,9 @@ import {
   defaultFilters,
   narrowedGroupCount,
   setStatus,
-  toggleSaved,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=54";
-import {
-  RESEARCH_SOURCES,
-  REVIEW_STATUSES,
-  RESEARCH_TYPES,
-  findResearchSource,
-  findCadence,
-} from "../research-catalog.js?v=19";
+} from "../briefs-store.js?v=56";
+import { RESEARCH_SOURCES, REVIEW_STATUSES, findResearchSource, findCadence } from "../research-catalog.js?v=20";
 import { getContextById } from "../contexts-store.js?v=75";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
@@ -280,9 +273,12 @@ let filters = defaultFilters();
 // next one.
 function freshView() {
   return {
+    // Which segment is showing. THE TYPE STOPPED BEING A TAG YOU READ AND BECAME
+    // THE VIEW YOU ARE IN — see renderSegments for what each one holds.
+    segment: "ready",
     generating: false,
     panelOpen: false,
-    groups: { types: true, status: true, sources: true },
+    groups: { status: true, sources: true },
     openMenu: null,
     // Which topic's article is showing beside the list, or null. View state, not
     // URL state: the article is a way of reading the list, not a place, and a
@@ -434,6 +430,50 @@ function onNoFeedClick(event) {
   // The user is one click from an empty screen and wants to fix that screen —
   // a table is a detour that makes them find their own row first.
   if (event.target.closest("[data-feed-settings]")) navigate("/topic-feeds/settings");
+}
+
+// ── The two segments ──────────────────────────────────────────────────────
+// A topic is IN "Topics for later" only while it is a content-strategy topic
+// that no pillar has claimed. Link it to a pillar and it leaves — because that
+// is exactly what linking means: the thing that was blocking it (no angle, no
+// home) is answered, and it is now draftable.
+//
+// So the split is not the raw `researchType` any more. Type is the input; the
+// pillar link is the second half, and the segment is the answer.
+function inSegment(brief, segment) {
+  const later = brief.researchType === "content-strategy" && !pillarForBrief(brief.id);
+  return segment === "later" ? later : !later;
+}
+
+function segmentBriefs(segment) {
+  return getBriefsForLane(laneId, filters).filter((b) => inSegment(b, segment));
+}
+
+// Hand-built, and deliberately: the DS ships Segmented Control only as
+// <ap-segmented-control> in Angular — the CSS-UI layer has no class for it — and
+// its own tie-breaker says a segmented control is the component for flipping
+// between two to four short co-visible views, which is exactly this. Track,
+// radius, active fill and type all come from DS tokens, so it is a faithful
+// hand-build rather than an invention; swap it for the real component if the
+// CSS-UI class ever lands.
+function renderSegments() {
+  const counts = {
+    ready: segmentBriefs("ready").length,
+    later: segmentBriefs("later").length,
+  };
+  const seg = (id, label) => `
+    <button
+      type="button"
+      class="research-segments__item ${view.segment === id ? "is-on" : ""}"
+      data-feed-segment="${id}"
+      aria-pressed="${view.segment === id ? "true" : "false"}"
+    >
+      <span>${label}</span>
+      <span class="research-segments__count">${counts[id]}</span>
+    </button>`;
+  return `<div class="research-segments" role="group" aria-label="Which topics to show">
+      ${seg("ready", "Ready to draft")}${seg("later", "Topics for later")}
+    </div>`;
 }
 
 function firstLaneForScope() {
@@ -646,7 +686,7 @@ function observeMore(target) {
 
 function loadMore(target) {
   if (view.loadingMore) return;
-  const total = getBriefsForLane(laneId, filters).length;
+  const total = segmentBriefs(view.segment).length;
   if (view.shown >= total) return;
   view.loadingMore = true;
   paint(target); // swap the caption for the spinner
@@ -665,7 +705,7 @@ function renderPage() {
   if (!lane) return "";
   if (view.generating) return renderGenerating();
 
-  const briefs = getBriefsForLane(laneId, filters);
+  const briefs = segmentBriefs(view.segment);
   // ── The attention notice is switched OFF ─────────────────────────────────
   // Kept, not deleted, so it can be switched back on in one line. It reported
   // trending and updated topics above the list; with every status now ticked by
@@ -747,7 +787,8 @@ function renderGenerating() {
 
 // The topbar cluster: Filters (with its panel), Export, Feed settings.
 function renderTopbarActions(narrowed) {
-  return html`<div class="research-filters">
+  return html`${raw(renderSegments())}
+    <div class="research-filters">
       <button
         type="button"
         class="ap-button stroked grey"
@@ -774,19 +815,21 @@ function renderTopbarActions(narrowed) {
     </button>`;
 }
 
-// Group order is fixed: Topic status, Sources, Topic type. Topic type is
-// last by request — it's the least-touched of the three.
+// Two groups: Topic status, then Sources.
+//
+// ── Topic type is GONE from here, and had to be ───────────────────────────
+// The segmented control is that filter now. Leaving both meant two controls
+// answering one question, and they could contradict: untick "Draft-ready" while
+// standing in the Ready-to-draft segment and the list empties with the segment
+// still claiming a count. The catalogue's own rule — one pattern per problem per
+// surface — decides it, and the segment wins because it is always visible.
+//
+// `filters.types` still exists and still defaults to both, so
+// getBriefsForLane's shape is unchanged; nothing narrows on it any more.
 function renderFilterPanel() {
   return html`<div class="research-filters__panel" data-feed-panel>
     ${raw(
-      // Topic type FIRST. It spent a while as a chip row under the header and is
-      // back in the panel, because that row cost ~48px of vertical space — a
-      // whole card line above the fold — to keep two checkboxes permanently on
-      // screen. First in the group order rather than last: it is the axis that
-      // changes which action a card offers, so of the three it is the one worth
-      // reaching first.
-      renderGroup("types", "Topic type", RESEARCH_TYPES, filters.types, "types") +
-        renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
+      renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
         // Sources renders WITHOUT its glyphs, unlike Topic status. The difference is
         // whether the row has a mapping to teach: a card shows its status as a BARE
         // icon, so the filter row is the only place that glyph is ever named — while
@@ -979,13 +1022,27 @@ function bind(target) {
     if (event.target.closest("[data-feed-export]")) {
       // The count is what's in the feed RIGHT NOW, i.e. after filtering — the
       // dialog says "currently in your feed" and has to mean it.
-      return openExport({ count: getBriefsForLane(laneId, filters).length });
+      return openExport({ count: segmentBriefs(view.segment).length });
     }
 
     // ── Brief actions ───────────────────────────────────────────────────
     // The card's own kebab. Shares `view.openMenu` with the (parked) split
     // button's key on purpose — one open menu at a time across the whole feed,
     // and the click-outside handler at the bottom of this file already closes it.
+    const segBtn = event.target.closest("[data-feed-segment]");
+    if (segBtn) {
+      const next = segBtn.dataset.feedSegment;
+      if (next === view.segment) return;
+      view.segment = next;
+      // The open article belongs to the segment you just left. Clearing it and
+      // re-arming the auto-open means the new segment opens on ITS first topic,
+      // which is what arriving at a list does everywhere else in this feature.
+      view.articleId = null;
+      view.articleAuto = false;
+      resetPaging();
+      return paint(target);
+    }
+
     const moreBtn = event.target.closest("[data-brief-more]");
     if (moreBtn) {
       const id = moreBtn.dataset.briefMore;
@@ -1032,14 +1089,6 @@ function bind(target) {
       view.openMenu = null;
       setStatus(use.dataset.briefUse, "used");
       openBriefInChat(use.dataset.briefUse);
-      return;
-    }
-
-    const save = event.target.closest("[data-brief-save]");
-    if (save) {
-      const next = toggleSaved(save.dataset.briefSave);
-      view.openMenu = null;
-      showToast(next === "saved" ? "Saved for later" : "Removed from saved");
       return;
     }
 

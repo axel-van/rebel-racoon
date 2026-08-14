@@ -40,7 +40,7 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=19";
+import { findReviewStatus } from "../research-catalog.js?v=20";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief } from "../pillars-store.js?v=6";
 
@@ -312,19 +312,13 @@ export function renderBriefCard(
 // after a divider, and hidden once already ignored (a second press has nothing
 // to do — the same rule the old menu row followed).
 function renderCardMore(brief, pillar, menuOpen) {
-  const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
-  const ready = brief.researchType === "ready-to-post";
-  const savedLabel = saved ? "Remove from saved" : "Save for later";
-  const rows = ready
-    ? [
-        { attr: "data-brief-use", icon: "ap-icon-single-chat-bubble", label: "Use in chat" },
-        { attr: "data-brief-save", icon: "ap-icon-bookmark", label: savedLabel },
-      ]
-    : [
-        { attr: "data-brief-save", icon: "ap-icon-bookmark", label: savedLabel },
-        { attr: "data-brief-use", icon: "ap-icon-single-chat-bubble", label: "Use in chat" },
-      ];
+  // ── Save is gone, and with it the route-driven ORDER ─────────────────────
+  // The menu used to lead with Save for a Content-strategy topic and with Use
+  // in chat for a Draft-ready one. With Save removed there is one verb left, so
+  // there is nothing left to order — and "I'll come back to this" is now the
+  // segment a topic sits in rather than something you press.
+  const rows = [{ attr: "data-brief-use", icon: "ap-icon-single-chat-bubble", label: "Use in chat" }];
   return html`<button
       type="button"
       class="ap-icon-button transparent topics-card__more"
@@ -499,15 +493,10 @@ function unlinkRow(briefId, pillar) {
  *                  menu made this point with .red-mode on the label.
  */
 export function renderUseButtons(brief) {
-  const saved = brief.status === "saved";
   const ignored = brief.status === "ignored";
-  const ready = brief.researchType === "ready-to-post";
-  const savedLabel = saved ? "Remove from saved" : "Save for later";
-  // Whichever verb is not the main one, exactly as the menu decided it.
-  const main = ready
-    ? { attr: "data-brief-use", label: "Use in chat" }
-    : { attr: "data-brief-save", label: savedLabel };
-  const alt = ready ? { attr: "data-brief-save", label: savedLabel } : { attr: "data-brief-use", label: "Use in chat" };
+  // One verb and one taking-away. Save is gone (see the menu above), so the
+  // main/alt split it existed to arbitrate went with it.
+  const main = { attr: "data-brief-use", label: "Use in chat" };
   return html`<span class="topics-use-flat" data-brief-use-wrap="${escapeAttr(brief.id)}">
     <!-- primary orange, not stroked blue. The house convention (CLAUDE.md) is
          orange = AI / spotlight action, blue = routine list-page CTA — and
@@ -516,9 +505,6 @@ export function renderUseButtons(brief) {
          obvious next step instead of three equal-weight buttons. -->
     <button type="button" class="ap-button primary orange" ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}>
       <span>${main.label}</span>
-    </button>
-    <button type="button" class="ap-button stroked grey" ${raw(`${alt.attr}="${escapeAttr(brief.id)}"`)}>
-      <span>${alt.label}</span>
     </button>
     <!-- Hidden once ignored — the action has been taken and a second press has
          nothing to do, the same rule the menu row followed.
@@ -550,6 +536,10 @@ export function renderUseButtons(brief) {
 
 /**
  * The card's Use-in-chat split button — UNREACHABLE, and kept on purpose.
+ *
+ * ⚠️ It still emits `data-brief-save`, and SAVE NO LONGER EXISTS anywhere in the
+ * product — no handler listens for that attribute. Restoring this function means
+ * deciding what its second verb is now, not wiring the old one back up.
  *
  * Nothing calls it: the card's footer is gone from every variant, and the article
  * pane uses renderUseButtons above. Left whole rather than deleted for the reason the
