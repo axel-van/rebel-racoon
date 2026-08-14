@@ -29,7 +29,7 @@ import { isFlagOn } from "../feature-flags.js?v=22";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
 import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=6";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=5";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=6";
 import {
   getPillars,
   getPillarById,

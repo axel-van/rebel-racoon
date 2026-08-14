@@ -9,9 +9,17 @@
 //
 // Three fields and no seed picker. "Start it from a topic / a chat / nothing"
 // was tried and removed: matching runs from the moment the pillar exists, so
-// seeding it by hand answers a question nobody has. The infobox says that
-// plainly — it is the one thing an empty form cannot convey, and it is
-// informative (`ap-infobox info`), not a warning about the feature.
+// seeding it by hand answers a question nobody has.
+//
+// ── Name AND description are required ──────────────────────────────────────
+// The description is not a nicety here — it is the seed the matcher reads until
+// the first topic lands, so a pillar created without one matches nothing and
+// looks broken for a week. It is the one field whose absence is invisible at the
+// moment it is skipped, which is exactly what a required field is for.
+//
+// The infobox sits LAST, above the footer, because it describes what happens
+// AFTER this form is submitted. Between the fields it read as an instruction
+// about the field above it and split the form in two.
 //
 // Assets are optional and use the same `.ap-dropzone` the pillar page uses, so
 // the field a user meets first is the field they meet later.
@@ -49,28 +57,23 @@ const HTML = `
     <i class="ap-icon-close"></i>
   </button>
   <div class="ap-dialog-content pillar-modal__content">
+    <!-- Placeholders describe WHAT TO WRITE rather than showing one brand's
+         answer. A worked example ("Sustainable wardrobe") reads as the expected
+         answer and gets copied; a description of the shape does not. -->
     <div class="ap-form-field">
       <label for="pillarName">Name it</label>
       <div class="ap-input-group">
-        <input type="text" id="pillarName" placeholder="Sustainable wardrobe" />
+        <input type="text" id="pillarName" placeholder="A short name for the theme, as you'd say it out loud" />
       </div>
     </div>
     <div class="ap-form-field">
       <label for="pillarAbout">What is this pillar about?</label>
       <div class="ap-textarea-field resizable">
-        <textarea id="pillarAbout" rows="3" placeholder="Buying less, but better. Durability and cost-per-wear, never guilt."></textarea>
-      </div>
-    </div>
-    <div class="ap-infobox info has-title pillar-modal__note">
-      <i class="ap-icon-info_fill"></i>
-      <div class="ap-infobox-content">
-        <div class="ap-infobox-texts">
-          <span class="ap-infobox-title">You don't have to fill this</span>
-          <span class="ap-infobox-message">
-            From here on I match topics from your feeds and what comes up in your chats against this pillar, and
-            file them into it myself. Everything I add is dated, and you can take any of it back out.
-          </span>
-        </div>
+        <textarea
+          id="pillarAbout"
+          rows="5"
+          placeholder="What it covers, the angle you take on it, and anything I should never say about it. A few sentences is plenty — I'll build on this as topics and chats come in."
+        ></textarea>
       </div>
     </div>
     <div class="ap-form-field">
@@ -85,6 +88,18 @@ const HTML = `
         <input type="file" class="ap-dropzone__input" id="pillarAssets" multiple hidden />
       </div>
       <ul class="pillar-modal__files" id="pillarFiles"></ul>
+    </div>
+    <div class="ap-infobox info pillar-modal__note">
+      <i class="ap-icon-info_fill"></i>
+      <div class="ap-infobox-content">
+        <div class="ap-infobox-texts">
+          <span class="ap-infobox-message">
+            From your description, topics from your feed and content from your chats will be matched to
+            continuously nurture the pillar. You can review what's included any time and add your own assets and
+            notes.
+          </span>
+        </div>
+      </div>
     </div>
   </div>
   <div class="ap-dialog-footer">
@@ -119,10 +134,15 @@ function injectOnce() {
   saveBtn.addEventListener("click", submit);
 
   nameEl.addEventListener("input", syncSave);
+  aboutEl.addEventListener("input", syncSave);
+  // Enter moves ON to the description rather than submitting past it — the
+  // description is required, and a keyboard user who types a name and presses
+  // Enter should land in the next field, not bounce off a disabled button.
   nameEl.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      submit();
+      if (aboutEl.value.trim()) submit();
+      else aboutEl.focus();
     }
   });
   modal.addEventListener("keydown", (event) => {
@@ -187,13 +207,15 @@ function paintFiles() {
 }
 
 function syncSave() {
-  saveBtn.disabled = nameEl.value.trim().length === 0;
+  saveBtn.disabled = nameEl.value.trim().length === 0 || aboutEl.value.trim().length === 0;
 }
 
 function submit() {
   const name = nameEl.value.trim();
-  if (!name) return;
   const about = aboutEl.value.trim();
+  // Both, not just the name: Enter in the name field submits, so this is the
+  // guard the disabled button cannot provide on its own.
+  if (!name || !about) return;
   // The Playbook is not asked here any more: a pillar belongs to whichever brand
   // the rail is scoped to, and asking again would let the dialog disagree with
   // the switcher two inches to its left.

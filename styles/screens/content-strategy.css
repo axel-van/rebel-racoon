@@ -626,6 +626,21 @@
   color: var(--sys-text-color-light);
 }
 
+/* The dialog is 840 wide but the description is prose — it keeps a measure of
+   its own rather than running the full width, which is the same reason the
+   pillar page caps .pillar-sec__prose. The single-line name field follows it so
+   the two fields share a left AND a right edge. */
+.pillar-modal__content .ap-form-field,
+.pillar-modal__note {
+  max-width: 74ch;
+}
+
+/* Last thing before the footer, and visually separated from the fields it is not
+   part of: it describes what happens after Create, not how to fill anything in. */
+.pillar-modal__note {
+  margin-top: var(--ref-spacing-xxs);
+}
+
 .pillar-modal__files {
   list-style: none;
   margin: var(--ref-spacing-xxs) 0 0;

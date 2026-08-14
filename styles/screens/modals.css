@@ -102,8 +102,14 @@ body.has-modal {
 
 /* 560, not the rename dialog's 440: this one carries a textarea, an infobox and
    a dropzone, and at 440 the infobox's two sentences ran to five lines. */
+/* 840, up from 560. The description is now required and five rows deep, so the
+   dialog is a writing surface rather than a naming one — at 560 that textarea
+   was a narrow column with a wide empty dialog around it. The wider frame also
+   lets the infobox's three lines sit as two.
+   Still the widest dialog in the app after connectors (920), which is a gallery;
+   past ~840 the description's measure decouples from readable. */
 .pillar-modal {
-  width: min(calc(100% - 32px), 560px);
+  width: min(calc(100% - 32px), 840px);
   flex-direction: column;
 }
 
