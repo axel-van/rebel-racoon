@@ -1707,3 +1707,16 @@
 .research-segments__count {
   font-weight: var(--ref-font-weight-regular);
 }
+
+/* The paused notice, above the list. Full width of the inner column and a gap
+   below it — the DS Infobox brings its own padding, border and colours, so this
+   is placement only. */
+.research-feed__paused {
+  margin-bottom: var(--ref-spacing-md);
+}
+
+/* The "switch something on" error, between the section label and the source
+   cards. Placement only — the DS Infobox brings everything else. */
+.research-form__error {
+  margin-bottom: var(--ref-spacing-sm);
+}

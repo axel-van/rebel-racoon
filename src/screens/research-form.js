@@ -20,12 +20,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=429";
+import { renderTopbar } from "../components/topbar.js?v=430";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { getContexts, getContextById } from "../contexts-store.js?v=75";
-import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=44";
-import { getActivePlaybookId } from "../active-playbook.js?v=16";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=117";
+import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=45";
+import { getActivePlaybookId } from "../active-playbook.js?v=17";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=118";
 import {
   RESEARCH_SOURCES,
   CADENCES,
@@ -38,6 +38,9 @@ import {
 // so it lives here rather than in the store. Cancel just drops it.
 let draft = null;
 let laneId = null;
+// Set only by a refused save, cleared the moment a source goes back on. Never
+// true on arrival: a form that opens shouting at you has judged nothing yet.
+let showSourceError = false;
 
 let boundTarget = null;
 let boundClick = null;
@@ -68,6 +71,7 @@ export function renderResearchForm(params, target) {
   // resolved the same way the feed itself resolves it. /topic-feeds/:id/settings
   // still names one, which is what deep links and the attention page use.
   laneId = params && params.id ? params.id : laneForActivePlaybook();
+  showSourceError = false;
 
   if (laneId) {
     const lane = getLaneById(laneId);
@@ -208,9 +212,37 @@ function renderScope() {
   </section>`;
 }
 
+// ── Saving with nothing switched on ────────────────────────────────────────
+// A feed with no sources cannot return a single topic, so it is not aquieter
+// feed — it is a screen that will be empty forever, and nothing on it would say
+// why. The form refuses the save and says so.
+//
+// The message sits with the SOURCES, not with the footer: the footer is where you
+// pressed, the sources are where the fix is, and an error at the bottom of a long
+// form is read after the user has already started hunting. renderSources paints
+// it, so it survives every repaint; the save handler scrolls it into view, since
+// on a short viewport the toggles can be a screen away from the button.
+//
+// DS Infobox in `error`, which is the documented banner for section-level
+// feedback — not .ap-form-message, which belongs to one field and this is about
+// nine of them.
 function renderSources() {
   return html`<section class="research-form__section">
     ${raw(renderSectionLabel("Topic sources"))}
+    ${raw(
+      showSourceError
+        ? html`<div class="ap-infobox error research-form__error" role="alert" data-form-error>
+            <i class="ap-icon-error_fill" aria-hidden="true"></i>
+            <div class="ap-infobox-content">
+              <div class="ap-infobox-texts">
+                <span class="ap-infobox-message">
+                  Switch on at least one source. With none, I have nothing to listen to and this feed stays empty.
+                </span>
+              </div>
+            </div>
+          </div>`
+        : "",
+    )}
     <div class="research-form__sources">${raw(RESEARCH_SOURCES.map(renderSourceCard).join(""))}</div>
   </section>`;
 }
@@ -479,6 +511,12 @@ function bind(target) {
       // aria-disabled rather than the disabled attribute, so the control stays
       // focusable and screen-reader-announced; the guard lives here instead.
       if (!isComplete()) return;
+      if (!draft.sources.length) {
+        showSourceError = true;
+        paint(target);
+        target.querySelector("[data-form-error]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
       if (mode() === "settings") {
         updateLane(laneId, draft);
         navigate(`/topic-feeds/${encodeURIComponent(laneId)}`);
@@ -535,6 +573,10 @@ function bind(target) {
         return;
       }
       draft.sources = source.checked ? [...new Set([...draft.sources, id])] : draft.sources.filter((x) => x !== id);
+      if (showSourceError && draft.sources.length) {
+        showSourceError = false;
+        paint(target);
+      }
       return;
     }
 

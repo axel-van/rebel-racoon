@@ -971,8 +971,14 @@ Forme reprise des réglages **Automated moderation** de l'inbox (`agorapulse/pla
 
 | Section         | Table                                                                                    |
 | --------------- | ---------------------------------------------------------------------------------------- |
-| **Playbooks**   | Playbook · piliers · feed · actions (Switch to / ouvrir / supprimer). CTA : New Playbook |
-| **Topic feeds** | Une ligne par Playbook — sources, dernier refresh, actions (crayon / corbeille)          |
+| **Playbooks**   | Playbook · piliers · feed · actions (crayon / corbeille). CTA : **Create Playbook**      |
+| **Topic feeds** | Une ligne par Playbook — sources, cadence _ou_ « Paused », actions (crayon / pause-play) |
+
+**Un feed se met en PAUSE, il ne se supprime pas.** Il est implicite dans son Playbook : le supprimer le ferait reconstruire à la lecture suivante, donc le bouton aurait menti. La pause dit de toute façon la chose vraie — arrête d'écouter, garde ce que tu as — et c'est la seule des deux qu'on peut reprendre. Pas de dialogue de confirmation : rien n'est perdu et le même bouton défait. La colonne « Refreshed » affiche alors un `.ap-tag orange` **Paused** à la place de la cadence, et le feed lui-même porte une `.ap-infobox warning` avec un bouton **Resume** — l'interrupteur est à deux écrans de là, et le seul autre symptôme est une liste qui cesse discrètement de grossir, ce qui se lit « il ne se passe rien sur mon marché » et non « je l'ai coupé ».
+
+**Chaque Playbook a un feed, et il écoute les concurrents dès le premier jour.** Trois Playbooks n'avaient aucune lane : leur ligne affichait « No sources yet » et leur feed un état vide — une marque neuve rencontrait un écran qui lui demandait d'aller configurer quelque chose avant que quoi que ce soit puisse arriver. `provisionMissingLanes()` (research-store) en crée une à la lecture, avec **Competitors** activé : c'est la source dont toute marque a la réponse, le Playbook les liste déjà. Provisionné paresseusement et non au boot, sinon un Playbook créé à 10h n'aurait toujours pas de feed à midi.
+
+**Et le formulaire refuse un feed sans aucune source.** Un feed sans source ne peut ramener aucun Topic : ce n'est pas un feed plus discret, c'est un écran vide pour toujours dont rien n'expliquerait la raison. Le message est une `.ap-infobox error` posée **avec les sources** et non avec le pied de page — le pied est là où on a appuyé, les sources sont là où se trouve la correction — et il disparaît dès qu'une source est rallumée.
 
 ⚠️ **Deux entrées, et ça reste deux.** CLAUDE.md porte la règle « une surface de réglages ne doit pas AGRÉGER », acquise après trois reverts. Celle-ci passe par la **seconde clause** — « ou sur une route scopée à UNE fonctionnalité » : depuis que le Playbook est le scope de l'app, « quelles marques existent et ce que le feed de chacune écoute » est une seule fonctionnalité vue de deux façons. Une troisième entrée qui ne serait ni un Playbook ni son feed est le signal que ça a recommencé à agréger. Les champs du Playbook restent sur `/playbook/:id`, que la table **lie** au lieu de les dupliquer.
 
@@ -1024,6 +1030,11 @@ Vérifiés le 2026-08-14 dans Chrome, flags `contentStrategy` + `contentResearch
 | S30 | Le feed n'a plus ni **Export** ni rouage dans son cluster                                                                 | ✅ Filters seul                                                                 |
 | S31 | **Ignore** est collé à Use in chat (12px) et en ghost **gris**                                                            | ✅                                                                              |
 | S32 | **Search chats** est sous l'en-tête Chats, au-dessus de PINNED                                                            | ✅                                                                              |
+| S33 | Chaque Playbook a un feed avec **Competitors** activé ; plus aucun « No sources yet »                                     | ✅ 7 lignes sur 7                                                               |
+| S34 | La table des Topic feeds met en **pause / relance** ; « Paused » remplace la cadence                                      | ✅ toast + icône play, sans dialogue                                            |
+| S35 | Un feed en pause affiche une infobox avec **Resume** au-dessus de sa liste                                                | ✅ ; Resume la retire                                                           |
+| S36 | Enregistrer sans aucune source est **refusé**, message posé sur les sources                                               | ✅ ; rallumer une source l'efface                                               |
+| S37 | La ligne **Ignore** du menu de carte est en couleur normale, sans filet au-dessus                                         | ✅ grey-100, 0 divider                                                          |
 
 ⚠️ **Donnée modifiée avec le code** : `recentSessions[].contextId` a été réassigné pour que chaque chat cité comme source d'un pilier vive dans le Playbook de ce pilier. Le rail filtrant sur ce champ, un chat cité par un pilier mais rangé sous une autre marque était invisible depuis le pilier qui le nomme.
 

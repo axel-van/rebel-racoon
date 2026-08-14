@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=429";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=430";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=53";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=54";
 import {
   openIgnoreReason,
   openVersionHistory,
@@ -48,13 +48,13 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=117";
-import { openBriefInChat } from "../brief-flow.js?v=29";
+} from "../components/research-modals.js?v=118";
+import { openBriefInChat } from "../brief-flow.js?v=30";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=16";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=8";
-import { getLaneById, getLanes } from "../research-store.js?v=44";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=17";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=9";
+import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=45";
 import {
   getBriefById,
   getBriefsForLane,
@@ -765,6 +765,28 @@ function renderPage() {
 
   return html`<div class="research-feed__body">
     <div class="research-feed__inner">
+      <!-- A paused feed has to SAY so here. The switch is in the settings table,
+           two screens away, and the only other symptom is a list that quietly
+           stops growing — which reads as "nothing is happening in my market",
+           not as "I turned this off". The Resume button is in the notice because
+           the fix belongs where the news is. -->
+      ${raw(
+        lane.paused
+          ? html`<div class="ap-infobox warning research-feed__paused" role="status">
+              <i class="ap-icon-warning_fill" aria-hidden="true"></i>
+              <div class="ap-infobox-content">
+                <div class="ap-infobox-texts">
+                  <span class="ap-infobox-message">
+                    This feed is paused. Everything below stays, but nothing new arrives until you start it again.
+                  </span>
+                </div>
+                <button type="button" class="ap-button stroked grey" data-feed-resume>
+                  <i class="ap-icon-play" aria-hidden="true"></i><span>Resume</span>
+                </button>
+              </div>
+            </div>`
+          : "",
+      )}
       ${raw(showNotice ? renderAttentionNotice(attention) : "")}
       <!-- The split starts HERE, below the header and the chips, so neither of
            them changes width when an article opens.
@@ -1006,6 +1028,11 @@ function bind(target) {
     // from everywhere instead of only from here.
     if (event.target.closest("[data-feed-trending]"))
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
+
+    if (event.target.closest("[data-feed-resume]")) {
+      toggleLanePause(laneId);
+      return paint(target);
+    }
 
     if (event.target.closest("[data-feed-filters]")) {
       view.panelOpen = !view.panelOpen;

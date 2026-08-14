@@ -17,6 +17,7 @@
 //   updateLane(id, patch)  → Lane | null
 //   duplicateLane(id)      → Lane | null  (appends a "(copy)" sibling)
 //   deleteLane(id)         → boolean
+//   toggleLanePause(id)    → Lane | null  (the settings table's play/pause)
 //   subscribe(fn)          → unsubscribe
 //
 // Lane shape (see mocks.researchLanes):
@@ -24,9 +25,11 @@
 //     sources: string[],        — enabled source ids, from research-catalog
 //     cadence,                  — a CADENCES id; copy, never a timer
 //     notify,                   — "notify me after a scan" switch
+//     paused,                   — stopped listening; the topics it found stay
 //     showTrending }            — gates the banner AND the trending page entry
 
 import { researchLanes as seed } from "./mocks.js?v=91";
+import { getContexts } from "./contexts-store.js?v=75";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=2";
 import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=20";
@@ -57,6 +60,9 @@ function normalizeLane(raw = {}) {
     sources: sources.length ? Array.from(new Set(sources)) : DEFAULT_ENABLED_IDS.slice(),
     cadence: findCadence(raw.cadence) ? raw.cadence : DEFAULT_CADENCE,
     notify: raw.notify !== false,
+    // Off unless said otherwise: a feed that arrives paused has never listened
+    // to anything, which is indistinguishable from broken.
+    paused: raw.paused === true,
     showTrending: raw.showTrending !== false,
     // Sites the Brand-website source scans. Owned by the LANE, not the Playbook:
     // the Playbook's own websiteUrl is the brand's canonical address, while this
@@ -93,8 +99,41 @@ function copyLane(l) {
   return { ...l, sources: l.sources.slice(), websites: l.websites.slice() };
 }
 
+// EVERY Playbook has a feed, and it listens to competitors from the first day.
+//
+// Three of the seeded Playbooks had no lane at all, so their row in the settings
+// table read "No sources yet" and their feed rendered an empty state — a brand
+// new to the app met a screen asking it to go and configure something before
+// anything could happen. Competitors is the source every brand has an answer for
+// (the Playbook already lists them), so it is the one that ships on.
+//
+// Provisioned lazily on read rather than at module load: in `new-alt` mode the
+// stores start empty and the Playbooks arrive later, so a one-shot pass at boot
+// would provision nothing and a Playbook made at 10am would still have no feed
+// at noon. The guard is the Playbook id, so this runs once per brand and never
+// re-creates a feed the user deleted... which is exactly why nothing here can
+// DELETE a feed — see toggleLanePause.
+function provisionMissingLanes() {
+  let added = false;
+  for (const ctx of getContexts()) {
+    if (lanes.some((l) => l.playbookId === ctx.id)) continue;
+    lanes.push(
+      normalizeLane({
+        id: `lane-auto-${ctx.id}`,
+        name: `${ctx.name} · listening`,
+        playbookId: ctx.id,
+        sources: ["competitor-posts"],
+        websites: ctx.websiteUrl ? [ctx.websiteUrl] : [],
+      }),
+    );
+    added = true;
+  }
+  return added;
+}
+
 /** Every lane, in creation order so the grid doesn't reshuffle on repaint. */
 export function getLanes() {
+  provisionMissingLanes();
   return lanes.map(copyLane);
 }
 
@@ -130,6 +169,21 @@ export function duplicateLane(id) {
   const src = lanes.find((x) => x.id === id);
   if (!src) return null;
   return addLane({ ...src, id: `lane-${++seq}`, name: `${src.name} (copy)` });
+}
+
+// Pause, not delete — this is what the settings table offers now.
+//
+// A feed cannot be deleted from there because it is IMPLICIT in its Playbook:
+// delete it and provisionMissingLanes() builds it back on the next read, so the
+// button would have lied. Pausing says the true thing anyway — stop listening,
+// keep what you already have — and it is the only reversible one of the two.
+// deleteLane() stays for the Playbook that is itself deleted.
+export function toggleLanePause(id) {
+  const i = lanes.findIndex((x) => x.id === id);
+  if (i < 0) return null;
+  lanes[i] = { ...lanes[i], paused: !lanes[i].paused };
+  notify();
+  return copyLane(lanes[i]);
 }
 
 export function deleteLane(id) {

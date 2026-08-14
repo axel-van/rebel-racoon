@@ -349,24 +349,28 @@ function renderCardMore(brief, pillar, menuOpen) {
                       label: "Link to a Content pillar",
                     }),
             )}
+            <!-- A normal row, with no divider above it. Ignoring hides a topic
+                 that a spike brings back — nothing is destroyed — so red-mode was
+                 flagging a danger that is not there, and the rule was fencing it
+                 off from actions it belongs with. Same correction the pane's
+                 Ignore button got. -->
             ${raw(
               ignored
                 ? ""
-                : html`<div class="ap-action-dropdown-divider"></div>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      class="ap-action-dropdown-item red-mode has-description"
-                      data-brief-ignore="${escapeAttr(brief.id)}"
-                    >
-                      <i class="ap-icon-eye-off"></i>
-                      <div class="ap-action-dropdown-item-text">
-                        <div class="ap-action-dropdown-item-label-container">
-                          <span class="ap-action-dropdown-item-label">Ignore</span>
-                        </div>
-                        <span class="ap-action-dropdown-item-description">${IGNORE_HINT}</span>
+                : html`<button
+                    type="button"
+                    role="menuitem"
+                    class="ap-action-dropdown-item has-description"
+                    data-brief-ignore="${escapeAttr(brief.id)}"
+                  >
+                    <i class="ap-icon-eye-off"></i>
+                    <div class="ap-action-dropdown-item-text">
+                      <div class="ap-action-dropdown-item-label-container">
+                        <span class="ap-action-dropdown-item-label">Ignore</span>
                       </div>
-                    </button>`,
+                      <span class="ap-action-dropdown-item-description">${IGNORE_HINT}</span>
+                    </div>
+                  </button>`,
             )}
           </div>`
         : "",
