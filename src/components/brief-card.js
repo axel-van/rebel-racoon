@@ -42,7 +42,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus } from "../research-catalog.js?v=19";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { pillarForBrief } from "../pillars-store.js?v=4";
+import { pillarForBrief } from "../pillars-store.js?v=6";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the
@@ -338,7 +338,23 @@ function renderCardMore(brief, pillar, menuOpen) {
     ${raw(
       menuOpen
         ? html`<div class="ap-action-dropdown topics-card__more-menu" role="menu">
-            ${raw(rows.map((r) => menuRow(brief.id, r)).join(""))} ${raw(pillar ? unlinkRow(brief.id, pillar) : "")}
+            ${raw(rows.map((r) => menuRow(brief.id, r)).join(""))}
+            <!-- Link when it is filed nowhere, Unlink when it is. Never both:
+                 they are the same decision in two directions, and offering to
+                 link a topic that is already linked offers to do what it just
+                 did. Re-filing is Unlink then Link — two clicks for a rare
+                 action, rather than a third row on every card forever. -->
+            ${raw(
+              !isFlagOn("contentStrategy")
+                ? ""
+                : pillar
+                  ? unlinkRow(brief.id, pillar)
+                  : menuRow(brief.id, {
+                      attr: "data-brief-link",
+                      icon: "ap-icon-stack",
+                      label: "Link to a Content pillar",
+                    }),
+            )}
             ${raw(
               ignored
                 ? ""
@@ -471,9 +487,11 @@ function unlinkRow(briefId, pillar) {
  * three separate buttons have no such constraint. The weights carry the hierarchy the
  * menu used to carry by position:
  *
- *   stroked blue   the main verb — same treatment as the card's main segment and the
- *                  version dialog's action, so "use in chat" looks identical wherever
- *                  it is offered
+ *   primary orange the main verb. Orange is the AI / spotlight colour in this app,
+ *                  and taking a topic into a chat is the AI action the pane exists
+ *                  to set up. It was stroked blue, matching the card's parked split
+ *                  button — but with the split gone there is nothing left to match,
+ *                  and three stroked buttons gave the pane no obvious next step
  *   stroked grey   the alternate verb, quieter because it is the one you did not come
  *                  here for
  *   ghost red      Ignore, the taking-away one. The DS's red family, and ghost rather
@@ -491,7 +509,12 @@ export function renderUseButtons(brief) {
     : { attr: "data-brief-save", label: savedLabel };
   const alt = ready ? { attr: "data-brief-save", label: savedLabel } : { attr: "data-brief-use", label: "Use in chat" };
   return html`<span class="topics-use-flat" data-brief-use-wrap="${escapeAttr(brief.id)}">
-    <button type="button" class="ap-button stroked blue" ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}>
+    <!-- primary orange, not stroked blue. The house convention (CLAUDE.md) is
+         orange = AI / spotlight action, blue = routine list-page CTA — and
+         taking a topic into a chat is the AI action this whole pane exists to
+         set up. It is also now the only primary on screen, so the pane has one
+         obvious next step instead of three equal-weight buttons. -->
+    <button type="button" class="ap-button primary orange" ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}>
       <span>${main.label}</span>
     </button>
     <button type="button" class="ap-button stroked grey" ${raw(`${alt.attr}="${escapeAttr(brief.id)}"`)}>

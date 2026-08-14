@@ -146,6 +146,24 @@ export function pillarForBrief(briefId) {
   return id ? getPillarById(id) : null;
 }
 
+/**
+ * File a topic under a pillar from the feed.
+ *
+ * Writes the LINK only — the mark on the card and the context that rides into a
+ * chat. It does NOT push a row into the pillar's trail, because the trail
+ * records what fed the condensed context and a link made by hand has not fed it
+ * yet; that happens when the pillar next re-condenses. Keeping the two apart is
+ * the same separation `unlinkBrief` relies on in the other direction.
+ */
+export function linkBrief(briefId, pillarId) {
+  if (!briefId || !pillarId) return null;
+  const pillar = pillars.find((p) => p.id === pillarId);
+  if (!pillar) return null;
+  links.set(briefId, pillarId);
+  notify();
+  return { ...pillar };
+}
+
 export function unlinkBrief(briefId) {
   if (!links.has(briefId)) return null;
   const pillar = getPillarById(links.get(briefId));

@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=422";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=424";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=49";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=51";
 import {
   openIgnoreReason,
   openExport,
@@ -49,11 +49,12 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=112";
+} from "../components/research-modals.js?v=114";
 import { openBriefInChat } from "../brief-flow.js?v=27";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=4";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=9";
+import { unlinkBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=11";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=3";
 import { getLaneById, getLanes } from "../research-store.js?v=43";
 import {
   getBriefById,
@@ -318,6 +319,10 @@ let timer = null;
 
 let unsubscribe = null;
 let unsubscribePillars = null;
+let unsubscribeScope = null;
+let fromScope = false;
+let mountedParams = null;
+let mountedTarget = null;
 let topbarEl = null;
 let boundTarget = null;
 let boundClick = null;
@@ -343,6 +348,13 @@ export function renderResearchFeed(params, target) {
   // A Playbook with more than one lane shows its first: the mocks give each
   // brand exactly one, and the moment that stops being true this is the seam
   // where the briefs of several lanes get merged into one list.
+  // Remembered so a SCOPE CHANGE can re-resolve. /topic-feeds carries no id, so
+  // its lane is a function of the active Playbook — and switching brand while
+  // standing on it changed nothing until this existed, because the route did not
+  // change and the router had nothing to re-run.
+  fromScope = !params.id;
+  mountedParams = params;
+  mountedTarget = target;
   laneId = params.id || firstLaneForScope();
   const lane = getLaneById(laneId);
   if (!lane) {
@@ -353,6 +365,9 @@ export function renderResearchFeed(params, target) {
     teardown();
     renderTopbar();
     paintNoFeed(target);
+    unsubscribeScope = subscribeScope(() => {
+      if (fromScope) renderResearchFeed(mountedParams, mountedTarget);
+    });
     return teardown;
   }
 
@@ -389,6 +404,9 @@ export function renderResearchFeed(params, target) {
   unsubscribe = subscribeBriefs(() => paint(target));
   // Unlinking a topic from a pillar repaints the card that carries the mark.
   unsubscribePillars = subscribePillars(() => paint(target));
+  unsubscribeScope = subscribeScope(() => {
+    if (fromScope) renderResearchFeed(mountedParams, mountedTarget);
+  });
   return teardown;
 }
 
@@ -430,6 +448,10 @@ function teardown() {
   if (unsubscribePillars) {
     unsubscribePillars();
     unsubscribePillars = null;
+  }
+  if (unsubscribeScope) {
+    unsubscribeScope();
+    unsubscribeScope = null;
   }
   if (timer) {
     window.clearTimeout(timer);
@@ -972,6 +994,13 @@ function bind(target) {
     // status and its row in the pillar's trail. Removing it from the pillar is a
     // separate action on the pillar page, and conflating them would let a click
     // in a feed quietly rewrite a pillar's condensed context.
+    const link = event.target.closest("[data-brief-link]");
+    if (link) {
+      view.openMenu = null;
+      openPillarPicker({ briefId: link.dataset.briefLink });
+      return;
+    }
+
     const unlink = event.target.closest("[data-brief-unlink]");
     if (unlink) {
       view.openMenu = null;

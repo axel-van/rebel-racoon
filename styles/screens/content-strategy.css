@@ -77,13 +77,6 @@
   max-width: 100%;
 }
 
-.strategy-view__foot {
-  margin: 0;
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-caption-size);
-  max-width: 96ch;
-}
-
 /* Same track sizing and gutter as .research-grid, since the cards are now the
    same card — a pillar card narrower than a lane card would ellipsise its title
    at a different point from its twin one section away. */
@@ -695,4 +688,107 @@
 .pillar-modal__select:focus-visible {
   outline: none;
   border-color: var(--sys-border-color-active);
+}
+
+/* ── The pillar picker ────────────────────────────────────────────────────
+   Rows, not `.ap-select-option`: each carries a name AND its sentence, and the
+   DS option row is a single-line 40px control. Same shape as the app's other
+   choose-one lists (analyse__option, chat-picker) — a full-width button with a
+   glyph, a two-line text block and a quiet meta on the right. */
+.pillar-picker__row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--sys-color-border-color-default);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--ref-animation-short) var(--app-ease-standard),
+    background-color var(--ref-animation-short) var(--app-ease-standard);
+}
+
+/* The app's clickable-card convention: a light-blue wash and a light blue
+   border, never a hard outline (chat.css states this outright). */
+.pillar-picker__row:hover,
+.pillar-picker__row:focus-visible {
+  outline: none;
+  border-color: var(--ref-color-electric-blue-20);
+  background: var(--ref-color-electric-blue-05);
+}
+
+.pillar-picker__row-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: var(--app-radius-sm);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.pillar-picker__row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pillar-picker__row-name {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: 700;
+  color: var(--app-convo-navy);
+}
+
+/* One line, ellipsised — the sentence is here to tell two pillars apart, not to
+   be read in full. Its full text lives on the pillar's own page. */
+.pillar-picker__row-about {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillar-picker__row-meta {
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+  white-space: nowrap;
+}
+
+.pillar-picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  text-align: center;
+  padding: var(--ref-spacing-lg) var(--ref-spacing-sm);
+}
+
+.pillar-picker__empty p {
+  margin: 0;
+  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.6;
+  max-width: 44ch;
+}
+
+.pillar-picker__empty-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.pillar-picker__empty-mark > i {
+  font-size: var(--sys-text-style-h2-size);
 }

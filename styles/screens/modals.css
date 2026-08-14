@@ -50,6 +50,7 @@ body.has-modal {
 .confirm-modal,
 .rename-modal,
 .pillar-modal,
+.pillar-picker,
 .save-folder-modal,
 .analyze-profiles-modal,
 .fill-document-modal,
@@ -111,6 +112,19 @@ body.has-modal {
 .pillar-modal {
   width: min(calc(100% - 32px), 840px);
   flex-direction: column;
+}
+
+/* 520: a list of names with one line of description each. Narrower than the
+   create dialog on purpose — this is a pick, not a writing surface. */
+.pillar-picker {
+  width: min(calc(100% - 32px), 520px);
+  flex-direction: column;
+}
+
+.pillar-picker .ap-dialog-content {
+  flex: 1;
+  overflow-y: auto;
+  gap: var(--ref-spacing-xxs);
 }
 
 /* ── Analyze social profiles modal ─────────────────────────── */
@@ -488,6 +502,7 @@ body.has-modal {
 .confirm-modal.open,
 .rename-modal.open,
 .pillar-modal.open,
+.pillar-picker.open,
 .save-folder-modal.open,
 .analyze-profiles-modal.open,
 .fill-document-modal.open,

@@ -825,6 +825,18 @@ Trois changements, dont **deux ne sont pas gatés** par ce flag : ils appartienn
 - L'état vit dans un `Map` de module (`composerPillarBySession`), pas dans un store : comme les @mentions, il décrit ce que **ce composer** s'apprête à envoyer, pas une propriété du chat.
 - **La liste « Fresh topics to review »** porte la même marque, mais **en toutes lettres** dans le fil d'ariane (`starter-topic__pillar`) plutôt qu'en glyphe à tooltip : la carte entière est un `<button>`, donc un déclencheur survolable à l'intérieur serait un élément focusable dans un bouton.
 
+### Lier un Topic à un pilier depuis le feed
+
+Le menu de carte porte **« Link to a Content pillar »** quand le Topic n'est classé nulle part, et **Unlink** quand il l'est — jamais les deux : c'est la même décision dans deux sens, et proposer de lier un Topic déjà lié serait proposer de refaire ce qui vient d'être fait. Re-classer, c'est Unlink puis Link : deux clics pour une action rare, plutôt qu'une troisième ligne sur chaque carte pour toujours.
+
+La ligne ouvre un **dialog**, pas un sous-menu : le choix demande la phrase de chaque pilier pour être répondable (« lequel décrit vraiment ce Topic ? »), et une ligne d'`.ap-action-dropdown` fait 40px. Le menu est de toute façon dans une colonne qui défile, où un flyout serait rogné.
+
+- **Scopé, et ça doit le rester** : seuls les piliers du Playbook actif sont listés. Un Topic appartient à un feed, un feed à un Playbook — le classer sous le pilier d'une autre marque poserait une marque sur une carte que ce pilier n'aurait jamais pu matcher.
+- `linkBrief()` écrit **le lien seul**, pas une ligne dans la piste : la piste enregistre ce qui a nourri le contexte condensé, et un lien posé à la main ne l'a pas encore nourri. Même séparation que `unlinkBrief` dans l'autre sens.
+- Aucun pilier dans ce Playbook → état vide qui **mène à la section**, jamais un dialog de création par-dessus un dialog.
+
+Le verbe principal du pied d'article est passé en **`ap-button primary orange`**. La convention maison (CLAUDE.md) est orange = action IA / mise en avant, bleu = CTA de liste ; emmener un Topic dans un chat est l'action IA que ce panneau existe pour préparer. C'était `stroked blue` par mimétisme avec le split button garé de la carte — le split est parti, il n'y a plus rien à imiter, et trois boutons stroked ne donnaient au panneau aucune étape suivante évidente.
+
 **Unlink ne défait que la MARQUE.** Le Topic garde sa place dans le feed, son statut et sa ligne dans la piste du pilier. Le retirer du pilier est une action séparée, sur la page du pilier : confondre les deux laisserait un clic dans un feed réécrire en silence le contexte condensé d'un pilier.
 
 ### Critères d'acceptation

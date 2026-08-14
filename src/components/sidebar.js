@@ -22,16 +22,16 @@ import { clearSession as clearLibrarySession } from "../library.js?v=91";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=75";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=60";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=28";
-import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=4";
+import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=6";
 import {
   getActivePlaybook,
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=9";
+} from "../active-playbook.js?v=11";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=43";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=54";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=556";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=558";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
