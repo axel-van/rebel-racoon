@@ -90,28 +90,6 @@ body.onboarding .app-content {
   grid-column: 1;
 }
 
-/* ---------- Full-rail mode (Settings) ----------
-   The topbar goes and the rail grows into the row it had. Not `onboarding`,
-   which also drops the sidebar: here the sidebar is the point — you switch
-   Playbook while looking at the table of them — and only the header duplicated
-   what the settings rail already says.
-
-   Both remaining children move to row 1. The sidebar's own `grid-row: 1 / 3`
-   would still resolve against an implicit second row, leaving the rail half the
-   height of the pane beside it. */
-body.full-rail .app-topbar {
-  display: none;
-}
-
-body.full-rail .app-shell {
-  grid-template-rows: 1fr;
-}
-
-body.full-rail .app-sidebar,
-body.full-rail .app-content {
-  grid-row: 1;
-}
-
 /* ---------- Empty chat ----------
    A fresh chat KEEPS the topbar, which reads "New chat" (topbar.js falls back to
    that, or to ?title=, for a session not yet in the store). It used to be hidden

@@ -36,7 +36,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=431";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=432";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=54";
 import {
@@ -52,8 +52,8 @@ import {
 import { openBriefInChat } from "../brief-flow.js?v=30";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=18";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=10";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=19";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=11";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=45";
 import {
   getBriefById,
@@ -1023,9 +1023,8 @@ function bind(target) {
   boundTarget = target;
 
   boundClick = (event) => {
-    // No gear here any more: the topbar carries one on EVERY screen (topbar.js),
-    // and on this route it lands on /settings/topic-feeds — the same door, opened
-    // from everywhere instead of only from here.
+    // No gear in this cluster: the topbar renders one for this route (topbar.js)
+    // and it opens /topic-feeds/settings — this feed's own sources form.
     if (event.target.closest("[data-feed-trending]"))
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
 

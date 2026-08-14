@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=565";
+} from "./right-panel.js?v=566";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=89";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=97";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=91";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=358";
+} from "./conversation-status-card.js?v=359";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=39";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
@@ -122,24 +122,23 @@ export function renderTopbar(_options = {}) {
   const left = back ? renderBack(back) : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(left)}${raw(onSession ? "" : screenLead)}</div>
-    <div class="app-topbar__right">${raw(rightSide)}${raw(onWelcomeAlt ? "" : renderSettingsCog())}</div>
+    <div class="app-topbar__right">${raw(rightSide)}${raw(isFeedRoute(getPath()) ? renderSettingsCog() : "")}</div>
   `;
 }
 
-// The settings cog — on EVERY topbar, not just the Topic feed's.
+// The Feed-settings cog — on the Topic feed's topbar and NOWHERE else.
 //
-// It started as "Feed settings" in the feed's own action cluster, which made the
-// settings space reachable from exactly one screen. From a chat — where most of a
-// session is spent — there was no way in at all.
+// It was briefly on every topbar, leading to a global settings space. Both are
+// gone: there is no global settings space to lead to, and a cog on a chat's
+// topbar promised configuration for a screen that has none. What is left is the
+// control it always was — this feed's sources, one click from the feed.
 //
-// It goes to the section for what you are looking at, defaulting to Playbooks. A
-// cog that always landed on the same page would take a reader on the feed away
-// from what they were configuring; a cog that lands on the feed's row from the
-// feed is the same promise the label "Feed settings" made, kept from everywhere
-// else too. Hidden only in the welcome-alt chrome, which has no app to configure
-// yet — and absent on /settings itself, which drops the topbar entirely.
-function settingsTargetFor(path) {
-  return path.startsWith("/topic-feeds") ? "/settings/topic-feeds" : "/settings/playbooks";
+// It opens the FORM, not a table of every Playbook's feed. You are looking at one
+// feed; the sources it listens to are what "settings" can mean here, and routing
+// through a list to find the row you were already on was a detour dressed as a
+// destination.
+function isFeedRoute(path) {
+  return path === "/topic-feeds" || path.startsWith("/topic-feeds/");
 }
 
 function renderSettingsCog() {
@@ -147,8 +146,8 @@ function renderSettingsCog() {
     type="button"
     class="ap-icon-button transparent app-topbar__settings"
     data-topbar-settings
-    title="Settings"
-    aria-label="Settings"
+    title="Feed settings"
+    aria-label="Feed settings"
   >
     <i class="ap-icon-cog"></i>
   </button>`;
@@ -262,7 +261,7 @@ export function initTopbar() {
       return;
     }
     if (event.target.closest("[data-topbar-settings]")) {
-      navigate(settingsTargetFor(getPath()));
+      navigate("/topic-feeds/settings");
       return;
     }
     // "Change profile" — back to the repurposing profile chooser (step 1).
@@ -552,17 +551,7 @@ function backTargetFor(path) {
   // goes back to the same place and the label no longer names a lane. It used to,
   // because you could be looking at any of several feeds' settings; with one per
   // Playbook the name would repeat the rail's scope switcher.
-  //
-  // The SETTINGS form is the exception, and goes back to /settings/topic-feeds.
-  // You get here from the table's pen — that is where you came from, and "back"
-  // has to mean it. It also matters more than it looks: the settings space has no
-  // topbar of its own, so a back that returned to the feed left the table with no
-  // way back to it except the rail's cog, two clicks away from the row you were
-  // just editing.
-  if (/^\/topic-feeds\/.*settings$/.test(path)) return { to: "/settings/topic-feeds", label: "Back to Settings" };
   if (/^\/topic-feeds\/.+/.test(path)) return { to: "/topic-feeds", label: "Back to the feed" };
-  // Settings is a place, not a step in a flow — its own back is the rail's.
-  if (/^\/settings/.test(path)) return null;
   // The Topics settings page carries its Playbook scope BACK to the feed, so a
   // filtered feed survives the round trip. getPath() strips the query, so the scope
   // has to be read from the hash here rather than taken from `path`.

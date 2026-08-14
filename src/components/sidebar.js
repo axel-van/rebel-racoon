@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=18";
+} from "../active-playbook.js?v=19";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=45";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=56";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=565";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=566";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
@@ -210,12 +210,12 @@ export function initSidebar() {
       event.preventDefault();
       const details = event.target.closest("details");
       if (details) details.open = false;
-      navigate("/settings/playbooks");
+      navigate("/contexts");
       return;
     }
     if (event.target.closest("[data-scope-create]")) {
       event.preventDefault();
-      navigate("/settings/playbooks");
+      navigate("/contexts");
       return;
     }
 
@@ -680,8 +680,9 @@ function renderScopeSwitcher() {
       <!-- ONE footer row, and only one. "Open this Playbook" was the row that
            had to go: it was a second way to do what picking a row above already
            does, so the control was answering its own question twice. What stays
-           is the way OUT — to the tables where every Playbook is managed, which
-           is a different job and has no other door in the rail. -->
+           is the way OUT — to /contexts, the Playbooks library, which is where a
+           Playbook is created, edited and deleted. It is a different job from
+           switching, and it has no other door in the rail. -->
       <div class="ap-select-footer">
         <button type="button" class="ap-select-create" data-scope-manage>
           <i class="ap-icon-cog ap-select-create-icon" aria-hidden="true"></i>

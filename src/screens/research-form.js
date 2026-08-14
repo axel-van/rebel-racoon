@@ -20,11 +20,11 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=431";
+import { renderTopbar } from "../components/topbar.js?v=432";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { getContexts, getContextById } from "../contexts-store.js?v=75";
 import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=45";
-import { getActivePlaybookId } from "../active-playbook.js?v=18";
+import { getActivePlaybookId } from "../active-playbook.js?v=19";
 import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=118";
 import {
   RESEARCH_SOURCES,
@@ -412,6 +412,23 @@ function renderOther() {
         draft.showTrending,
       ),
     )}
+    <!-- Pause lives here, and this is the only place it can. It was a play/pause
+         button in the settings table, which no longer exists; the feed's own
+         settings are where the rest of "how this feed behaves" already is.
+
+         LAST in the section, and phrased as the thing you turn ON rather than as
+         a "Listening" switch you turn off: it stops the whole feature above it,
+         so it reads as the exception at the bottom rather than as one setting
+         among equals at the top. Resuming is also possible from the feed itself,
+         which is where you notice nothing is arriving. -->
+    ${raw(
+      renderSwitchCard(
+        "paused",
+        "Pause this feed",
+        "Stop scanning for now. Topics already in the feed stay where they are, and nothing new arrives until you switch this back off.",
+        draft.paused,
+      ),
+    )}
   </section>`;
 }
 
@@ -450,11 +467,11 @@ function renderFooter() {
  * (topbar.backTargetFor). Two exits from one screen that disagree is how a user
  * loses work. */
 function exitPath() {
-  // The settings table, which is where the pen that opens this form lives —
-  // and the same target the topbar's back uses (topbar.backTargetFor). SAVE is
-  // the one exit that goes elsewhere, on purpose: it lands on the feed you just
-  // changed, because the point of saving is to see what it did.
-  return "/settings/topic-feeds";
+  // Back to THE feed — there is one, it is the active Playbook's, and it is where
+  // the cog that opens this form lives. Same target as the topbar's back
+  // (topbar.backTargetFor), deliberately: two exits from one screen that disagree
+  // is how a user loses work.
+  return "/topic-feeds";
 }
 
 function bind(target) {

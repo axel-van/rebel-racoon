@@ -39,8 +39,6 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | `/topic-feeds/:id`           | `research-feed.js`     | One feed by id — deep links (a pillar's trail) and the attention page                             |
 | `/topic-feeds/:id/settings`  | `research-form.js`     | The same form, feed named by id                                                                   |
 | `/topic-feeds/:id/attention` | `research-trending.js` | The flagged Topics (trending / updated), outside triage                                           |
-| `/settings`                  | `settings.js`          | Redirect → `/settings/playbooks`                                                                  |
-| `/settings/:section`         | `settings.js`          | **Settings** — left rail + table. Two sections: `playbooks`, `topic-feeds`                        |
 | `/content-strategy`          | `content-strategy.js`  | **Content strategy** — the pillar list (gated by `contentStrategy`)                               |
 | `/pillar/:id`                | `pillar.js`            | One pillar: Context & assets · What went into it. Topbar back → `/content-strategy`               |
 | `/welcome-alt`               | `welcome-alt.js`       | First-time onboarding kickoff (thin redirect into a transient session)                            |
@@ -48,7 +46,7 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 
 `research.js` (the feed LIST) and `/topic-feeds/new` are gone: with one feed per Playbook there is nothing to list and nothing to create. The file is kept and marked unreachable — it carries the reasoning for the list shape, if several feeds per Playbook ever come back.
 
-There is **no `/settings` route** — it was removed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
+There is **no `/settings` route** — removed, restored once, and removed again (see "A settings surface must not aggregate"). Playbooks are managed on **`/contexts`**, the library that already exists for them; a feed's sources are edited from that feed. The prototype Admin controls (user mode + feature flags + docs link) now live in the sidebar footer cog popover (`admin-menu.js`, rendered by `sidebar.js`); the old Social-accounts page was dropped (`social-profiles.js` remains as a shared helper).
 
 `setAfterRender` (in `app.js`) re-renders the sidebar + conversation-status-card after every route change and toggles the `body.onboarding` full-bleed class for the welcome-alt flow.
 
@@ -156,7 +154,7 @@ src/
 
 ### The active Playbook is the app's one scope
 
-The switcher is the **only** entry point to the Playbook — the nav row that pointed at the same object was a second door to one room and is gone. Its dropdown footer carries one verb — **Manage Playbooks** (`/settings/playbooks`) — because without it `/settings` is only reachable from a feed's gear; "Open this Playbook" was the second, and two destinations under a list of choices made the switcher read as a nav menu.
+The switcher is the **only** entry point to the Playbook — the nav row that pointed at the same object was a second door to one room and is gone. Its dropdown footer carries one verb — **Manage Playbooks** (`/contexts`) — the way OUT to the library where a Playbook is created, edited and deleted, which is a different job from switching and has no other door in the rail. "Open this Playbook" was the second verb and had to go: two destinations under a list of choices made the switcher read as a nav menu.
 
 `active-playbook.js` holds **one** Playbook id, chosen from the switcher pinned above the nav in the sidebar and persisted in `localStorage` (`archie-active-playbook`). Everything below the switcher inherits it: Content strategy, the Topic feed, the new-session "Fresh topics to review" list, the recent-chats list, both nav counters, and a **new chat's** `contextId`.
 
@@ -171,7 +169,7 @@ An existing chat keeps whichever Playbook it was created in — a chat is a reco
 
 ### The topbar can carry a screen's own controls
 
-`topbar.setTopbarActions(actions, lead)` / `clearTopbarActions()`. Two slots — `actions` on the right, `lead` beside the title — used by the Topic feed for Filters (right) and the segmented control (left), which retired an in-page header costing ~96px above the fold. A **settings cog is permanent** on every topbar (`/topic-feeds*` → `/settings/topic-feeds`, elsewhere → `/settings/playbooks`); `/settings` itself has **no topbar** (`body.full-rail`, flipped in `setAfterRender`) because its rail already carries the back arrow and the title. It is a **composition**, not a new component: what goes in is unmodified `.ap-button`s. The rule — only controls acting on the **whole screen** belong there. The screen owns the teardown, and must bind its own click listener on `#topbar`: that node is outside `#app`, so a screen's delegated handler does not reach it.
+`topbar.setTopbarActions(actions, lead)` / `clearTopbarActions()`. Two slots — `actions` on the right, `lead` beside the title — used by the Topic feed for Filters (right) and the segmented control (left), which retired an in-page header costing ~96px above the fold. A **Feed-settings cog** is rendered on `/topic-feeds*` and nowhere else; it opens `/topic-feeds/settings`, that feed's own sources form. It was briefly on every topbar, pointing at a global settings space — both are gone: a cog on a chat's topbar promised configuration for a screen that has none. It is a **composition**, not a new component: what goes in is unmodified `.ap-button`s. The rule — only controls acting on the **whole screen** belong there. The screen owns the teardown, and must bind its own click listener on `#topbar`: that node is outside `#app`, so a screen's delegated handler does not reach it.
 
 ### State management
 
@@ -195,11 +193,18 @@ An existing chat keeps whichever Playbook it was created in — a chat is a reco
 
 ### A settings surface must not aggregate
 
-Three attempts at a general settings page were reverted here: the drawer (`2b0abcf`, the DS ships no side-drawer primitive), a Connectors section (`8cdd7e8`, it duplicated `/connectors`), then `/settings` itself (`6fca0b0`). Config belongs on the entity that owns it (a Playbook's fields live on `/playbook/:id`) or on a route scoped to one feature — never re-hosted in a global page.
+**FOUR** attempts at a general settings page have been reverted here: the drawer (`2b0abcf`, the DS ships no side-drawer primitive), a Connectors section (`8cdd7e8`, it duplicated `/connectors`), `/settings` itself (`6fca0b0`), and the rail-plus-table version that argued it was scoped to one feature. Config belongs on the entity that owns it — never re-hosted in a global page.
 
-**`/settings` is back, under the second clause, and the boundary is now explicit.** Once the Playbook became the app's scope, "which brands exist, and what each one's feed listens to" became **one** feature with two views of it — not a drawer of unrelated switches. So `/settings/playbooks` and `/settings/topic-feeds` exist, and **that is the whole list**. A third entry that is not a Playbook or its feed is the signal this has started aggregating again; the Playbook's own fields still live on `/playbook/:id`, which the table links to rather than duplicating.
+**The fourth attempt is the instructive one.** It claimed the rule's "or on a route scoped to one feature" clause: once the Playbook became the app's scope, "which brands exist, and what each one's feed listens to" reads like one feature with two views. It still became a place you GO to configure things, one screen away from every object it configured — a table of Playbooks beside the Playbooks library that already existed, and a row per feed you had to find yourself instead of the feed you were looking at. Where things live now:
 
-Its shape is lifted from the inbox's Automated-moderation settings (`agorapulse/platform`, `conversation/automated-moderation`): a 224px left rail of sections, a scrollable pane, and a DS `.ap-table` (`outer-border header-background striped`) as the thing you read. Sizing and tints come from the DS settings recipe (`--sys-settings-*`).
+| To configure…       | Go to                                                       |
+| ------------------- | ----------------------------------------------------------- |
+| a Playbook          | `/contexts` (the library) → `/playbook/:id`                 |
+| a feed's sources    | the feed's own topbar cog → `/topic-feeds/settings`         |
+| Topics' six sources | `/topics/settings` — one feature, reached from that feature |
+| the prototype Admin | the sidebar footer cog popover                              |
+
+Read the second clause narrowly: a route scoped to one feature is one the FEATURE owns and links to from inside itself, not a hub several features are re-hosted in.
 
 ### Connectors as live, MCP-queryable sources
 
