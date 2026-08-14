@@ -635,3 +635,100 @@ button.ap-link {
 .ap-textarea-field.narrow > textarea {
   min-width: 0;
 }
+
+/* ── Segmented Control — a PORT of the DS component ────────────────────────
+   `@agorapulse/ui-components/segmented-control` ships Angular only: an
+   <ap-segmented-control> whose template and SCSS carry the whole design, and
+   NOTHING in the CSS-UI layer. This app has no Angular, so the classes below are
+   that SCSS, transcribed: same names, same values, same structure, taken from
+   libs/ui-components/segmented-control/src/segmented-control.component.{html,scss}.
+
+   Not a redeclaration — .ap-segmented-control does not exist in ds/css-ui, so
+   this is the missing-primitive case ds-patches.css is for. It also means the day
+   the class lands in the DS, this block is a delete and the markup is already
+   right.
+
+   Two things are deliberately NOT ported: `--full-width` (nothing here needs
+   equal-width segments) and the icon slot (no segment in this app has one).
+   The `--selected` double dash is the component's own; it is what the DS wrote. */
+.ap-segmented-control {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ap-segmented-control__segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxs);
+  box-sizing: border-box;
+  min-height: 36px;
+  margin: 0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border: 1px solid var(--ref-color-grey-20);
+  background-color: var(--ref-color-white);
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-md);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+/* The segments share one edge — the negative margin is what makes the group read
+   as a single control rather than as buttons in a row. */
+.ap-segmented-control__segment:not(:first-child) {
+  margin-left: -1px;
+}
+
+.ap-segmented-control__segment:first-child {
+  border-top-left-radius: var(--ref-border-radius-sm);
+  border-bottom-left-radius: var(--ref-border-radius-sm);
+}
+
+.ap-segmented-control__segment:last-child {
+  border-top-right-radius: var(--ref-border-radius-sm);
+  border-bottom-right-radius: var(--ref-border-radius-sm);
+}
+
+/* z-index on hover/selected/focus: the shared edge means one segment's border is
+   under its neighbour's, and whichever is lit has to come up to be seen whole. */
+.ap-segmented-control__segment:hover:not(:disabled) {
+  z-index: 1;
+  border-color: var(--ref-color-electric-blue-100);
+}
+
+.ap-segmented-control__segment:focus-visible {
+  z-index: 2;
+  outline: none;
+  border-color: var(--ref-color-electric-blue-100);
+  box-shadow:
+    0 0 0 1px var(--ref-color-white),
+    0 0 0 3px var(--ref-color-electric-blue-100);
+}
+
+/* Selected changes border and TEXT, not the fill. */
+.ap-segmented-control__segment--selected {
+  z-index: 1;
+  border-color: var(--ref-color-electric-blue-100);
+  color: var(--ref-color-electric-blue-100);
+}
+
+.ap-segmented-control__segment:disabled {
+  border-color: var(--ref-color-grey-20);
+  background-color: var(--ref-color-grey-05);
+  color: var(--ref-color-grey-40);
+  cursor: not-allowed;
+}
+
+.ap-segmented-control__label {
+  font: inherit;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

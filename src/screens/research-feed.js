@@ -36,12 +36,11 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=428";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=429";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=52";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=53";
 import {
   openIgnoreReason,
-  openExport,
   openVersionHistory,
   openSourcePosts,
   // PARKED with the handler below — kept imported so restoring is one uncomment.
@@ -49,12 +48,12 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=116";
+} from "../components/research-modals.js?v=117";
 import { openBriefInChat } from "../brief-flow.js?v=29";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=6";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=15";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=7";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=16";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=8";
 import { getLaneById, getLanes } from "../research-store.js?v=44";
 import {
   getBriefById,
@@ -449,29 +448,43 @@ function segmentBriefs(segment) {
   return getBriefsForLane(laneId, filters).filter((b) => inSegment(b, segment));
 }
 
-// Hand-built, and deliberately: the DS ships Segmented Control only as
-// <ap-segmented-control> in Angular — the CSS-UI layer has no class for it — and
-// its own tie-breaker says a segmented control is the component for flipping
-// between two to four short co-visible views, which is exactly this. Track,
-// radius, active fill and type all come from DS tokens, so it is a faithful
-// hand-build rather than an invention; swap it for the real component if the
-// CSS-UI class ever lands.
+// A PORT of the DS's Segmented Control, not a look-alike.
+//
+// The DS ships this component in Angular only (<ap-segmented-control>) — the
+// CSS-UI layer has no class for it — while its own tie-breaker names a segmented
+// control as the component for flipping between two to four short co-visible
+// views, which is exactly this. So it is hand-built, but from the component's
+// real template and SCSS: same class names, same markup, same values. The CSS
+// lives in ds-patches.css, the one place this app is allowed to add a primitive
+// the CSS-UI layer forgot, and swapping in the real component is a delete.
+//
+// The first version was a look-alike rather than a port — a grey track with a
+// raised white chip on it, the iOS shape. The DS's is an outlined button group:
+// white segments, grey-20 borders sharing an edge, and a SELECTED state that
+// changes border and text to electric blue rather than filling anything.
+//
+// The count span is the one addition. The DS option carries a label and an
+// optional icon, so the count is ours; it keeps its own class and sits inside
+// the segment's own gap.
 function renderSegments() {
   const counts = {
     ready: segmentBriefs("ready").length,
     later: segmentBriefs("later").length,
   };
-  const seg = (id, label) => `
+  const seg = (id, label) => {
+    const on = view.segment === id;
+    return `
     <button
       type="button"
-      class="research-segments__item ${view.segment === id ? "is-on" : ""}"
+      class="ap-segmented-control__segment ${on ? "ap-segmented-control__segment--selected" : ""}"
       data-feed-segment="${id}"
-      aria-pressed="${view.segment === id ? "true" : "false"}"
+      aria-pressed="${on ? "true" : "false"}"
     >
-      <span>${label}</span>
+      <span class="ap-segmented-control__label">${label}</span>
       <span class="research-segments__count">${counts[id]}</span>
     </button>`;
-  return `<div class="research-segments" role="group" aria-label="Which topics to show">
+  };
+  return `<div class="ap-segmented-control research-segments" role="group" aria-label="Which topics to show">
       ${seg("ready", "Ready to draft")}${seg("later", "Topics for later")}
     </div>`;
 }
@@ -789,33 +802,23 @@ function renderGenerating() {
   </div>`;
 }
 
-// The topbar cluster: Filters (with its panel), Export, Feed settings.
+// The topbar cluster: Filters (with its panel) and Feed settings. Export is gone —
+// it shipped a CSV of a list nobody has asked to take out of the app, and it sat at
+// the same weight as Filters, which every reader uses.
 function renderTopbarActions(narrowed) {
   return html`<div class="research-filters">
-      <button
-        type="button"
-        class="ap-button stroked grey"
-        data-feed-filters
-        aria-expanded="${view.panelOpen ? "true" : "false"}"
-      >
-        <i class="ap-icon-filter" aria-hidden="true"></i>
-        <span>Filters</span>
-        ${raw(narrowed ? html`<span class="research-filters__badge">${narrowed}</span>` : "")}
-      </button>
-      ${raw(view.panelOpen ? renderFilterPanel() : "")}
-    </div>
-    <button type="button" class="ap-button stroked grey" data-feed-export>
-      <i class="ap-icon-upload" aria-hidden="true"></i><span>Export</span>
-    </button>
     <button
       type="button"
-      class="ap-icon-button stroked grey"
-      data-feed-settings
-      title="Feed settings"
-      aria-label="Feed settings"
+      class="ap-button stroked grey"
+      data-feed-filters
+      aria-expanded="${view.panelOpen ? "true" : "false"}"
     >
-      <i class="ap-icon-cog"></i>
-    </button>`;
+      <i class="ap-icon-filter" aria-hidden="true"></i>
+      <span>Filters</span>
+      ${raw(narrowed ? html`<span class="research-filters__badge">${narrowed}</span>` : "")}
+    </button>
+    ${raw(view.panelOpen ? renderFilterPanel() : "")}
+  </div>`;
 }
 
 // Two groups: Topic status, then Sources.
@@ -998,12 +1001,9 @@ function bind(target) {
   boundTarget = target;
 
   boundClick = (event) => {
-    if (event.target.closest("[data-feed-settings]"))
-      // The gear opens the SETTINGS SPACE, not this feed's form. With one feed
-      // per Playbook, "feed settings" is one row of a table that also shows
-      // every other brand's — and getting there from the feed is the only way
-      // that table is discoverable at all.
-      return navigate("/settings/topic-feeds");
+    // No gear here any more: the topbar carries one on EVERY screen (topbar.js),
+    // and on this route it lands on /settings/topic-feeds — the same door, opened
+    // from everywhere instead of only from here.
     if (event.target.closest("[data-feed-trending]"))
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
 
@@ -1022,12 +1022,6 @@ function bind(target) {
       resetPaging();
       return paint(target);
     }
-    if (event.target.closest("[data-feed-export]")) {
-      // The count is what's in the feed RIGHT NOW, i.e. after filtering — the
-      // dialog says "currently in your feed" and has to mean it.
-      return openExport({ count: segmentBriefs(view.segment).length });
-    }
-
     // ── Brief actions ───────────────────────────────────────────────────
     // The card's own kebab. Shares `view.openMenu` with the (parked) split
     // button's key on purpose — one open menu at a time across the whole feed,

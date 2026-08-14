@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=15";
+} from "../active-playbook.js?v=16";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=44";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=56";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=562";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=563";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=97";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=68";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=89";
@@ -512,7 +512,9 @@ export function renderSidebar() {
 
     ${raw(renderOrganizeHeader())}
 
-    <div class="app-sidebar__list" aria-label="Recent conversations">${raw(renderRecentLists(activeSessionId))}</div>
+    <div class="app-sidebar__list" aria-label="Recent conversations">
+      ${raw(renderSearchRow())}${raw(renderRecentLists(activeSessionId))}
+    </div>
 
     <div class="app-sidebar__foot">
       <div class="app-sidebar__user">
@@ -779,10 +781,12 @@ const NAV = [
 ];
 
 function renderNav(path) {
-  // Action rows at the top of the nav group: New conversation + Search.
-  // Both are verbs (not routes), so they live alongside Playbooks / Connectors
-  // but never carry the `.is-active` cue. Their ⇧⌘O / ⌘K kbd hints are
-  // hover-revealed (cf. sidebar.css — opacity 0 → 1 on :hover/:focus).
+  // One action row at the top of the nav group: New chat. It is a verb (not a
+  // route), so it sits alongside Content strategy / Topic feeds but never carries
+  // the `.is-active` cue. Its ⇧⌘O kbd hint is hover-revealed (cf. sidebar.css —
+  // opacity 0 → 1 on :hover/:focus).
+  //
+  // Search moved DOWN, under the Chats header — see renderSearchRow.
   const newConversationItem = `
     <button
       type="button"
@@ -794,20 +798,6 @@ function renderNav(path) {
       <i class="ap-icon-plus"></i>
       <span>New chat</span>
       <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⇧⌘O</kbd>
-    </button>
-  `;
-
-  const searchItem = `
-    <button
-      type="button"
-      class="app-sidebar__nav-item"
-      data-sidebar-search-open
-      aria-label="Search chats"
-      title="Search chats (⌘K)"
-    >
-      <i class="ap-icon-search"></i>
-      <span>Search…</span>
-      <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⌘K</kbd>
     </button>
   `;
 
@@ -832,7 +822,7 @@ function renderNav(path) {
     })
     .join("");
 
-  return newConversationItem + searchItem + routeItems;
+  return newConversationItem + routeItems;
 }
 
 // "Sort & group" control — options for the two rows. Grouping is limited to the
@@ -953,6 +943,28 @@ function renderOrganizeHeader() {
         ${renderOrganizeSection("Sort by", "sortBy", ORGANIZE_SORT_OPTIONS, sortBy)}
       </div>
     </div>
+  `;
+}
+
+// Search chats — under the "Chats" header, above Pinned.
+//
+// It was the second row of the nav group, between New chat and Content strategy,
+// where it read as a search of the whole app. It only ever searched CHATS
+// (search-modal.js), so it now sits inside the list it searches: the header names
+// the section, the row filters it, the groups follow. ⌘K is unchanged.
+function renderSearchRow() {
+  return `
+    <button
+      type="button"
+      class="app-sidebar__nav-item app-sidebar__search-row"
+      data-sidebar-search-open
+      aria-label="Search chats"
+      title="Search chats (⌘K)"
+    >
+      <i class="ap-icon-search"></i>
+      <span>Search chats</span>
+      <kbd class="app-sidebar__nav-kbd" aria-hidden="true">⌘K</kbd>
+    </button>
   `;
 }
 

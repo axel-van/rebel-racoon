@@ -486,11 +486,13 @@ function unlinkRow(briefId, pillar) {
  *                  to set up. It was stroked blue, matching the card's parked split
  *                  button — but with the split gone there is nothing left to match,
  *                  and three stroked buttons gave the pane no obvious next step
- *   stroked grey   the alternate verb, quieter because it is the one you did not come
- *                  here for
- *   ghost red      Ignore, the taking-away one. The DS's red family, and ghost rather
- *                  than stroked so it does not read as a third equal choice — the
- *                  menu made this point with .red-mode on the label.
+ *   ghost grey     Ignore. It sits NEXT TO Use in chat rather than pushed to the far
+ *                  right: with only two buttons left, the gap read as a missing third
+ *                  one, and a control alone at the opposite edge of a 620px pane looks
+ *                  like it belongs to the pane rather than to the topic. Grey, not red —
+ *                  ignoring hides a topic that a spike brings back, so the destructive
+ *                  colour was promising a consequence the action does not have. Ghost
+ *                  keeps it from reading as a second equal choice.
  */
 export function renderUseButtons(brief) {
   const ignored = brief.status === "ignored";
@@ -522,7 +524,7 @@ export function renderUseButtons(brief) {
         : html`<span class="topics-use-flat__ignore">
             <button
               type="button"
-              class="ap-button ghost red"
+              class="ap-button ghost grey"
               data-brief-ignore="${escapeAttr(brief.id)}"
               aria-label="Ignore Topic. ${IGNORE_HINT}"
             >

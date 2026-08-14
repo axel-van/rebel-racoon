@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=562";
+} from "./right-panel.js?v=563";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=89";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=97";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=91";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=355";
+} from "./conversation-status-card.js?v=356";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=39";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=75";
@@ -122,8 +122,36 @@ export function renderTopbar(_options = {}) {
   const left = back ? renderBack(back) : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(left)}${raw(onSession ? "" : screenLead)}</div>
-    <div class="app-topbar__right">${raw(rightSide)}</div>
+    <div class="app-topbar__right">${raw(rightSide)}${raw(onWelcomeAlt ? "" : renderSettingsCog())}</div>
   `;
+}
+
+// The settings cog — on EVERY topbar, not just the Topic feed's.
+//
+// It started as "Feed settings" in the feed's own action cluster, which made the
+// settings space reachable from exactly one screen. From a chat — where most of a
+// session is spent — there was no way in at all.
+//
+// It goes to the section for what you are looking at, defaulting to Playbooks. A
+// cog that always landed on the same page would take a reader on the feed away
+// from what they were configuring; a cog that lands on the feed's row from the
+// feed is the same promise the label "Feed settings" made, kept from everywhere
+// else too. Hidden only in the welcome-alt chrome, which has no app to configure
+// yet — and absent on /settings itself, which drops the topbar entirely.
+function settingsTargetFor(path) {
+  return path.startsWith("/topic-feeds") ? "/settings/topic-feeds" : "/settings/playbooks";
+}
+
+function renderSettingsCog() {
+  return html`<button
+    type="button"
+    class="ap-icon-button transparent app-topbar__settings"
+    data-topbar-settings
+    title="Settings"
+    aria-label="Settings"
+  >
+    <i class="ap-icon-cog"></i>
+  </button>`;
 }
 
 // True when the active session is showing the repurposing board (step 2) —
@@ -231,6 +259,10 @@ export function initTopbar() {
     const backBtn = event.target.closest("[data-topbar-back]");
     if (backBtn) {
       navigate(backBtn.dataset.topbarBack || "/");
+      return;
+    }
+    if (event.target.closest("[data-topbar-settings]")) {
+      navigate(settingsTargetFor(getPath()));
       return;
     }
     // "Change profile" — back to the repurposing profile chooser (step 1).

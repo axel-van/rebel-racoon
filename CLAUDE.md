@@ -171,7 +171,7 @@ An existing chat keeps whichever Playbook it was created in — a chat is a reco
 
 ### The topbar can carry a screen's own controls
 
-`topbar.setTopbarActions(html)` / `clearTopbarActions()`. Used by the Topic feed for Filters · Export · Feed settings, which retired an in-page header costing ~96px above the fold. It is a **composition**, not a new component: what goes in is unmodified `.ap-button`s. The rule — only controls acting on the **whole screen** belong there. The screen owns the teardown, and must bind its own click listener on `#topbar`: that node is outside `#app`, so a screen's delegated handler does not reach it.
+`topbar.setTopbarActions(actions, lead)` / `clearTopbarActions()`. Two slots — `actions` on the right, `lead` beside the title — used by the Topic feed for Filters (right) and the segmented control (left), which retired an in-page header costing ~96px above the fold. A **settings cog is permanent** on every topbar (`/topic-feeds*` → `/settings/topic-feeds`, elsewhere → `/settings/playbooks`); `/settings` itself has **no topbar** (`body.full-rail`, flipped in `setAfterRender`) because its rail already carries the back arrow and the title. It is a **composition**, not a new component: what goes in is unmodified `.ap-button`s. The rule — only controls acting on the **whole screen** belong there. The screen owns the teardown, and must bind its own click listener on `#topbar`: that node is outside `#app`, so a screen's delegated handler does not reach it.
 
 ### State management
 

@@ -1,9 +1,9 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=22";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=428";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=395";
-import { init as initRightPanel } from "./components/right-panel.js?v=562";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=429";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=396";
+import { init as initRightPanel } from "./components/right-panel.js?v=563";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=93";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -14,10 +14,10 @@ import { init as initChatPickerModal } from "./components/chat-picker-modal.js?v
 import { init as initAddSourceModal } from "./components/add-source-modal.js?v=100";
 import { init as initConnectorsModal } from "./components/connectors-modal.js?v=44";
 import { init as initTopicModal } from "./components/topic-modal.js?v=39";
-import { init as initResearchModals } from "./components/research-modals.js?v=116";
+import { init as initResearchModals } from "./components/research-modals.js?v=117";
 import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
-import { init as initPillarModal } from "./components/pillar-modal.js?v=15";
-import { init as initPillarPickerModal } from "./components/pillar-picker-modal.js?v=7";
+import { init as initPillarModal } from "./components/pillar-modal.js?v=16";
+import { init as initPillarPickerModal } from "./components/pillar-picker-modal.js?v=8";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=41";
@@ -27,24 +27,24 @@ import { init as initSearchModal } from "./components/search-modal.js?v=47";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=355";
+} from "./components/conversation-status-card.js?v=356";
 import { renderDashboard } from "./screens/dashboard.js?v=90";
-import { renderSession } from "./screens/session.js?v=660";
-import { renderContexts } from "./screens/contexts.js?v=389";
-import { renderConnectors } from "./screens/connectors.js?v=328";
-import { renderTopics } from "./screens/topics.js?v=197";
-import { renderTopicsSettings } from "./screens/topics-settings.js?v=199";
-import { renderContentStrategy } from "./screens/content-strategy.js?v=16";
-import { renderSettings, renderSettingsIndex } from "./screens/settings.js?v=12";
-import { renderPillar } from "./screens/pillar.js?v=15";
-import { renderResearchForm } from "./screens/research-form.js?v=165";
-import { renderResearchFeed } from "./screens/research-feed.js?v=187";
-import { renderResearchTrending } from "./screens/research-trending.js?v=169";
+import { renderSession } from "./screens/session.js?v=661";
+import { renderContexts } from "./screens/contexts.js?v=390";
+import { renderConnectors } from "./screens/connectors.js?v=329";
+import { renderTopics } from "./screens/topics.js?v=198";
+import { renderTopicsSettings } from "./screens/topics-settings.js?v=201";
+import { renderContentStrategy } from "./screens/content-strategy.js?v=17";
+import { renderSettings, renderSettingsIndex } from "./screens/settings.js?v=13";
+import { renderPillar } from "./screens/pillar.js?v=16";
+import { renderResearchForm } from "./screens/research-form.js?v=166";
+import { renderResearchFeed } from "./screens/research-feed.js?v=188";
+import { renderResearchTrending } from "./screens/research-trending.js?v=170";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=386";
-import { renderPlaybook } from "./screens/playbook.js?v=400";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=387";
+import { renderPlaybook } from "./screens/playbook.js?v=401";
 import * as __capAddSource from "./components/add-source-modal.js?v=100";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
@@ -55,7 +55,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=562";
+} from "./components/right-panel.js?v=563";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb
@@ -168,6 +168,12 @@ setAfterRender((path) => {
     /* ignore */
   }
   document.body.classList.toggle("onboarding", (path.startsWith("/welcome") || isAltSession) && !integratedCreate);
+  // Settings keeps the sidebar and drops the topbar: its own rail already
+  // carries the back arrow and the word "Settings", so the topbar was a second
+  // header saying the same thing over the top of it. Flipped here rather than
+  // in the screen, like `onboarding`, because the class has to be off again the
+  // moment you leave — and a screen's cleanup runs AFTER the next render.
+  document.body.classList.toggle("full-rail", path.startsWith("/settings"));
 });
 
 start();

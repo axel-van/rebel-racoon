@@ -112,7 +112,10 @@
    no longer sits in .research-card__signals, which used to supply the shrink. */
 .strategy-card__auto {
   align-self: flex-start;
-  margin-top: var(--ref-spacing-xxxs);
+  /* 8, not 4: the pill qualifies the TITLE above it, but 4 above and 8 below made
+     it read as the first line of the description underneath. Equal gaps let it
+     belong to the card rather than to either neighbour. */
+  margin-top: var(--ref-spacing-xxs);
   cursor: pointer;
   font-family: inherit;
 }

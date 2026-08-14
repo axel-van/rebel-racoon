@@ -929,7 +929,9 @@ Il est à gauche et non avec Filters / Export parce qu'il ne fait pas le même t
 
 **Lier un Topic à un pilier le fait changer de segment**, et c'est exactement ce que lier veut dire : ce qui le bloquait — pas d'angle, pas de maison — est répondu, donc il est draftable. Le split n'est donc plus le `researchType` brut : le type est l'entrée, le lien de pilier la seconde moitié, le segment la réponse.
 
-⚠️ **Le contrôle est fait main, et c'est assumé.** Le DS ne livre Segmented Control qu'en `<ap-segmented-control>` Angular — la couche CSS-UI n'a aucune classe — alors que son propre arbitrage désigne le segmented control pour basculer entre deux à quatre vues courtes et co-visibles, ce qui est exactement le cas. Piste, rayon, remplissage actif et typo viennent tous de tokens DS : c'est une reconstruction fidèle, pas une invention. À remplacer par le vrai composant le jour où une `.ap-segmented-control` arrive.
+⚠️ **Le contrôle est un PORT du composant DS, pas un sosie.** Le DS ne livre Segmented Control qu'en `<ap-segmented-control>` Angular — la couche CSS-UI n'a aucune classe — alors que son propre arbitrage le désigne pour basculer entre deux à quatre vues courtes et co-visibles, ce qui est exactement le cas. Les classes sont donc **transcrites depuis le composant lui-même** (`segmented-control.component.html` + `.scss`) et vivent dans `ds-patches.css` : mêmes noms, mêmes valeurs, même structure. Le jour où la classe arrive dans le DS, c'est une suppression.
+
+La première version était un sosie et pas un port — piste grise avec une pastille blanche surélevée, la forme iOS. Le vrai composant est un **groupe de boutons contourés** : segments blancs, bordures grey-20 partagées (`margin-left: -1px`), et une sélection qui change la **bordure et le texte** en electric-blue-100 sans rien remplir. Seul le **compte** est à nous — l'option DS ne porte qu'un label et une icône — d'où sa classe à part, en graisse regular, qui hérite de `color` et bleuit donc avec le segment sélectionné.
 
 ### Save n'existe plus
 
@@ -944,7 +946,9 @@ Conséquences en cascade, toutes assumées :
 
 ### L'en-tête du feed est parti dans le topbar
 
-`research-feed__header` portait le monogramme, le nom, la méta et trois contrôles — soit ~96px au-dessus de la ligne de flottaison, à répéter ce que le switcher dit déjà. Les trois contrôles (Filters, Export, réglages) montent dans le **topbar** via `topbar.setTopbarActions()`.
+`research-feed__header` portait le monogramme, le nom, la méta et trois contrôles — soit ~96px au-dessus de la ligne de flottaison, à répéter ce que le switcher dit déjà. Ce qui en reste monte dans le **topbar** via `topbar.setTopbarActions()`.
+
+Il ne reste qu'**un** contrôle : **Filters**. Export est supprimé — il produisait un CSV d'une liste que personne n'a demandé à sortir de l'app, au même poids visuel que Filters, dont tout le monde se sert. Le rouage, lui, n'a pas disparu : il est devenu **permanent dans le topbar** (voir plus bas), donc le garder ici aurait fait deux rouages dans la même barre.
 
 - C'est une **composition**, pas un composant nouveau : ce qui entre est du `.ap-button` non modifié, et `.app-topbar` est une pièce de shell applicatif. Vérifié contre `design-specs/patterns/composition.md` — « reuse before compose before invent » l'autorise explicitement.
 - La règle du créneau : **seuls les contrôles qui agissent sur TOUT l'écran** y ont leur place.
@@ -978,40 +982,48 @@ La colonne d'actions des deux tables est la **même paire d'icônes** (crayon + 
 
 Le rail se met en **`flex-direction: row` explicitement** : `.screen` impose `column` à toute racine d'écran, donc sans ça le rail s'empile au-dessus du panneau et se lit comme un en-tête que personne n'a demandé.
 
-Le **rouage du feed** ouvre `/settings/topic-feeds` plutôt que le formulaire de ce feed : avec un feed par Playbook, « feed settings » est une ligne d'une table qui montre aussi les autres — et venir du feed est la seule chose qui rend cette table trouvable.
+Le **rouage est sur TOUS les topbars**, plus seulement sur celui du feed. Il ouvrait l'espace de réglages depuis un seul écran ; depuis un chat — là où passe l'essentiel d'une session — il n'y avait aucune porte. Il mène à la **section de ce qu'on regarde** : `/settings/topic-feeds` depuis le feed, `/settings/playbooks` partout ailleurs. Un rouage qui atterrirait toujours au même endroit sortirait le lecteur du feed de ce qu'il était en train de régler ; celui-là tient depuis partout la promesse que faisait le libellé « Feed settings ».
+
+**`/settings` n'a pas de topbar du tout** (`body.full-rail`) : son rail porte déjà la flèche retour et le mot « Settings », donc le topbar était un second en-tête posé par-dessus le premier. La bascule est faite dans `setAfterRender`, comme `onboarding`, parce que la classe doit être retirée à la sortie — et le cleanup d'un écran s'exécute APRÈS le rendu du suivant. La barre latérale, elle, reste : on change de Playbook en regardant la table des Playbooks.
 
 ### Critères d'acceptation
 
 Vérifiés le 2026-08-14 dans Chrome, flags `contentStrategy` + `contentResearch` ON.
 
-| #   | Critère                                                                                                                   | Vérifié                                                                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| S1  | Un switcher de Playbook est épinglé au-dessus de la nav et affiche le nom de la marque active                             | ✅ « Noba Fashion » avec son initiale                                       |
-| S2  | Changer de marque re-scope Content strategy, le feed, les chats et les compteurs                                          | ✅ Acme → 0 pilier ; Noba → 2 ; Dwelling → 2                                |
-| S3  | Aucune option « All Playbooks » nulle part                                                                                | ✅                                                                          |
-| S4  | `/content-strategy` n'a **plus de facette** Playbook et les cartes n'ont **plus de `research-card__meta`**                | ✅ 0 `.strategy-view__filter`, 0 `.research-card__meta`                     |
-| S5  | `/topic-feeds` rend **le feed**, sans en-tête in-page ; Filters / Export / réglages sont dans le topbar                   | ✅ la liste commence en haut du viewport                                    |
-| S6  | Le panneau de filtres s'ouvre depuis le topbar et reste dans le viewport                                                  | ✅ ancré sous le déclencheur, 320px, entièrement visible                    |
-| S7  | Plus aucune route de **création** de feed ; les réglages sont accessibles depuis le feed                                  | ✅ `/topic-feeds/new` supprimée, `/topic-feeds/settings` en place           |
-| S8  | Un Playbook sans lane rend un état vide, **pas** une boucle de redirection                                                | ✅                                                                          |
-| S9  | Le dialog **New pillar** n'a plus de champ Playbook et crée dans la marque active                                         | ✅ 3 champs                                                                 |
-| S10 | Le composer n'affiche **plus** de contrôle Playbook ; le sélecteur de pilier reste et liste ceux de la marque             | ✅ « No pillar » + les 2 piliers de Noba                                    |
-| S11 | Un **nouveau chat** hérite du scope (et non du Playbook par défaut)                                                       | ✅ le picker de piliers se remplit sur un `/session/new-*`                  |
-| S12 | « Fresh topics to review » ne montre que les Topics de la marque active, et le head ne porte que le pilier                | ✅ 2 cartes, heads = « Sustainable wardrobe » / « Full price, no apology »  |
-| S13 | Les chats du rail sont scopés                                                                                             | ✅ Noba → Riverside + Weekly recap                                          |
-| S14 | Changer de marque depuis un pilier atterrit sur la **section**, pas sur un pilier d'une autre marque                      | ✅ `/pillar/…` → `/content-strategy` avec les piliers de la nouvelle marque |
-| S15 | Aucune erreur console sur 12 routes                                                                                       | ✅                                                                          |
-| S16 | **Aucune ligne de nav Playbook** — le switcher est le seul point d'entrée                                                 | ✅ nav = New chat · Search · Content strategy · Topic feeds                 |
-| S17 | Le switcher ne porte plus `.ap-select-trigger` (36px imposés), s'aligne sur l'inset des lignes de nav, chevron qui pivote | ✅                                                                          |
-| S18 | Le pied du menu offre **une seule** ligne, « Manage Playbooks »                                                           | ✅                                                                          |
-| S19 | `/settings` redirige vers `/settings/playbooks` ; une section inconnue retombe sur la première                            | ✅                                                                          |
-| S20 | La table des Playbooks liste nom · piliers · feed et marque la ligne active ; ses actions sont crayon + corbeille         | ✅                                                                          |
-| S21 | La table des Topic feeds liste une ligne par Playbook avec ses sources en `.ap-tag`                                       | ✅ « Competitors » — `name`, pas `label`, sinon les chips sont vides        |
-| S22 | Le **rouage du feed** ouvre `/settings/topic-feeds`                                                                       | ✅                                                                          |
-| S23 | Le segmented control est dans `app-topbar__left`, à droite du titre                                                       | ✅ « Ready to draft 5 » / « Topics for later 4 »                            |
-| S24 | Les lignes du rail de réglages font 36px, label regular, sélection en electric-blue-20                                    | ✅                                                                          |
-| S25 | La table des Topic feeds n'a **plus** de colonne « en attente » et offre crayon + corbeille                               | ✅ 7 lignes, corbeille désactivée sur les 3 Playbooks sans lane             |
-| S26 | Le dialog **New pillar** fait 700px et tous ses blocs partagent un inset de 32px                                          | ✅ titre / champs / infobox / pied à 32                                     |
+| #   | Critère                                                                                                                   | Vérifié                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| S1  | Un switcher de Playbook est épinglé au-dessus de la nav et affiche le nom de la marque active                             | ✅ « Noba Fashion » avec son initiale                                           |
+| S2  | Changer de marque re-scope Content strategy, le feed, les chats et les compteurs                                          | ✅ Acme → 0 pilier ; Noba → 2 ; Dwelling → 2                                    |
+| S3  | Aucune option « All Playbooks » nulle part                                                                                | ✅                                                                              |
+| S4  | `/content-strategy` n'a **plus de facette** Playbook et les cartes n'ont **plus de `research-card__meta`**                | ✅ 0 `.strategy-view__filter`, 0 `.research-card__meta`                         |
+| S5  | `/topic-feeds` rend **le feed**, sans en-tête in-page ; Filters / Export / réglages sont dans le topbar                   | ✅ la liste commence en haut du viewport                                        |
+| S6  | Le panneau de filtres s'ouvre depuis le topbar et reste dans le viewport                                                  | ✅ ancré sous le déclencheur, 320px, entièrement visible                        |
+| S7  | Plus aucune route de **création** de feed ; les réglages sont accessibles depuis le feed                                  | ✅ `/topic-feeds/new` supprimée, `/topic-feeds/settings` en place               |
+| S8  | Un Playbook sans lane rend un état vide, **pas** une boucle de redirection                                                | ✅                                                                              |
+| S9  | Le dialog **New pillar** n'a plus de champ Playbook et crée dans la marque active                                         | ✅ 3 champs                                                                     |
+| S10 | Le composer n'affiche **plus** de contrôle Playbook ; le sélecteur de pilier reste et liste ceux de la marque             | ✅ « No pillar » + les 2 piliers de Noba                                        |
+| S11 | Un **nouveau chat** hérite du scope (et non du Playbook par défaut)                                                       | ✅ le picker de piliers se remplit sur un `/session/new-*`                      |
+| S12 | « Fresh topics to review » ne montre que les Topics de la marque active, et le head ne porte que le pilier                | ✅ 2 cartes, heads = « Sustainable wardrobe » / « Full price, no apology »      |
+| S13 | Les chats du rail sont scopés                                                                                             | ✅ Noba → Riverside + Weekly recap                                              |
+| S14 | Changer de marque depuis un pilier atterrit sur la **section**, pas sur un pilier d'une autre marque                      | ✅ `/pillar/…` → `/content-strategy` avec les piliers de la nouvelle marque     |
+| S15 | Aucune erreur console sur 12 routes                                                                                       | ✅                                                                              |
+| S16 | **Aucune ligne de nav Playbook** — le switcher est le seul point d'entrée                                                 | ✅ nav = New chat · Search · Content strategy · Topic feeds                     |
+| S17 | Le switcher ne porte plus `.ap-select-trigger` (36px imposés), s'aligne sur l'inset des lignes de nav, chevron qui pivote | ✅                                                                              |
+| S18 | Le pied du menu offre **une seule** ligne, « Manage Playbooks »                                                           | ✅                                                                              |
+| S19 | `/settings` redirige vers `/settings/playbooks` ; une section inconnue retombe sur la première                            | ✅                                                                              |
+| S20 | La table des Playbooks liste nom · piliers · feed et marque la ligne active ; ses actions sont crayon + corbeille         | ✅                                                                              |
+| S21 | La table des Topic feeds liste une ligne par Playbook avec ses sources en `.ap-tag`                                       | ✅ « Competitors » — `name`, pas `label`, sinon les chips sont vides            |
+| S22 | Le **rouage du feed** ouvre `/settings/topic-feeds`                                                                       | ✅                                                                              |
+| S23 | Le segmented control est dans `app-topbar__left`, à droite du titre                                                       | ✅ « Ready to draft 5 » / « Topics for later 4 »                                |
+| S24 | Les lignes du rail de réglages font 36px, label regular, sélection en electric-blue-20                                    | ✅                                                                              |
+| S25 | La table des Topic feeds n'a **plus** de colonne « en attente » et offre crayon + corbeille                               | ✅ 7 lignes, corbeille désactivée sur les 3 Playbooks sans lane                 |
+| S26 | Le dialog **New pillar** fait 700px et tous ses blocs partagent un inset de 32px                                          | ✅ titre / champs / infobox / pied à 32                                         |
+| S27 | Le segmented control est le **port** du composant DS : segments contourés, sélection bordure + texte bleus                | ✅ 36px, bordure/texte #178dfe, chevauchement −1px                              |
+| S28 | Un rouage de réglages est présent sur **tous** les topbars, y compris celui d'un chat                                     | ✅ ; `/topic-feeds` → `/settings/topic-feeds`, ailleurs → `/settings/playbooks` |
+| S29 | `/settings` n'affiche **aucun** topbar et le rail monte jusqu'en haut de la page                                          | ✅ `display: none`, rail à y=0                                                  |
+| S30 | Le feed n'a plus ni **Export** ni rouage dans son cluster                                                                 | ✅ Filters seul                                                                 |
+| S31 | **Ignore** est collé à Use in chat (12px) et en ghost **gris**                                                            | ✅                                                                              |
+| S32 | **Search chats** est sous l'en-tête Chats, au-dessus de PINNED                                                            | ✅                                                                              |
 
 ⚠️ **Donnée modifiée avec le code** : `recentSessions[].contextId` a été réassigné pour que chaque chat cité comme source d'un pilier vive dans le Playbook de ce pilier. Le rail filtrant sur ce champ, un chat cité par un pilier mais rangé sous une autre marque était invisible depuis le pilier qui le nomme.
 
