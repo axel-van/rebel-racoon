@@ -154,14 +154,6 @@
   color: var(--app-convo-navy);
 }
 
-/* Picker only — the lane a topic came from, in the same register as the age so
-   the two read as one meta run rather than as two competing labels. */
-.topics-card__lane {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ref-color-grey-40);
-}
-
 .topics-card__when {
   font-size: 13px;
   font-weight: 600;

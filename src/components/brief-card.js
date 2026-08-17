@@ -160,7 +160,7 @@ function renderTrendingMark() {
 
 export function renderBriefCard(
   brief,
-  { source = null, variant = "feed", menuOpen = false, laneName = "", articleOpen = false } = {},
+  { source = null, variant = "feed", menuOpen = false, articleOpen = false } = {},
 ) {
   if (!brief) return "";
   const trendingPage = variant === "trending";
@@ -211,11 +211,6 @@ export function renderBriefCard(
                 ><span class="topics-card__source">${source.name}</span>`
             : "",
         )}
-        <!-- The lane, picker only. The feed and the attention page are already
-             inside one lane, so naming it there would be noise; the picker spans
-             every lane a Playbook owns, and grouping by age (not by lane) is
-             what took the lane headings away. -->
-        ${raw(laneName ? html`<span class="topics-card__lane">· ${laneName}</span>` : "")}
         <span class="topics-card__when">· ${brief.ageLabel}</span>
         <!-- The status glyph, immediately right of the age. It moved here from the
              far right of the row, past the spacer, and the move is the point: the

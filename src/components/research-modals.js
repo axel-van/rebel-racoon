@@ -33,10 +33,10 @@ import {
 } from "../briefs-store.js?v=57";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=55";
+import { renderUseButtons } from "./brief-card.js?v=56";
 import { getLanes } from "../research-store.js?v=46";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=24";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=25";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -57,7 +57,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=31";
-import { renderBriefCard } from "./brief-card.js?v=55";
+import { renderBriefCard } from "./brief-card.js?v=56";
 import { renderSocialPostCard } from "./social-post-card.js?v=32";
 import { showToast } from "./toast.js?v=21";
 
@@ -932,17 +932,16 @@ function renderIdeaPicker(ctx) {
 // a different rule than the feed does; "3 days ago" is the thing you actually
 // scan a topic list by, and the picker had no reason to disagree.
 //
-// The lane didn't just disappear with its headings: it moves onto each card's
-// meta line (see pickerCard), because a Playbook can own several lanes and the
-// picker is the one surface that spans them.
+// The lane's NAME is gone from the cards too. It moved onto the meta line back
+// when a Playbook could own several feeds and this was the one surface that
+// spanned them — one feed per Playbook, and a picker scoped to one Playbook,
+// means every card in this list now carries the same string. What does not change
+// from row to row is not information. (Same reason the "Playbook › Topic feed"
+// breadcrumb left the new-session cards.)
 function renderTopicStep(ctx) {
   const lanes = pickerLanes().map((lane) => ({ lane, ...pickerSplit(lane.id) }));
-  const laneNameOf = new Map();
   const shown = [];
-  for (const g of lanes) {
-    for (const b of [...g.shown, ...g.hiddenTrending]) laneNameOf.set(b.id, g.lane.name);
-    shown.push(...g.shown);
-  }
+  for (const g of lanes) shown.push(...g.shown);
   // Newest first inside a group, matching the feed's own sort.
   shown.sort((a, b) => ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel));
   const ageGroups = groupBriefsByAge(shown);
@@ -973,7 +972,7 @@ function renderTopicStep(ctx) {
                   You ignored ${trending.length === 1 ? "this one" : "these"}, but
                   ${trending.length === 1 ? "it is" : "they are"} running above baseline again.
                 </p>
-                ${raw(trending.map((b) => pickerCard(b, laneNameOf.get(b.id))).join(""))}
+                ${raw(trending.map((b) => pickerCard(b)).join(""))}
               </section>`
             : "") +
           ageGroups
@@ -981,7 +980,7 @@ function renderTopicStep(ctx) {
               ({ group, briefs }) =>
                 html`<section class="topics-agegroup">
                   <h4 class="topics-agegroup__label">${group.label}</h4>
-                  ${raw(briefs.map((b) => pickerCard(b, laneNameOf.get(b.id))).join(""))}
+                  ${raw(briefs.map((b) => pickerCard(b)).join(""))}
                 </section>`,
             )
             .join("")
@@ -1003,8 +1002,8 @@ function renderTopicStep(ctx) {
 // feed two seconds earlier. The summary, the Trending and Updated marks and the
 // Why-now / What-changed blocks are the things you actually choose on, and the
 // row dropped all four.
-function pickerCard(b, laneName = "") {
-  return renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "picker", laneName });
+function pickerCard(b) {
+  return renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "picker" });
 }
 
 // ─── 7. Full research ──────────────────────────────────────────────────────
