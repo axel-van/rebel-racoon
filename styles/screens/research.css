@@ -1257,6 +1257,15 @@
     --article-w: var(--topics-card-max);
     max-height: none;
     width: 100%;
+    /* flex: 1 1 0 is what the pane uses SIDE BY SIDE, where the axis is
+       horizontal and a zero basis means "take the leftover width". Turning the
+       split into a column turns that same declaration into a zero-basis HEIGHT
+       in a container with no free space to distribute — so the pane rendered at
+       2px, its own borders, with overflow: hidden clipping the article, the
+       footer and the Close button out of existence. Clicking a card looked like
+       nothing happened, and nothing could be clicked to undo it.
+       auto basis, no grow: the pane is as tall as the article it holds. */
+    flex: 0 0 auto;
   }
 }
 

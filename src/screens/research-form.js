@@ -98,6 +98,10 @@ export function renderResearchForm(params, target) {
       sources: DEFAULT_ENABLED_IDS.slice(),
       cadence: DEFAULT_CADENCE,
       notify: true,
+      // No switch for this any more — the "Show Topics that need attention" card
+      // is gone from the form. It stays true on the lane: research-trending.js
+      // and the attention entry still read it, and a new feed should behave like
+      // every seeded one.
       showTrending: true,
       websites: [],
     };
@@ -402,14 +406,6 @@ function renderOther() {
         "Notify me about new Topics",
         "Send a notification after a scan that found something.",
         draft.notify,
-      ),
-    )}
-    ${raw(
-      renderSwitchCard(
-        "showTrending",
-        "Show Topics that need attention",
-        "Flag a Topic in the feed when it is trending or its story has moved, and give those their own page.",
-        draft.showTrending,
       ),
     )}
     <!-- Pause lives here, and this is the only place it can. It was a play/pause
