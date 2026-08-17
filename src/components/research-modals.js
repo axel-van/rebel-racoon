@@ -30,13 +30,14 @@ import {
   groupBriefsByAge,
   ignoreBrief,
   setStatus,
-} from "../briefs-store.js?v=57";
+  briefTitle,
+} from "../briefs-store.js?v=59";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=57";
+import { renderUseButtons } from "./brief-card.js?v=58";
 import { getLanes } from "../research-store.js?v=46";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=27";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=28";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -56,8 +57,8 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=31";
-import { renderBriefCard } from "./brief-card.js?v=57";
+import { openBriefInChat } from "../brief-flow.js?v=32";
+import { renderBriefCard } from "./brief-card.js?v=58";
 import { renderSocialPostCard } from "./social-post-card.js?v=32";
 import { showToast } from "./toast.js?v=21";
 
@@ -153,13 +154,19 @@ function isOpen() {
   return !!panel && !panel.hidden;
 }
 
-function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "", back = null }) {
+// `bareHead` hides the header's title and subtitle — see the article views. The
+// title is still PASSED and still rendered, visually hidden, because the dialog is
+// labelled by that element (aria-labelledby); dropping it would leave the dialog
+// nameless to a screen reader in exactly the views whose content is longest.
+function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "", back = null, bareHead = false }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
   titleEl.textContent = title;
   subEl.textContent = sub;
-  subEl.hidden = !sub;
+  subEl.hidden = !sub || bareHead;
+  const headText = panel.querySelector(".research-modal__head-text");
+  if (headText) headText.classList.toggle("sr-only", bareHead);
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
   // Normalised here so every call site can keep passing a bare briefId. Stored on
@@ -332,7 +339,7 @@ function topicSeed(brief) {
   if (!brief) return { title: "", text: "" };
   const paras = Array.isArray(brief.research?.paragraphs) ? brief.research.paragraphs : [];
   return {
-    title: brief.research?.title || brief.headline || "",
+    title: briefTitle(brief),
     text: paras.length ? paras.join("\n\n") : brief.summary || "",
   };
 }
@@ -1029,9 +1036,18 @@ function renderTopicStep(ctx) {
 // "a briefId" and start meaning "a destination".
 function renderPickerArticle(ctx, brief) {
   openShell("idea-article-picker", ctx, {
-    title: brief.headline,
+    title: briefTitle(brief),
     sub: researchArticleSub(brief),
-    wide: true,
+    // The LIST's width, not the article's 768. The dialog jumped 62px wider when a
+    // topic opened and back when you returned — one dialog, growing and shrinking
+    // under a back button, reads as two. 706 is the topic card plus the body's own
+    // padding, so both steps are sized to what the body actually holds; the prose
+    // gets a 666px measure, which is nearer a reading measure than 728 was anyway.
+    size: "topics",
+    // No header title here: the article's own title is the heading (see
+    // renderResearchArticle), and with briefTitle() they are now the SAME string —
+    // so a header would have printed it twice, directly above itself.
+    bareHead: true,
     body: renderResearchArticle(brief),
     // data-idea-pick, NOT the article dialog's data-brief-use: both end at
     // openBriefInChat, but only this one goes through the picker's own onPick,
@@ -1154,7 +1170,7 @@ export function openSourcePosts({ briefId, from = null }) {
     { briefId },
     {
       title: "Sources",
-      sub: `Topic: ${brief.headline}`,
+      sub: `Topic: ${briefTitle(brief)}`,
       wide: true,
       back: from,
       body: html`<p class="research-sources__lede">
@@ -1273,9 +1289,12 @@ export function openFullResearch({ briefId }) {
     "full-research",
     { briefId },
     {
-      title: brief.headline,
+      title: briefTitle(brief),
       sub: researchArticleSub(brief),
       wide: true,
+      // Same reason as the picker's: the body renders the title, and it is now the
+      // same string the header carried.
+      bareHead: true,
       body: renderResearchArticle(brief),
       foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
         <span>Close</span>
@@ -1305,9 +1324,10 @@ export function openIdeaArticle({ briefId }) {
     "idea-article",
     { briefId },
     {
-      title: brief.headline,
+      title: briefTitle(brief),
       sub: researchArticleSub(brief),
       wide: true,
+      bareHead: true,
       body: renderResearchArticle(brief),
       foot: renderUseButtons(brief),
     },
@@ -1391,7 +1411,7 @@ function paintVersions() {
       // Playbook do you want topics from?"). Labelling the slot itself would print
       // "Topic: Agorapulse" over a Playbook and "Topic: Which Playbook…" over a
       // picker.
-      sub: `Topic: ${brief.headline}`,
+      sub: `Topic: ${briefTitle(brief)}`,
       wide: true,
       back: versionFrom,
       body: html`<div class="research-versions">
@@ -1708,7 +1728,7 @@ function onPanelClick(event) {
     // pressed, so cancelling still left it triaged.
     const { briefId, playbookId, onConfirm } = active.ctx;
     const brief = getBriefById(briefId);
-    const topic = brief ? { briefId, headline: brief.headline, when: brief.ageLabel } : null;
+    const topic = brief ? { briefId, headline: briefTitle(brief), when: brief.ageLabel } : null;
     // Read the fields at confirm time rather than tracking every keystroke: the
     // dialog is the only editor and it is about to close.
     const titleEl2 = panel.querySelector("[data-strategy-title]");

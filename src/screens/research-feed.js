@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=439";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=440";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=57";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=58";
 import {
   openIgnoreReason,
   openVersionHistory,
@@ -48,15 +48,16 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=125";
-import { openBriefInChat } from "../brief-flow.js?v=31";
+} from "../components/research-modals.js?v=126";
+import { openBriefInChat } from "../brief-flow.js?v=32";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=7";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=27";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=18";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=28";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=19";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=46";
 import {
   getBriefById,
+  briefTitle,
   getBriefsForLane,
   groupBriefsByAge,
   attentionCountsForLane,
@@ -64,7 +65,7 @@ import {
   narrowedGroupCount,
   setStatus,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=57";
+} from "../briefs-store.js?v=59";
 import { RESEARCH_SOURCES, REVIEW_STATUSES, findResearchSource, findCadence } from "../research-catalog.js?v=20";
 import { getContextById } from "../contexts-store.js?v=76";
 
@@ -211,23 +212,20 @@ function renderArticlePane(brief, entering = false) {
            source-and-count sub, which said "Competitors · 14 posts" — the card's own
            source row says the same thing two inches to the left.
 
-           What remains is brief.headline — the SAME string the card shows, in the
-           SAME class. That is the point, and it was briefly the article's own title
-           instead: two different sentences for one topic, one on the card you
-           clicked and one in the pane that opened, so the pane read as a different
-           object rather than as the thing you had just selected.
+           What remains is briefTitle() — the SAME string the card shows, in the
+           SAME class. That is the point: the pane must read as the thing you just
+           clicked rather than as a different object.
 
-           Same class AND same string. .topics-card__headline sets the pane's first
-           line and the card's identically, and now they also SAY the same thing —
-           which is what makes the two boxes read as one selection rather than two
-           panels.
+           That string is now the ARTICLE's title everywhere (briefs-store.briefTitle).
+           A brief carries two — the scan's own headline and the article's title —
+           and they were different sentences about one topic. The article's is the
+           claim the topic makes, so it wins on the card, in the pane, and in every
+           dialog; the scan's is only the fallback for a brief with no article yet.
 
-           brief.research.title, the article's own title, is consequently not
-           rendered in the pane at all: the header carries the headline and the body
-           starts at its first section heading. Pass withTitle: true to
-           renderResearchArticle below to put it back in the body. -->
+           The body still renders with withTitle: false, so the title appears once:
+           here, in the header. -->
       <div class="research-feed__article-headtext">
-        <h2 class="topics-card__headline">${brief.headline}</h2>
+        <h2 class="topics-card__headline">${briefTitle(brief)}</h2>
       </div>
       <button
         type="button"

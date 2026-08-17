@@ -41,6 +41,8 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus } from "../research-catalog.js?v=20";
+// One title per topic — the article's, not the scan's headline. See briefs-store.
+import { briefTitle } from "../briefs-store.js?v=59";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief } from "../pillars-store.js?v=7";
 
@@ -246,7 +248,7 @@ export function renderBriefCard(
         <span class="topics-card__spacer"></span>
       </span>
 
-      <span class="topics-card__headline">${brief.headline}</span>
+      <span class="topics-card__headline">${briefTitle(brief)}</span>
 
       <!-- No "Summary:" label. Every card carried it, so it labelled nothing —
            the two-line block under a headline is self-evidently the summary, and

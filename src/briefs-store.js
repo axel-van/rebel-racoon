@@ -332,6 +332,22 @@ export function countNewForLane(laneId) {
   return briefs.filter((b) => b.laneId === laneId && getStatus(b.id) === "new").length;
 }
 
+/**
+ * THE title of a Topic, for every surface that shows one.
+ *
+ * A brief carries two: `headline`, written when the scan grouped the posts, and
+ * `research.title`, written when Archie wrote the article. They were different
+ * sentences about the same topic, so a card said one thing and the article you
+ * opened from it said another — the card read as a summary of something else.
+ *
+ * The article's is the one that survives: it is the claim the topic actually
+ * makes, and it is what the reader is deciding on. `headline` stays in the data
+ * as the fallback for a brief whose article has not been written.
+ */
+export function briefTitle(brief) {
+  return brief?.research?.title || brief?.headline || "";
+}
+
 export function getBriefById(id) {
   const b = briefs.find((x) => x.id === id);
   return b ? withTriage(b) : null;

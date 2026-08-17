@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=439";
+import { renderTopbar } from "../components/topbar.js?v=440";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=91";
 import {
   getConnectedProfiles,
@@ -72,7 +72,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=7";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=27";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=28";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -83,12 +83,13 @@ import {
   getStarterTopics,
   countFreshTopics,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=57";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=31";
+  briefTitle,
+} from "../briefs-store.js?v=59";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=32";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=15";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=26";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=27";
 import { getLaneById, getLanes } from "../research-store.js?v=46";
-import * as contextBuilder from "../context-builder.js?v=406";
+import * as contextBuilder from "../context-builder.js?v=407";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -125,7 +126,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=125";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=126";
 import { findResearchSource } from "../research-catalog.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -133,7 +134,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=573";
+} from "../components/right-panel.js?v=574";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=37";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2197,7 +2198,7 @@ function renderStarterTopicCard(brief) {
            competing with the crumb above. Inline-flex, so it flows with the text
            and lands after the last word wherever that falls. -->
       <span class="starter-card__title"
-        >${escapeHtml(brief.headline)}${mark ? ` ${mark}` : ""}</span
+        >${escapeHtml(briefTitle(brief))}${mark ? ` ${mark}` : ""}</span
       >
       <!-- The Topic's summary, in the feed's own .topics-card__summary — same class,
            not a copy of it: one object, one summary treatment (15px prose, the

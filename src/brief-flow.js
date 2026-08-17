@@ -31,7 +31,7 @@
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
 import { addReadySource } from "./sources-stream.js?v=90";
-import { getBriefById, getBriefVersions } from "./briefs-store.js?v=57";
+import { getBriefById, getBriefVersions, briefTitle } from "./briefs-store.js?v=59";
 import { getLaneById } from "./research-store.js?v=46";
 import { findResearchSource } from "./research-catalog.js?v=20";
 
@@ -59,7 +59,7 @@ export function openBriefInChat(briefId, { versionId = null } = {}) {
   const lane = getLaneById(brief.laneId);
   const params = new URLSearchParams();
   if (lane?.playbookId) params.set("contextId", lane.playbookId);
-  params.set("title", brief.headline);
+  params.set("title", briefTitle(brief));
   navigate(`/session/new-${Date.now().toString(36)}?${params.toString()}`);
   return true;
 }
@@ -83,7 +83,7 @@ export function attachBriefToChat(sessionId, briefId, versionId = null) {
   const past = version && !version.isCurrent;
   addReadySource(sessionId, {
     id: past ? `${brief.id}-${version.id}` : brief.id,
-    filename: past ? `${brief.headline} (${version.when})` : brief.headline,
+    filename: past ? `${briefTitle(brief)} (${version.when})` : briefTitle(brief),
     kind: past ? "Topic · past version" : "Topic",
     preview: past ? version.paragraphs[0] || version.title : brief.summary,
     iconClass: src?.icon || "ap-icon-folder",
