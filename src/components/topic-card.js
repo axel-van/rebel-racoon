@@ -14,7 +14,7 @@
 // resolves the nesting unpredictably.
 
 import { html, raw } from "../utils.js?v=21";
-import { topicWhen } from "../topics-store.js?v=29";
+import { topicWhen } from "../topics-store.js?v=30";
 
 // Avatar tints, mirroring social-post-card's set — the footer stacks the post
 // authors, so the two surfaces have to agree on what a given accent looks like.

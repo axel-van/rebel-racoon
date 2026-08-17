@@ -138,7 +138,15 @@
   gap: 24px;
 }
 
-.research-card {
+/* `.pillar-card` rides along on every rule in this block. It is the Content-strategy
+   card, and it is the only LIVE one: research.js is parked, so nothing renders a
+   `.research-card` today. The block class was renamed there so the live screen is
+   not named after a retired feature, while the treatment stays defined once — the
+   two cards are the same object shape and a second copy would drift. The `__part`
+   classes below are still `research-card__*` on both, deliberately: a parallel set
+   of pillar-card__head / __title / __open would be a rename with no reader. */
+.research-card,
+.pillar-card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -155,7 +163,8 @@
      shadow off. */
 }
 
-.research-card:hover {
+.research-card:hover,
+.pillar-card:hover {
   box-shadow: 0 6px 22px -6px rgba(10, 27, 51, 0.18);
 }
 
@@ -239,7 +248,9 @@
 }
 
 .research-card:hover .research-card__hover,
-.research-card:focus-within .research-card__hover {
+.research-card:focus-within .research-card__hover,
+.pillar-card:hover .research-card__hover,
+.pillar-card:focus-within .research-card__hover {
   opacity: 1;
   pointer-events: auto;
 }
@@ -449,6 +460,7 @@
    Honour a reduced-motion preference by removing the transitions entirely. */
 @media (prefers-reduced-motion: reduce) {
   .research-card,
+  .pillar-card,
   .research-create-card,
   .research-create-card__disc {
     transition: none;

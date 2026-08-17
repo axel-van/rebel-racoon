@@ -31,7 +31,7 @@
 
 import { html, raw, escapeAttr, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { getPillarById, getPillarTimeline, setPillarFrozen, subscribe } from "../pillars-store.js?v=10";
+import { getPillarById, getPillarTimeline, setPillarFrozen, subscribe } from "../pillars-store.js?v=11";
 import { renderDiff } from "../text-diff.js?v=1";
 import { showToast } from "./toast.js?v=21";
 

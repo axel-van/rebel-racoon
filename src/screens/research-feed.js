@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=445";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=446";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=62";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=63";
 import {
   openIgnoreReason,
   openVersionHistory,
@@ -48,13 +48,13 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=131";
-import { openBriefInChat } from "../brief-flow.js?v=34";
+} from "../components/research-modals.js?v=133";
+import { openBriefInChat } from "../brief-flow.js?v=35";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=10";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=34";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=24";
-import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=47";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=11";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=36";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=25";
+import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=48";
 import {
   getBriefById,
   briefTitle,
@@ -65,9 +65,9 @@ import {
   narrowedGroupCount,
   setStatus,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=60";
+} from "../briefs-store.js?v=61";
 import { RESEARCH_SOURCES, REVIEW_STATUSES, findResearchSource, findCadence } from "../research-catalog.js?v=21";
-import { getContextById } from "../contexts-store.js?v=77";
+import { getContextById } from "../contexts-store.js?v=78";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -310,6 +310,11 @@ function freshView() {
 let view = freshView();
 let timer = null;
 
+// Has the generating loader already played in this page load? Module-level, so it
+// survives every mount and remount of this screen and resets only on a reload —
+// which is the "first time you click the nav" this restores.
+let generatingPlayed = false;
+
 let unsubscribe = null;
 let unsubscribePillars = null;
 let unsubscribeScope = null;
@@ -386,8 +391,24 @@ export function renderResearchFeed(params, target) {
     view.articleAuto = true;
   }
 
+  // Two ways in. `?fresh=1` is the EXPLICIT one — a save on the settings form
+  // appends it, and so did the parked feed list when you opened a feed.
+  //
+  // The second is the FIRST arrival of the page load, which is what restored the
+  // loader after the feed list was retired: the sidebar's Topic Feed row navigates
+  // to a bare /topic-feeds, so with `?fresh=1` as the only trigger the loader had
+  // quietly stopped playing for the one route anybody actually uses. It plays once
+  // per page load, like the starter-topic countdown and the pillar cards' own
+  // generating state — this is a prototype showing that a feed is SCANNED, and a
+  // spinner on every visit would be a lie you sit through.
+  //
+  // Not when a deep link names a topic (`?topic=`): you asked for one card, and
+  // making you wait 1.6s to be shown the thing you clicked is the loader getting in
+  // the way of the content it is supposed to be announcing.
   const fresh = parseHashParams().get("fresh") === "1";
-  if (fresh) {
+  const firstArrival = !generatingPlayed && !wantedBrief;
+  generatingPlayed = true;
+  if (fresh || firstArrival) {
     view.generating = true;
     timer = window.setTimeout(() => {
       view.generating = false;

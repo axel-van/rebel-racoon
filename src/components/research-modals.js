@@ -31,18 +31,18 @@ import {
   ignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=60";
+} from "../briefs-store.js?v=61";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=62";
-import { getLanes } from "../research-store.js?v=47";
+import { renderUseButtons } from "./brief-card.js?v=63";
+import { getLanes } from "../research-store.js?v=48";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=34";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=36";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
 // list and a different object entirely.
-import { pillarForBrief } from "../pillars-store.js?v=10";
+import { pillarForBrief } from "../pillars-store.js?v=11";
 import {
   getContexts,
   getContextById,
@@ -53,13 +53,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=77";
+} from "../contexts-store.js?v=78";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=34";
-import { renderBriefCard } from "./brief-card.js?v=62";
-import { renderSocialPostCard } from "./social-post-card.js?v=33";
+import { openBriefInChat } from "../brief-flow.js?v=35";
+import { renderBriefCard } from "./brief-card.js?v=63";
+import { renderSocialPostCard } from "./social-post-card.js?v=34";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -167,6 +167,10 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size 
   subEl.hidden = !sub || bareHead;
   const headText = panel.querySelector(".research-modal__head-text");
   if (headText) headText.classList.toggle("sr-only", bareHead);
+  // The same fact, on the panel: .sr-only takes the title block out of the flow, so
+  // the header is left holding buttons only and must not keep reserving the vertical
+  // space that text needed. CSS cannot ask "is my child sr-only", hence the mirror.
+  panel.classList.toggle("research-modal--barehead", bareHead);
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
   // Normalised here so every call site can keep passing a bare briefId. Stored on

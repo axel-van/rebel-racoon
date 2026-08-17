@@ -6236,8 +6236,15 @@ export const pillars = [
       "the format that has landed twice.",
     contextUpdatedAgo: "2d ago",
     // What the context said BEFORE the last run — what "Show what changed" marks
-    // against. Seeded on two pillars so the diff has something to render before
-    // anyone edits anything; every later change writes it from the store.
+    // against. Every pillar carries one, so the toggle is live on a first visit
+    // rather than only after somebody has edited something; from then on the store
+    // writes it on every rewrite. A pillar you create yourself has none, and the
+    // toggle is correctly disabled until its first run lands.
+    //
+    // Each pair is written as an incremental rewrite, not a rephrasing: the
+    // previous text is the same argument with the newest evidence missing, so the
+    // diff reads the way a weekly run actually changes a paragraph — a clause
+    // added, a vague one replaced by a specific one.
     previousContext:
       "Buying less, but better. We argue against discount-driven wardrobes without moralising. Our own returns " +
       "data is the proof we lead with.",
@@ -6399,6 +6406,9 @@ export const pillars = [
       "out-detail us on it; the bill after handover is unoccupied ground and it is the number that decides whether " +
       "a home is attainable at all.",
     contextUpdatedAgo: "1d ago",
+    previousContext:
+      "Operating cost, not build material. Competitors own the sustainability-of-the-material argument; the bill " +
+      "after handover is unoccupied ground.",
     createdBy: "you",
     openedAgo: "2mo ago",
     sources: [
@@ -6441,6 +6451,9 @@ export const pillars = [
       "same footage with weather, delay and mess removed, and it keeps running through the month everyone else " +
       "closes.",
     contextUpdatedAgo: "1w ago",
+    previousContext:
+      "A controlled line is a better story than a muddy site. Competitors are filming builds; a factory floor is " +
+      "the same footage without the weather.",
     createdBy: "you",
     openedAgo: "6w ago",
     sources: [
@@ -6486,6 +6499,9 @@ export const pillars = [
       "to boys — and we say the same thing to every family, because it is the same thing. Belts are milestones in " +
       "that story, never the story.",
     contextUpdatedAgo: "3d ago",
+    previousContext:
+      "Confidence, composure and a routine. We say the same thing to every family. Belts are milestones in that " +
+      "story, never the story.",
     createdBy: "you",
     openedAgo: "3mo ago",
     sources: [
@@ -6537,6 +6553,9 @@ export const pillars = [
       "person in the room — so the answer is what happens between rounds, and the fact that consistency, not " +
       "talent, is the only thing every promotion here has in common.",
     contextUpdatedAgo: "6d ago",
+    previousContext:
+      "For the adult who trained once and stopped. The blocker is never fitness, it is the fear of being the worst " +
+      "person in the room — so the answer is what happens between rounds.",
     createdBy: "you",
     openedAgo: "2mo ago",
     sources: [
@@ -6582,6 +6601,9 @@ export const pillars = [
       "is naming the task that stops arriving. MCP is being explained to engineers and to nobody who runs a social " +
       "inbox, which is the same gap in a different vocabulary.",
     contextUpdatedAgo: "2d ago",
+    previousContext:
+      "Not what the model is, what it removes. Everyone is shipping an agent and describing the technology; nobody " +
+      "is naming the task that stops arriving.",
     createdBy: "you",
     openedAgo: "6w ago",
     sources: [
@@ -6629,6 +6651,9 @@ export const pillars = [
       "number closes a conversation with a client — and the same instinct is why an approval workflow is everyone's " +
       "screenshot and nobody's argument.",
     contextUpdatedAgo: "4d ago",
+    previousContext:
+      "Reporting as a way to settle a debate. The competitive argument is not more metrics, it is which single " +
+      "number closes a conversation with a client.",
     createdBy: "archie",
     reviewed: false,
     openedAgo: "4d ago",

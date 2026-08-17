@@ -94,14 +94,17 @@
   gap: var(--ref-spacing-md);
 }
 
-/* The pillar card is .research-card (styles/screens/research.css) — the lane
-   card, reused whole. Only what is genuinely strategy-specific lives here. */
+/* The pillar card is `.pillar-card`, and its BLOCK rules live in
+   styles/screens/research.css, where `.research-card, .pillar-card` share one
+   definition — same object shape, and the parked lane card is the only other user.
+   Its `__part` classes are still `research-card__*` for the same reason.
+   What lives here is what only a pillar has. */
 
 /* The pillar's own sentence, between the meta line and the signals. The lane
    card has no equivalent because a lane's name IS its description; a pillar has
    a point of view that has to be readable at a glance. Two lines then an
    ellipsis, so a long one cannot push the footer around. */
-.strategy-card__about {
+.pillar-card__about {
   margin: var(--ref-spacing-xxs) 0 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: 1.5;
@@ -112,20 +115,48 @@
   overflow: hidden;
 }
 
-/* Sits in .research-card__signals beside the DS Badge, so it inherits that
-   row's wrap and centring. Reset only what a <button> brings and a <span>
-   would not. */
-/* align-self, because the card is a flex COLUMN and a stretched child fills its
-   width — the tag ran edge to edge under the title and read as a banner. It also
-   no longer sits in .research-card__signals, which used to supply the shrink. */
-.strategy-card__auto {
-  align-self: flex-start;
-  /* 8, not 4: the pill qualifies the TITLE above it, but 4 above and 8 below made
-     it read as the first line of the description underneath. Equal gaps let it
-     belong to the card rather than to either neighbour. */
-  margin-top: var(--ref-spacing-xxs);
+/* Back inside .research-card__signals, beside the DS Badge, so the row supplies the
+   wrap, the centring and the gap — and there is nothing left to declare here but the
+   two things a <button> brings that a <span> would not.
+   The `align-self: flex-start` and `margin-top` this used to carry belonged to the
+   spell it spent on its own line in the card's flex COLUMN, where a stretched child
+   ran edge to edge and read as a banner. In a flex ROW neither is needed. */
+.pillar-card__auto {
   cursor: pointer;
   font-family: inherit;
+}
+
+/* The generating state — the same block as a real card (so the grid cannot jump when
+   the two swap), with its contents centred and nothing to click. The spinner takes
+   the free space below the two lines, which is what makes the wait read as the card's
+   own rather than as a decoration on top of it. */
+.pillar-card--loading {
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xxxs);
+  text-align: center;
+  cursor: default;
+}
+
+.pillar-card__loading-title {
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--ref-color-grey-100);
+}
+
+.pillar-card__loading-sub {
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* .ap-loader-container is the DS's own centring wrapper; the fill comes from this
+   flex rule, so the loader itself keeps a documented size class. */
+.pillar-card__loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--ref-spacing-xs);
 }
 
 /* The ghost tile — the /contexts "Create a Playbook" card, same shape and same
@@ -134,7 +165,7 @@
    nothing, which is the whole of "the new-pillar button is broken". Values
    mirror .contexts-card--ghost deliberately; if that one moves, move this with
    it. The min-height matches .research-card, its neighbour in the grid. */
-.strategy-card--new {
+.pillar-card--new {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -155,15 +186,15 @@
     transform var(--ref-animation-short) var(--app-ease-out);
 }
 
-.strategy-card--new:hover,
-.strategy-card--new:focus-visible {
+.pillar-card--new:hover,
+.pillar-card--new:focus-visible {
   outline: none;
   border-color: var(--app-archie-mark);
   background: var(--app-butter);
   transform: translateY(-1px);
 }
 
-.strategy-card--new__glyph {
+.pillar-card--new__glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -177,26 +208,26 @@
     color var(--ref-animation-short) var(--app-ease-out);
 }
 
-.strategy-card--new__glyph i {
+.pillar-card--new__glyph i {
   font-size: var(--sys-icon-css-md);
 }
 
 /* Hover: the tile turns brand orange and the logo flips to white — the mask
    paints in currentColor, so `color` is what drives it. */
-.strategy-card--new:hover .strategy-card--new__glyph,
-.strategy-card--new:focus-visible .strategy-card--new__glyph {
+.pillar-card--new:hover .pillar-card--new__glyph,
+.pillar-card--new:focus-visible .pillar-card--new__glyph {
   background: var(--app-archie-mark);
   color: var(--ref-color-white);
 }
 
-.strategy-card--new__title {
+.pillar-card--new__title {
   font-size: var(--sys-text-style-h3-size);
   line-height: var(--sys-text-style-h3-line-height);
   font-weight: var(--sys-text-style-h3-weight);
   color: var(--ref-color-grey-100);
 }
 
-.strategy-card--new__sub {
+.pillar-card--new__sub {
   font-size: var(--sys-text-style-caption-size);
   font-weight: var(--sys-text-style-caption-weight);
   line-height: var(--sys-text-style-caption-line-height);

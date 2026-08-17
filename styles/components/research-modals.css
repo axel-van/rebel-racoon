@@ -58,6 +58,21 @@
   min-width: 0;
 }
 
+/* The close button is pinned to the TRAILING edge by its own margin, not by the
+   title block's flex:1 above.
+   That distinction is the whole bug: the article views pass `bareHead`, which puts
+   .sr-only on the title block — and .sr-only is position:absolute, so the flex item
+   holding this button over to the right left the flow entirely. The button became the
+   only in-flow child of a plain flex row and sat at its START, i.e. the top-LEFT
+   corner of the dialog, on exactly the three views that hide their header text.
+   auto margin rather than justify-content on the head: the head has to keep laying
+   out back / title / close from the start edge when all three are present, and only
+   this one element is being pushed. The nested layout positions this button
+   absolutely, where the margin is inert. */
+.research-modal__head > [data-research-modal-close] {
+  margin-left: auto;
+}
+
 .research-modal__title {
   margin: 0;
   font-size: 22px;
@@ -71,6 +86,15 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--ref-color-grey-60);
+  /* One line. This is orientation — "Topic: <headline>" — and the headline it names
+     is the first thing in the body directly below, so an ellipsis costs the reader
+     nothing. It only bites where the text would not have fitted anyway: since the
+     nested head became a row, the sub shares its width with the back and close
+     buttons, and a long headline wrapped to a second line that pushed the header to
+     106px while every other dialog's was 73px. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .research-modal__sub[hidden] {
@@ -693,28 +717,29 @@
    own padding back so its LABEL lines up with the title underneath it rather than
    its box. */
 .research-modal__back {
-  align-self: flex-start;
+  align-self: center;
+  flex: 0 0 auto;
   margin-left: calc(var(--ref-spacing-xs) * -1);
-  margin-bottom: var(--ref-spacing-xxs);
 }
 
-/* The head becomes a column when a back button is present: back on its own line,
-   then the title and sub. In a row the three would compete for the same band and the
-   title would lose, which is the one thing the header has to keep. */
-.research-modal--nested .research-modal__head {
-  flex-direction: column;
-  align-items: stretch;
-}
+/* ── Why the nested head is a ROW again ────────────────────────────────────
+   It was a COLUMN — back on its own line, then the title and sub — on the argument
+   that in a row the three would compete for one band and the title would lose. The
+   cost of that was never measured, and it is large: the Sources dialog's header came
+   to 144px, twice the 73px every other dialog spends, for a back button, a
+   two-word title and a subtitle. A fifth of the dialog was chrome.
+   The objection also does not survive contact with the two views that are nested:
+   their titles are "Sources" and "Past versions". Nothing is competing for space,
+   and the long string — the topic's own headline — is in the SUB, which still gets a
+   line of its own inside .research-modal__head-text. So the row is back | title+sub |
+   close, which is the shape of every other header in this component, and the
+   absolutely-positioned close it needed goes with the column. */
 
-/* …and the close button returns to the corner it occupies in every other view.
-   The header is the positioning context, declared here rather than globally so the
-   non-nested layout keeps its plain flex row. */
-.research-modal--nested .research-modal__head {
-  position: relative;
-}
-
-.research-modal--nested .research-modal__head > [data-research-modal-close] {
-  position: absolute;
-  top: var(--ref-spacing-sm);
-  right: var(--ref-spacing-sm);
+/* ── A head with no text needs no room for text ────────────────────────────
+   `bareHead` puts .sr-only on the title block for the three article views, whose
+   BODY renders the title. That left a 73px band holding one 36px close button — 37px
+   of padding around a single icon. The vertical padding drops to a quarter of the
+   text version's; the horizontal stays, so the buttons keep the dialog's own gutter. */
+.research-modal--barehead .research-modal__head {
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
 }

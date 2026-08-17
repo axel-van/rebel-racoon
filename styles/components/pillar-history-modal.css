@@ -184,3 +184,15 @@
   color: var(--ref-color-green-150);
   text-decoration: none;
 }
+
+/* A word swapped for another leaves the two marks touching: the diff kept the one
+   space between them as unchanged text, so "We" replaced by "Competitors" renders
+   as WeCompetitors and reads as a word. A hair of margin separates the marks
+   without inventing whitespace the sentence does not have — the text still copies
+   out correctly, which adding a space would break. */
+.pillar-history__diff del + ins,
+.pillar-history__diff ins + del,
+.pillar-sec__prose del + ins,
+.pillar-sec__prose ins + del {
+  margin-left: 0.25em;
+}

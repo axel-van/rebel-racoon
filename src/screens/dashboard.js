@@ -1,5 +1,5 @@
-import { getSessions } from "../sessions-store.js?v=40";
-import { getContexts } from "../contexts-store.js?v=77";
+import { getSessions } from "../sessions-store.js?v=41";
+import { getContexts } from "../contexts-store.js?v=78";
 import { isNewUser } from "../user-mode.js?v=22";
 
 // Dashboard route — pure redirect surface.

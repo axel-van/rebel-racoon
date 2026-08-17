@@ -7,14 +7,14 @@
 // and the edit canvas + action bar to edit-view.
 
 import { html, raw, escapeHtml } from "../../utils.js?v=21";
-import { getPosts } from "../../posts-store.js?v=69";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=65";
-import { renderPostCard } from "../post-card.js?v=111";
-import { KEY, ctx } from "./context.js?v=70";
-import { generateControls } from "./compose-view.js?v=82";
-import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=84";
+import { getPosts } from "../../posts-store.js?v=70";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=66";
+import { renderPostCard } from "../post-card.js?v=112";
+import { KEY, ctx } from "./context.js?v=71";
+import { generateControls } from "./compose-view.js?v=83";
+import { actionBar, toolPalette, editCanvas } from "./edit-view.js?v=85";
 import { compositeOverlays } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=96";
+import * as imageStudio from "../../image-studio.js?v=97";
 
 // In-feed preview — the edit canvas layers logo/text overlays as live DOM over the
 // image, but the post-card preview can't (it just takes an image URL), so overlays

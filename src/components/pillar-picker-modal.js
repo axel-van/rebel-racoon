@@ -18,8 +18,8 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
-import { getPillarsForPlaybook, linkBrief } from "../pillars-store.js?v=10";
-import { getActivePlaybookId, getActivePlaybook } from "../active-playbook.js?v=34";
+import { getPillarsForPlaybook, linkBrief } from "../pillars-store.js?v=11";
+import { getActivePlaybookId, getActivePlaybook } from "../active-playbook.js?v=36";
 import { navigate } from "../router.js?v=30";
 import { showToast } from "./toast.js?v=21";
 
