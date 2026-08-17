@@ -98,25 +98,11 @@
   color: var(--app-convo-navy);
 }
 
-.research-modal__sub {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ref-color-grey-60);
-  /* One line. This is orientation — "Topic: <headline>" — and the headline it names
-     is the first thing in the body directly below, so an ellipsis costs the reader
-     nothing. It only bites where the text would not have fitted anyway: since the
-     nested head became a row, the sub shares its width with the back and close
-     buttons, and a long headline wrapped to a second line that pushed the header to
-     106px while every other dialog's was 73px. */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.research-modal__sub[hidden] {
-  display: none;
-}
+/* .research-modal__sub is gone — the header is a title and nothing else. It held a
+   different fact in each of the twelve views (a source name, a Playbook name, a
+   topic count, "Topic: <headline>", and in one case an outright question), and its
+   one-line clamp existed only to stop a long headline pushing the nested header from
+   73px to 106px. Removing the line removes the reason for the clamp with it. */
 
 .research-modal__body {
   flex: 1 1 auto;

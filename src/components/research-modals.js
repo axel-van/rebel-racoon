@@ -37,7 +37,7 @@ import {
 import { renderUseButtons } from "./brief-card.js?v=65";
 import { getLanes } from "../research-store.js?v=49";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=40";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=41";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -70,7 +70,7 @@ const MODAL_ID = "research";
 // to restore; pickerSplit and the group's render are both still below.
 const SHOW_HIDDEN_TRENDING = false;
 
-let backdrop, panel, headEl, titleEl, subEl, bodyEl, footEl, backEl;
+let backdrop, panel, headEl, titleEl, bodyEl, footEl, backEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
 // Where the header's back button goes. Either a briefId — meaning "back to that
@@ -128,9 +128,10 @@ const SHELL = `
     <button type="button" class="ap-button ghost grey research-modal__back" data-research-modal-back hidden>
       <i class="ap-icon-chevron-left" aria-hidden="true"></i><span>Back to the topic</span>
     </button>
+    <!-- Title only. The subtitle this used to carry is gone from every view — see
+         openShell for what each one held and why the title now stands alone. -->
     <div class="research-modal__head-text">
       <h2 class="research-modal__title" id="researchModalTitle"></h2>
-      <p class="research-modal__sub"></p>
     </div>
   </header>
   <div class="research-modal__body"></div>
@@ -147,7 +148,6 @@ export function init() {
   panel = document.getElementById("researchModal");
   headEl = panel.querySelector(".research-modal__head");
   titleEl = panel.querySelector(".research-modal__title");
-  subEl = panel.querySelector(".research-modal__sub");
   bodyEl = panel.querySelector(".research-modal__body");
   footEl = panel.querySelector(".research-modal__foot");
   backEl = panel.querySelector("[data-research-modal-back]");
@@ -183,13 +183,11 @@ function isOpen() {
 // No bareHead view passes `back`, and none can while the header owns that button:
 // if one ever needs to, the back button moves out of the header the same way the
 // close button just did.
-function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "", back = null, bareHead = false }) {
+function openShell(kind, ctx, { title, body, foot, wide = false, size = "", back = null, bareHead = false }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
   titleEl.textContent = title;
-  subEl.textContent = sub;
-  subEl.hidden = !sub;
   headEl.hidden = bareHead;
   if (bareHead) {
     panel.removeAttribute("aria-labelledby");
@@ -265,7 +263,6 @@ export function openNeedSource({ sourceId }) {
     { sourceId },
     {
       title: "Need that source?",
-      sub: source ? source.name : "",
       body: html`<p class="research-modal__lede">
           This source isn't live yet. Tell me how you'd use it and the team will factor it into what we build next.
         </p>
@@ -428,7 +425,6 @@ function renderPillarPbStep(ctx) {
   const options = pillarPbOptions();
   openShell("pillar-picker", ctx, {
     title: "Post about a content pillar",
-    sub: "Which Playbook's strategy do you want to write from?",
     wide: true,
     body: options.length
       ? html`<div class="research-pick__pbgrid">
@@ -467,7 +463,6 @@ function renderPillarListStep(ctx) {
   const pillars = getPillars(pillarPbId);
   openShell("pillar-picker", ctx, {
     title: "Post about a content pillar",
-    sub: pb ? pb.name : "",
     body: html`<div class="research-pick__pillars">
       ${raw(
         pillars
@@ -514,7 +509,6 @@ function renderPillarDetailStep(ctx) {
   }
   openShell("pillar-picker", ctx, {
     title: p.title,
-    sub: pb ? `${pb.name} · Content strategy` : "",
     body: html`<div class="research-pick__detail">
       <section class="research-article">
         <span class="research-article__label">Pillar Detail</span>
@@ -625,7 +619,6 @@ function paintStrategy({ briefId, playbookId, onConfirm, returning }) {
     { briefId, playbookId, onConfirm },
     {
       title: returning ? "Update a content pillar" : "Add to Content strategy",
-      sub: ctx ? ctx.name : "",
       body:
         // The DS Infobox, because "explain what this does" on a persistent
         // surface is what an infobox is for. `info`, not the app's orange: this
@@ -880,7 +873,6 @@ export function openPlaybookList({ playbookId, kind }) {
       title: spec.title,
       // The Playbook name as an uppercase eyebrow ABOVE the section title, so the
       // dialog says whose competitors these are without a second heading.
-      sub: "",
       body: html`<div class="pbklist__eyebrow">
           <span class="pbklist__tile" aria-hidden="true">${brandInitial(ctx)}</span>
           <span class="pbklist__brand">${ctx ? ctx.name : "Playbook"}</span>
@@ -1002,7 +994,6 @@ function renderTopicStep(ctx) {
 
   openShell("idea-picker", ctx, {
     title: "Pick a Topic",
-    sub: `${shownTotal} ready to draft in ${pb ? pb.name : "this Playbook"}`,
     // Sized to the card rather than to a generic "wide": the topic card caps
     // itself at its own content, so the 768px shell step 1 uses would leave a
     // dead column beside every card.
@@ -1068,7 +1059,6 @@ function renderTopicStep(ctx) {
 function renderPickerArticle(ctx, brief) {
   openShell("idea-article-picker", ctx, {
     title: briefTitle(brief),
-    sub: researchArticleSub(brief),
     // The LIST's width, not the article's 768. The dialog jumped 62px wider when a
     // topic opened and back when you returned — one dialog, growing and shrinking
     // under a back button, reads as two. 706 is the topic card plus the body's own
@@ -1201,7 +1191,6 @@ export function openSourcePosts({ briefId, from = null }) {
     { briefId },
     {
       title: "Sources",
-      sub: `Topic: ${briefTitle(brief)}`,
       wide: true,
       back: from,
       body: html`<p class="research-sources__lede">
@@ -1299,18 +1288,12 @@ function renderArticleBody(research) {
   return section(subheads[0], paras.slice(0, split)) + section(subheads[1], paras.slice(split));
 }
 
-/** Source name + post count, the article's own subtitle in either container. */
-export function researchArticleSub(brief) {
-  if (!brief) return "";
-  const source = findResearchSource(brief.sourceId);
-  const posts = brief.posts || [];
-  // Drop the count entirely at zero rather than printing "0 posts", which reads
-  // as a bug. A brief legitimately has no attached posts when its scan returned
-  // topics without the underlying items.
-  return [source ? source.name : "", posts.length ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}` : ""]
-    .filter(Boolean)
-    .join(" · ");
-}
+// researchArticleSub() lived here — source name + post count, the article's own
+// subtitle. It went with the subtitle slot itself: its three callers were the three
+// article views, which are `bareHead` and have not rendered a header at all since
+// the close button moved out of it, so it was already computing a string nobody
+// saw. The card in the feed still names its source and its post count, which is
+// where a reader looks for both.
 
 export function openFullResearch({ briefId }) {
   const brief = getBriefById(briefId);
@@ -1321,7 +1304,6 @@ export function openFullResearch({ briefId }) {
     { briefId },
     {
       title: briefTitle(brief),
-      sub: researchArticleSub(brief),
       wide: true,
       // Same reason as the picker's: the body renders the title, and it is now the
       // same string the header carried.
@@ -1356,7 +1338,6 @@ export function openIdeaArticle({ briefId }) {
     { briefId },
     {
       title: briefTitle(brief),
-      sub: researchArticleSub(brief),
       wide: true,
       bareHead: true,
       body: renderResearchArticle(brief),
@@ -1430,19 +1411,12 @@ function paintVersions() {
     "versions",
     { briefId: versionBriefId },
     {
+      // "Past versions" of WHAT is no longer said in the header — the subtitle that
+      // carried "Topic: <headline>" is gone from every view. The list below names
+      // each version, and this dialog is only ever reached from the topic itself
+      // (the back button says so), so the topic is the thing you just left rather
+      // than something the header has to re-state.
       title: "Past versions",
-      // "Topic:" is a fixed label, present whatever the headline says. The headline
-      // alone was ambiguous in this dialog specifically: the title above it reads
-      // "Past versions", so an unlabelled sentence underneath could be taken for
-      // the name of a version rather than the topic all five belong to.
-      //
-      // Prefixed HERE, not in the shell. .research-modal__sub is shared by nine
-      // openShell calls and carries something different in each — a connector's
-      // name, a Playbook's name, a topic count, an outright question ("Which
-      // Playbook do you want topics from?"). Labelling the slot itself would print
-      // "Topic: Agorapulse" over a Playbook and "Topic: Which Playbook…" over a
-      // picker.
-      sub: `Topic: ${briefTitle(brief)}`,
       wide: true,
       back: versionFrom,
       body: html`<div class="research-versions">
