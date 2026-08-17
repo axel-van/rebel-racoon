@@ -30,7 +30,7 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
-import { getActivePlaybookId } from "../active-playbook.js?v=25";
+import { getActivePlaybookId } from "../active-playbook.js?v=26";
 import { addPillar, assetKindFor } from "../pillars-store.js?v=7";
 import { showToast } from "./toast.js?v=21";
 
@@ -72,7 +72,7 @@ const HTML = `
         <textarea
           id="pillarAbout"
           rows="5"
-          placeholder="What it covers, the angle you take on it, and anything I should never say about it. A few sentences is plenty — I'll build on this as topics and chats come in."
+          placeholder="What it covers, the angle to take on it, and anything to stay away from. A few sentences is plenty — it gets matched against the topics and chats you already have, as well as everything that arrives later."
         ></textarea>
       </div>
     </div>
@@ -94,8 +94,8 @@ const HTML = `
       <div class="ap-infobox-content">
         <div class="ap-infobox-texts">
           <span class="ap-infobox-message">
-            From your description, topics from your feed and content from your chats will be matched to
-            continuously nurture the pillar. You can review what's included any time and add your own assets and
+            From your description, topics and chats are matched to the pillar — the ones you already have as well as
+            everything that arrives from here on. You can review what's included any time and add your own assets and
             notes.
           </span>
         </div>

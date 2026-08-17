@@ -22,16 +22,16 @@ import { clearSession as clearLibrarySession } from "../library.js?v=92";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=76";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=61";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=29";
-import { unseenCount as getUnseenPillarSources, subscribe as subscribePillars } from "../pillars-store.js?v=7";
+import { getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=7";
 import {
   getActivePlaybook,
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=25";
+} from "../active-playbook.js?v=26";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=46";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=57";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=571";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=572";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=98";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=69";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=90";
@@ -734,12 +734,15 @@ const NAV = [
     match: (p) => p.startsWith("/topics"),
     count: () => getUnseenTopicCount(),
   },
-  // The counter is UNSEEN sources — topics and chat extracts Archie has filed
-  // into a pillar and nobody has looked at yet. A `notif` counter promises
-  // "something needs you" and nothing here does; it is deliberate, because the
-  // whole feature runs unattended and without one signal that anything happened
-  // nobody comes back. It drains per pillar, on opening that pillar — clearing
-  // it from the section would wipe a badge whose contents were never seen.
+  // The counter is HOW MANY PILLARS this Playbook has — a plain `normal grey`
+  // counter, the same one Connectors uses for a set you own.
+  //
+  // It was unseen filed sources in `notif` orange, and that was the wrong promise
+  // twice over. A notif counter means "something needs you", and nothing here
+  // does: pillars fill themselves whether or not anyone looks, so an orange badge
+  // that never stops coming back is a to-do nobody agreed to. It also counted a
+  // thing you cannot see from the row — arrivals inside pillars — so the number
+  // never matched what the page showed. The size of the set does.
   {
     path: "/content-strategy",
     icon: "ap-icon-stack",
@@ -749,8 +752,7 @@ const NAV = [
     match: (p) => p.startsWith("/content-strategy") || p.startsWith("/pillar/"),
     // Scoped, like the section it counts. A global total under a scoped rail is
     // the worst of both: it promises work that the page it opens will not show.
-    count: () => getUnseenPillarSources(getActivePlaybookId()),
-    notif: true,
+    count: () => getPillarsForPlaybook(getActivePlaybookId()).length,
   },
   // The counter is the number of LANES, not briefs: unlike Topics this row is
   // navigation, not a notification. "How many research operations do I have

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=437";
+import { renderTopbar } from "../components/topbar.js?v=438";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=91";
 import {
   getConnectedProfiles,
@@ -72,7 +72,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=7";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=25";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=26";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -86,9 +86,9 @@ import {
 } from "../briefs-store.js?v=57";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=31";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=15";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=24";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=25";
 import { getLaneById, getLanes } from "../research-store.js?v=46";
-import * as contextBuilder from "../context-builder.js?v=404";
+import * as contextBuilder from "../context-builder.js?v=405";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -125,7 +125,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=123";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=124";
 import { findResearchSource } from "../research-catalog.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -133,7 +133,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=571";
+} from "../components/right-panel.js?v=572";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=37";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
