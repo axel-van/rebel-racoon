@@ -40,9 +40,9 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=20";
+import { findReviewStatus } from "../research-catalog.js?v=21";
 // One title per topic — the article's, not the scan's headline. See briefs-store.
-import { briefTitle } from "../briefs-store.js?v=59";
+import { briefTitle } from "../briefs-store.js?v=60";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief } from "../pillars-store.js?v=7";
 
@@ -139,16 +139,33 @@ function renderUpdatedMark() {
 // a display:none tooltip is not the only place they exist — the same
 // construction, and the same reason, as the status glyph above. Getting TO the
 // pillar is a menu row, not this glyph.
+// The pillar mark: the icon, then the pillar's NAME.
+//
+// The icon alone said a topic was filed somewhere without saying where, so the
+// one fact the mark exists to carry — which pillar — was only available by
+// hovering. The name is clamped at 15 characters because it sits in a meta run
+// beside the source and the age, and a pillar called "Social media measurement
+// that survives a board meeting" would have owned the row.
+//
+// The tooltip keeps the FULL name and the explanation, and now opens from the
+// whole element rather than the icon: with a label beside it, hovering the words
+// and getting nothing is the more likely miss.
+const PILLAR_LABEL_MAX = 15;
+
 function renderPillarMark(pillar) {
-  return html`<span class="topics-card__pillar">
-    <i
-      class="ap-icon-stack"
-      role="img"
-      aria-label="Linked with the ${pillar.name} content pillar. The pillar's context will be included if you use this topic in chat."
-    ></i>
+  const full = pillar.name || "";
+  const short = full.length > PILLAR_LABEL_MAX ? `${full.slice(0, PILLAR_LABEL_MAX).trimEnd()}…` : full;
+  return html`<span
+    class="topics-card__pillar"
+    tabindex="0"
+    role="img"
+    aria-label="Linked with the ${full} content pillar. The pillar's context will be included if you use this topic in chat."
+  >
+    <i class="ap-icon-stack" aria-hidden="true"></i>
+    <span class="topics-card__pillar-name">${short}</span>
     <span class="ap-tooltip bottom-left topics-card__pillar-tip" aria-hidden="true">
-      Linked with <strong>${pillar.name}</strong> content pillar. The pillar's context will be included if you use this
-      topic in chat.
+      Linked with <strong>${full}</strong> content pillar. The pillar's context will be included if you use this topic
+      in chat.
     </span>
   </span>`;
 }

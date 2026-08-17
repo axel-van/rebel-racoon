@@ -20,19 +20,19 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=441";
+import { renderTopbar } from "../components/topbar.js?v=442";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { getContexts, getContextById } from "../contexts-store.js?v=76";
-import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=46";
-import { getActivePlaybookId } from "../active-playbook.js?v=29";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=127";
+import { getContexts, getContextById } from "../contexts-store.js?v=77";
+import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=47";
+import { getActivePlaybookId } from "../active-playbook.js?v=31";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=128";
 import {
   RESEARCH_SOURCES,
   CADENCES,
   DEFAULT_ENABLED_IDS,
   DEFAULT_CADENCE,
   isLiveSource,
-} from "../research-catalog.js?v=20";
+} from "../research-catalog.js?v=21";
 
 // The in-flight draft. Ephemeral by definition — it only becomes a lane on save,
 // so it lives here rather than in the store. Cancel just drops it.
@@ -144,12 +144,6 @@ function paint(target) {
 
 // ─── Render ────────────────────────────────────────────────────────────────
 
-/** The Playbook this feed belongs to, for the lead. */
-function playbookName() {
-  const pb = getContextById(draft.playbookId);
-  return pb ? pb.name : "";
-}
-
 /**
  * A feed is complete once it has a Playbook — which it always does now, because
  * nothing on this page can change it and every entry point supplies one.
@@ -186,17 +180,11 @@ function renderPage() {
                chosen the first time as well as every time after. The MODE still
                differs underneath (create writes a lane, settings updates one);
                only the words stopped announcing which one you are in. -->
-          <!-- The Playbook is NAMED here, not chosen. The section above this used
-               to hold a feed name and a "Linked Playbook" select; both are gone —
-               see the note on renderResearchForm. What that select genuinely
-               carried, and what the lead now carries instead, is WHICH brand this
-               page configures: a global scope hides, so every surface it filters
-               has to stay legible. -->
+          <!-- Title only. The lead under it read "What I watch for Agorapulse, and
+               how often I check it" — a sentence in Archie's voice restating what
+               the sources below already show, one scroll above them. The brand is
+               named by the rail's switcher, which is on screen the whole time. -->
           <h1 class="ap-h1 research-form__title">Feed settings</h1>
-          <p class="ap-body research-form__lead">
-            What I watch for ${raw(playbookName() ? html`<strong>${playbookName()}</strong>` : "this Playbook")}, and
-            how often I check it.
-          </p>
         </header>
         ${raw(renderSources())} ${raw(renderOther())}
       </div>
@@ -232,7 +220,7 @@ function renderSources() {
             <div class="ap-infobox-content">
               <div class="ap-infobox-texts">
                 <span class="ap-infobox-message">
-                  Switch on at least one source. With none, I have nothing to listen to and this feed stays empty.
+                  Switch on at least one source. With none there is nothing to listen to, and this feed stays empty.
                 </span>
               </div>
             </div>
@@ -264,7 +252,10 @@ function renderSourceCard(source) {
           data-form-playbook-list="${escapeAttr(anchor)}"
           data-form-playbook-id="${escapeAttr(pb.id)}"
         >
-          <span>Review my ${anchor} in the Playbook</span>
+          <!-- "the Playbook's competitors", not "my competitors": the list belongs
+               to the Playbook, and this page speaks about what the system does
+               rather than in Archie's voice. -->
+          <span>Review the Playbook's ${anchor}</span>
           <i class="ap-icon-arrow-right" aria-hidden="true"></i>
         </button>`
       : "";
@@ -318,7 +309,7 @@ function renderSourceCard(source) {
         ${raw(
           !draft.websites.length
             ? html`<p class="research-source__site-empty">
-                ${pb ? "No website yet — add the one I should scan." : "Pick a Playbook, or add a website yourself."}
+                ${pb ? "No website yet — add the one to scan." : "Pick a Playbook, or add a website yourself."}
               </p>`
             : "",
         )}
@@ -375,8 +366,8 @@ function renderOther() {
     <div class="research-form__card">
       <h4 class="research-form__setting-title">Refresh frequency</h4>
       <p class="research-form__setting-desc">
-        How often I scan your sources for new Topics. More frequent scans keep you close to live trends; less frequent
-        ones return a more aggregated, high-level overview.
+        How often your sources are scanned for new Topics. More frequent scans keep you close to live trends; less
+        frequent ones return a more aggregated, high-level overview.
       </p>
       <!-- The DS Segmented Control, ported into ds-patches.css from the Angular
            component's own template and SCSS. This used to be a look-alike composed
@@ -409,7 +400,7 @@ function renderOther() {
       renderSwitchCard(
         "notify",
         "Notify me about new Topics",
-        "Get notified after a new scan with new Topics.",
+        "Send a notification after a scan that found something.",
         draft.notify,
       ),
     )}
@@ -417,7 +408,7 @@ function renderOther() {
       renderSwitchCard(
         "showTrending",
         "Show Topics that need attention",
-        "Tell me in the feed when a Topic is trending or its story has moved, and give them their own page.",
+        "Flag a Topic in the feed when it is trending or its story has moved, and give those their own page.",
         draft.showTrending,
       ),
     )}
@@ -434,7 +425,7 @@ function renderOther() {
       renderSwitchCard(
         "paused",
         "Pause this feed",
-        "Stop scanning for now. Topics already in the feed stay where they are, and nothing new arrives until you switch this back off.",
+        "Scanning stops. Topics already in the feed stay where they are, and nothing new arrives until this is switched back off.",
         draft.paused,
       ),
     )}

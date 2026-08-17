@@ -30,7 +30,7 @@ export const TOPIC_SOURCES = Object.freeze([
     icon: "ap-icon-megaphone",
     accent: "purple",
     description:
-      "I track your competitors' best-performing posts — the formats, the messaging, the tone — so you know what's worth borrowing and where your own strengths let you differentiate.",
+      "Your competitors' best-performing posts are tracked — the formats, the messaging, the tone — so you know what's worth borrowing and where your own strengths let you differentiate.",
     playbookAnchor: "competitors",
     defaultEnabled: true,
   },
@@ -40,7 +40,7 @@ export const TOPIC_SOURCES = Object.freeze([
     icon: "ap-icon-star",
     accent: "red",
     description:
-      "I follow the creators your audience already listens to: their best content, the formats they use, who they partner with. You get collaboration angles and creative that already lands.",
+      "The creators your audience already listens to are followed: their best content, the formats they use, who they partner with. You get collaboration angles and creative that already lands.",
     // null, not "competitors": a Playbook holds no list of creators, so nothing
     // in it feeds this. Agorapulse listening finds them from the audience.
     // Pointing at Competitors was a stretch that made the UI claim this source
@@ -54,7 +54,7 @@ export const TOPIC_SOURCES = Object.freeze([
     icon: "ap-icon-double-chat-bubbles",
     accent: "menthol",
     description:
-      "I read what people say to and about you — comments, DMs, reviews — and pull out the pain points and requests that keep coming back. I only raise a theme once ten or more people have voiced it, and I tie it to a real complaint.",
+      "What people say to and about you — comments, DMs, reviews — is read for the pain points and requests that keep coming back. A theme is only raised once ten or more people have voiced it, and it is tied to a real complaint.",
     playbookAnchor: null,
     defaultEnabled: false,
   },
@@ -64,7 +64,7 @@ export const TOPIC_SOURCES = Object.freeze([
     icon: "ap-icon-feature-listening",
     accent: "electric-blue",
     description:
-      "I watch the complaints and gaps in your competitors' products, and flag the openings where your strengths answer a need they're leaving unmet.",
+      "The complaints and gaps in your competitors' products are watched, and the openings are flagged where your strengths answer a need they're leaving unmet.",
     playbookAnchor: "competitors",
     defaultEnabled: false,
   },
@@ -74,7 +74,7 @@ export const TOPIC_SOURCES = Object.freeze([
     icon: "ap-icon-bar-graph",
     accent: "green",
     description:
-      "I follow the conversations gaining momentum in your industry, and surface the ones that have actually grown over the last 30 days.",
+      "Conversations gaining momentum in your industry are followed, surfacing the ones that have actually grown over the last 30 days.",
     playbookAnchor: null,
     defaultEnabled: false,
   },
@@ -84,7 +84,7 @@ export const TOPIC_SOURCES = Object.freeze([
     icon: "ap-icon-web-news",
     accent: "orange",
     description:
-      "I scan the cultural, seasonal and news moments that touch your brand, and suggest the timely angles with wide reach and low risk.",
+      "Cultural, seasonal and news moments that touch your brand are scanned for the timely angles with wide reach and low risk.",
     playbookAnchor: null,
     defaultEnabled: false,
   },

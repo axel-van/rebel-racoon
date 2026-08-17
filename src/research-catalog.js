@@ -43,8 +43,15 @@
 // read-only textarea; that read as a broken input, so it is now text. Do not
 // reintroduce a disabled input here.
 //
-// Descriptions and howItWorks are written in Archie's first person ("I track…"),
-// like every other piece of assistant copy in the app.
+// Descriptions and howItWorks are written in a NEUTRAL, passive register — "every
+// post is read", not "I read every post".
+//
+// Archie speaks in the first person everywhere it is TALKING to you: the thread,
+// the toasts, the empty states. This is settings copy, and settings copy explains
+// what the system does when nobody is watching. In the first person the same
+// sentences read as promises made in conversation ("I only raise a theme once ten
+// people have voiced it"), which is the wrong register for a switch you set once
+// and leave running for months.
 
 export const RESEARCH_SOURCES = Object.freeze([
   {
@@ -56,8 +63,8 @@ export const RESEARCH_SOURCES = Object.freeze([
     playbookAnchor: "competitors",
     defaultEnabled: true,
     howItWorks:
-      "I read every post your listed competitors publish, rank them by how far " +
-      "they beat that account's own median engagement, and keep the ones that " +
+      "Every post your listed competitors publish is read and ranked by how far " +
+      "it beat that account's own median engagement, keeping the ones that " +
       "actually outperformed. You get the format, the hook and the angle — plus " +
       "where your own strengths let you answer it differently.",
   },
@@ -73,10 +80,10 @@ export const RESEARCH_SOURCES = Object.freeze([
     playbookAnchor: "influencers",
     defaultEnabled: true,
     howItWorks:
-      "I follow the creators your audience already listens to and watch what " +
-      "lands for them: the formats, the partnerships, the recurring themes. You " +
-      "get collaboration angles and creative that has already proved itself with " +
-      "the people you're trying to reach.",
+      "The creators your audience already listens to are followed, and what lands " +
+      "for them is tracked: the formats, the partnerships, the recurring themes. " +
+      "You get collaboration angles and creative that has already proved itself " +
+      "with the people you're trying to reach.",
   },
   {
     id: "brand-website",
@@ -102,9 +109,9 @@ export const RESEARCH_SOURCES = Object.freeze([
     // the model, but it tells the reader to do something the Playbook UI has no
     // field for. The site row above already states the provenance.
     howItWorks:
-      "I scan your website regularly for content worth leveraging — new blog " +
-      "posts, product launches, customer success stories — and turn what I find " +
-      "into topics you can post.",
+      "Your website is scanned regularly for content worth leveraging — new blog " +
+      "posts, product launches, customer success stories — and what turns up " +
+      "becomes topics you can post.",
   },
   {
     id: "brand-feedback",
@@ -115,10 +122,10 @@ export const RESEARCH_SOURCES = Object.freeze([
     playbookAnchor: null,
     defaultEnabled: false,
     howItWorks:
-      "I read what people say to and about you — comments, DMs, reviews — and " +
-      "pull out the pain points and requests that keep coming back. I only raise " +
-      "a theme once ten or more people have voiced it, and I tie it to a real " +
-      "complaint so you can answer something specific.",
+      "What people say to and about you — comments, DMs, reviews — is read for " +
+      "the pain points and requests that keep coming back. A theme is only raised " +
+      "once ten or more people have voiced it, and it is tied to a real complaint " +
+      "so you can answer something specific.",
   },
   {
     id: "competitor-monitoring",
@@ -129,9 +136,9 @@ export const RESEARCH_SOURCES = Object.freeze([
     playbookAnchor: "competitors",
     defaultEnabled: false,
     howItWorks:
-      "I watch the complaints and unmet asks piling up under your competitors' " +
-      "posts, and flag the openings where a strength of yours answers a need " +
-      "they're leaving on the table.",
+      "The complaints and unmet asks piling up under your competitors' posts are " +
+      "watched, and the openings are flagged where a strength of yours answers a " +
+      "need they're leaving on the table.",
   },
   {
     id: "industry-trends",
@@ -142,7 +149,7 @@ export const RESEARCH_SOURCES = Object.freeze([
     playbookAnchor: null,
     defaultEnabled: false,
     howItWorks:
-      "I follow the conversations gaining momentum in your industry and surface " +
+      "Conversations gaining momentum in your industry are followed, surfacing " +
       "the ones that genuinely grew over the last 30 days — not the ones that " +
       "were always loud.",
   },
@@ -155,8 +162,8 @@ export const RESEARCH_SOURCES = Object.freeze([
     playbookAnchor: null,
     defaultEnabled: false,
     howItWorks:
-      "I scan the cultural, seasonal and news moments that touch your brand, and " +
-      "suggest the timely angles with wide reach and low risk of landing badly.",
+      "Cultural, seasonal and news moments that touch your brand are scanned for " +
+      "the timely angles with wide reach and low risk of landing badly.",
   },
   {
     id: "internal-ideas",
@@ -174,9 +181,9 @@ export const RESEARCH_SOURCES = Object.freeze([
       { id: "gdrive", name: "Google Drive" },
     ]),
     howItWorks:
-      "I read the docs and threads your team already writes — roadmaps, support " +
-      "notes, launch briefs — and pull out the things worth saying publicly that " +
-      "nobody got round to posting.",
+      "The docs and threads your team already writes — roadmaps, support notes, " +
+      "launch briefs — are read for the things worth saying publicly that nobody " +
+      "got round to posting.",
   },
 ]);
 

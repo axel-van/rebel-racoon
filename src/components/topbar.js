@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=575";
+} from "./right-panel.js?v=576";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=90";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=98";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=92";
@@ -23,16 +23,16 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=368";
+} from "./conversation-status-card.js?v=369";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=40";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=76";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=77";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=118";
+} from "../top-posts-flow.js?v=119";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -544,10 +544,11 @@ function backTargetFor(path) {
   // in. The page already names itself in its own header, so the topbar was
   // spending its one slot repeating that instead of offering the way out.
   //
-  // "/" is the chat: dashboard.js redirects it to the most recent session, or to
-  // a fresh one when there is none. Naming the destination "chat" rather than
-  // "Home" says what the reader will actually see.
-  if (path === "/contexts") return { to: "/", label: "Back to chat" };
+  // "/session/new" — a FRESH chat, not the most recent one. "/" would have
+  // dropped the reader back into whatever conversation they last had open, which
+  // is not where someone who just went to manage their Playbooks was heading. The
+  // label says which of the two it is.
+  if (path === "/contexts") return { to: "/session/new", label: "Back to new chat" };
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
   if (/^\/pillar\//.test(path)) return { to: "/content-strategy", label: "Back to Content strategy" };
   // A lane's own sub-pages — its SETTINGS and its ATTENTION page — go back to that

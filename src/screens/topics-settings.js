@@ -29,7 +29,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=441";
+import { renderTopbar } from "../components/topbar.js?v=442";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import {
@@ -38,7 +38,7 @@ import {
   getDefaultContext,
   updateContext,
   subscribe as subscribeContexts,
-} from "../contexts-store.js?v=76";
+} from "../contexts-store.js?v=77";
 import {
   TOPIC_SOURCES,
   CADENCES,
@@ -46,7 +46,7 @@ import {
   DEFAULT_CADENCE,
   findTopicSource,
   findCadence,
-} from "../topics-catalog.js?v=3";
+} from "../topics-catalog.js?v=4";
 
 // Above this many Playbooks the picker earns a search field. Below it, a search box
 // over four rows is just noise.
@@ -133,7 +133,7 @@ function renderPage() {
         renderEmptyState({
           icon: "ap-icon-target",
           title: "No Playbooks yet",
-          body: "I listen on behalf of a Playbook. Create one and I'll show you what I can watch for it.",
+          body: "Listening happens on behalf of a Playbook. Create one to choose what gets watched for it.",
           actionHtml: `<button type="button" class="ap-button primary blue" data-topics-playbooks><i class="ap-icon-target"></i><span>Go to Playbooks</span></button>`,
           wrapperClass: "topics-settings__empty",
         }),
@@ -150,16 +150,14 @@ function renderPage() {
   const differing = playbooks.filter((c) => c.id !== ctx.id && watchKey(c) !== mine).length;
 
   const count =
-    onCount === 0
-      ? "Nothing on yet — turn one on and I'll start watching."
-      : `${onCount} of ${TOPIC_SOURCES.length} on`;
+    onCount === 0 ? "Nothing on yet — turn one on to start watching." : `${onCount} of ${TOPIC_SOURCES.length} on`;
 
   return html`
     <div class="topics-settings__content">
       <header class="topics-settings__head">
         <h1 class="ap-h1 topics-settings__title">Topics settings</h1>
         <p class="ap-body topics-settings__lead">
-          The sources I listen to on your behalf, and how often I check them. Everything I find lands in your Topics
+          The sources listened to on your behalf, and how often they are checked. Everything found lands in your Topics
           feed.
         </p>
 
@@ -179,7 +177,7 @@ function renderPage() {
             ${raw(renderPlaybookSelect(playbooks, ctx))}
           </div>
           <div class="ap-form-field topics-settings__field">
-            <label>How often I check</label>
+            <label>How often sources are checked</label>
             ${raw(renderCadenceSelect(ctx, findCadence(conf.cadence)))}
           </div>
         </div>

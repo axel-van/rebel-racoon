@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=20";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=21";
 import {
   ageMinutes,
   getBriefById,
@@ -31,13 +31,13 @@ import {
   ignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=59";
+} from "../briefs-store.js?v=60";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=58";
-import { getLanes } from "../research-store.js?v=46";
+import { renderUseButtons } from "./brief-card.js?v=59";
+import { getLanes } from "../research-store.js?v=47";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=29";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=31";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -53,12 +53,12 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=76";
+} from "../contexts-store.js?v=77";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=32";
-import { renderBriefCard } from "./brief-card.js?v=58";
+import { openBriefInChat } from "../brief-flow.js?v=33";
+import { renderBriefCard } from "./brief-card.js?v=59";
 import { renderSocialPostCard } from "./social-post-card.js?v=32";
 import { showToast } from "./toast.js?v=21";
 

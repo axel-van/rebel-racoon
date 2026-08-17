@@ -30,12 +30,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=441";
+import { renderTopbar } from "../components/topbar.js?v=442";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { getContextById } from "../contexts-store.js?v=76";
-import { getBriefById } from "../briefs-store.js?v=59";
+import { getContextById } from "../contexts-store.js?v=77";
+import { getBriefById } from "../briefs-store.js?v=60";
 import {
   getPillarById,
   removeSource,

@@ -19,7 +19,7 @@
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
 import { getPillarsForPlaybook, linkBrief } from "../pillars-store.js?v=7";
-import { getActivePlaybookId, getActivePlaybook } from "../active-playbook.js?v=29";
+import { getActivePlaybookId, getActivePlaybook } from "../active-playbook.js?v=31";
 import { navigate } from "../router.js?v=30";
 import { showToast } from "./toast.js?v=21";
 
@@ -85,7 +85,15 @@ function injectOnce() {
       const { briefId, onPicked } = state;
       close();
       const pillar = linkBrief(briefId, pillarId);
-      if (pillar) showToast(`Linked to “${pillar.name}”`);
+      // The toast carries the way THERE. Filing a topic is the moment you most
+      // want to see what it landed in — the pillar's page shows the context it
+      // just joined — and without this the only route is the section, then the
+      // card, then the page.
+      if (pillar) {
+        showToast(`Linked to “${pillar.name}”`, {
+          action: { label: "See Content pillar", onClick: () => navigate(`/pillar/${encodeURIComponent(pillar.id)}`) },
+        });
+      }
       if (typeof onPicked === "function") onPicked(pillar);
       return;
     }

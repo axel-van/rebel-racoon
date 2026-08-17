@@ -22,7 +22,7 @@ import { requestOpen, notifyClose, bindOverlayDismissal } from "../../modal-coor
 import { showToast } from "../toast.js?v=21";
 import { getPosts, attachImageToDraft, attachCarouselToDraft } from "../../posts-store.js?v=69";
 import { getSessionById } from "../../sessions-store.js?v=40";
-import { getContextById } from "../../contexts-store.js?v=76";
+import { getContextById } from "../../contexts-store.js?v=77";
 import { MODAL_ID, KEY, ctx, state } from "./context.js?v=69";
 import { compositeOverlays, loadImg, shadowMetrics, outlineMetrics } from "./canvas.js?v=2";
 import { renderStudio } from "./shell-view.js?v=100";

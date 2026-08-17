@@ -481,13 +481,6 @@
   margin: 0;
 }
 
-.research-form__lead {
-  margin: var(--ref-spacing-xxxs) 0 0;
-  /* A reading measure, independent of the form column. */
-  max-width: 72ch;
-  color: var(--sys-text-color-light);
-}
-
 /* The body scrolls, the footer doesn't — min-height:0 is what actually lets a
    flex child scroll instead of growing the page. */
 .research-form__body {

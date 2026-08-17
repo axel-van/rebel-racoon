@@ -183,8 +183,37 @@
   color: var(--ref-color-electric-blue-100);
 }
 
+.topics-card__pillar {
+  gap: var(--ref-spacing-xxxs);
+  cursor: default;
+}
+
 .topics-card__pillar > i {
-  font-size: 15px;
+  font-size: var(--sys-icon-css-sm);
+}
+
+/* The pillar's name, beside the mark. Same register as the source and the age it
+   sits between — this is one meta run, not a label competing with them. The JS
+   clamps the string at 15 characters; this keeps a long one from stretching the
+   row if that ever changes. */
+.topics-card__pillar-name {
+  max-width: 16ch;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+}
+
+/* The whole element opens the tooltip, not just the icon: with a label beside it,
+   hovering the words and getting nothing is the likelier miss. tabindex on the
+   span makes the same text reachable from the keyboard. */
+.topics-card__pillar:focus-visible {
+  outline: none;
+}
+
+.topics-card__pillar:focus-visible > .topics-card__pillar-tip {
+  display: block;
 }
 
 .topics-card__pillar-tip {

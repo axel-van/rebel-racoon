@@ -21,7 +21,7 @@ import { onFeedbackClick } from "./feedback-control.js?v=4";
 // Shared compact idea card — same component the standalone Ideas page uses.
 import { renderCompactIdeaCard } from "./idea-card-compact.js?v=2";
 import { open as openVideoClipsModal } from "./video-clips-modal.js?v=92";
-import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=408";
+import { isSidebarCollapsed, setSidebarCollapsed, isAutoCollapsed } from "./sidebar.js?v=409";
 import {
   getSources as getStreamSources,
   subscribeSources,
@@ -43,8 +43,8 @@ import { iconFor } from "../file-kinds.js?v=20";
 // = first-run welcome). Returning user gets the full seed.
 const IDEAS = isNewUser() ? [] : MOCK_IDEAS;
 import { open as openScheduleModal } from "./schedule-modal.js?v=94";
-import { open as openImageStudioModal } from "./image-studio/index.js?v=109";
-import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=87";
+import { open as openImageStudioModal } from "./image-studio/index.js?v=110";
+import { open as openImageStudioV2Modal } from "./image-studio-v2/index.js?v=88";
 import { open as openConfirmModal } from "./confirm-modal.js?v=22";
 
 // Global Right Panel — slides in from the right edge of the viewport, overlays
@@ -736,7 +736,7 @@ export function init() {
       openVideoClipsModal(src, {
         onSaveClips: (id, nextClips) => updateSourceClips(id, nextClips),
         onUseClips: (selectedClips, source) => {
-          import("../screens/session.js?v=673").then(({ startClipDraftFlow }) => {
+          import("../screens/session.js?v=674").then(({ startClipDraftFlow }) => {
             startClipDraftFlow(
               sid,
               selectedClips.map((clip) => ({ clip, sourceName: source.filename, sourceId: source.id })),
@@ -919,7 +919,7 @@ export function init() {
       const sid = activeSessionId();
       if (!sid || !entry) return;
       const { clip, sourceName, sourceId } = entry;
-      import("../screens/session.js?v=673").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=674").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, [{ clip, sourceName, sourceId }]);
       });
       return;
@@ -937,7 +937,7 @@ export function init() {
       if (picked.length === 0) return;
       clipSelection = new Set();
       renderPanel();
-      import("../screens/session.js?v=673").then(({ startClipDraftFlow }) => {
+      import("../screens/session.js?v=674").then(({ startClipDraftFlow }) => {
         startClipDraftFlow(sid, picked);
       });
       return;
@@ -2812,7 +2812,7 @@ function useIdea(ideaId) {
   if (!idea) return;
   const sid = activeSessionId();
   if (!sid) return;
-  import("../screens/session.js?v=673").then(({ askAngleQuestion }) => {
+  import("../screens/session.js?v=674").then(({ askAngleQuestion }) => {
     askAngleQuestion(sid, ideaId);
   });
 }
