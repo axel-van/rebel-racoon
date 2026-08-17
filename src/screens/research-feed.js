@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=442";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=444";
 import { isFlagOn } from "../feature-flags.js?v=22";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=59";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=61";
 import {
   openIgnoreReason,
   openVersionHistory,
@@ -48,12 +48,12 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=128";
+} from "../components/research-modals.js?v=130";
 import { openBriefInChat } from "../brief-flow.js?v=33";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=7";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=31";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=21";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=9";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=33";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=23";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=47";
 import {
   getBriefById,

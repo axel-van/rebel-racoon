@@ -20,12 +20,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=442";
+import { renderTopbar } from "../components/topbar.js?v=444";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { getContexts, getContextById } from "../contexts-store.js?v=77";
 import { getLaneById, getLanes, addLane, updateLane } from "../research-store.js?v=47";
-import { getActivePlaybookId } from "../active-playbook.js?v=31";
-import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=128";
+import { getActivePlaybookId } from "../active-playbook.js?v=33";
+import { openNeedSource, openPlaybookList } from "../components/research-modals.js?v=130";
 import {
   RESEARCH_SOURCES,
   CADENCES,

@@ -333,6 +333,51 @@
    title above it. The ramp read 24 → 12 → 14: the heading was the smallest and
    quietest thing in its own section, and an uppercase caption is an eyebrow ABOVE
    a title, not the title itself. */
+/* Title on the left, its pencil on the right — the edit control belongs to the
+   section it edits, so it sits on that section's own line rather than in the page
+   header. */
+.pillar-sec__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+
+.pillar-sec__edit {
+  flex: 0 0 auto;
+}
+
+/* Cancel + Save for the CONTEXT, inside the context's own section — the name has
+   its own pair in the page header. Right-aligned, the same way every other
+   in-place edit in this app ends. */
+.pillar-sec__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-xxs);
+  margin-top: var(--ref-spacing-xxs);
+}
+
+/* The title and its rename pencil. The pencil only appears on hover or focus:
+   the page title is read far more often than it is renamed, and a permanent
+   control beside an h2 competes with it. */
+.pillar-view__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.pillar-view__rename {
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) var(--app-ease-out);
+}
+
+.pillar-view__title-row:hover > .pillar-view__rename,
+.pillar-view__rename:focus-visible {
+  opacity: 1;
+}
+
 .pillar-sec__title {
   display: flex;
   align-items: center;
@@ -556,6 +601,51 @@
 
 .pillar-row__kind--note {
   color: var(--sys-text-color-light);
+}
+
+/* A rewrite is the user's own act, like a note — same quiet register, so the
+   trail's colour still separates "Archie found this" from "you did this". */
+.pillar-row__kind--edit {
+  color: var(--sys-text-color-light);
+}
+
+/* Before and after, side by side while there is room and stacked when there is
+   not. Each half is clamped: the point of the row is that the change happened
+   and roughly what it was, and the full text of both versions would make one
+   entry taller than the rest of the trail put together. */
+.pillar-edit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ref-spacing-sm);
+}
+
+.pillar-edit__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  min-width: 0;
+}
+
+.pillar-edit__label {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: var(--app-label-tracking);
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
+}
+
+.pillar-edit__text {
+  margin: 0;
+  padding-left: var(--ref-spacing-xs);
+  border-left: 2px solid var(--sys-border-color-default);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.5;
+  color: var(--sys-text-color-light);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .pillar-row__title {

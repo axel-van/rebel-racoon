@@ -23,13 +23,13 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=442";
+import { renderTopbar } from "../components/topbar.js?v=444";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=77";
-import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=31";
+import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=33";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=29";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=31";
 import {
   getPillars,
   getPillarById,
@@ -37,7 +37,7 @@ import {
   updatePillar,
   unseenCountFor,
   subscribe as subscribePillars,
-} from "../pillars-store.js?v=7";
+} from "../pillars-store.js?v=9";
 
 // No view state left. The Playbook facet is gone — the rail's scope switcher IS
 // the filter now, and a second one on this page would be a way for the two to

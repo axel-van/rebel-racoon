@@ -30,7 +30,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=442";
+import { renderTopbar } from "../components/topbar.js?v=444";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -48,11 +48,13 @@ import {
   updatePillar,
   isRecent,
   subscribe as subscribePillars,
-} from "../pillars-store.js?v=7";
+  recordContextEdit,
+} from "../pillars-store.js?v=9";
 
 const PAGE = 8;
 
-let view = { id: null, tab: "context", visible: PAGE, editing: false };
+// editing: null | "name" | "context" — two independent in-place edits.
+let view = { id: null, tab: "context", visible: PAGE, editing: null };
 let unsubscribe = null;
 let boundTarget = null;
 let boundClick = null;
@@ -85,7 +87,7 @@ export function renderPillar(params, target) {
     // Edit mode never survives a tab switch or a remount: leaving the block you
     // were editing and coming back to a live textarea is how unsaved text goes
     // missing without anyone noticing.
-    editing: false,
+    editing: null,
   };
   if (!samePillar) arrivedOnEntry = unseenCountFor(params.id);
   renderTopbar();
@@ -130,15 +132,26 @@ function renderPage(p) {
   return `
     <header class="pillar-view__head">
       <div class="pillar-view__heading">
+        <!-- TWO independent edits on this page, each with its own pencil: the
+             NAME here, the condensed context on its own section. One control for
+             both used to swap the whole page into an edit state, so renaming a
+             pillar put you in front of a textarea you had not asked to touch —
+             and saving wrote both fields whether or not you meant to. -->
         ${
-          view.editing
+          view.editing === "name"
             ? `<div class="ap-form-field pillar-view__name-field">
                  <label for="pillarName">Name</label>
                  <div class="ap-input-group">
                    <input type="text" id="pillarName" data-pillar-name value="${escapeAttr(p.name)}" />
                  </div>
                </div>`
-            : `<h1 class="ap-h2 pillar-view__title">${escapeAttr(p.name)}</h1>`
+            : `<div class="pillar-view__title-row">
+                 <h1 class="ap-h2 pillar-view__title">${escapeAttr(p.name)}</h1>
+                 <button type="button" class="ap-icon-button ghost grey pillar-view__rename" data-pillar-edit="name"
+                   title="Rename this pillar" aria-label="Rename this pillar">
+                   <i class="ap-icon-pen"></i>
+                 </button>
+               </div>`
         }
         <p class="pillar-view__sub">
           ${ctx ? `${escapeAttr(ctx.name)} · ` : ""}context rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}
@@ -146,18 +159,17 @@ function renderPage(p) {
       </div>
       <div class="pillar-view__actions">
         ${
-          view.editing
+          view.editing === "name"
             ? // Cancel + Save changes, the same pair and the same weights the
-              // Playbook page uses for an in-place edit.
+              // Playbook page uses for an in-place edit. They sit HERE because the
+              // name is what is being edited here; the context's pair sits in the
+              // context's own section.
               `<button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
                <button type="button" class="ap-button primary orange" data-pillar-save>
-                 <i class="ap-icon-check"></i><span>Save changes</span>
+                 <i class="ap-icon-check"></i><span>Save name</span>
                </button>`
             : `<button type="button" class="ap-button stroked grey" data-pillar-share>
                  <i class="ap-icon-share"></i><span>Share</span>
-               </button>
-               <button type="button" class="ap-button stroked grey" data-pillar-edit>
-                 <i class="ap-icon-pen"></i><span>Edit</span>
                </button>`
         }
       </div>
@@ -191,22 +203,49 @@ function renderTabs(p) {
 // a dialog that can only show a name and a sentence. Same reasoning and the same
 // controls as the Playbook page's in-place panels.
 function renderContextTab(p) {
-  const body = view.editing
+  const editing = view.editing === "context";
+  const body = editing
     ? `<div class="ap-textarea-field resizable pillar-sec__editor">
          <textarea data-pillar-context rows="5">${escapeAttr(p.context || p.about || "")}</textarea>
        </div>`
     : `<p class="pillar-sec__prose">${escapeAttr(p.context || p.about || "")}</p>`;
   return `
-    <section class="pillar-sec ${view.editing ? "is-editing" : ""}">
-      <h2 class="pillar-sec__title">The context I carry</h2>
+    <section class="pillar-sec ${editing ? "is-editing" : ""}">
+      <div class="pillar-sec__head">
+        <h2 class="pillar-sec__title">Pillar Aggregated Context</h2>
+        <!-- The pencil belongs to THIS section, because this section is the only
+             thing it edits. An icon button rather than a labelled one: the
+             heading beside it already names what is being edited, so the word
+             "Edit" would have been the second half of a sentence the title has
+             just finished. Hidden while editing — Cancel and Save are in the
+             header and there is nothing left for it to start. -->
+        ${
+          editing
+            ? ""
+            : `<button type="button" class="ap-icon-button ghost grey pillar-sec__edit" data-pillar-edit="context"
+                 title="Edit the context" aria-label="Edit the context">
+                 <i class="ap-icon-pen"></i>
+               </button>`
+        }
+      </div>
       ${body}
       <p class="pillar-sec__note">
         ${
-          view.editing
-            ? "Your words win. I rewrite this when a source is added or removed — editing it now replaces what I wrote."
+          editing
+            ? "Your words win. The context is rewritten whenever a source is added or removed — editing it now replaces what was there, and the change is kept in the history."
             : `Condensed from every topic, chat and note in this pillar. Last rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.`
         }
       </p>
+      ${
+        editing
+          ? `<div class="pillar-sec__actions">
+               <button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
+               <button type="button" class="ap-button primary orange" data-pillar-save>
+                 <i class="ap-icon-check"></i><span>Save context</span>
+               </button>
+             </div>`
+          : ""
+      }
     </section>
     ${renderAssets(p)}`;
 }
@@ -256,7 +295,7 @@ function renderSourcesTab(p) {
   const more = p.sources.length - shown.length;
   return `
     <div class="pillar-trail__head">
-      <span class="pillar-trail__sort">Newest first</span>
+      <span class="pillar-trail__sort">History</span>
       <p class="pillar-sec__note">Removing a source re-condenses the context without it.</p>
     </div>
     <div class="pillar-trail" data-pillar-trail>
@@ -274,7 +313,7 @@ function renderTrailEmpty() {
     </p>`;
 }
 
-const KIND_LABEL = { topic: "Topic", chat: "Chat", note: "Note" };
+const KIND_LABEL = { topic: "Topic", chat: "Chat", note: "Note", edit: "Edit" };
 
 // The title is a LINK BACK to wherever the source came from — a topic opens its
 // feed with that topic already selected, a chat opens the chat. Without it the
@@ -287,7 +326,28 @@ const KIND_LABEL = { topic: "Topic", chat: "Chat", note: "Note" };
 // A <button>, not a link, and NOT wrapping the whole row: the row also carries
 // Remove, and a button inside a button is the invalid nesting the topic card's
 // body/footer split exists to avoid.
+// A context rewrite, in the trail. It carries no quote and no destination: the
+// change IS the content, so the row shows what the text said before and what it
+// says now, labelled, rather than an excerpt of something else.
+function renderEditRow(s) {
+  const pair = (label, text) => `
+    <div class="pillar-edit__side">
+      <span class="pillar-edit__label">${label}</span>
+      <blockquote class="pillar-edit__text">${escapeAttr(text || "—")}</blockquote>
+    </div>`;
+  return `
+    <article class="pillar-row pillar-row--edit ${isRecent(s) ? "pillar-row--recent" : ""}" data-source-row="${escapeAttr(s.id)}">
+      <div class="pillar-row__top">
+        <span class="pillar-row__kind pillar-row__kind--edit">${KIND_LABEL.edit}</span>
+        <span class="pillar-row__title">${escapeAttr(s.title || "You rewrote the context")}</span>
+        <span class="pillar-row__when">${escapeAttr(s.addedAgo)}</span>
+      </div>
+      <div class="pillar-edit">${pair("Before", s.before)}${pair("After", s.after)}</div>
+    </article>`;
+}
+
 function renderSourceRow(s) {
+  if (s.kind === "edit") return renderEditRow(s);
   const note = s.kind === "note";
   const titleText = note ? "Written by you · quoted in full" : s.title;
   const canOpen = (s.kind === "topic" && s.briefId) || (s.kind === "chat" && s.chatId);
@@ -348,7 +408,7 @@ function bind(target) {
   boundClick = (event) => {
     const tab = event.target.closest("[data-pillar-tab]");
     if (tab) {
-      view.editing = false;
+      view.editing = null;
       const next = tab.getAttribute("data-pillar-tab");
       // Query-only navigation, so a link to the trail is shareable and Back
       // works. The default tab writes no param.
@@ -357,31 +417,48 @@ function bind(target) {
       setHashQuery(getPath(), next === "sources" ? { tab: "sources" } : {});
       return;
     }
-    if (event.target.closest("[data-pillar-edit]")) {
-      view.editing = true;
+    const startEdit = event.target.closest("[data-pillar-edit]");
+    if (startEdit) {
+      // "name" or "context" — one page, two independent edits.
+      view.editing = startEdit.getAttribute("data-pillar-edit") || "context";
       paint(target);
-      const nameEl = target.querySelector("[data-pillar-name]");
-      if (nameEl) {
-        nameEl.focus();
-        nameEl.select();
+      const field = target.querySelector(view.editing === "name" ? "[data-pillar-name]" : "[data-pillar-context]");
+      if (field) {
+        field.focus();
+        if (view.editing === "name") field.select();
       }
       return;
     }
     if (event.target.closest("[data-pillar-cancel]")) {
-      view.editing = false;
+      view.editing = null;
       paint(target);
       return;
     }
     if (event.target.closest("[data-pillar-save]")) {
-      const nameEl = target.querySelector("[data-pillar-name]");
+      // Each editor writes ONLY its own field. The single save used to write both
+      // whether or not the other had been opened, so renaming a pillar rewrote
+      // the context with whatever the textarea happened to hold.
+      const mode = view.editing;
+      view.editing = null;
+      if (mode === "name") {
+        const nameEl = target.querySelector("[data-pillar-name]");
+        const name = nameEl ? nameEl.value.trim() : "";
+        // A pillar with no name is not a pillar — keep the old one rather than
+        // writing an empty title nobody can find again.
+        if (name) updatePillar(view.id, { name });
+        else paint(target);
+        showToast(name ? "Pillar renamed" : "Name left as it was");
+        return;
+      }
       const contextEl = target.querySelector("[data-pillar-context]");
-      const name = nameEl ? nameEl.value.trim() : "";
       const context = contextEl ? contextEl.value.trim() : "";
-      view.editing = false;
-      // A pillar with no name is not a pillar — keep the old one rather than
-      // writing an empty title nobody can find again.
-      updatePillar(view.id, { ...(name ? { name } : {}), context });
-      showToast("Pillar saved");
+      // Read the OLD context before the write, or there is nothing left to
+      // record: the trail entry is the only copy of what the condensed text used
+      // to say.
+      const previous = getPillarById(view.id)?.context || "";
+      updatePillar(view.id, { context });
+      const logged = recordContextEdit(view.id, previous, context);
+      showToast(logged ? "Context rewritten — added to the history" : "Context unchanged");
       return;
     }
     if (event.target.closest("[data-pillar-share]")) {

@@ -80,7 +80,13 @@ const UNIT_MINUTES = { mo: 43200, w: 10080, d: 1440, h: 60, m: 1 };
 const AGE_RE = /^\s*(\d+)\s*(mo|[wdhm])\b/i;
 
 export function addedMinutes(label) {
-  const m = AGE_RE.exec(String(label || ""));
+  const text = String(label || "").trim();
+  // "just now" is what anything added during the session carries, and the regex
+  // below cannot match it — so it fell through to MAX_SAFE_INTEGER and sorted as
+  // the OLDEST thing in the trail. The first entry written at runtime (a context
+  // rewrite) landed at the bottom of a list whose whole promise is newest-first.
+  if (/^(just\s+)?now$/i.test(text)) return 0;
+  const m = AGE_RE.exec(text);
   if (!m) return Number.MAX_SAFE_INTEGER;
   return Number(m[1]) * (UNIT_MINUTES[m[2].toLowerCase()] || 1);
 }
@@ -208,6 +214,44 @@ export function updatePillar(id, patch = {}) {
   if (!p) return;
   Object.assign(p, patch);
   notify();
+}
+
+/**
+ * Record a user's rewrite of the context as a trail entry.
+ *
+ * The trail answers "what went into this pillar", and until now it only knew
+ * about things ARCHIE put in — topics, chats, notes. A person rewriting the
+ * condensed context is the largest single change anyone can make to a pillar, and
+ * it left no mark at all: the prose simply read differently the next time you
+ * opened it, with "Last rewritten 2d ago" the only clue that anything had
+ * happened, and no way to see what it used to say.
+ *
+ * Both halves are kept. `before` is the whole point — the condensed text is
+ * generated, so an edit overwrites something nobody else has a copy of.
+ *
+ * Deliberately NOT called from recondense(): that is the machine rewriting its
+ * own summary after a source is added or removed, and logging it would fill the
+ * trail with entries the user did not make. Only an explicit save records one.
+ */
+export function recordContextEdit(id, before, after) {
+  const p = pillars.find((x) => x.id === id);
+  if (!p) return null;
+  const from = String(before || "").trim();
+  const to = String(after || "").trim();
+  // Nothing changed — opening the editor and saving is not an edit.
+  if (from === to) return null;
+  const entry = {
+    id: `ps-edit-${nextId++}`,
+    kind: "edit",
+    title: "You rewrote the context",
+    before: from,
+    after: to,
+    addedAgo: "just now",
+    seen: true,
+  };
+  p.sources.unshift(entry);
+  notify();
+  return { ...entry };
 }
 
 export function deletePillar(id) {
