@@ -1696,17 +1696,12 @@
 }
 
 /* ── The segmented control ────────────────────────────────────────────────
-   The control itself is a PORT of the DS component and lives in ds-patches.css
-   (.ap-segmented-control). Only the count — the one thing the DS option does not
-   carry — is ours, so only the count is here.
-
-   It is part of the label, not a DS Counter: it says how big this VIEW is, where
-   a Counter in this app means "how many of these need you". Regular weight
-   against the segment's bold label, and it inherits `color`, so it turns blue
-   with the rest of the selected segment instead of staying grey against it. */
-.research-segments__count {
-  font-weight: var(--ref-font-weight-regular);
-}
+   The control is a PORT of the DS component and lives in ds-patches.css
+   (.ap-segmented-control). The count beside each label is a DS **Counter**
+   (.ap-counter normal grey|blue), so it needs no rule of its own — the class
+   below is a hook for the markup, not styling. What was here before was a
+   font-weight override on a bare span: a component redrawn by hand, which is
+   exactly the drift the guidelines name. */
 
 /* The paused notice, above the list. Full width of the inner column and a gap
    below it — the DS Infobox brings its own padding, border and colours, so this

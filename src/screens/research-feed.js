@@ -465,9 +465,17 @@ function segmentBriefs(segment) {
 // white segments, grey-20 borders sharing an edge, and a SELECTED state that
 // changes border and text to electric blue rather than filling anything.
 //
-// The count span is the one addition. The DS option carries a label and an
-// optional icon, so the count is ours; it keeps its own class and sits inside
-// the segment's own gap.
+// The count is the one addition, and it is a DS **Counter** rather than a styled
+// span. The segment option carries a label and an optional icon, so the number is
+// ours to place — but not ours to draw: `.ap-counter normal` is the documented
+// way this product puts a number beside a label, and it is what the nav rows use
+// for the size of a set you own. The first version was a bare span with a
+// font-weight override, which is the "recreate a component in raw CSS" drift the
+// guidelines call out.
+//
+// It takes the SEGMENT's state: grey while unselected, blue when selected, using
+// the DS's own two colour pairs so the number belongs to the segment it sits in
+// rather than floating grey against blue text.
 function renderSegments() {
   const counts = {
     ready: segmentBriefs("ready").length,
@@ -483,7 +491,7 @@ function renderSegments() {
       aria-pressed="${on ? "true" : "false"}"
     >
       <span class="ap-segmented-control__label">${label}</span>
-      <span class="research-segments__count">${counts[id]}</span>
+      <span class="ap-counter normal ${on ? "blue" : "grey"} research-segments__count">${counts[id]}</span>
     </button>`;
   };
   return `<div class="ap-segmented-control research-segments" role="group" aria-label="Which topics to show">

@@ -204,7 +204,7 @@ function renderContextTab(p) {
         ${
           view.editing
             ? "Your words win. I rewrite this when a source is added or removed — editing it now replaces what I wrote."
-            : `Condensed from every topic, chat and note in this pillar. Rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.`
+            : `Condensed from every topic, chat and note in this pillar. Last rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.`
         }
       </span>
     </section>
@@ -246,7 +246,7 @@ function renderAssets(p) {
         </div>
       </div>
       <span class="pillar-sec__note">
-        Assets are yours — I never add or remove one. I use them when drafting from this pillar.
+        Assets are only used drafting from this pillar. They are never automatically adjusted.
       </span>
     </section>`;
 }
