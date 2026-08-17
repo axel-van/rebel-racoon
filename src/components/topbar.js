@@ -14,25 +14,25 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=578";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=90";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=98";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=92";
+} from "./right-panel.js?v=579";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=91";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=99";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=93";
 import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=69";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=371";
+} from "./conversation-status-card.js?v=372";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=40";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=77";
-import { isFlagOn } from "../feature-flags.js?v=22";
+import { isFlagOn } from "../feature-flags.js?v=23";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=119";
+} from "../top-posts-flow.js?v=120";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -617,7 +617,7 @@ function currentTitle() {
   // lane. Registering these is also what let the lane list drop its in-page
   // bordered bar — that bar only existed because this map had no entry and the
   // topbar fell through to "Archie".
-  if (path.startsWith("/topic-feeds")) return "Topic feeds";
+  if (path.startsWith("/topic-feeds")) return "Topic Feed";
   // Same rule for Content strategy: the topbar names the SECTION, the pillar's
   // own header names the pillar.
   if (path.startsWith("/settings")) return "Settings";

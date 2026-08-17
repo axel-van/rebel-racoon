@@ -30,7 +30,7 @@
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
-import { getActivePlaybookId } from "../active-playbook.js?v=33";
+import { getActivePlaybookId } from "../active-playbook.js?v=34";
 import { addPillar, assetKindFor } from "../pillars-store.js?v=9";
 import { showToast } from "./toast.js?v=21";
 

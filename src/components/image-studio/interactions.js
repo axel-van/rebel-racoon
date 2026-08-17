@@ -5,9 +5,9 @@
 // drag for smoothness, then notify (re-render) on pointer-up. All DOM queries go
 // through ctx.modal.
 
-import { KEY, ctx, state, clamp } from "./context.js?v=69";
+import { KEY, ctx, state, clamp } from "./context.js?v=70";
 import { cropImage } from "./canvas.js?v=2";
-import * as imageStudio from "../../image-studio.js?v=95";
+import * as imageStudio from "../../image-studio.js?v=96";
 
 // ── File / font pickers ─────────────────────────────────────────────────────
 

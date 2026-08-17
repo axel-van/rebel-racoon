@@ -117,12 +117,12 @@ export const FLAGS = Object.freeze([
   },
   {
     id: "contentResearch",
-    label: "Topic feeds",
+    label: "Topic Feed",
     default: false,
     hides:
-      "When OFF (default), hides everything Topic feeds: the /topic-feeds " +
-      "routes (feed list, form, feed, trending page), its sidebar nav row, and " +
-      "the composer Add → 'Pick from Topic feeds' picker. A stale deep link bounces " +
+      "When OFF (default), hides everything Topic Feed: the /topic-feeds " +
+      "routes (feed, form, trending page), its sidebar nav row, and " +
+      "the composer Add → 'Pick from the Topic Feed' picker. A stale deep link bounces " +
       "to /, like /topics. When ON, the user pairs a Playbook with sources into " +
       "a named INSPIRATION FEED, and Archie returns INSPIRATIONS — a headline, a " +
       "summary, a full write-up and the social posts behind it — each triaged " +

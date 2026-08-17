@@ -12,7 +12,7 @@ import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=91";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
 import { detectUrlService } from "./url-services.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=22";
+import { isFlagOn } from "./feature-flags.js?v=23";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.

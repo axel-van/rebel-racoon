@@ -14,14 +14,14 @@
 // suggestions, editingId, onComplete }.
 
 import * as inlineQuestion from "./inline-question.js?v=48";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=98";
-import * as rightPanel from "./components/right-panel.js?v=578";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=99";
+import * as rightPanel from "./components/right-panel.js?v=579";
 import { addContext, updateContext, getContextById } from "./contexts-store.js?v=77";
 import { analyzeWebsite } from "./context-mock-analysis.js?v=25";
 import { connectors as connectorMocks } from "./mocks.js?v=91";
-import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=64";
+import { getConnectedProfiles, buildConnectedProfileItems, PROFILE_SEARCH_THRESHOLD } from "./social-profiles.js?v=65";
 import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=22";
+import { isFlagOn } from "./feature-flags.js?v=23";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>

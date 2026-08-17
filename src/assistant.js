@@ -10,7 +10,7 @@ import { ideas, threadsBySession as seedThreadsBySession, connectorDocs } from "
 import { findConnector } from "./connectors-store.js?v=61";
 import { createSessionNotifier } from "./store-utils.js?v=3";
 import { showToast } from "./components/toast.js?v=21";
-import { isFlagOn } from "./feature-flags.js?v=22";
+import { isFlagOn } from "./feature-flags.js?v=23";
 
 const threads = new Map(); // sessionId → messages[]
 const notifier = createSessionNotifier("assistant");

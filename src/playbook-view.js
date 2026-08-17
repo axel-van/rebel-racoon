@@ -15,11 +15,11 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { openPillarInChat } from "./pillar-flow.js?v=16";
+import { openPillarInChat } from "./pillar-flow.js?v=17";
 import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
-import { isFlagOn } from "./feature-flags.js?v=22";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=64";
+import { isFlagOn } from "./feature-flags.js?v=23";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=65";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { open as openAddPlaybookEntry } from "./components/add-playbook-entry-modal.js?v=1";
 
@@ -2544,7 +2544,7 @@ function onClick(event) {
       // this is recoverable from the Used cards.
       body:
         `Removing "${pillar.title || "this pillar"}" means I'll no longer use it to help draft content. ` +
-        `You can add it back anytime from the Used cards in Topic feeds.`,
+        `You can add it back anytime from the Used cards in the Topic Feed.`,
       confirmLabel: "Delete pillar",
       danger: true,
       onConfirm: () => {
