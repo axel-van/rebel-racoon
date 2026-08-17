@@ -185,9 +185,14 @@ export function renderBriefCard(
 
          It carries data-brief-research — the exact attribute the footer's "Full
          research" button already uses — so both screens' existing handlers pick
-         it up with no new wiring. In the picker it carries data-idea-pick
-         instead: same button, different verb, because there the card is the
-         control rather than a way into the full read.
+         it up with no new wiring. In the picker it carries data-idea-read: a
+         different attribute for the same verb, because the picker's dialog opens
+         the article INSIDE itself rather than in the feed's side pane.
+
+         It used to carry data-idea-pick — the card was the control, and clicking
+         it chose the topic there and then. That asked the reader to decide from
+         two clamped lines of summary; the pick moved to the article's own footer,
+         where they have just read the thing they are choosing.
 
          Everything inside is a <span>, not the h3/p it was: a button may only
          contain PHRASING content, so a heading or paragraph in here is invalid.
@@ -200,7 +205,7 @@ export function renderBriefCard(
     <button
       type="button"
       class="topics-card__body"
-      ${raw(picker ? `data-idea-pick="${escapeAttr(brief.id)}"` : `data-brief-research="${escapeAttr(brief.id)}"`)}
+      ${raw(picker ? `data-idea-read="${escapeAttr(brief.id)}"` : `data-brief-research="${escapeAttr(brief.id)}"`)}
       ${raw(picker ? "" : `aria-expanded="${articleOpen ? "true" : "false"}"`)}
     >
       <span class="topics-card__source-row">

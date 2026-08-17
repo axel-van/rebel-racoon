@@ -33,10 +33,10 @@ import {
 } from "../briefs-store.js?v=57";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=56";
+import { renderUseButtons } from "./brief-card.js?v=57";
 import { getLanes } from "../research-store.js?v=46";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=26";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=27";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -57,7 +57,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=31";
-import { renderBriefCard } from "./brief-card.js?v=56";
+import { renderBriefCard } from "./brief-card.js?v=57";
 import { renderSocialPostCard } from "./social-post-card.js?v=32";
 import { showToast } from "./toast.js?v=21";
 
@@ -72,7 +72,11 @@ const SHOW_HIDDEN_TRENDING = false;
 let backdrop, panel, titleEl, subEl, bodyEl, footEl, backEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
-let backTo = null; // briefId to return to, when this view was opened from the article
+// Where the header's back button goes. Either a briefId — meaning "back to that
+// Topic's article", which is what every caller meant when this was the only kind
+// — or a { label, go } pair for a view that returns somewhere else. The picker's
+// article returns to the LIST, which is not an article and has no id.
+let backTo = null;
 // Topic-picker state. Module-level because each step re-renders through openShell,
 // which rebuilds the dialog — the step and the answer have to outlive that.
 // No picker STEP any more: the rail's switcher answers "whose topics?" for the
@@ -158,9 +162,13 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size 
   subEl.hidden = !sub;
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
-  // `back` is the id of the Topic to return to, or null. Stored on the shell rather
-  // than on the button so a view can be reopened without re-deriving it.
-  backTo = back;
+  // Normalised here so every call site can keep passing a bare briefId. Stored on
+  // the shell rather than on the button so a view can be reopened without
+  // re-deriving it.
+  backTo =
+    typeof back === "string" && back
+      ? { label: "Back to the topic", go: () => openIdeaArticle({ briefId: back }) }
+      : back || null;
   // Hidden with BOTH the attribute and inline display, deliberately. `.ap-button` sets
   // display: inline-flex, and a class rule beats the UA's [hidden] { display: none } —
   // so the attribute alone left the button on screen in every view, including the ones
@@ -168,8 +176,13 @@ function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size 
   // records this trap for .ap-select-not-found (UI-PATTERNS); this is the second case.
   // The attribute stays for assistive tech, the inline style is what actually hides it.
   if (backEl) {
-    backEl.hidden = !back;
-    backEl.style.display = back ? "" : "none";
+    backEl.hidden = !backTo;
+    backEl.style.display = backTo ? "" : "none";
+    // The label is per destination: "Back to the topic" from a version list,
+    // "Back to topics" from the picker's article. A back button that names the
+    // wrong place is worse than one with no words at all.
+    const backLabel = backEl.querySelector("span");
+    if (backLabel && backTo) backLabel.textContent = backTo.label;
   }
   panel.classList.toggle("research-modal--nested", !!back);
   panel.classList.toggle("research-modal--wide", wide);
@@ -1002,6 +1015,35 @@ function renderTopicStep(ctx) {
 // feed two seconds earlier. The summary, the Trending and Updated marks and the
 // Why-now / What-changed blocks are the things you actually choose on, and the
 // row dropped all four.
+// The full read, INSIDE the picker.
+//
+// The card used to pick on click, which asked the reader to choose a topic from
+// two clamped lines of summary — the same trade the feed refused when it gave
+// every card an article pane. Here the card opens the article in the shell it is
+// already in, and the pick moves to the article's footer: read, then decide.
+//
+// It reuses the article dialog's own body (renderResearchArticle) and its `wide`
+// width, so the picker's full read and the feed's full read are the same document
+// rather than two that drift. The one difference is the header's back button,
+// which returns to the LIST — the reason openShell's `back` had to stop meaning
+// "a briefId" and start meaning "a destination".
+function renderPickerArticle(ctx, brief) {
+  openShell("idea-article-picker", ctx, {
+    title: brief.headline,
+    sub: researchArticleSub(brief),
+    wide: true,
+    body: renderResearchArticle(brief),
+    // data-idea-pick, NOT the article dialog's data-brief-use: both end at
+    // openBriefInChat, but only this one goes through the picker's own onPick,
+    // which is the contract the caller passed in.
+    foot: html`<button type="button" class="ap-button primary orange" data-idea-pick="${escapeAttr(brief.id)}">
+        <span>Use in chat</span>
+      </button>
+      <button type="button" class="ap-button stroked grey" data-research-modal-close><span>Close</span></button>`,
+    back: { label: "Back to topics", go: () => renderIdeaPicker(ctx) },
+  });
+}
+
 function pickerCard(b) {
   return renderBriefCard(b, { source: findResearchSource(b.sourceId), variant: "picker" });
 }
@@ -1547,8 +1589,8 @@ function onPanelClick(event) {
   // the dialog never leaves the screen, so it reads as going up a level rather than
   // as dismissing one thing and summoning another.
   if (event.target.closest("[data-research-modal-back]")) {
-    const id = backTo;
-    if (id) return openIdeaArticle({ briefId: id });
+    const dest = backTo;
+    if (dest && typeof dest.go === "function") return dest.go();
     return close();
   }
   if (!active) return;
@@ -1621,6 +1663,14 @@ function onPanelClick(event) {
     footEl.innerHTML = html`<button type="button" class="ap-button primary blue" data-research-modal-close>
       <span>Close</span>
     </button>`;
+    return;
+  }
+
+  // The picker card's body: open the full read in this same dialog.
+  const read = event.target.closest("[data-idea-read]");
+  if (read) {
+    const brief = getBriefById(read.dataset.ideaRead);
+    if (brief) renderPickerArticle(active.ctx, brief);
     return;
   }
 

@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=26";
+} from "../active-playbook.js?v=27";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=46";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=57";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=572";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=573";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=98";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=69";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=90";
