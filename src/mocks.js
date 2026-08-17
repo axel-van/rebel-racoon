@@ -6235,6 +6235,12 @@ export const pillars = [
       "durability and cost-per-wear, not guilt. Our own returns data is the proof we lead with, and the capsule is " +
       "the format that has landed twice.",
     contextUpdatedAgo: "2d ago",
+    // What the context said BEFORE the last run — what "Show what changed" marks
+    // against. Seeded on two pillars so the diff has something to render before
+    // anyone edits anything; every later change writes it from the store.
+    previousContext:
+      "Buying less, but better. We argue against discount-driven wardrobes without moralising. Our own returns " +
+      "data is the proof we lead with.",
     createdBy: "you",
     openedAgo: "3mo ago",
     sources: [
@@ -6315,9 +6321,25 @@ export const pillars = [
       "argument is now about what a garment is worth rather than what it was marked down from. Colour and cut that " +
       "carry across seasons are the proof, not a promise.",
     contextUpdatedAgo: "5d ago",
+    previousContext:
+      "Why we don't discount. The argument is about what a garment is worth rather than what it was marked down " +
+      "from. Colour and cut that carry across seasons are the proof.",
+    // Held on purpose, and seeded that way so the frozen state is visible without
+    // anyone having to freeze one first. The pair of events below is what the
+    // history reads.
+    frozen: true,
     createdBy: "you",
     openedAgo: "2mo ago",
     sources: [
+      // The freeze that holds this pillar, and the pair it makes with the resume
+      // before it — the two rows that explain a gap in the weeks.
+      {
+        id: "ps-frz-1",
+        kind: "freeze",
+        title: "You froze updates",
+        addedAgo: "3d ago",
+        seen: true,
+      },
       {
         id: "ps-7",
         kind: "topic",
@@ -6344,6 +6366,22 @@ export const pillars = [
         title: "Written by you",
         quote: "Never name a competitor's markdown. We are making a case, not running a comparison.",
         addedAgo: "2mo ago",
+        seen: true,
+      },
+      // The earlier hold and its resume — proof in the seed that freezing is a
+      // pair of events rather than a state you can only be in once.
+      {
+        id: "ps-unfrz-0",
+        kind: "unfreeze",
+        title: "You resumed updates",
+        addedAgo: "2mo ago",
+        seen: true,
+      },
+      {
+        id: "ps-frz-0",
+        kind: "freeze",
+        title: "You froze updates",
+        addedAgo: "3mo ago",
         seen: true,
       },
     ],

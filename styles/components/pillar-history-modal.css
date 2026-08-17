@@ -1,0 +1,186 @@
+/* Pillar history dialog — src/components/pillar-history-modal.js
+ *
+ * The dialog, its accordions, counters, tags, status pills and buttons are all
+ * DS. What lives here is what the DS leaves to the caller: the width, the state
+ * row above the list, and the two row shapes the list is made of.
+ *
+ * The diff's <ins>/<del> styling is here rather than in the screen's stylesheet
+ * because both surfaces render it — the section's prose and this list — and one
+ * definition is what keeps them the same mark. */
+
+.pillar-history {
+  width: min(calc(100% - 32px), 560px);
+  flex-direction: column;
+}
+
+.pillar-history__body {
+  flex: 1;
+  overflow-y: auto;
+  gap: var(--ref-spacing-xxs);
+  max-height: min(60vh, 520px);
+}
+
+/* ── The state row ─────────────────────────────────────────────────────────
+   What the pillar is doing, and the switch that changes it, above the record it
+   governs. Tinted so it reads as chrome rather than as the first entry. */
+.pillar-history__state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-xs);
+  margin-bottom: var(--ref-spacing-xxs);
+  border: 1px solid var(--sys-border-color-default);
+  border-radius: var(--sys-border-radius-md);
+  background: var(--ref-color-grey-bg);
+}
+
+.pillar-history__state-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pillar-history__state-title {
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+.pillar-history__state-sub {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* ── An entry ──────────────────────────────────────────────────────────────
+   The DS accordion, with its header made a button: the component styles a div,
+   and a row that opens on click has to be one for the keyboard. */
+.pillar-history__head {
+  width: 100%;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.pillar-history__content {
+  gap: var(--ref-spacing-xxxs);
+}
+
+.pillar-history__lbl {
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: var(--app-label-tracking);
+  text-transform: uppercase;
+  color: var(--ref-color-grey-60);
+}
+
+.pillar-history__in {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-width: 0;
+}
+
+.pillar-history__in-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--sys-text-color-default);
+}
+
+.pillar-history__when {
+  flex: 0 0 auto;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* The input's own excerpt — what it said, indented under its row. Deliberately
+   NOT captioned as "what this contributed": a condensed paragraph does not trace
+   cleanly to one input, and claiming it would be the one overstatement that
+   costs trust rather than building it. */
+.pillar-history__quote {
+  margin: 0 0 var(--ref-spacing-xxs) 26px;
+  padding-left: var(--ref-spacing-xs);
+  border-left: 2px solid var(--sys-border-color-default);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--sys-text-color-light);
+}
+
+.pillar-history__diff {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.6;
+  color: var(--sys-text-color-default);
+}
+
+/* ── A freeze / resume ─────────────────────────────────────────────────────
+   A row, not an accordion: the event is the whole content, and a chevron that
+   opens onto nothing is a promise the row cannot keep. */
+.pillar-history__event {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  border: 1px solid var(--sys-border-color-default);
+  border-radius: var(--sys-border-radius-md);
+  background: var(--ref-color-white);
+}
+
+.pillar-history__event > .ap-status {
+  flex: 0 0 auto;
+}
+
+.pillar-history__more,
+.pillar-history__empty {
+  margin: var(--ref-spacing-xxs) 0 0;
+  text-align: center;
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* .ap-link assumes an <a>; this one is a button, so it needs the UA chrome off.
+   Same patch ds-patches.css carries for `button.ap-link` — repeated here only
+   because this file must stand alone if the modal moves. */
+.pillar-history__more-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pillar-history__note {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: 1.4;
+  color: var(--sys-text-color-light);
+  max-width: 30ch;
+  display: block;
+}
+
+/* ── The diff mark, shared by both surfaces ────────────────────────────────
+   <ins> and <del> are the semantic elements — a screen reader announces them as
+   inserted and removed, which two styled spans would not. Green and red at their
+   -10 tints: strong enough to scan, quiet enough to read a paragraph through. */
+.pillar-history__diff del,
+.pillar-sec__prose del {
+  color: var(--ref-color-grey-60);
+  text-decoration-color: var(--ref-color-red-100);
+}
+
+.pillar-history__diff ins,
+.pillar-sec__prose ins {
+  background: var(--ref-color-green-10);
+  color: var(--ref-color-green-150);
+  text-decoration: none;
+}
