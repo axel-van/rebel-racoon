@@ -29,7 +29,7 @@ With Claude Code the dev server auto-launches via `.claude/launch.json` (server 
 | ---------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | `/`                          | `dashboard.js`         | Redirect-only: first-time → `/welcome-alt`, returning → most-recent session or a fresh one        |
 | `/session/:id`               | `session.js`           | The main chat surface (largest file); hosts the assistant thread, composer, and per-session flows |
-| `/contexts`                  | `contexts.js`          | Standalone **Playbooks** library (cards + edit)                                                   |
+| `/contexts`                  | `contexts.js`          | Standalone **Playbooks** library (cards + edit); topbar leads with **Back to chat**               |
 | `/playbook/:id`              | `playbook.js`          | Playbook detail page (topbar back → `/contexts`)                                                  |
 | `/connectors`                | `connectors.js`        | Connectors gallery (marketplace); detail opens in a modal (gated by the `connectors` flag)        |
 | `/topics`                    | `topics.js`            | **Topics** feed — the listening dossiers, one stream across every Playbook (gated by `topics`)    |

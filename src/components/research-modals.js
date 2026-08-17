@@ -37,7 +37,7 @@ import {
 import { renderUseButtons } from "./brief-card.js?v=58";
 import { getLanes } from "../research-store.js?v=46";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=28";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=29";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar

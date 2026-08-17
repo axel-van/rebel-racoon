@@ -14,7 +14,7 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=574";
+} from "./right-panel.js?v=575";
 import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=90";
 import { getThread, subscribe as subscribeThread } from "../assistant.js?v=98";
 import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=92";
@@ -23,7 +23,7 @@ import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=367";
+} from "./conversation-status-card.js?v=368";
 import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=40";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=76";
@@ -538,6 +538,16 @@ function isSessionRoute() {
 
 // Routes that lead with a back control instead of a title, and where they go.
 function backTargetFor(path) {
+  // The Playbooks library leads with a way BACK rather than with its own name.
+  // You arrive here from one place — "Manage Playbooks" in the scope switcher —
+  // and it is a detour from whatever chat you were in, not a section you settle
+  // in. The page already names itself in its own header, so the topbar was
+  // spending its one slot repeating that instead of offering the way out.
+  //
+  // "/" is the chat: dashboard.js redirects it to the most recent session, or to
+  // a fresh one when there is none. Naming the destination "chat" rather than
+  // "Home" says what the reader will actually see.
+  if (path === "/contexts") return { to: "/", label: "Back to chat" };
   if (/^\/playbook\//.test(path)) return { to: "/contexts", label: "Back to Playbooks" };
   if (/^\/pillar\//.test(path)) return { to: "/content-strategy", label: "Back to Content strategy" };
   // A lane's own sub-pages — its SETTINGS and its ATTENTION page — go back to that
@@ -597,7 +607,8 @@ function currentSessionId() {
 function currentTitle() {
   const path = getPath();
   if (path === "/") return "Home";
-  if (path === "/contexts") return "Playbooks";
+  // No /contexts entry: that route renders a back button instead of a title
+  // (backTargetFor), and the page carries its own heading.
   if (path === "/connectors") return "Connectors";
   if (path === "/topics") return "Topics";
   // Every Content Research route reports the SECTION here, not the lane. The
