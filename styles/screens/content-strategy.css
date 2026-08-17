@@ -3,6 +3,14 @@
    it opens are the same object at two zoom levels, and splitting them meant the
    card's meta line and the page's meta line drifted apart twice.
 
+   ⚠️ The border token is `--sys-border-color-default`, NOT the DS's own
+   `--sys-color-border-color-default`: this proto's variables define the first
+   name and not the second, so the DS spelling resolves to nothing, the whole
+   `border:` shorthand is invalid, and the rule renders at border-width: 0 with no
+   error anywhere. Eight rules in this file were silently borderless — including
+   .pillar-trail, whose card outline had never drawn. UI-PATTERNS records the same
+   trap for .ap-divider.
+
    Nothing here redeclares an .ap-* class. The DS brings the card, the tabs, the
    counter, the tag, the dropdown, the tooltip and the dropzone (.ap-dropzone is
    an app primitive and lives in ds-patches.css — the DS ships none). */
@@ -24,7 +32,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-md);
-  border-bottom: 1px solid var(--sys-color-border-color-default);
+  border-bottom: 1px solid var(--sys-border-color-default);
   padding-bottom: var(--ref-spacing-sm);
 }
 
@@ -304,23 +312,36 @@
   gap: var(--ref-spacing-xxs);
 }
 
+/* A bounded section, matching .pillar-trail on the other tab — same border, same
+   radius, same white ground. The two sections used to sit on the flat page with
+   nothing but a 16px margin between them, so one tab of this page grouped its
+   content and the other did not. */
 .pillar-sec {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
   margin-top: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md);
+  border: 1px solid var(--sys-border-color-default);
+  border-radius: var(--app-radius-md);
+  background: var(--ref-color-white);
 }
 
+/* The DS h3 style, whole. This was the caption-bold SIZE with a literal weight, a
+   hand-picked 0.07em of tracking, uppercase, and the light text colour — which
+   made the section heading 12px against the 14px prose it introduces and the 24px
+   title above it. The ramp read 24 → 12 → 14: the heading was the smallest and
+   quietest thing in its own section, and an uppercase caption is an eyebrow ABOVE
+   a title, not the title itself. */
 .pillar-sec__title {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   margin: 0;
-  font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--sys-text-color-light);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
+  color: var(--sys-text-color-default);
 }
 
 /* The condensed context is the product of this page, so it gets prose treatment
@@ -333,8 +354,13 @@
   max-width: 74ch;
 }
 
+/* Used inside a .pillar-sec and, on the trail tab, in .pillar-trail__head — it is
+   the page's caption line wherever it appears, which is why the margin is reset
+   here rather than assumed from a flex parent. */
 .pillar-sec__note {
+  margin: 0;
   font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
 }
 
@@ -352,7 +378,7 @@
   flex-direction: column;
   gap: var(--ref-spacing-xxxs);
   padding: var(--ref-spacing-xs);
-  border: 1px solid var(--sys-color-border-color-default);
+  border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   background: var(--ref-color-white);
 }
@@ -453,7 +479,7 @@
 
 .pillar-trail__sort {
   font-size: var(--sys-text-style-caption-bold-size);
-  font-weight: 700;
+  font-weight: var(--sys-text-style-caption-bold-weight);
   color: var(--sys-text-color-light);
 }
 
@@ -463,7 +489,7 @@
 .pillar-trail {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--sys-color-border-color-default);
+  border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -485,7 +511,7 @@
   flex-direction: column;
   gap: var(--ref-spacing-xxxs);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  border-bottom: 1px solid var(--sys-color-border-color-default);
+  border-bottom: 1px solid var(--sys-border-color-default);
 }
 
 .pillar-trail > .pillar-row:last-child {
@@ -509,11 +535,15 @@
   gap: var(--ref-spacing-sm);
 }
 
+/* The trail row's kind — a genuine eyebrow, so it keeps the uppercase treatment
+   the section title just lost. Weight and tracking come from tokens now: it was
+   a literal 700 beside a caption-size token, and a hand-picked 0.08em. */
 .pillar-row__kind {
   flex: 0 0 52px;
-  font-size: var(--sys-text-style-caption-size);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  letter-spacing: var(--app-label-tracking);
   text-transform: uppercase;
   color: var(--ref-color-electric-blue-150);
 }
@@ -575,7 +605,7 @@
 .pillar-row__quote {
   margin: 0 0 0 60px;
   padding-left: var(--ref-spacing-xs);
-  border-left: 2px solid var(--sys-color-border-color-default);
+  border-left: 2px solid var(--sys-border-color-default);
   font-size: var(--sys-text-style-caption-size);
   line-height: 1.55;
   color: var(--sys-text-color-light);
@@ -683,7 +713,7 @@
      on; if the DS ever moves it, this is the one line to follow. */
   height: var(--ref-spacing-xl);
   padding: 0 var(--ref-spacing-xs);
-  border: 1px solid var(--sys-color-border-color-default);
+  border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-sm);
   background: var(--ref-color-white);
   color: var(--sys-text-color-default);
@@ -707,7 +737,7 @@
   gap: var(--ref-spacing-xs);
   width: 100%;
   padding: var(--ref-spacing-xs);
-  border: 1px solid var(--sys-color-border-color-default);
+  border: 1px solid var(--sys-border-color-default);
   border-radius: var(--app-radius-md);
   background: var(--ref-color-white);
   font-family: inherit;

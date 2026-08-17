@@ -90,6 +90,16 @@
   --app-radius-md: var(--sys-border-radius-md); /* 4 */
   --app-radius-lg: var(--sys-border-radius-lg); /* 8 */
   --app-radius-button-sm: 6px; /* handoff small buttons / icon-buttons */
+  /* ── Uppercase micro-label tracking ──────────────────────────────────────
+     The DS typography scale ships no letter-spacing token, so every uppercase
+     eyebrow in this app picked its own: 0.03em in the research form and feed,
+     0.06em in the sidebar and the topic modal, 0.07em and 0.08em on the pillar
+     page. Six values for one idiom. This is the single source, set to the value
+     the most-seen of those labels already used.
+     The remaining literals are a separate sweep — research.css,
+     research-modals.css, brief-card.css, sidebar.css, topic-modal.css,
+     topics.css. */
+  --app-label-tracking: 0.06em;
   --app-radius-starter: 10px; /* handoff starter cards */
   /* ── Topic card geometry ──────────────────────────────────────────────────
      Here rather than on .topics-card because two stylesheets need them:

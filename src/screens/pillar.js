@@ -200,13 +200,13 @@ function renderContextTab(p) {
     <section class="pillar-sec ${view.editing ? "is-editing" : ""}">
       <h2 class="pillar-sec__title">The context I carry</h2>
       ${body}
-      <span class="pillar-sec__note">
+      <p class="pillar-sec__note">
         ${
           view.editing
             ? "Your words win. I rewrite this when a source is added or removed — editing it now replaces what I wrote."
             : `Condensed from every topic, chat and note in this pillar. Last rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.`
         }
-      </span>
+      </p>
     </section>
     ${renderAssets(p)}`;
 }
@@ -245,9 +245,9 @@ function renderAssets(p) {
           <input type="file" class="ap-dropzone__input" multiple hidden />
         </div>
       </div>
-      <span class="pillar-sec__note">
+      <p class="pillar-sec__note">
         Assets are only used drafting from this pillar. They are never automatically adjusted.
-      </span>
+      </p>
     </section>`;
 }
 
@@ -257,7 +257,7 @@ function renderSourcesTab(p) {
   return `
     <div class="pillar-trail__head">
       <span class="pillar-trail__sort">Newest first</span>
-      <span class="pillar-sec__note">Removing a source re-condenses the context without it.</span>
+      <p class="pillar-sec__note">Removing a source re-condenses the context without it.</p>
     </div>
     <div class="pillar-trail" data-pillar-trail>
       ${shown.map(renderSourceRow).join("")}
