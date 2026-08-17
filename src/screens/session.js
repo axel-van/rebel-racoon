@@ -71,7 +71,7 @@ import {
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=9";
+import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=10";
 import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=34";
 
 // sessionId → pillarId attached in the composer. Module state rather than a

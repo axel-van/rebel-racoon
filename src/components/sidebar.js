@@ -22,7 +22,7 @@ import { clearSession as clearLibrarySession } from "../library.js?v=93";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=77";
 import { getConnectedConnectors, subscribe as subscribeConnectors } from "../connectors-store.js?v=61";
 import { getUnseenCount as getUnseenTopicCount, subscribe as subscribeTopics } from "../topics-store.js?v=29";
-import { getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=9";
+import { getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=10";
 import {
   getActivePlaybook,
   getActivePlaybookId,

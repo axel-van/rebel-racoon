@@ -51,7 +51,7 @@ import {
 } from "../components/research-modals.js?v=131";
 import { openBriefInChat } from "../brief-flow.js?v=34";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=9";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=10";
 import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=34";
 import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=24";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=47";

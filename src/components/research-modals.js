@@ -42,7 +42,7 @@ import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
 // list and a different object entirely.
-import { pillarForBrief } from "../pillars-store.js?v=9";
+import { pillarForBrief } from "../pillars-store.js?v=10";
 import {
   getContexts,
   getContextById,

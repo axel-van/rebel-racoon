@@ -278,12 +278,8 @@
   margin: 0;
 }
 
-.pillar-view__sub {
-  margin: var(--ref-spacing-xxxs) 0 0;
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-text-style-body-size);
-}
-
+/* Two uses, one shape: Share in the header's right slot, and the Cancel/Save pair
+   that replaces the rename pencil inside the title row. */
 .pillar-view__actions {
   display: flex;
   align-items: center;
@@ -291,10 +287,16 @@
   flex: 0 0 auto;
 }
 
-/* Edit mode. The title becomes an input of roughly its own width so the header
-   does not jump when the two swap — a header that resizes on entering edit mode
-   makes the Save button move under the cursor that just pressed Edit. */
-.pillar-view__name-field {
+/* Edit mode. The field's WIDTH is set inline from the title's measured width (see
+   pillar.js), so this only has to keep it sane at the two extremes: never grow past
+   the width it was given — `1 1 auto` used to stretch it to the 520px ceiling for
+   every name, which is the jump this is meant to avoid — never shrink below a
+   usable field for a two-word pillar, and never outgrow the header for a 50-char
+   one. 520px is roughly where a 50-character 18px bold title lands, so the ceiling
+   almost never binds; it is the guard, not the size. */
+.pillar-view__name-input {
+  flex: 0 1 auto;
+  min-width: 180px;
   max-width: 520px;
 }
 
@@ -343,18 +345,64 @@
   gap: var(--ref-spacing-xs);
 }
 
+/* The section's right slot: the diff toggle, then the pencil. Two controls and
+   only two — the state moved to the title and the freeze switch into the History
+   dialog, because a corner holding four buried the two the reader came for. */
+.pillar-sec__ctrls {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  flex: 0 0 auto;
+}
+
 .pillar-sec__edit {
   flex: 0 0 auto;
 }
 
-/* Cancel + Save for the CONTEXT, inside the context's own section — the name has
-   its own pair in the page header. Right-aligned, the same way every other
-   in-place edit in this app ends. */
+/* Caption-sized, because it labels a control rather than saying anything: the
+   DS toggle ships body text, which beside a 16px section title read as a second
+   heading. */
+.pillar-sec__diff {
+  font-size: var(--sys-text-style-caption-size);
+  white-space: nowrap;
+}
+
+/* Nothing to compare against yet — a pillar whose context has never been
+   rewritten. Dimmed rather than hidden: the control is part of the section's
+   shape, and a corner that gains a toggle the first time a run lands would move
+   the pencil under the cursor. */
+.pillar-sec__diff[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The one route into the record. `.ap-link` assumes an <a>; this is a button,
+   so the UA chrome comes off — the same patch ds-patches.css carries. */
+.pillar-sec__history {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The status pill rides inside the section title, so it must not inherit the
+   heading's size or weight. */
+.pillar-sec__title > .ap-status {
+  font-size: var(--sys-text-style-caption-size);
+  font-weight: var(--ref-font-weight-bold);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Cancel + Save for the CONTEXT, in the section head's right slot where the pencil
+   was. It used to be a right-aligned row at the FOOT of the section; in the head it
+   is a plain inline group, so it needs neither the alignment nor the top margin. */
 .pillar-sec__actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: var(--ref-spacing-xxs);
-  margin-top: var(--ref-spacing-xxs);
+  flex: 0 0 auto;
 }
 
 /* The title and its rename pencil. The pencil only appears on hover or focus:
@@ -365,6 +413,12 @@
   align-items: center;
   gap: var(--ref-spacing-xxs);
   min-width: 0;
+}
+
+/* A field and the buttons that commit it need more air between them than a title
+   and its pencil, and the row's own 8px gap is set for the latter. */
+.pillar-view__title-row > .pillar-view__actions {
+  margin-left: var(--ref-spacing-xxxs);
 }
 
 .pillar-view__rename {

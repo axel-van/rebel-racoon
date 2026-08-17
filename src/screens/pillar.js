@@ -33,38 +33,47 @@ import { navigate, getPath } from "../router.js?v=30";
 import { renderTopbar } from "../components/topbar.js?v=445";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { getContextById } from "../contexts-store.js?v=77";
-import { getBriefById } from "../briefs-store.js?v=60";
+import { parseHashParams } from "../url-state.js?v=21";
+import { renderDiff, hasDiff } from "../text-diff.js?v=1";
+import { open as openHistory } from "../components/pillar-history-modal.js?v=1";
 import {
   getPillarById,
-  removeSource,
-  restoreSource,
   addAsset,
   removeAsset,
   assetKindFor,
   markPillarSeen,
-  unseenCountFor,
   updatePillar,
-  isRecent,
   subscribe as subscribePillars,
   recordContextEdit,
-} from "../pillars-store.js?v=9";
+  NAME_MAX,
+} from "../pillars-store.js?v=10";
 
 const PAGE = 8;
 
+// The group's own horizontal chrome: 2 × --ref-spacing-xs of padding + 2 × 1px of
+// border. .ap-input-group is border-box, so the measured title width has to be
+// grown by this much for the input's TEXT to start where the title's text did.
+const INPUT_CHROME = 26;
+
+// The trail is no longer a TAB. It is the History dialog
+// (components/pillar-history-modal.js), opened from the provenance line under the
+// context — which is where the question "what changed?" is actually asked. As a
+// tab it sat on the other side of the page from the text it explained, and it was
+// opened rarely enough that the context stayed unexplained.
+//
+// showDiff: whether the context is rendered marked against its previous version.
+// OFF on arrival, always: the output is what the page is for, and a page that
+// opens covered in ins/del marks answers a question nobody asked yet.
+//
 // editing: null | "name" | "context" — two independent in-place edits.
-let view = { id: null, tab: "context", visible: PAGE, editing: null };
+// nameWidth: the h1's measured px width, captured before the repaint swaps it for
+// the input. It lives on `view` rather than in a local because the pillars-store
+// subscription repaints while the edit is open, and every repaint has to size the
+// field the same way.
+let view = { id: null, showDiff: false, editing: null, nameWidth: 0 };
 let unsubscribe = null;
 let boundTarget = null;
 let boundClick = null;
-let observer = null;
-// The unseen count is read ONCE per visit and frozen: marking the sources seen
-// on mount is what clears the nav badge, but the tab must keep showing what
-// arrived while the user is standing on the page. Without the freeze the number
-// vanishes the instant it becomes useful.
-let arrivedOnEntry = 0;
-
 export function renderPillar(params, target) {
   if (!isFlagOn("contentStrategy")) {
     navigate("/");
@@ -77,19 +86,23 @@ export function renderPillar(params, target) {
   }
   // parseHashParams returns a URLSearchParams, not a plain object.
   const q = parseHashParams();
+  // ?tab=sources is a dead link now — the trail it pointed at is the History
+  // dialog. Kept readable rather than redirected: landing on the pillar is the
+  // right destination, and the dialog is one click below.
   const samePillar = view.id === params.id;
   view = {
     id: params.id,
-    tab: q.get("tab") === "sources" ? "sources" : "context",
-    // A tab switch is a query-only change and re-runs this handler, so the paging
-    // position has to survive it — resetting only when the pillar itself changes.
-    visible: samePillar ? view.visible : PAGE,
-    // Edit mode never survives a tab switch or a remount: leaving the block you
-    // were editing and coming back to a live textarea is how unsaved text goes
-    // missing without anyone noticing.
+    // Marks never survive a remount, for the same reason edit mode does not:
+    // arriving at a page already covered in them is not what anyone asked for.
+    showDiff: samePillar ? view.showDiff : false,
+    // Edit mode never survives a remount: leaving the block you were editing and
+    // coming back to a live textarea is how unsaved text goes missing without
+    // anyone noticing.
     editing: null,
+    // Dropped with `editing`: a width measured against another pillar's title, or
+    // against this one before a rename, would size the next field to the wrong text.
+    nameWidth: 0,
   };
-  if (!samePillar) arrivedOnEntry = unseenCountFor(params.id);
   renderTopbar();
   teardown();
   paint(target);
@@ -109,10 +122,6 @@ function teardown() {
     unsubscribe();
     unsubscribe = null;
   }
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
   boundTarget = null;
   boundClick = null;
@@ -122,13 +131,11 @@ function paint(target) {
   const p = getPillarById(view.id);
   if (!p) return;
   target.innerHTML = html`<section class="screen pillar-view">${raw(renderPage(p))}</section>`;
-  if (view.tab === "sources") observeSentinel(target);
 }
 
 // ─── Render ────────────────────────────────────────────────────────────────
 
 function renderPage(p) {
-  const ctx = p.playbookId ? getContextById(p.playbookId) : null;
   return `
     <header class="pillar-view__head">
       <div class="pillar-view__heading">
@@ -136,116 +143,135 @@ function renderPage(p) {
              NAME here, the condensed context on its own section. One control for
              both used to swap the whole page into an edit state, so renaming a
              pillar put you in front of a textarea you had not asked to touch —
-             and saving wrote both fields whether or not you meant to. -->
-        ${
-          view.editing === "name"
-            ? `<div class="ap-form-field pillar-view__name-field">
-                 <label for="pillarName">Name</label>
-                 <div class="ap-input-group">
-                   <input type="text" id="pillarName" data-pillar-name value="${escapeAttr(p.name)}" />
+             and saving wrote both fields whether or not you meant to.
+             Both follow playbook-view's renderPanelHead: the pencil and the
+             Cancel/Save pair occupy ONE slot and swap places, so the row keeps its
+             shape and the controls that commit an edit sit where the control that
+             started it was. -->
+        <div class="pillar-view__title-row">
+          ${
+            view.editing === "name"
+              ? // No .ap-form-field and no label: the h1 this input replaces already
+                // said what the field is, so a "Name" label above it would caption a
+                // title. .ap-input-group is what carries the DS border, so the input
+                // needs no class of its own — but it does need an aria-label, because
+                // dropping the visible label leaves it with no accessible name.
+                //
+                // The width is the TITLE's own measured width, so the header does not
+                // resize as the two swap — a header that grows on entering edit mode
+                // moves Save under the cursor that just pressed the pencil. Inline,
+                // because only the runtime knows how wide this name rendered; CSS
+                // keeps the floor and the ceiling (see .pillar-view__name-input).
+                // The `ch` fallback covers a repaint that never measured, and keeps
+                // the field content-sized rather than snapping to the ceiling.
+                `<div class="ap-input-group pillar-view__name-input" style="width:${
+                  view.nameWidth ? `${view.nameWidth + INPUT_CHROME}px` : `${Math.min(p.name.length, NAME_MAX) + 2}ch`
+                }">
+                   <input type="text" data-pillar-name value="${escapeAttr(p.name)}" aria-label="Pillar name"
+                     maxlength="${NAME_MAX}" />
                  </div>
-               </div>`
-            : `<div class="pillar-view__title-row">
-                 <h1 class="ap-h2 pillar-view__title">${escapeAttr(p.name)}</h1>
+                 <div class="pillar-view__actions">
+                   <button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
+                   <button type="button" class="ap-button primary orange" data-pillar-save>
+                     <i class="ap-icon-check"></i><span>Save changes</span>
+                   </button>
+                 </div>`
+              : `<h1 class="ap-h2 pillar-view__title">${escapeAttr(p.name)}</h1>
                  <button type="button" class="ap-icon-button ghost grey pillar-view__rename" data-pillar-edit="name"
                    title="Rename this pillar" aria-label="Rename this pillar">
                    <i class="ap-icon-pen"></i>
-                 </button>
-               </div>`
-        }
-        <p class="pillar-view__sub">
-          ${ctx ? `${escapeAttr(ctx.name)} · ` : ""}context rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}
-        </p>
+                 </button>`
+          }
+        </div>
       </div>
+      <!-- Share stays put through a rename, the same way the Playbook recap keeps
+           its header actions while a section is being edited: it acts on the whole
+           pillar, so an edit to one field is not a reason for it to disappear. -->
       <div class="pillar-view__actions">
-        ${
-          view.editing === "name"
-            ? // Cancel + Save changes, the same pair and the same weights the
-              // Playbook page uses for an in-place edit. They sit HERE because the
-              // name is what is being edited here; the context's pair sits in the
-              // context's own section.
-              `<button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
-               <button type="button" class="ap-button primary orange" data-pillar-save>
-                 <i class="ap-icon-check"></i><span>Save name</span>
-               </button>`
-            : `<button type="button" class="ap-button stroked grey" data-pillar-share>
-                 <i class="ap-icon-share"></i><span>Share</span>
-               </button>`
-        }
+        <button type="button" class="ap-button stroked grey" data-pillar-share>
+          <i class="ap-icon-share"></i><span>Share</span>
+        </button>
       </div>
     </header>
-    ${renderTabs(p)}
-    ${view.tab === "sources" ? renderSourcesTab(p) : renderContextTab(p)}
+    ${renderContextTab(p)}
   `;
 }
 
-// DS Tabs, unmodified: .ap-tabs > .ap-tabs-nav > .ap-tabs-tab.active.
-// The counter falls back to the quiet total when nothing arrived — a `notif`
-// badge on a zero-delta tab would be claiming attention for a log.
-function renderTabs(p) {
-  const arrived = arrivedOnEntry;
-  const counter = arrived
-    ? `<span class="ap-counter notif">${arrived}</span>`
-    : `<span class="ap-counter normal grey">${p.sources.length}</span>`;
-  return `
-    <div class="ap-tabs pillar-tabs">
-      <div class="ap-tabs-nav" role="tablist">
-        <button type="button" role="tab" class="ap-tabs-tab ${view.tab === "context" ? "active" : ""}"
-          aria-selected="${view.tab === "context"}" data-pillar-tab="context">Context &amp; assets</button>
-        <button type="button" role="tab" class="ap-tabs-tab ${view.tab === "sources" ? "active" : ""}"
-          aria-selected="${view.tab === "sources"}" data-pillar-tab="sources">What went into it ${counter}</button>
-      </div>
-    </div>`;
-}
-
-// The context is the one thing on this page a human writes rather than Archie,
-// so it is edited HERE, in place, next to the sources that produced it — not in
-// a dialog that can only show a name and a sentence. Same reasoning and the same
-// controls as the Playbook page's in-place panels.
 function renderContextTab(p) {
   const editing = view.editing === "context";
+  const text = p.context || p.about || "";
+  // Something to compare against — a run or an edit has landed at least once.
+  // Without it the toggle would be a control that can only disappoint.
+  const comparable = hasDiff(p.previousContext, text);
+  const marked = view.showDiff && comparable;
   const body = editing
     ? `<div class="ap-textarea-field resizable pillar-sec__editor">
-         <textarea data-pillar-context rows="5">${escapeAttr(p.context || p.about || "")}</textarea>
+         <textarea data-pillar-context rows="5">${escapeAttr(text)}</textarea>
        </div>`
-    : `<p class="pillar-sec__prose">${escapeAttr(p.context || p.about || "")}</p>`;
+    : `<p class="pillar-sec__prose">${marked ? renderDiff(p.previousContext, text) : escapeAttr(text)}</p>`;
   return `
     <section class="pillar-sec ${editing ? "is-editing" : ""}">
       <div class="pillar-sec__head">
-        <h2 class="pillar-sec__title">Pillar Aggregated Context</h2>
+        <!-- The Frozen pill rides WITH the title, not with the controls: it
+             qualifies the section, and the corner is reserved for the two things
+             that act on the text. Same DS status pill, in the same orange, the
+             Topic Feed's paused row uses. -->
+        <h2 class="pillar-sec__title">
+          Pillar Aggregated Context
+          ${p.frozen ? `<span class="ap-status tagOrange"><span>Frozen</span></span>` : ""}
+        </h2>
         <!-- The pencil belongs to THIS section, because this section is the only
              thing it edits. An icon button rather than a labelled one: the
              heading beside it already names what is being edited, so the word
              "Edit" would have been the second half of a sentence the title has
-             just finished. Hidden while editing — Cancel and Save are in the
-             header and there is nothing left for it to start. -->
+             just finished.
+             Editing swaps it for Cancel + Save in the same slot — the pattern
+             playbook-view's renderPanelHead uses for every panel. The pair used to
+             sit at the FOOT of the section, below the note, which put the commit
+             two paragraphs away from the pencil that started the edit and made the
+             section grow a row as you entered it. -->
         ${
           editing
-            ? ""
-            : `<button type="button" class="ap-icon-button ghost grey pillar-sec__edit" data-pillar-edit="context"
-                 title="Edit the context" aria-label="Edit the context">
-                 <i class="ap-icon-pen"></i>
-               </button>`
+            ? `<div class="pillar-sec__actions">
+                 <button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
+                 <button type="button" class="ap-button primary orange" data-pillar-save>
+                   <i class="ap-icon-check"></i><span>Save changes</span>
+                 </button>
+               </div>`
+            : // Two controls, and only two: see what changed, and change it. The
+              // frozen state moved to the title and the freeze switch moved into
+              // the History dialog, because a corner holding four things buried
+              // the two the reader came for.
+              `<div class="pillar-sec__ctrls">
+                 <label class="ap-toggle-container pillar-sec__diff" ${comparable ? "" : 'aria-disabled="true"'}>
+                   <input type="checkbox" data-pillar-diff ${view.showDiff && comparable ? "checked" : ""}
+                     ${comparable ? "" : "disabled"} />
+                   <i aria-hidden="true"></i>
+                   <span>Show what changed</span>
+                 </label>
+                 <button type="button" class="ap-icon-button ghost grey pillar-sec__edit" data-pillar-edit="context"
+                   title="Edit the context" aria-label="Edit the context">
+                   <i class="ap-icon-pen"></i>
+                 </button>
+               </div>`
         }
       </div>
       ${body}
+      <!-- The provenance line: what the cadence is, when it last ran, and the one
+           route to the record. It reads AFTER the prose because it is about the
+           prose — the output is the reason the page exists. -->
       <p class="pillar-sec__note">
         ${
           editing
             ? "Your words win. The context is rewritten whenever a source is added or removed — editing it now replaces what was there, and the change is kept in the history."
-            : `Condensed from every topic, chat and note in this pillar. Last rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}.`
+            : `${
+                p.frozen
+                  ? "Frozen — updates are held."
+                  : `Updated weekly from every topic, chat and note in this pillar.`
+              } Last rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}. <button type="button"
+                 class="ap-link pillar-sec__history" data-pillar-history>History</button>`
         }
       </p>
-      ${
-        editing
-          ? `<div class="pillar-sec__actions">
-               <button type="button" class="ap-button ghost grey" data-pillar-cancel><span>Cancel</span></button>
-               <button type="button" class="ap-button primary orange" data-pillar-save>
-                 <i class="ap-icon-check"></i><span>Save context</span>
-               </button>
-             </div>`
-          : ""
-      }
     </section>
     ${renderAssets(p)}`;
 }
@@ -290,137 +316,47 @@ function renderAssets(p) {
     </section>`;
 }
 
-function renderSourcesTab(p) {
-  const shown = p.sources.slice(0, view.visible);
-  const more = p.sources.length - shown.length;
-  return `
-    <div class="pillar-trail__head">
-      <span class="pillar-trail__sort">History</span>
-      <p class="pillar-sec__note">Removing a source re-condenses the context without it.</p>
-    </div>
-    <div class="pillar-trail" data-pillar-trail>
-      ${shown.map(renderSourceRow).join("")}
-      ${more > 0 ? `<div class="pillar-trail__more" data-pillar-sentinel>Loading more…</div>` : ""}
-    </div>
-    ${p.sources.length === 0 ? renderTrailEmpty() : ""}`;
-}
-
-function renderTrailEmpty() {
-  return `
-    <p class="pillar-trail__empty">
-      Nothing has been filed into this pillar yet. As topics arrive in your feeds and chats touch this theme, I add
-      them here — and everything I add says when it landed.
-    </p>`;
-}
-
-const KIND_LABEL = { topic: "Topic", chat: "Chat", note: "Note", edit: "Edit" };
-
-// The title is a LINK BACK to wherever the source came from — a topic opens its
-// feed with that topic already selected, a chat opens the chat. Without it the
-// trail is a list of things you can only delete: the excerpt tells you what the
-// pillar took, and this is how you go and read the rest of it.
+// The trail that used to live here — renderSourcesTab, its rows, the empty state
+// and the IntersectionObserver that paged it — is gone, not parked. It became the
+// History dialog (components/pillar-history-modal.js), which reads the same data
+// through pillars-store.getPillarTimeline() and shows it as EVENTS: a weekly run
+// with its inputs, a manual rewrite with its diff, a freeze, a resume. Keeping
+// both would have been two answers to one question on one surface.
 //
-// A note has no destination: it was written here, and there is nowhere else for
-// it to be. So it stays plain text rather than a button that goes nowhere.
-//
-// A <button>, not a link, and NOT wrapping the whole row: the row also carries
-// Remove, and a button inside a button is the invalid nesting the topic card's
-// body/footer split exists to avoid.
-// A context rewrite, in the trail. It carries no quote and no destination: the
-// change IS the content, so the row shows what the text said before and what it
-// says now, labelled, rather than an excerpt of something else.
-function renderEditRow(s) {
-  const pair = (label, text) => `
-    <div class="pillar-edit__side">
-      <span class="pillar-edit__label">${label}</span>
-      <blockquote class="pillar-edit__text">${escapeAttr(text || "—")}</blockquote>
-    </div>`;
-  return `
-    <article class="pillar-row pillar-row--edit ${isRecent(s) ? "pillar-row--recent" : ""}" data-source-row="${escapeAttr(s.id)}">
-      <div class="pillar-row__top">
-        <span class="pillar-row__kind pillar-row__kind--edit">${KIND_LABEL.edit}</span>
-        <span class="pillar-row__title">${escapeAttr(s.title || "You rewrote the context")}</span>
-        <span class="pillar-row__when">${escapeAttr(s.addedAgo)}</span>
-      </div>
-      <div class="pillar-edit">${pair("Before", s.before)}${pair("After", s.after)}</div>
-    </article>`;
-}
-
-function renderSourceRow(s) {
-  if (s.kind === "edit") return renderEditRow(s);
-  const note = s.kind === "note";
-  const titleText = note ? "Written by you · quoted in full" : s.title;
-  const canOpen = (s.kind === "topic" && s.briefId) || (s.kind === "chat" && s.chatId);
-  const title = canOpen
-    ? `<button type="button" class="pillar-row__title pillar-row__title--link" data-source-open="${escapeAttr(s.id)}"
-         title="${s.kind === "topic" ? "Open this topic in its feed" : "Open this chat"}">${escapeAttr(titleText)}</button>`
-    : `<span class="pillar-row__title">${escapeAttr(titleText)}</span>`;
-  return `
-    <article class="pillar-row ${isRecent(s) ? "pillar-row--recent" : ""}" data-source-row="${escapeAttr(s.id)}">
-      <div class="pillar-row__top">
-        <span class="pillar-row__kind pillar-row__kind--${escapeAttr(s.kind)}">${KIND_LABEL[s.kind] || "Source"}</span>
-        ${title}
-        <span class="pillar-row__when">Added ${escapeAttr(s.addedAgo)}</span>
-        <button type="button" class="ap-button ghost grey pillar-row__x" data-source-remove="${escapeAttr(s.id)}">
-          <i class="ap-icon-close"></i><span>Remove</span>
-        </button>
-      </div>
-      <blockquote class="pillar-row__quote ${note ? "pillar-row__quote--full" : ""}">${escapeAttr(s.quote || "")}</blockquote>
-    </article>`;
-}
-
-// ─── Paging ────────────────────────────────────────────────────────────────
-// The sentinel is inside the trail's own scroller, so `root` has to be that
-// scroller — with the default (viewport) root it fires immediately on a list
-// that is taller than the pane and pages the whole thing in at once.
-//
-// A plain `scroll` listener backs it up, and that is not belt-and-braces: an
-// IntersectionObserver does not run while the document is hidden
-// (`visibilityState === "hidden"`), which is exactly the state a background tab
-// or an automated browser session is in. Without the fallback the list simply
-// stops paging there and looks broken — and it is the only path that can be
-// verified without a foreground window.
-function observeSentinel(target) {
-  if (observer) observer.disconnect();
-  const trail = target.querySelector("[data-pillar-trail]");
-  const sentinel = target.querySelector("[data-pillar-sentinel]");
-  if (!trail || !sentinel) return;
-  const more = () => {
-    view.visible += PAGE;
-    paint(target);
-  };
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((e) => e.isIntersecting)) more();
-    },
-    { root: trail, rootMargin: "120px" },
-  );
-  observer.observe(sentinel);
-  trail.addEventListener("scroll", () => {
-    if (trail.scrollTop + trail.clientHeight >= trail.scrollHeight - 120) more();
-  });
-}
-
-// ─── Bind ──────────────────────────────────────────────────────────────────
+// Removing a source went with it, deliberately. An input is a record of what
+// happened; deleting it rewrites that record to change a sentence. The sentence
+// is changed by editing the context — which is what the pencil above does, and
+// what the dialog's one verb offers.
 
 function bind(target) {
   boundTarget = target;
   boundClick = (event) => {
-    const tab = event.target.closest("[data-pillar-tab]");
-    if (tab) {
-      view.editing = null;
-      const next = tab.getAttribute("data-pillar-tab");
-      // Query-only navigation, so a link to the trail is shareable and Back
-      // works. The default tab writes no param.
-      // No key at all for the default tab — URLSearchParams stringifies null to
-      // the literal "null", which would put ?tab=null in the address bar.
-      setHashQuery(getPath(), next === "sources" ? { tab: "sources" } : {});
+    // The record, in a dialog. It carries the freeze switch too, so this one link
+    // is the way to everything that is not "read or edit the text".
+    if (event.target.closest("[data-pillar-history]")) {
+      openHistory({
+        pillarId: view.id,
+        // The dialog's own verb hands the page back its edit state, so "Edit the
+        // context" in there and the pencil out here end in the same place.
+        onEdit: () => {
+          view.editing = "context";
+          paint(target);
+          target.querySelector("[data-pillar-context]")?.focus();
+        },
+      });
       return;
     }
     const startEdit = event.target.closest("[data-pillar-edit]");
     if (startEdit) {
       // "name" or "context" — one page, two independent edits.
       view.editing = startEdit.getAttribute("data-pillar-edit") || "context";
+      // Measure the h1 BEFORE the repaint removes it — this is the only moment the
+      // rendered title width exists to be read. paint() writes innerHTML, so the
+      // node is gone by the next line.
+      if (view.editing === "name") {
+        const titleEl = target.querySelector(".pillar-view__title");
+        view.nameWidth = titleEl ? Math.round(titleEl.getBoundingClientRect().width) : 0;
+      }
       paint(target);
       const field = target.querySelector(view.editing === "name" ? "[data-pillar-name]" : "[data-pillar-context]");
       if (field) {
@@ -442,7 +378,10 @@ function bind(target) {
       view.editing = null;
       if (mode === "name") {
         const nameEl = target.querySelector("[data-pillar-name]");
-        const name = nameEl ? nameEl.value.trim() : "";
+        // Sliced as well as maxlength'd: the attribute stops typing and pasting, it
+        // does not stop a value that arrived any other way. The store is what every
+        // other surface reads, so the cap has to hold at the write.
+        const name = nameEl ? nameEl.value.trim().slice(0, NAME_MAX) : "";
         // A pillar with no name is not a pillar — keep the old one rather than
         // writing an empty title nobody can find again.
         if (name) updatePillar(view.id, { name });
@@ -465,38 +404,6 @@ function bind(target) {
       showToast("Share link copied");
       return;
     }
-    const openSrc = event.target.closest("[data-source-open]");
-    if (openSrc) {
-      const p = getPillarById(view.id);
-      const src = p && p.sources.find((s) => s.id === openSrc.getAttribute("data-source-open"));
-      if (!src) return;
-      if (src.kind === "chat" && src.chatId) {
-        navigate(`/session/${src.chatId}`);
-        return;
-      }
-      // A topic goes back to ITS FEED with itself selected — not to a modal.
-      // The feed is where the topic lives and where its siblings are; the lane
-      // comes off the brief rather than off the pillar, because a pillar spans a
-      // Playbook and a Playbook can own more than one feed.
-      const brief = src.briefId ? getBriefById(src.briefId) : null;
-      if (brief && brief.laneId) navigate(`/topic-feeds/${brief.laneId}?topic=${encodeURIComponent(brief.id)}`);
-      return;
-    }
-    const rm = event.target.closest("[data-source-remove]");
-    if (rm) {
-      const id = rm.getAttribute("data-source-remove");
-      const p = getPillarById(view.id);
-      const index = p ? p.sources.findIndex((s) => s.id === id) : -1;
-      const removed = removeSource(view.id, id);
-      if (removed) {
-        // Undo rather than a confirm: removing one source is small and repeated,
-        // and the snackbar is how Dismiss already works on the Topics feed.
-        showToast("Source removed · context rebuilt", {
-          action: { label: "Undo", onClick: () => restoreSource(view.id, removed, Math.max(0, index)) },
-        });
-      }
-      return;
-    }
     const rmAsset = event.target.closest("[data-asset-remove]");
     if (rmAsset) {
       const removed = removeAsset(view.id, rmAsset.getAttribute("data-asset-remove"));
@@ -513,6 +420,14 @@ function bind(target) {
   target.addEventListener("click", boundClick);
 
   target.addEventListener("change", (event) => {
+    // The diff toggle. `change` rather than click: it is a checkbox inside a
+    // label, and the label's own activation is what fires here.
+    const diff = event.target.closest("[data-pillar-diff]");
+    if (diff) {
+      view.showDiff = diff.checked;
+      paint(target);
+      return;
+    }
     const input = event.target.closest(".ap-dropzone__input");
     if (!input || !input.files || !input.files.length) return;
     const names = [...input.files].map((f) => f.name);
