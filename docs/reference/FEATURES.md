@@ -992,6 +992,12 @@ Ce qui a **survécu** à la suppression de la table, parce que ça ne lui appart
 
 Le retour du formulaire (et son Cancel, même cible — `research-form.exitPath`) pointe sur **le feed**, d'où vient le rouage. **Save** va au même endroit : il n'y a plus de table à laquelle revenir.
 
+#### Les deux pickers du composer suivent le scope, pas une question de plus
+
+- **« Pick a Topic »** ouvrait sur une grille de Playbooks — « les topics de qui ? ». Cette question a déménagé : le switcher du rail y répond pour toute l'app, en permanence et visiblement. Le modal ouvre donc directement sur la liste, en **Ready to draft** uniquement, avec la règle exacte du feed (`researchType === "content-strategy"` sans pilier = « for later », donc pas prêt) — le composer et le feed en désaccord sur le mot « prêt » serait pire que l'une ou l'autre réponse.
+- **Le Playbook retenu est celui du CHAT**, pas celui du rail. Un chat garde la marque dans laquelle il a été créé, donc proposer les topics d'une autre marque y attacherait une source qui n'appartient pas au travail. Le sous-titre nomme la marque (« 6 ready to draft in Agorapulse ») : un scope qui CACHE doit rester lisible sur les surfaces qu'il filtre.
+- **Le pied du sélecteur de pilier crée** au lieu de renvoyer à la liste. « View all your pillars » sortait du chat en cours pour montrer les mêmes noms que le dropdown venait d'afficher ; la seule chose que ce contrôle ne peut pas faire seul, c'est proposer un pilier qui n'existe pas encore. Le pilier créé est **sélectionné au retour** — on a ouvert ce menu pour en attacher un, le créer n'en est que la moitié — et il est créé dans le Playbook **du chat** (`pillar-modal.open({ playbookId })`, un argument qui existait mais n'était pas lu : le pilier atterrissait dans la mauvaise marque, invisible pour le contrôle qui venait de l'ouvrir).
+
 ### Critères d'acceptation
 
 Vérifiés le 2026-08-14 dans Chrome, flags `contentStrategy` + `contentResearch` ON.

@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=433";
+import { renderTopbar } from "../components/topbar.js?v=436";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=91";
 import {
   getConnectedProfiles,
@@ -72,7 +72,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=22";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=7";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=21";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=24";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -86,8 +86,9 @@ import {
 } from "../briefs-store.js?v=57";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=31";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=15";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=23";
 import { getLaneById, getLanes } from "../research-store.js?v=46";
-import * as contextBuilder from "../context-builder.js?v=400";
+import * as contextBuilder from "../context-builder.js?v=403";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -124,7 +125,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=119";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=122";
 import { findResearchSource } from "../research-catalog.js?v=20";
 import {
   openDrafts as openDraftsPanel,
@@ -132,7 +133,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=567";
+} from "../components/right-panel.js?v=570";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=37";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1337,9 +1338,9 @@ function renderPillarControl(ctx, sessionId) {
       <div class="ap-select-dropdown composer-pillar__dropdown" role="listbox" aria-label="Choose a content pillar">
         <div class="ap-select-options">${pillars.length ? noneRow + items : empty}</div>
         <div class="ap-select-footer">
-          <button type="button" class="ap-select-create" data-pillar-view-all>
-            <i class="ap-icon-arrow-right ap-select-create-icon" aria-hidden="true"></i>
-            <span>View all your pillars</span>
+          <button type="button" class="ap-select-create" data-pillar-create>
+            <i class="ap-icon-plus ap-select-create-icon" aria-hidden="true"></i>
+            <span>Create a pillar</span>
           </button>
         </div>
       </div>
@@ -5492,9 +5493,28 @@ function bindSession(root, session) {
         return;
       }
 
-      if (event.target.closest("[data-pillar-view-all]")) {
+      // The footer verb CREATES rather than navigating to the list.
+      //
+      // "View all your pillars" sent you to /content-strategy — out of the chat
+      // you were composing, to look at the same names the dropdown had just
+      // shown you. The one thing this control cannot do on its own is offer a
+      // pillar that does not exist yet, so that is what the footer does now, and
+      // the new pillar is selected on the way back: you opened this to attach
+      // one, and creating it is only half of that.
+      if (event.target.closest("[data-pillar-create]")) {
         event.preventDefault();
-        navigate("/content-strategy");
+        const details = event.target.closest("details");
+        if (details) details.open = false;
+        openPillarModal({
+          // The CHAT's Playbook, not the rail's: an older chat keeps the brand it
+          // was created in, and a pillar it cannot list is a pillar it cannot use.
+          playbookId: session.contextId || null,
+          onDone: (created) => {
+            if (created) composerPillarBySession.set(session.id, created.id);
+            const box = root.querySelector("[data-composer-pillar]");
+            if (box) box.outerHTML = renderPillarControl(getContextById(session.contextId), session.id);
+          },
+        });
         return;
       }
 
@@ -5558,7 +5578,10 @@ function bindSession(root, session) {
         // and every existing affordance (Extract ideas, Draft, Ask) lights up on
         // its own. No new action surface for it to need.
         if (kind === "content-ideas") {
-          openIdeaPicker({ onPick: (brief) => openBriefInChat(brief.id) });
+          // THIS chat's Playbook, for the reason the pillar control uses it too:
+          // a chat keeps the brand it was created in, and a topic from another
+          // one would arrive as a source that does not belong to the work.
+          openIdeaPicker({ onPick: (brief) => openBriefInChat(brief.id), playbookId: session.contextId || null });
           return;
         }
         // A pillar attaches to THIS chat rather than spawning one: the composer is

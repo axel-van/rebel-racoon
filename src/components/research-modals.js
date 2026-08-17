@@ -35,6 +35,13 @@ import {
 // verbs — so it comes from the same module rather than being re-written here.
 import { renderUseButtons } from "./brief-card.js?v=55";
 import { getLanes } from "../research-store.js?v=46";
+// The scope the whole app hangs off — this modal reads it instead of asking.
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=24";
+// pillars-store, not contexts-store: this is the Content-strategy pillar a topic
+// gets FILED into, which is what decides whether it is ready to draft. The
+// getPillars imported below from contexts-store is the older per-Playbook pillar
+// list and a different object entirely.
+import { pillarForBrief } from "../pillars-store.js?v=7";
 import {
   getContexts,
   getContextById,
@@ -68,8 +75,12 @@ let active = null; // { kind, ctx } — what's currently open
 let backTo = null; // briefId to return to, when this view was opened from the article
 // Topic-picker state. Module-level because each step re-renders through openShell,
 // which rebuilds the dialog — the step and the answer have to outlive that.
-let pickerStep = "playbooks";
-let pickerPlaybook = null; // one id; picking a card IS the navigation
+// No picker STEP any more: the rail's switcher answers "whose topics?" for the
+// whole app, so the modal opens on the answer. The id is still held, because the
+// answer is not always the rail's — a chat keeps the Playbook it was created in,
+// and offering another brand's topics to it would file a Noba topic as a source
+// in an Acme chat.
+let pickerPlaybookId = null;
 // Add-to-strategy state. Same reason as the picker's: choosing create-vs-link
 // re-renders the dialog through openShell, so the choice and the edited text have
 // to live outside it. `text` is seeded once from the topic and then belongs to the
@@ -126,17 +137,6 @@ export function init() {
   // the wiring is too. Each branch reads `active` for its context.
   panel.addEventListener("click", onPanelClick);
   panel.addEventListener("input", onPanelInput);
-  // The Playbook step's cards are .contexts-card — an <article role="button">,
-  // not a <button>, because that is the element /contexts styles. A real button
-  // gets Enter and Space for free; role="button" does not, so they are wired
-  // here exactly as contexts.js wires the same card on its own page.
-  panel.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    const card = event.target.closest?.('[data-idea-pb][role="button"]');
-    if (!card) return;
-    event.preventDefault();
-    card.click();
-  });
   backdrop.addEventListener("click", close);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen()) close();
@@ -879,29 +879,15 @@ export function openPlaybookList({ playbookId, kind }) {
 // IGNORED topics are left out. Everything else — New, Saved, Used — is offered,
 // because re-using a topic in a second chat is legitimate, but "Ignore" is the
 // one status that means "not this one".
-// TWO STEPS, not a filter dropdown. Picking the Playbook first is a real
-// question with a small answer set, and answering it up front means step two is
-// already the short list — where a dropdown made you open the modal, read a list
-// you did not want, then go filter it.
-//
-// `pickerStep` and `pickerPlaybook` are module-level because each step re-renders
-// through openShell, which rebuilds the dialog; the answers have to outlive that.
-export function openIdeaPicker({ onPick }) {
-  pickerStep = "playbooks";
-  pickerPlaybook = null;
+// ONE STEP. It used to open on a grid of Playbooks — "whose topics?" — and only
+// then show the list. That question has moved: the rail's switcher answers it for
+// every surface in the app, permanently and visibly, so asking again inside a
+// modal made the user state something they had already stated, and let the modal
+// disagree with the rail. The step is gone; the subtitle names the brand, because
+// a scope that hides has to stay legible on the surfaces it filters.
+export function openIdeaPicker({ onPick, playbookId = null }) {
+  pickerPlaybookId = playbookId || getActivePlaybookId();
   renderIdeaPicker({ onPick });
-}
-
-// Every Playbook that actually owns a topic, in lane order. Offering Playbooks
-// with nothing behind them would be a choice that can only empty the next step.
-function pickerPlaybookOptions() {
-  const seen = new Map();
-  for (const lane of getLanes()) {
-    if (seen.has(lane.playbookId)) continue;
-    const pb = getContextById(lane.playbookId);
-    if (pb) seen.set(lane.playbookId, pb);
-  }
-  return [...seen.values()];
 }
 
 // A lane's topics, split by whether the picker would normally show them.
@@ -916,105 +902,30 @@ function pickerPlaybookOptions() {
 function pickerSplit(laneId) {
   const all = getBriefsForLane(laneId);
   return {
-    shown: all.filter((b) => b.status !== "ignored"),
+    shown: all.filter((b) => b.status !== "ignored" && isReadyToDraft(b)),
     // Empty while the exception is off, so the group below simply never renders.
     hiddenTrending: SHOW_HIDDEN_TRENDING ? all.filter((b) => b.status === "ignored" && b.isTrending) : [],
   };
 }
 
 function pickerLanes() {
-  return getLanes().filter((lane) => lane.playbookId === pickerPlaybook);
+  return getLanes().filter((lane) => !pickerPlaybookId || lane.playbookId === pickerPlaybookId);
+}
+
+// READY TO DRAFT only, by the feed's own rule: a "Topics for later" card is one
+// no pillar has claimed, which is exactly the topic you are not ready to write
+// from. Same predicate as research-feed.inSegment, deliberately — the composer
+// and the feed disagreeing about what "ready" means would be worse than either
+// answer on its own.
+function isReadyToDraft(brief) {
+  return !(brief.researchType === "content-strategy" && !pillarForBrief(brief.id));
 }
 
 function renderIdeaPicker(ctx) {
-  if (pickerStep === "playbooks") return renderPlaybookStep(ctx);
   return renderTopicStep(ctx);
 }
 
-// ── Step 1: which Playbook ─────────────────────────────────────────────────
-//
-// One click on a card IS the answer — no checkboxes, no Continue. The question
-// has exactly one answer in practice ("show me this brand's topics"), and a
-// multi-select made you state it twice: tick, then confirm.
-//
-// It reuses the /contexts card — .contexts-card and its children, colour
-// modifier and all — rather than a list row of its own. A Playbook is the same
-// object here as it is on its own page, and the picker was the only surface
-// that drew it differently.
-//
-// Two deliberate omissions from that card:
-//   • .contexts-card__brief. Asked for, and right: the brief is a paragraph you
-//     read when you are deciding how a Playbook is set up, not when you are
-//     answering "whose topics?". It also made the cards tall enough to push the
-//     second row under the fold.
-//   • .contexts-card__actions (edit / duplicate / delete). Those are page
-//     affordances — a topic picker must not be a place you can delete a
-//     Playbook from.
-//
-// The topic count replaces them as an extra .contexts-card__counter, so the
-// picker's own information rides in the card's existing footer rather than in a
-// new element.
-function renderPlaybookStep(ctx) {
-  const options = pickerPlaybookOptions();
-
-  openShell("idea-picker", ctx, {
-    title: "Pick a Topic",
-    sub: "Which Playbook do you want Topics from?",
-    // wide, because .contexts-card is built for a ~300px minimum and the default
-    // 560px shell gave it one cramped column.
-    wide: true,
-    body: options.length
-      ? html`<div class="research-pick__pbgrid">
-          ${raw(
-            options
-              .map((o) => {
-                const lanes = getLanes().filter((l) => l.playbookId === o.id);
-                const n = lanes.reduce((t, l) => t + pickerSplit(l.id).shown.length, 0);
-                const color = o.color || "orange";
-                const voice = o.voiceProfile && o.voiceProfile.headline;
-                return html`<article
-                  class="contexts-card contexts-card--${color}"
-                  data-idea-pb="${escapeAttr(o.id)}"
-                  role="button"
-                  tabindex="0"
-                >
-                  <span class="contexts-card__swatch" aria-hidden="true"></span>
-                  <header class="contexts-card__head">
-                    <h3 class="contexts-card__name">${o.name}</h3>
-                  </header>
-                  ${raw(
-                    voice
-                      ? html`<div class="contexts-card__voice">
-                          <i class="ap-icon-archie-official"></i><span>${voice}</span>
-                        </div>`
-                      : "",
-                  )}
-                  <footer class="contexts-card__foot">
-                    <div class="contexts-card__counters">
-                      <span class="contexts-card__counter" title="${n} ${n === 1 ? "Topic" : "Topics"}">
-                        <i class="ap-icon-note"></i><span>${n}</span>
-                      </span>
-                      <span
-                        class="contexts-card__counter"
-                        title="${lanes.length} ${lanes.length === 1 ? "Topic feed" : "Topic feeds"}"
-                      >
-                        <i class="ap-icon-folder"></i><span>${lanes.length}</span>
-                      </span>
-                    </div>
-                  </footer>
-                </article>`;
-              })
-              .join(""),
-          )}
-        </div>`
-      : html`<p class="research-pick__empty muted">No Topics yet. Your Topic feeds fill up once one has run.</p>`,
-    foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
-      <span>Cancel</span>
-    </button>`,
-  });
-}
-
-// ── Step 2: the topics themselves ──────────────────────────────────────────
+// ── The list ───────────────────────────────────────────────────────────────
 // Grouped BY AGE, exactly like the topic-list screen — same groupBriefsByAge,
 // same AGE_GROUPS order, same .topics-agegroup chrome. It used to group by lane,
 // which meant the one list in the app that shows the feed's cards sorted them by
@@ -1037,11 +948,11 @@ function renderTopicStep(ctx) {
   const ageGroups = groupBriefsByAge(shown);
   const shownTotal = shown.length;
   const trending = lanes.flatMap((g) => g.hiddenTrending);
-  const pb = getContextById(pickerPlaybook);
+  const pb = pickerPlaybookId ? getContextById(pickerPlaybookId) : getActivePlaybook();
 
   openShell("idea-picker", ctx, {
     title: "Pick a Topic",
-    sub: `${shownTotal} ${shownTotal === 1 ? "Topic" : "Topics"} in ${pb ? pb.name : "this Playbook"}`,
+    sub: `${shownTotal} ready to draft in ${pb ? pb.name : "this Playbook"}`,
     // Sized to the card rather than to a generic "wide": the topic card caps
     // itself at its own content, so the 768px shell step 1 uses would leave a
     // dead column beside every card.
@@ -1074,13 +985,14 @@ function renderTopicStep(ctx) {
                 </section>`,
             )
             .join("")
-        : html`<p class="research-pick__empty muted">No Topics in this Playbook yet.</p>`,
-    foot: html`<button type="button" class="ap-button stroked grey" data-idea-back>
-        <i class="ap-icon-arrow-left" aria-hidden="true"></i><span>Playbooks</span>
-      </button>
-      <button type="button" class="ap-button stroked grey" data-research-modal-close>
-        <span>Close</span>
-      </button>`,
+        : html`<p class="research-pick__empty muted">
+            Nothing ready to draft in this Playbook. Topics parked for later show up here once they are linked to a
+            content pillar.
+          </p>`,
+    // One button. The back to Playbooks went with the step it returned to.
+    foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+      <span>Close</span>
+    </button>`,
   });
 }
 
@@ -1710,23 +1622,6 @@ function onPanelClick(event) {
     footEl.innerHTML = html`<button type="button" class="ap-button primary blue" data-research-modal-close>
       <span>Close</span>
     </button>`;
-    return;
-  }
-
-  // ── Topic-picker step navigation ──────────────────────────────────────────
-  // A Playbook card: choosing it and moving on are one action, so there is no
-  // Continue to guard and no state that can be empty.
-  const pbCard = event.target.closest("[data-idea-pb]");
-  if (pbCard) {
-    pickerPlaybook = pbCard.dataset.ideaPb;
-    pickerStep = "topics";
-    renderIdeaPicker(active.ctx);
-    return;
-  }
-
-  if (event.target.closest("[data-idea-back]")) {
-    pickerStep = "playbooks";
-    renderIdeaPicker(active.ctx);
     return;
   }
 

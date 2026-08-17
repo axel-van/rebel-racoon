@@ -26,11 +26,11 @@
 //
 // Public API:
 //   init()
-//   open({ playbookId?, onDone? })
+//   open({ playbookId?, onDone? })   — onDone receives the created pillar
 
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { escapeAttr } from "../utils.js?v=21";
-import { getActivePlaybookId } from "../active-playbook.js?v=21";
+import { getActivePlaybookId } from "../active-playbook.js?v=24";
 import { addPillar, assetKindFor } from "../pillars-store.js?v=7";
 import { showToast } from "./toast.js?v=21";
 
@@ -38,7 +38,7 @@ const MODAL_ID = "pillar";
 
 let backdrop, modal, titleEl, nameEl, aboutEl, saveBtn, cancelBtn, closeBtn, dropzone, fileInput, fileList;
 let initialized = false;
-let state = { assets: [], onDone: null };
+let state = { assets: [], onDone: null, playbookId: null };
 
 const HTML = `
 <div class="app-modal-backdrop pillar-modal__backdrop" id="pillarBackdrop" hidden></div>
@@ -216,14 +216,21 @@ function submit() {
   // Both, not just the name: Enter in the name field submits, so this is the
   // guard the disabled button cannot provide on its own.
   if (!name || !about) return;
-  // The Playbook is not asked here any more: a pillar belongs to whichever brand
-  // the rail is scoped to, and asking again would let the dialog disagree with
-  // the switcher two inches to its left.
-  const { onDone, assets } = state;
+  // The Playbook is not ASKED here — a pillar belongs to whichever brand the rail
+  // is scoped to, and asking again would let the dialog disagree with the switcher
+  // two inches to its left. A caller may still name one, and one does: a chat
+  // keeps the Playbook it was created in, so creating a pillar from an older
+  // chat's composer has to file it under THAT chat's brand rather than under
+  // whatever the rail happens to show now. Without this the pillar landed in the
+  // wrong brand and the control that opened the dialog could not even list it.
+  const { onDone, assets, playbookId } = state;
   close();
-  addPillar({ name, about, playbookId: getActivePlaybookId(), assets });
+  // Handed to onDone, because a caller that opened this from a picker wants to
+  // SELECT what it just made — asking the user to create a pillar and then find
+  // it in the list they were already looking at is a step nobody needs.
+  const created = addPillar({ name, about, playbookId: playbookId || getActivePlaybookId(), assets });
   showToast(`Created “${name}”`);
-  if (typeof onDone === "function") onDone();
+  if (typeof onDone === "function") onDone(created);
 }
 
 export function init() {
@@ -234,7 +241,7 @@ export function open({ playbookId = null, onDone = null } = {}) {
   injectOnce();
   requestOpen(MODAL_ID, close);
 
-  state = { assets: [], onDone };
+  state = { assets: [], onDone, playbookId };
 
   titleEl.textContent = "New pillar";
   saveBtn.textContent = "Create pillar";
@@ -262,5 +269,6 @@ export function close() {
   backdrop.hidden = true;
   document.body.classList.remove("has-modal");
   state.onDone = null;
+  state.playbookId = null;
   notifyClose(MODAL_ID);
 }
