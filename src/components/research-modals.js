@@ -34,10 +34,10 @@ import {
 } from "../briefs-store.js?v=62";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=64";
+import { renderUseButtons } from "./brief-card.js?v=65";
 import { getLanes } from "../research-store.js?v=49";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=39";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=40";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -58,7 +58,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=36";
-import { renderBriefCard } from "./brief-card.js?v=64";
+import { renderBriefCard } from "./brief-card.js?v=65";
 import { renderSocialPostCard } from "./social-post-card.js?v=35";
 import { showToast } from "./toast.js?v=21";
 

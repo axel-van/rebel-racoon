@@ -1205,10 +1205,21 @@
    every other use of it (CLAUDE.md).
 
    ABOVE: the footer is the pane's bottom edge, so there is nothing below to open
-   into. `top-right` is the DS modifier for that — arrow on the bottom edge, near the
-   right, pointing down at the button. The bubble grows leftwards from the button's
-   right edge, which keeps it inside the pane now that Ignore sits second from the
-   left rather than at the far right.
+   into. `top-left` is the DS modifier for that — arrow on the bottom edge, near the
+   left, pointing down at the button.
+
+   LEFT, not right. Anchored `right: 0` the 280px bubble grew leftwards out of its
+   own container, because Ignore sits SECOND FROM THE LEFT of the footer rather than
+   at the far right: measured, its left edge landed 63px past the article pane's left
+   edge, and 69px past the dialog's. The two containers then failed differently and
+   both looked like the same bug — the pane has overflow:hidden so it sliced the
+   bubble off, the dialog has overflow:visible so it let it slide under the sidebar.
+   Neither was a z-index fault; the DS ships z-index 9999999 on .ap-tooltip and
+   nothing here creates a stacking context to trap it.
+
+   Anchored `left: 0` it grows from the button's LEFT edge into the space that is
+   actually there: 443→723 inside a pane ending at 966, and 393→673 inside a dialog
+   ending at 1024. Both clear by ~250px, so the widest hint this can hold still fits.
 
    Hover only. Unlike the card's status glyph this trigger IS a button, so focus
    would be available — but the button already carries the same words in its
@@ -1217,7 +1228,7 @@
 .topics-use-flat__tip {
   display: none;
   bottom: calc(100% + var(--ref-spacing-xxs));
-  right: 0;
+  left: 0;
   width: max-content;
   max-width: 280px;
   white-space: normal;

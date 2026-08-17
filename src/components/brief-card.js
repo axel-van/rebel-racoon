@@ -553,7 +553,7 @@ export function renderUseButtons(brief) {
             >
               <span>Ignore</span>
             </button>
-            <span class="ap-tooltip top-right topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
+            <span class="ap-tooltip top-left topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
           </span>`,
     )}
   </span>`;
