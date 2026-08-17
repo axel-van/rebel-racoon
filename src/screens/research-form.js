@@ -87,15 +87,23 @@ export function renderResearchForm(params, target) {
     // mocks.js, so the pre-fill is still there on first open.
     draft = { ...lane, sources: lane.sources.slice(), websites: lane.websites.slice() };
   } else {
+    // Neither the name nor the Playbook is asked for any more, so both are
+    // derived: the brand is the app's scope, and the name follows the one
+    // provisionMissingLanes() generates so a hand-made lane and an automatic one
+    // are indistinguishable.
+    const scopePb = getContextById(getActivePlaybookId());
     draft = {
-      name: "",
-      playbookId: "",
+      name: scopePb ? `${scopePb.name} · listening` : "Listening",
+      playbookId: scopePb ? scopePb.id : "",
       sources: DEFAULT_ENABLED_IDS.slice(),
       cadence: DEFAULT_CADENCE,
       notify: true,
       showTrending: true,
       websites: [],
     };
+    // The Playbook's own site, offered as the first row — the case the select's
+    // handler used to cover.
+    seedWebsites();
   }
 
   renderTopbar();
@@ -136,9 +144,24 @@ function paint(target) {
 
 // ─── Render ────────────────────────────────────────────────────────────────
 
-/** Both name and Playbook are required; the save button is tinted until then. */
+/** The Playbook this feed belongs to, for the lead. */
+function playbookName() {
+  const pb = getContextById(draft.playbookId);
+  return pb ? pb.name : "";
+}
+
+/**
+ * A feed is complete once it has a Playbook — which it always does now, because
+ * nothing on this page can change it and every entry point supplies one.
+ *
+ * It used to require a NAME too, typed into a field at the top of the page. That
+ * field is gone: a feed is implicit in its Playbook, its name is generated, and
+ * the only place it was ever printed is the unreachable feed-list screen. Asking
+ * for a name the product never shows, and blocking Save until it was given, was
+ * two costs for nothing.
+ */
 function isComplete() {
-  return !!draft.name.trim() && !!draft.playbookId;
+  return !!draft.playbookId;
 }
 
 // No in-page bordered bar. It was the last one left in the app and it duplicated
@@ -163,10 +186,19 @@ function renderPage() {
                chosen the first time as well as every time after. The MODE still
                differs underneath (create writes a lane, settings updates one);
                only the words stopped announcing which one you are in. -->
+          <!-- The Playbook is NAMED here, not chosen. The section above this used
+               to hold a feed name and a "Linked Playbook" select; both are gone —
+               see the note on renderResearchForm. What that select genuinely
+               carried, and what the lead now carries instead, is WHICH brand this
+               page configures: a global scope hides, so every surface it filters
+               has to stay legible. -->
           <h1 class="ap-h1 research-form__title">Feed settings</h1>
-          <p class="ap-body research-form__lead">What I watch for this Playbook, and how often I check it.</p>
+          <p class="ap-body research-form__lead">
+            What I watch for ${raw(playbookName() ? html`<strong>${playbookName()}</strong>` : "this Playbook")}, and
+            how often I check it.
+          </p>
         </header>
-        ${raw(renderScope())} ${raw(renderSources())} ${raw(renderOther())}
+        ${raw(renderSources())} ${raw(renderOther())}
       </div>
     </div>
     ${raw(renderFooter())}`;
@@ -174,42 +206,6 @@ function renderPage() {
 
 function renderSectionLabel(text) {
   return html`<h3 class="research-form__section-label">${text}</h3>`;
-}
-
-function renderScope() {
-  const contexts = getContexts();
-  const selected = getContextById(draft.playbookId);
-  return html`<section class="research-form__section">
-    ${raw(renderSectionLabel("Topic feed scope"))}
-    <div class="research-form__card research-form__card--stack">
-      <label class="research-form__field">
-        <span class="research-form__field-label">Topic feed name</span>
-        <input
-          type="text"
-          class="research-form__input"
-          placeholder="e.g. Lost dog recovery"
-          value="${escapeAttr(draft.name)}"
-          data-form-name
-        />
-      </label>
-      <label class="research-form__field">
-        <span class="research-form__field-label">Linked Playbook</span>
-        <select class="ap-select research-form__select" data-form-playbook>
-          <option value="" ${raw(!selected ? " selected" : "")}>Select a Playbook</option>
-          ${raw(
-            contexts
-              .map(
-                (c) =>
-                  html`<option value="${escapeAttr(c.id)}" ${raw(draft.playbookId === c.id ? " selected" : "")}>
-                    ${c.name}
-                  </option>`,
-              )
-              .join(""),
-          )}
-        </select>
-      </label>
-    </div>
-  </section>`;
 }
 
 // ── Saving with nothing switched on ────────────────────────────────────────
@@ -326,7 +322,10 @@ function renderSourceCard(source) {
               </p>`
             : "",
         )}
-        <button type="button" class="research-source__add-site" data-form-site-add>
+        <!-- A DS button, not the dashed pill this used to be. The pill was
+             invented visual language for an ordinary secondary action; ghost blue
+             is what the DS gives a low-weight add. -->
+        <button type="button" class="ap-button ghost blue research-source__add-site" data-form-site-add>
           <i class="ap-icon-plus" aria-hidden="true"></i
           ><span>${draft.websites.length ? "Add another website" : "Add a website"}</span>
         </button>
@@ -336,7 +335,11 @@ function renderSourceCard(source) {
   const toolRow = source.tools
     ? html`<div class="research-source__tools">
         ${raw(source.tools.map((t) => html`<span class="ap-tag grey mini">${t.name}</span>`).join(""))}
-        <button type="button" class="research-source__add-tool" data-form-add-tool="${escapeAttr(source.id)}">
+        <button
+          type="button"
+          class="ap-button ghost blue research-source__add-tool"
+          data-form-add-tool="${escapeAttr(source.id)}"
+        >
           <i class="ap-icon-plus" aria-hidden="true"></i><span>Add tool</span>
         </button>
       </div>`
@@ -375,22 +378,28 @@ function renderOther() {
         How often I scan your sources for new Topics. More frequent scans keep you close to live trends; less frequent
         ones return a more aggregated, high-level overview.
       </p>
-      <!-- Segmented control composed from primitives: the installed DS ships no
-           segmented-control CSS-UI class (0 occurrences in ds/css-ui/index.css),
-           so this is a sanctioned compose rather than an invented component.
-           role=radiogroup keeps the semantics a native segmented control would. -->
-      <div class="research-segmented" role="radiogroup" aria-label="Refresh frequency">
+      <!-- The DS Segmented Control, ported into ds-patches.css from the Angular
+           component's own template and SCSS. This used to be a look-alike composed
+           from primitives — 1.5px borders, 10px radius, three separate boxes with
+           an 8px gap — written when the CSS-UI layer had no class for it. The port
+           landed for the feed's Ready-to-draft / Topics-for-later switch, and the
+           two controls now come from the same place.
+           role=radiogroup + role=radio is kept over the component's own
+           aria-pressed: this is one setting with three values, not three toggles. -->
+      <div class="ap-segmented-control research-segmented" role="radiogroup" aria-label="Refresh frequency">
         ${raw(
           CADENCES.map(
             (c) =>
               html`<button
                 type="button"
-                class="research-segmented__option${raw(draft.cadence === c.id ? " is-selected" : "")}"
+                class="ap-segmented-control__segment${raw(
+                  draft.cadence === c.id ? " ap-segmented-control__segment--selected" : "",
+                )}"
                 role="radio"
                 aria-checked="${draft.cadence === c.id ? "true" : "false"}"
                 data-form-cadence="${escapeAttr(c.id)}"
               >
-                ${c.label}
+                <span class="ap-segmented-control__label">${c.label}</span>
               </button>`,
           ).join(""),
         )}
@@ -552,27 +561,6 @@ function bind(target) {
   target.addEventListener("click", boundClick);
 
   boundInput = (event) => {
-    const name = event.target.closest("[data-form-name]");
-    if (name) {
-      draft.name = name.value;
-      // Only the footer's enabled state depends on the name, so repaint that
-      // alone — a full repaint would steal focus from the field being typed in.
-      refreshFooter(target);
-      return;
-    }
-
-    const pb = event.target.closest("[data-form-playbook]");
-    if (pb) {
-      draft.playbookId = pb.value;
-      // A different Playbook means a different brand site, so offer it — but only
-      // into a list that is still empty (see seedWebsites).
-      seedWebsites();
-      // Full repaint here: choosing a Playbook reveals the per-source
-      // "Edit my competitors" links, which depend on it.
-      paint(target);
-      return;
-    }
-
     const site = event.target.closest("[data-form-site]");
     if (site) {
       // No repaint: re-rendering the row on every keystroke would blur the field
@@ -608,11 +596,4 @@ function bind(target) {
   };
   target.addEventListener("input", boundInput);
   target.addEventListener("change", boundInput);
-}
-
-// Swap just the footer, so typing the research name doesn't blur the input.
-function refreshFooter(target) {
-  const footer = target.querySelector(".research-form__footer");
-  if (!footer) return;
-  footer.outerHTML = renderFooter();
 }

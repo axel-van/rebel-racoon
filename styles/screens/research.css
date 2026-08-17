@@ -455,7 +455,12 @@
   }
 }
 
-/* ══ Research form (create + settings) ═══════════════════════════════════ */
+/* ══ Research form (feed settings) ══════════════════════════════════════
+   Built on the DS **settings** recipe, like /topics/settings — the app's other
+   settings page. The two used to be built differently: this one painted the
+   generic app surface and rolled its own cards (18px padding, 14px radius),
+   which is not what --sys-settings-card-* says and not what the other page did.
+   Layout only here; nothing redefines a DS token. */
 
 .research-form {
   display: flex;
@@ -465,10 +470,8 @@
 }
 
 /* Page heading, in place of the bordered in-page bar this screen used to carry.
-   Mirrors .topics-settings__head — the app's other settings page — exactly: a
-   plain header inside the scrolling body, no border, no background, with the DS
-   .ap-h1 / .ap-body classes doing the typography so nothing here restates a text
-   style. Spacing below it comes from .research-form__inner's own 24px gap. */
+   Mirrors .topics-settings__head: a plain header inside the scrolling body, no
+   border, no background, DS .ap-h1 / .ap-body doing the typography. */
 .research-form__head {
   display: flex;
   flex-direction: column;
@@ -480,7 +483,7 @@
 
 .research-form__lead {
   margin: var(--ref-spacing-xxxs) 0 0;
-  /* A reading measure, independent of the 720px form column. */
+  /* A reading measure, independent of the form column. */
   max-width: 72ch;
   color: var(--sys-text-color-light);
 }
@@ -491,95 +494,75 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 32px;
-  background: var(--app-bg);
+  padding: var(--sys-settings-content-internal-margin);
+  background: var(--sys-settings-content-background-color);
 }
 
+/* max-width-md (700), not -lg: this page is a single column of settings read
+   top to bottom, where /topics/settings is a two-column grid of source cards. */
 .research-form__inner {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 720px;
+  gap: var(--ref-spacing-md);
+  max-width: var(--sys-settings-content-max-width-md);
   margin: 0 auto;
 }
 
+/* The section caption — the DS caption-bold style, uppercased. It was 12px/800
+   with a hand-picked 0.03em, which is a text style written out longhand. */
 .research-form__section-label {
-  margin: 0 0 10px;
-  font-size: 12px;
-  font-weight: 800;
+  margin: 0 0 var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--ref-color-grey-60);
 }
 
+/* One card recipe for the page, straight from --sys-settings-card-*. */
 .research-form__card {
-  padding: 18px;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: 14px;
+  padding: var(--sys-settings-card-internal-padding);
+  background: var(--sys-settings-card-background-color);
+  border: 1px solid var(--sys-settings-card-border-color);
+  border-radius: var(--sys-settings-card-border-radius);
 }
 
 .research-form__card + .research-form__card {
-  margin-top: 12px;
+  margin-top: var(--ref-spacing-xs);
 }
 
 .research-form__card--stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--ref-spacing-sm);
 }
 
 .research-form__card--switch {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--ref-spacing-sm);
 }
 
 .research-form__switch-text {
   flex: 1;
 }
 
-.research-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.research-form__field-label {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--app-convo-navy);
-}
-
-.research-form__input,
-.research-form__select {
-  width: 100%;
-  padding: 11px 13px;
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-starter);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--app-convo-navy);
-  background: var(--ref-color-white);
-}
-
-.research-form__input::placeholder {
-  color: var(--ref-color-grey-40);
-}
-
+/* A setting's title and its explanation. h3/body sizes from the DS scale — they
+   were 15px and 13px, two values the scale does not contain. */
 .research-form__setting-title {
   margin: 0;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--app-convo-navy);
 }
 
 .research-form__setting-desc {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 600;
+  margin: var(--ref-spacing-xxxs) 0 0;
+  font-size: var(--sys-text-style-caption-size);
   line-height: 1.5;
-  color: var(--ref-color-grey-60);
+  color: var(--sys-text-color-light);
 }
 
 /* ── Source cards ────────────────────────────────────────────────────── */
@@ -587,29 +570,30 @@
 .research-form__sources {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--ref-spacing-xs);
 }
 
 .research-source {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: 14px;
+  gap: var(--ref-spacing-xs);
+  padding: var(--sys-settings-card-internal-padding);
+  background: var(--sys-settings-card-background-color);
+  border: 1px solid var(--sys-settings-card-border-color);
+  border-radius: var(--sys-settings-card-border-radius);
 }
 
 .research-source__head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--ref-spacing-xxs);
 }
 
 .research-source__name {
   flex: 1;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: var(--sys-text-style-body-bold-size);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--app-convo-navy);
 }
 
@@ -622,13 +606,13 @@
   font: inherit;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 12px;
+  gap: var(--ref-spacing-xxs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
   background: var(--ref-color-electric-blue-05);
   border: 1px solid var(--ref-color-electric-blue-40);
-  border-radius: var(--app-radius-starter);
-  font-size: 14px;
-  font-weight: 800;
+  border-radius: var(--ref-border-radius-sm);
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--ref-color-electric-blue-100);
   text-decoration: none;
 }
@@ -670,8 +654,7 @@
 
 .research-source__site-empty {
   margin: 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--sys-text-style-caption-size);
   color: var(--sys-text-color-light);
 }
 
@@ -679,29 +662,23 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--ref-spacing-xxs);
 }
 
-.research-source__add-tool,
-.research-source__add-site {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  background: none;
-  border: 1px dashed var(--ref-color-grey-20);
-  border-radius: var(--app-radius-pill);
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--ref-color-grey-60);
-  cursor: pointer;
+/* Add-a-site / add-a-tool are DS ghost-blue buttons now; the dashed pills they
+   used to be were an invented control for an ordinary secondary action. Only
+   their alignment inside the card lives here. */
+.research-source__add-site,
+.research-source__add-tool {
+  align-self: flex-start;
 }
 
 .research-source__how-label {
   display: block;
-  margin-bottom: 3px;
-  font-size: 11px;
-  font-weight: 800;
+  margin-bottom: var(--ref-spacing-xxxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  font-weight: var(--sys-text-style-caption-bold-weight);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--ref-color-grey-40);
@@ -710,42 +687,21 @@
 /* Plain prose, never a disabled textarea — see research-catalog.js. */
 .research-source__how-body {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--sys-text-style-body-size);
   line-height: 1.5;
   color: var(--ref-color-grey-80);
 }
 
 /* ── Toggle ──────────────────────────────────────────────────────────────
    No styles: the switch is the DS .ap-toggle-container / .ap-toggle, which
-   ships its own track, knob, hover, focus and disabled states. The ~55 lines
-   of hand-rolled pill that used to live here are gone — including the
-   visually-hidden input rule, which the DS component already does itself. */
+   ships its own track, knob, hover, focus and disabled states. */
 
-/* ── Segmented control ───────────────────────────────────────────────── */
-
+/* ── Cadence ─────────────────────────────────────────────────────────────
+   The DS Segmented Control, ported in ds-patches.css. Nothing to style: the
+   only thing this page adds is the gap between the description above it and
+   the control. */
 .research-segmented {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.research-segmented__option {
-  flex: 1;
-  padding: 10px 12px;
-  background: var(--ref-color-white);
-  border: 1.5px solid var(--ref-color-grey-20);
-  border-radius: var(--app-radius-starter);
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
-}
-
-.research-segmented__option.is-selected {
-  background: var(--ref-color-electric-blue-05);
-  border-color: var(--ref-color-electric-blue-100);
-  color: var(--ref-color-electric-blue-100);
+  margin-top: var(--ref-spacing-xs);
 }
 
 /* ── Sticky footer ───────────────────────────────────────────────────── */
@@ -753,11 +709,11 @@
 .research-form__footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--ref-spacing-xxs);
   flex: 0 0 auto;
-  padding: 16px 32px;
-  border-top: 1px solid var(--ref-color-grey-10);
-  background: var(--ref-color-white);
+  padding: var(--ref-spacing-sm) var(--sys-settings-content-internal-margin);
+  border-top: 1px solid var(--sys-settings-card-border-color);
+  background: var(--sys-settings-card-background-color);
 }
 
 /* The disabled tint itself lives in ds-patches.css, keyed on
