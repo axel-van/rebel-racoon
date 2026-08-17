@@ -8,16 +8,38 @@
  * because both surfaces render it — the section's prose and this list — and one
  * definition is what keeps them the same mark. */
 
+/* Sized to the CONTENT, which is four open entries side by side.
+ *
+ * At 560px × 520px this held one and a half, so comparing two weeks — the whole
+ * reason the list exists — meant scrolling one out of view to see the other.
+ *
+ * WIDTH 720. That is where an input's excerpt stops wrapping: the quotes drop to
+ * one line somewhere between 640 and 800, and 720 is the first width that clears
+ * them all without the measure getting long enough to be tiring. It takes a
+ * two-input entry from 152px to 134px on its own, so the width buys height.
+ *
+ * HEIGHT is the window's, capped. The cap is on the DIALOG rather than on the
+ * body, so the body can flex into whatever the window allows instead of being
+ * pinned to a number that is wrong on two thirds of screens — the body needs
+ * `min-height: 0` for that, or a flex child in a column refuses to shrink below
+ * its content and the overflow lands on the dialog.
+ *
+ * What that buys, measured: four typical entries and the state row sit inside
+ * ~780px of body. A tall desktop window clears it. A four-entry list where every
+ * week folded in two quoted inputs wants ~840 and scrolls on anything under a
+ * ~1130px window — the honest outcome, and better than a dialog taller than the
+ * screen it opened on. */
 .pillar-history {
-  width: min(calc(100% - 32px), 560px);
+  width: min(calc(100% - 32px), 720px);
+  max-height: min(94vh, 1040px);
   flex-direction: column;
 }
 
 .pillar-history__body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   gap: var(--ref-spacing-xxs);
-  max-height: min(60vh, 520px);
 }
 
 /* ── The state row ─────────────────────────────────────────────────────────
@@ -28,7 +50,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--ref-spacing-sm);
-  padding: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
   margin-bottom: var(--ref-spacing-xxs);
   border: 1px solid var(--sys-border-color-default);
   border-radius: var(--sys-border-radius-md);
@@ -108,7 +130,7 @@
    cleanly to one input, and claiming it would be the one overstatement that
    costs trust rather than building it. */
 .pillar-history__quote {
-  margin: 0 0 var(--ref-spacing-xxs) 26px;
+  margin: 0 0 var(--ref-spacing-xxxs) 26px;
   padding-left: var(--ref-spacing-xs);
   border-left: 2px solid var(--sys-border-color-default);
   font-size: var(--sys-text-style-caption-size);

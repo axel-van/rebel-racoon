@@ -1,32 +1,30 @@
-// One pillar, route /pillar/:id — two tabs.
+// One pillar, route /pillar/:id — one page, no tabs.
 //
-//   Context & assets   the condensed prose Archie carries into a chat, plus the
-//                      files you have attached. THE DEFAULT.
-//   What went into it  the audit trail: every topic, chat and note, newest
-//                      first, each quoted and each removable.
+//   Pillar Aggregated Context   the condensed prose Archie carries into a chat,
+//                               with the diff toggle and the pencil that edits it
+//   Assets                      the files you have attached
 //
-// ── Why the split ─────────────────────────────────────────────────────────
-// A pillar's job is to hold a point of view. The trail is how you AUDIT that
-// view, which is a second-order need — with both on one page the page was mostly
-// log, and the thing the pillar actually says scrolled off the top.
+// ── Where the trail went ──────────────────────────────────────────────────
+// This page used to have a second tab, "What went into it": every topic, chat and
+// note, newest first, each quoted and each removable. It is now the History
+// dialog (components/pillar-history-modal.js), opened from the provenance line
+// under the prose.
 //
-// The tab's counter is the ONLY announcement in this feature. The banner that
-// once sat above the context ("3 things were added this week") is gone on
-// purpose: a page whose whole premise is automatic additions does not need a
-// notice telling you additions happened.
+// The tab was the wrong shape twice over. It sat on the OTHER SIDE of the page
+// from the text it explained, so it was opened rarely and the context stayed
+// unexplained; and it listed one row per input, which is not how anyone thinks
+// about a weekly cadence. The dialog answers where the question is asked and
+// groups by event.
 //
-// ── Why every row quotes ──────────────────────────────────────────────────
-// A title tells you a topic was matched. An excerpt tells you WHAT PART of it
-// the pillar swallowed, which is the only thing anyone can actually judge. A
-// note is the user's own text, so it is quoted whole and marked as such — the
-// one place in this feature where a model must not restate the input.
+// Removing an input went with it, deliberately. An input is a record of what
+// happened; deleting it would rewrite that record to change a sentence. The
+// sentence is changed by editing the context — the pencil on the section.
 //
-// ── The scroll ────────────────────────────────────────────────────────────
-// The trail owns its own scroll inside a scrolling page, which is the exact trap
-// this repo already hit on the new-session hero: a flex child in a max-height
-// column SHRINKS, and clamped text collapses to zero height. `flex: 0 0 auto` on
-// the rows in pillar.css is load-bearing — see docs/reference/UI-PATTERNS.md.
-// Paging is IntersectionObserver on a sentinel, not a "Show all" button.
+// ── Why the record still quotes every input ───────────────────────────────
+// A title tells you a topic was matched. An excerpt tells you WHAT PART of it the
+// pillar swallowed, which is the only thing anyone can actually judge. A note is
+// the user's own text, so it is quoted whole and marked as such — the one place
+// in this feature where a model must not restate the input.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
@@ -35,7 +33,7 @@ import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { parseHashParams } from "../url-state.js?v=21";
 import { renderDiff, hasDiff } from "../text-diff.js?v=1";
-import { open as openHistory } from "../components/pillar-history-modal.js?v=2";
+import { open as openHistory } from "../components/pillar-history-modal.js?v=5";
 import {
   getPillarById,
   addAsset,
@@ -338,17 +336,12 @@ function bind(target) {
   boundClick = (event) => {
     // The record, in a dialog. It carries the freeze switch too, so this one link
     // is the way to everything that is not "read or edit the text".
+    // The dialog is read-only and hands nothing back — it used to close into this
+    // page's edit state, which made the loudest control on a screen for READING
+    // the record one that changed the text, from a surface that could not show
+    // the result. Editing is the pencil above, in place, where the text is.
     if (event.target.closest("[data-pillar-history]")) {
-      openHistory({
-        pillarId: view.id,
-        // The dialog's own verb hands the page back its edit state, so "Edit the
-        // context" in there and the pencil out here end in the same place.
-        onEdit: () => {
-          view.editing = "context";
-          paint(target);
-          target.querySelector("[data-pillar-context]")?.focus();
-        },
-      });
+      openHistory({ pillarId: view.id });
       return;
     }
     const startEdit = event.target.closest("[data-pillar-edit]");

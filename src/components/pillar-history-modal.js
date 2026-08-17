@@ -19,15 +19,24 @@
 // it — and a third control there buried both. Here the switch has its own state
 // line, and every past freeze is one scroll below it.
 //
-// ── No delete ─────────────────────────────────────────────────────────────
-// Nothing in this dialog removes an input. An input is a record of what happened;
-// deleting it would rewrite that record to change a sentence. The sentence is
-// changed by editing the context, which is what the footer's one verb does.
+// ── Read-only, and the footer says so by being empty ──────────────────────
+// Nothing in this dialog changes the context. Nothing removes an input either —
+// an input is a record of what happened, and deleting it would rewrite that
+// record to change a sentence.
+//
+// The footer used to carry "Edit the context", which closed the dialog and put
+// the section behind it into edit mode. It read as the obvious next step from a
+// screen whose whole job is to show you what the text used to say, and that is
+// exactly the problem: you arrive here to READ, and the loudest control offered
+// to change the thing you are reading — from a surface that cannot show you the
+// result. The pencil on the section does it in place, where the text is.
+//
+// So: one verb, Close. The one control that stays is the freeze switch, because
+// it governs the record rather than the text.
 //
 // Public API:
 //   init()
-//   open({ pillarId, onEdit? })   — onEdit fires after close, so the caller can
-//                                   put the page into its edit state
+//   open({ pillarId })
 
 import { html, raw, escapeAttr, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
@@ -41,7 +50,7 @@ const PAGE = 6;
 let backdrop, modal, bodyEl, subEl;
 let initialized = false;
 let unsubscribe = null;
-let state = { pillarId: null, onEdit: null, open: new Set(), shown: PAGE };
+let state = { pillarId: null, open: new Set(), shown: PAGE };
 
 const HTML = `
 <div class="app-modal-backdrop pillar-history__backdrop" id="pillarHistoryBackdrop" hidden></div>
@@ -61,14 +70,13 @@ const HTML = `
     <i class="ap-icon-close"></i>
   </button>
   <div class="ap-dialog-content pillar-history__body" id="pillarHistoryBody"></div>
+  <!-- One control, and no caption beside it. The footer used to carry a line
+       explaining that nothing here is removable — true, but it was answering a
+       question nobody had asked yet, and it cost three lines of the height the
+       list needs to show four weeks at once. Read the module header for the
+       reasoning; the surface does not have to argue its own case. -->
   <div class="ap-dialog-footer">
-    <div class="ap-dialog-footer-left">
-      <span class="pillar-history__note">Nothing is removed here — the context is corrected by editing it.</span>
-    </div>
     <div class="ap-dialog-footer-right">
-      <button type="button" class="ap-button primary orange" data-history-edit>
-        <i class="ap-icon-pen"></i><span>Edit the context</span>
-      </button>
       <button type="button" class="ap-button stroked grey" data-history-close><span>Close</span></button>
     </div>
   </div>
@@ -103,13 +111,6 @@ function injectOnce() {
 
 function onClick(event) {
   if (event.target.closest("[data-history-close]")) return close();
-
-  if (event.target.closest("[data-history-edit]")) {
-    const cb = state.onEdit;
-    close();
-    if (typeof cb === "function") cb();
-    return;
-  }
 
   const row = event.target.closest("[data-history-entry]");
   if (row) {
@@ -256,7 +257,7 @@ export function init() {
   injectOnce();
 }
 
-export function open({ pillarId, onEdit = null } = {}) {
+export function open({ pillarId } = {}) {
   injectOnce();
   const p = getPillarById(pillarId);
   if (!p) return;
@@ -268,7 +269,7 @@ export function open({ pillarId, onEdit = null } = {}) {
   const timeline = getPillarTimeline(pillarId);
   const first = timeline[0];
   const firstKey = first ? (first.type === "update" ? `w${first.bucket}` : first.source?.id) : null;
-  state = { pillarId, onEdit, open: new Set(firstKey ? [firstKey] : []), shown: PAGE };
+  state = { pillarId, open: new Set(firstKey ? [firstKey] : []), shown: PAGE };
 
   paint();
   // The freeze switch writes to the store, and so does anything else on the page
@@ -296,6 +297,5 @@ export function close() {
     unsubscribe();
     unsubscribe = null;
   }
-  state.onEdit = null;
   notifyClose(MODAL_ID);
 }
