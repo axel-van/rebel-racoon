@@ -15,11 +15,11 @@
 // is safe because only one route renders at a time.
 
 import { html, raw, escapeHtml as esc } from "./utils.js?v=21";
-import { openPillarInChat } from "./pillar-flow.js?v=18";
+import { openPillarInChat } from "./pillar-flow.js?v=19";
 import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=25";
 import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1";
 import { isFlagOn } from "./feature-flags.js?v=23";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=66";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=67";
 import { open as openConfirmModal } from "./components/confirm-modal.js?v=22";
 import { open as openAddPlaybookEntry } from "./components/add-playbook-entry-modal.js?v=1";
 

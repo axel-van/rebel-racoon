@@ -16,6 +16,17 @@ export const recentSessions = [
     contextId: "ctx-agorapulse",
     pinned: true,
   },
+  // Filed into the "AI that takes work off your plate" pillar as a CHAT source,
+  // in the same week as the topic br-45 — which is the point of it. The pillar's
+  // trail groups by week, so one weekly update now carries a topic AND a chat and
+  // the reader can see two kinds of thing stacking under one entry.
+  {
+    id: "s-agp-competitor-scan",
+    name: "Competitor AI claims → what we say back",
+    lastActivity: "Yesterday",
+    contextId: "ctx-agorapulse",
+    pinned: false,
+  },
   {
     id: "s-riverside",
     name: "Riverside customer story → 5 posts",
@@ -579,6 +590,22 @@ export const topPosts = buildTopPosts();
 // cross-session reuse. Listed by sessionId for clarity; sources-stream.js
 // loads this into its per-session Map at boot for returning users.
 export const sourcesBySession = {
+  // The competitor export, dropped into a chat as one file. 48 posts across five
+  // accounts is the largest single source in this data, which is the reason it is
+  // here: it is what a genuinely big context looks like in the thread, and the
+  // pillar quotes the chat rather than the file.
+  "s-agp-competitor-scan": [
+    {
+      id: "src-agp-scan-1",
+      filename: "agorapulse_competitors_posts_last30days.csv",
+      kind: "CSV",
+      status: "Processed",
+      signal: "High signal",
+      signalColor: "orange",
+      ideaCount: 3,
+      addedAt: "1d ago",
+    },
+  ],
   "s-acme-launch": [
     {
       id: "src-acme-1",
@@ -861,6 +888,69 @@ export const anglesByIdea = {
 // `sourcesBySession` is kept in sync with the count of ideas pointing at
 // that source below.
 export const ideasBySession = {
+  // The three the competitor-scan chat extracted. They have to exist HERE as well
+  // as in the thread's extraction turn: the turn renders from its own data, but the
+  // topbar's Ideas pill and the right panel read this map, and a thread saying
+  // "Extracted 3 ideas" beside a pill reading 0 is the kind of mismatch a reviewer
+  // spots immediately.
+  "s-agp-competitor-scan": [
+    {
+      id: "idea-agp-scan-1",
+      title: "Where does the agent live — your AI, or theirs?",
+      body: "The one real split in the category, written as a buyer's question: bring your own AI and let the data reach it, or move your work into the vendor's chat.",
+      kind: "hook",
+      tags: ["competitive", "positioning", "agents"],
+      used: 0,
+      ref: "48 posts · last 30 days",
+      rationale:
+        "The only claim in the set that is a decision rather than a description. It also happens to be the one our own architecture answers well.",
+      relevance: "High relevance",
+      relevanceColor: "orange",
+      confidence: 94,
+      channels: ["linkedin"],
+      state: "Pinned",
+      pinned: true,
+      sourceIds: ["src-agp-scan-1"],
+      extractedAt: "1d ago",
+    },
+    {
+      id: "idea-agp-scan-2",
+      title: "The Tuesday, not the layer",
+      body: "What the inbox looked like at 9am, what was already sorted, what was left for a human, and how long that used to take. The post nobody in the set has written.",
+      kind: "story",
+      tags: ["workflow", "operator"],
+      used: 0,
+      ref: "48 posts · last 30 days",
+      rationale:
+        "Same claim as everyone else's, in the format none of them used. A workflow beats an architecture for this reader.",
+      relevance: "High relevance",
+      relevanceColor: "orange",
+      confidence: 88,
+      channels: ["linkedin", "instagram"],
+      state: "New",
+      pinned: false,
+      sourceIds: ["src-agp-scan-1"],
+      extractedAt: "1d ago",
+    },
+    {
+      id: "idea-agp-scan-3",
+      title: "$5–30 a month against $10K of equivalent work",
+      body: "Vista Social made the cost comparison explicit and nobody else did. The framing is available to anyone and it is more concrete than any capability claim around it.",
+      kind: "stat",
+      tags: ["pricing", "competitive"],
+      used: 0,
+      ref: "Vista Social · 14 Jul 2026",
+      rationale: "A number a social media manager can take to a budget conversation, which no capability sentence is.",
+      relevance: "Medium relevance",
+      relevanceColor: "tagOrange",
+      confidence: 76,
+      channels: ["linkedin"],
+      state: "New",
+      pinned: false,
+      sourceIds: ["src-agp-scan-1"],
+      extractedAt: "1d ago",
+    },
+  ],
   "s-acme-launch": [
     {
       id: "idea-acme-1",
@@ -3215,6 +3305,71 @@ export const postsBySession = {
 // content on click.
 
 export const threadsBySession = {
+  // The competitor-scan chat. Written to be the LONG one: a 48-post export goes in,
+  // and what comes back is a read of the whole set rather than a per-post reply.
+  // The pillar quotes this chat, so the thread has to contain the sentence the
+  // pillar's context now carries — otherwise the citation points at nothing.
+  "s-agp-competitor-scan": [
+    {
+      role: "assistant",
+      meta: "Archie",
+      text: "Hi. Want me to compare ideas, pick the strongest one, or draft a post? You can also type a question or drop a source.",
+    },
+    {
+      role: "source-intake",
+      meta: "Source intake",
+      kind: "CSV",
+      filename: "agorapulse_competitors_posts_last30days.csv",
+      size: "0.1mb",
+      sourceId: "src-agp-scan-1",
+      status: "ready",
+    },
+    {
+      role: "user",
+      meta: "You",
+      text: "48 posts from Sprout, Hootsuite, Sprinklr, Buffer and Vista Social, last 30 days. What are they all actually claiming, and where does it leave us?",
+    },
+    {
+      role: "assistant",
+      meta: "Archie",
+      text: "Read all 48. Two thirds of them are one theme: the chat replaces the dashboard. Hootsuite rebuilt the product around an agent layer and bridges listening data out to whatever AI you already run. Vista Social went the other way — Ask Vista is a command surface you move into, 25 agents with names, each logging the hours it saved against what a human would have cost. Buffer sits outside both, publishing a creator's stack of eight MCP servers and shipping Insights with MCP access on every plan. Sprinklr talks signals and sentiment, not agents. Sprout barely mentions AI at all this month — their feed is Cannes, the World Cup and an awards programme.\n\nThe gap is the same one in every account: they describe the architecture and never name the task that stops arriving. Two of them do put a number on it — Vista Social's $5–30/month against $10K+ of equivalent work, and Hootsuite's claim that most senior marketing leaders run AI with no access to live social data. Those are the only two sentences in 48 posts a social media manager could repeat to their boss.",
+    },
+    {
+      role: "assistant",
+      variant: "extraction",
+      meta: "Archie",
+      filename: "agorapulse_competitors_posts_last30days.csv",
+      ideas: [
+        {
+          id: "idea-agp-scan-1",
+          title: "Where does the agent live — your AI, or theirs?",
+          body: "The one real split in the category, written as a buyer's question: bring your own AI and let the data reach it, or move your work into the vendor's chat.",
+        },
+        {
+          id: "idea-agp-scan-2",
+          title: "The Tuesday, not the layer",
+          body: "What the inbox looked like at 9am, what was already sorted, what was left for a human, and how long that used to take. The post nobody in the set has written.",
+        },
+        {
+          id: "idea-agp-scan-3",
+          title: "$5–30 a month against $10K of equivalent work",
+          body: "Vista Social made the cost comparison explicit and nobody else did. The framing is available to anyone and it is more concrete than any capability claim around it.",
+        },
+      ],
+      count: 3,
+      open: false,
+    },
+    {
+      role: "user",
+      meta: "You",
+      text: "Keep the first one. That's the pillar.",
+    },
+    {
+      role: "assistant",
+      meta: "Archie",
+      text: "Filed under **AI that takes work off your plate**. I've added the competitor split to the pillar's context, so anything we draft from it starts with the question rather than the vocabulary.",
+    },
+  ],
   "s-acme-launch": [
     {
       role: "assistant",
@@ -5481,6 +5636,98 @@ export const researchBriefs = [
     seedStatus: "new",
     seedReason: "",
   },
+  // ── From the gemini-3.5-flash-lite export, Topic 1 (ready_to_write) ────────
+  // The third topic this pillar quotes, and deliberately NOT a third way of
+  // saying "nobody names the task": br-27 has that, br-28 has the MCP register.
+  // What the export carries that neither of those does is the DIVERGENCE — the
+  // two accounts agree conversational commands should replace the interface and
+  // disagree about where the agent lives. That is the only part of the theme that
+  // is a decision for the reader rather than a description of the market.
+  //
+  // Volume/network mix are the export's own (high, 50% Instagram / 36% web blog /
+  // 14% Facebook), and the posts below are the real items behind it.
+  {
+    id: "br-45",
+    laneId: "topic-list-6",
+    sourceId: "competitor-posts",
+    ageLabel: "1d ago",
+    headline: "Two ways to sell an agent: bring your own AI, or move into theirs",
+    summary:
+      "Every account in this window agrees the chat replaces the dashboard. They split on where the agent lives — one rebuilds the suite into apps behind a central agent and bridges out to the AI you already use, the other is a command surface you move into. That is the choice nobody is putting to the buyer.",
+    researchType: "ready-to-post",
+    isTrending: false,
+    isUpdated: false,
+    research: {
+      title: "The category agrees on the premise and splits on the architecture",
+      subheads: ["One premise, two architectures", "The question a buyer can actually answer"],
+      paragraphs: [
+        "Every monitored account in this window makes the same promise: conversational commands supersede interface navigation, agents run in the background, and you are interrupted only when something matters. The vocabulary is shared too — orchestration layers, intelligence units, autonomous teammates.",
+        "They diverge on structure, and the divergence is the story. One approach reorganises a legacy suite into purpose-built component apps — publishing, care, listening, advocacy — governed by a central agent, and keeps protocol bridges open so listening data flows into whatever AI tool the rest of the company already uses. The other positions its product as a standalone conversational command surface wired directly into its own tools; a third framing presents the software as one link inside a practitioner's stack rather than the platform itself.",
+        "Underneath the two shapes is one number worth repeating: a provider's own research claims most senior marketing leaders already run AI tools that have no access to live social data. Both architectures are answers to that, and they ask opposite things of you — bring your own AI and let the data reach it, or bring your work to the vendor's chat.",
+        'That is a question a social media manager can actually answer, unlike "is AI a foundation or a feature". Whoever writes it as a straight comparison — where does the agent live, whose AI does it feed, what happens to your data when you change tools — publishes the piece the category has been talking around for a month.',
+      ],
+    },
+    posts: [
+      {
+        id: "agp-p31",
+        network: "instagram",
+        publishedOn: "24 Jun 2026",
+        author: { name: "Hootsuite", handle: "@hootsuite", initials: "HS", accent: "yellow" },
+        text: "There's a future where you'll be able to do everything you do in Hootsuite now — without ever looking at our software. While others bolt AI features onto their existing tools and platforms, we've rebuilt Hootsuite from the ground up with AI as a foundation, not a feature. Flow real-time social listening insights directly into the AI tools you already use across your organization via MCP connectors.",
+        likes: 62,
+        comments: 14,
+        reposts: 0,
+        url: "https://www.instagram.com/p/DZ-GDNcDj9a/",
+      },
+      {
+        id: "agp-p32",
+        network: "instagram",
+        publishedOn: "25 Jun 2026",
+        author: { name: "Hootsuite", handle: "@hootsuite", initials: "HS", accent: "yellow" },
+        text: 'We knew there was a better way to manage social. And we knew we couldn\'t deliver it by bolting AI onto Hootsuite. So we started over and built AI right in. Comment "Suite" for more details!',
+        likes: 60,
+        comments: 12,
+        reposts: 0,
+        url: "https://www.instagram.com/p/DaA5GJ0lJFO/",
+      },
+      {
+        id: "agp-p33",
+        network: "instagram",
+        publishedOn: "25 Jun 2026",
+        author: { name: "Vista Social", handle: "@vistasocial", initials: "VS", accent: "purple" },
+        text: 'Your social media now has a whole AI team on the clock. Ask Vista lives inside Vista Social and it types back. Need a report? Done. Inbox chaos? Sorted. 50+ tools. 25+ agents. 20+ skills. All yours, just by typing. Comment "ask vista" below and we\'ll send you the link. 👇',
+        likes: 13,
+        comments: 2,
+        reposts: 0,
+        url: "https://www.instagram.com/p/DaAoBwyFNkf/",
+      },
+      {
+        id: "agp-p34",
+        network: "instagram",
+        publishedOn: "14 Jul 2026",
+        author: { name: "Vista Social", handle: "@vistasocial", initials: "VS", accent: "purple" },
+        text: "Here's the test I use to tell a real AI agent from a gimmick: does it just generate content, or does it actually run your operations? Triaging inboxes, flagging leads in comments, drafting review replies, building monthly reports — while you sleep. Ask Vista does the math for you too — every agent logs the hours it saved and what that labor would've cost a human.",
+        likes: 21,
+        comments: 0,
+        reposts: 0,
+        url: "https://www.instagram.com/p/Dax2KWUiloD/",
+      },
+      {
+        id: "agp-p35",
+        network: "instagram",
+        publishedOn: "9 Jul 2026",
+        author: { name: "Buffer", handle: "@buffer", initials: "BF", accent: "electric-blue" },
+        text: "One MCP is great. Several MCPs stacked on top of each other is even better. Here are the 8 I use in my day to day as a creator. Comment MCP to get the article or check the link in bio🔗",
+        likes: 40,
+        comments: 4,
+        reposts: 0,
+        url: "https://www.instagram.com/p/DalMPEzMMvm/",
+      },
+    ],
+    history: [{ status: "new", when: "1 day ago", note: "Surfaced from the competitor scan (5 matching items)." }],
+    seedStatus: "new",
+    seedReason: "",
+  },
   {
     id: "br-29",
     laneId: "topic-list-6",
@@ -6599,14 +6846,41 @@ export const pillars = [
     context:
       "Not what the model is, what it removes. Everyone is shipping an agent and describing the technology; nobody " +
       "is naming the task that stops arriving. MCP is being explained to engineers and to nobody who runs a social " +
-      "inbox, which is the same gap in a different vocabulary.",
-    contextUpdatedAgo: "2d ago",
+      "inbox, which is the same gap in a different vocabulary. The category agrees the chat replaces the dashboard " +
+      "and splits on where the agent lives — bring your own AI and let the data reach it, or move your work into " +
+      "the vendor's chat. That split is the only part of this a social media manager can answer, and it is the " +
+      "question we lead with.",
+    contextUpdatedAgo: "1d ago",
     previousContext:
       "Not what the model is, what it removes. Everyone is shipping an agent and describing the technology; nobody " +
-      "is naming the task that stops arriving.",
+      "is naming the task that stops arriving. MCP is being explained to engineers and to nobody who runs a social " +
+      "inbox, which is the same gap in a different vocabulary.",
     createdBy: "you",
     openedAgo: "6w ago",
+    // ── One week, two kinds of thing ──────────────────────────────────────────
+    // ps-29 (a topic) and ps-30 (a chat) both arrived 1d ago, and ps-23 is 2d ago,
+    // so the trail's weekly grouping folds all three into a single update entry.
+    // That is deliberate: it is the only place in this data where one week's run
+    // stacks a topic and a chat together, which is what the entry has to survive.
     sources: [
+      {
+        id: "ps-29",
+        kind: "topic",
+        briefId: "br-45",
+        title: "Two ways to sell an agent: bring your own AI, or move into theirs",
+        quote: "They agree the chat replaces the dashboard. They disagree about whose chat it is.",
+        addedAgo: "1d ago",
+        seen: false,
+      },
+      {
+        id: "ps-30",
+        kind: "chat",
+        chatId: "s-agp-competitor-scan",
+        title: "Competitor AI claims → what we say back",
+        quote: "Two sentences in 48 posts a social media manager could repeat to their boss.",
+        addedAgo: "1d ago",
+        seen: false,
+      },
       {
         id: "ps-23",
         kind: "topic",

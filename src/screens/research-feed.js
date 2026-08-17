@@ -36,9 +36,9 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=446";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=448";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=63";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=64";
 import {
   openIgnoreReason,
   openVersionHistory,
@@ -48,13 +48,13 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=133";
-import { openBriefInChat } from "../brief-flow.js?v=35";
+} from "../components/research-modals.js?v=135";
+import { openBriefInChat } from "../brief-flow.js?v=36";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=11";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=36";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=25";
-import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=48";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=12";
+import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=39";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=27";
+import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=49";
 import {
   getBriefById,
   briefTitle,
@@ -65,9 +65,9 @@ import {
   narrowedGroupCount,
   setStatus,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=61";
+} from "../briefs-store.js?v=62";
 import { RESEARCH_SOURCES, REVIEW_STATUSES, findResearchSource, findCadence } from "../research-catalog.js?v=21";
-import { getContextById } from "../contexts-store.js?v=78";
+import { getContextById } from "../contexts-store.js?v=79";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.

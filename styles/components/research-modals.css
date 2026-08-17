@@ -50,7 +50,21 @@
   align-items: flex-start;
   gap: 12px;
   padding: 18px 20px;
+  /* Room for the close button, which is positioned against the DIALOG and never
+     shares this row — the same relationship .ap-dialog-header has with
+     .ap-dialog-close, where the reserved gutter is 64px. 56px here because this
+     header's own right padding is 20px rather than the DS's 24px and the button is
+     36px, so the title stops the same distance clear of it. */
+  padding-right: 56px;
   border-bottom: 1px solid var(--ref-color-grey-10);
+}
+
+/* [hidden] loses to the display:flex above — the same trap this component already
+   hit on .research-modal__back, which is why that one is hidden with an inline
+   style as well as the attribute. Declared once here so the header can be dropped
+   with the attribute alone. */
+.research-modal__head[hidden] {
+  display: none;
 }
 
 .research-modal__head-text {
@@ -58,19 +72,22 @@
   min-width: 0;
 }
 
-/* The close button is pinned to the TRAILING edge by its own margin, not by the
-   title block's flex:1 above.
-   That distinction is the whole bug: the article views pass `bareHead`, which puts
-   .sr-only on the title block — and .sr-only is position:absolute, so the flex item
-   holding this button over to the right left the flow entirely. The button became the
-   only in-flow child of a plain flex row and sat at its START, i.e. the top-LEFT
-   corner of the dialog, on exactly the three views that hide their header text.
-   auto margin rather than justify-content on the head: the head has to keep laying
-   out back / title / close from the start edge when all three are present, and only
-   this one element is being pushed. The nested layout positions this button
-   absolutely, where the margin is inert. */
-.research-modal__head > [data-research-modal-close] {
-  margin-left: auto;
+/* ── Close, against the dialog ─────────────────────────────────────────────
+   The DS's own placement: .ap-dialog-close is position:absolute at top/right 20px,
+   a sibling of the header rather than a child, so a dialog with no header keeps its
+   close button in the same corner. Matching it is what let the two patches this
+   replaces be deleted — a margin-left:auto that put the button back on the trailing
+   edge after .sr-only took its neighbour out of the flow, and a padding override for
+   the empty band an otherwise-empty header left behind.
+
+   Top/right 12px, not the DS's 20: this dialog's header padding is 18/20 rather than
+   24, and .ap-icon-button is 36px against the DS close's 40, so 12 puts the glyph on
+   the same optical line as the title beside it. */
+.research-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
 }
 
 .research-modal__title {
@@ -735,11 +752,12 @@
    close, which is the shape of every other header in this component, and the
    absolutely-positioned close it needed goes with the column. */
 
-/* ── A head with no text needs no room for text ────────────────────────────
-   `bareHead` puts .sr-only on the title block for the three article views, whose
-   BODY renders the title. That left a 73px band holding one 36px close button — 37px
-   of padding around a single icon. The vertical padding drops to a quarter of the
-   text version's; the horizontal stays, so the buttons keep the dialog's own gutter. */
-.research-modal--barehead .research-modal__head {
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
-}
+/* ── A head with no text is not rendered ───────────────────────────────────
+   The three article views render their own title in the BODY, so `bareHead` now
+   drops the header outright rather than hiding its text. What it replaced: the
+   title block went .sr-only — position:absolute — which left the header holding one
+   36px close button inside a 73px band, so the band's padding had to be shrunk to
+   hide the fact that it was empty. With the close button positioned against the
+   dialog there is nothing left in that header at all, and an empty box with a
+   border-bottom under it is not something to re-size; it is something not to draw.
+   See openShell() in research-modals.js for the aria-label swap this needs. */

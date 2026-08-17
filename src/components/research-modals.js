@@ -31,18 +31,18 @@ import {
   ignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=61";
+} from "../briefs-store.js?v=62";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=63";
-import { getLanes } from "../research-store.js?v=48";
+import { renderUseButtons } from "./brief-card.js?v=64";
+import { getLanes } from "../research-store.js?v=49";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=36";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=39";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
 // list and a different object entirely.
-import { pillarForBrief } from "../pillars-store.js?v=11";
+import { pillarForBrief } from "../pillars-store.js?v=12";
 import {
   getContexts,
   getContextById,
@@ -53,13 +53,13 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=78";
+} from "../contexts-store.js?v=79";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=35";
-import { renderBriefCard } from "./brief-card.js?v=63";
-import { renderSocialPostCard } from "./social-post-card.js?v=34";
+import { openBriefInChat } from "../brief-flow.js?v=36";
+import { renderBriefCard } from "./brief-card.js?v=64";
+import { renderSocialPostCard } from "./social-post-card.js?v=35";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -70,7 +70,7 @@ const MODAL_ID = "research";
 // to restore; pickerSplit and the group's render are both still below.
 const SHOW_HIDDEN_TRENDING = false;
 
-let backdrop, panel, titleEl, subEl, bodyEl, footEl, backEl;
+let backdrop, panel, headEl, titleEl, subEl, bodyEl, footEl, backEl;
 let initialized = false;
 let active = null; // { kind, ctx } — what's currently open
 // Where the header's back button goes. Either a briefId — meaning "back to that
@@ -104,11 +104,27 @@ let strategyText = "";
 const SHELL = `
 <div class="app-modal-backdrop research-modal__backdrop" id="researchModalBackdrop" hidden></div>
 <aside class="research-modal" id="researchModal" role="dialog" aria-modal="true" aria-labelledby="researchModalTitle" tabindex="-1" hidden>
+  <!-- Close is a sibling of the header, not a child of it — the DS's own shape.
+       .ap-dialog-close is position:absolute against the dialog, and .ap-dialog-header
+       reserves padding-right:64px so a title cannot run under it; the two never share
+       a flex row. The Angular API says the same thing twice over: closable and
+       headerVisible are independent inputs, so a dialog with no header still has
+       its close button, in the same corner.
+
+       Here it was an in-flow flex child of the head, and that inversion cost two
+       patches. The three article views hide their header text, which used to mean
+       .sr-only — position:absolute — on the title block, so the flex item doing the
+       pushing left the flow and the button snapped to the top-LEFT corner; that
+       needed a margin-left:auto. And an empty header still reserved a band, so it
+       needed its padding shrunk. Out of the flow, both problems stop existing
+       rather than being corrected. -->
+  <button type="button" class="ap-icon-button ghost grey research-modal__close" data-research-modal-close aria-label="Close">
+    <i class="ap-icon-close" aria-hidden="true"></i>
+  </button>
   <header class="research-modal__head">
     <!-- The back button belongs to the HEADER, not to the body, because it navigates
-         the dialog rather than the content: it is a sibling of the close button, and
-         the two together say "this view sits inside something". Hidden unless the
-         current view was opened from another one. -->
+         the dialog rather than the content — it says "this view sits inside
+         something". Hidden unless the current view was opened from another one. -->
     <button type="button" class="ap-button ghost grey research-modal__back" data-research-modal-back hidden>
       <i class="ap-icon-chevron-left" aria-hidden="true"></i><span>Back to the topic</span>
     </button>
@@ -116,9 +132,6 @@ const SHELL = `
       <h2 class="research-modal__title" id="researchModalTitle"></h2>
       <p class="research-modal__sub"></p>
     </div>
-    <button type="button" class="ap-icon-button ghost grey" data-research-modal-close aria-label="Close">
-      <i class="ap-icon-close" aria-hidden="true"></i>
-    </button>
   </header>
   <div class="research-modal__body"></div>
   <footer class="research-modal__foot"></footer>
@@ -132,6 +145,7 @@ export function init() {
 
   backdrop = document.getElementById("researchModalBackdrop");
   panel = document.getElementById("researchModal");
+  headEl = panel.querySelector(".research-modal__head");
   titleEl = panel.querySelector(".research-modal__title");
   subEl = panel.querySelector(".research-modal__sub");
   bodyEl = panel.querySelector(".research-modal__body");
@@ -154,23 +168,36 @@ function isOpen() {
   return !!panel && !panel.hidden;
 }
 
-// `bareHead` hides the header's title and subtitle — see the article views. The
-// title is still PASSED and still rendered, visually hidden, because the dialog is
-// labelled by that element (aria-labelledby); dropping it would leave the dialog
-// nameless to a screen reader in exactly the views whose content is longest.
+// `bareHead` drops the header entirely — see the three article views, whose BODY
+// renders the title, so a header would print the same string directly above itself.
+//
+// It used to keep the header and put .sr-only on its text, because the dialog is
+// labelled by that element. That is what made the header a band holding nothing,
+// and it took the close button out of the flow with it. Now the header is simply
+// not rendered — which is the DS's own answer (`headerVisible=false` is an input,
+// independent of `closable`) — and the dialog is named with aria-label instead.
+// An aria-labelledby pointing INTO a display:none subtree names nothing, so the
+// swap is required rather than tidier: without it these three dialogs, the ones
+// with the longest content, would be the nameless ones.
+//
+// No bareHead view passes `back`, and none can while the header owns that button:
+// if one ever needs to, the back button moves out of the header the same way the
+// close button just did.
 function openShell(kind, ctx, { title, sub = "", body, foot, wide = false, size = "", back = null, bareHead = false }) {
   init();
   requestOpen(MODAL_ID, close);
   active = { kind, ctx };
   titleEl.textContent = title;
   subEl.textContent = sub;
-  subEl.hidden = !sub || bareHead;
-  const headText = panel.querySelector(".research-modal__head-text");
-  if (headText) headText.classList.toggle("sr-only", bareHead);
-  // The same fact, on the panel: .sr-only takes the title block out of the flow, so
-  // the header is left holding buttons only and must not keep reserving the vertical
-  // space that text needed. CSS cannot ask "is my child sr-only", hence the mirror.
-  panel.classList.toggle("research-modal--barehead", bareHead);
+  subEl.hidden = !sub;
+  headEl.hidden = bareHead;
+  if (bareHead) {
+    panel.removeAttribute("aria-labelledby");
+    panel.setAttribute("aria-label", title);
+  } else {
+    panel.removeAttribute("aria-label");
+    panel.setAttribute("aria-labelledby", "researchModalTitle");
+  }
   bodyEl.innerHTML = body;
   footEl.innerHTML = foot;
   // Normalised here so every call site can keep passing a bare briefId. Stored on
