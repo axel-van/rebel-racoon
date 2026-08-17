@@ -139,6 +139,18 @@
   color: var(--sys-text-color-light);
 }
 
+/* The way out to the input itself, under its excerpt. Indented to 26px like the
+   quote above it so the tag, the title, the quote and this all hang off one left
+   edge — the row reads as one block about one input rather than four stacked things.
+   inline-flex so the trailing arrow sits on the text's baseline; the DS sizes the
+   glyph itself from a token. */
+.pillar-history__in-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  margin: 0 0 var(--ref-spacing-xxs) 26px;
+}
+
 .pillar-history__diff {
   margin: 0;
   font-size: var(--sys-text-style-caption-size);

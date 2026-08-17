@@ -416,15 +416,38 @@
    variant's own emphasis was being thrown away and the control came out as 400-weight
    body text that happened to be blue. font-family alone is what a button actually
    fails to inherit; the DS owns the rest. */
+/* Only what a <button> needs. `display: inline-flex`, `align-items: center` and the
+   icon gap were all here and are all deleted — .ap-link declares every one of them
+   itself, and the gap I had written overrode the DS's own --comp-link-spacing with a
+   hardcoded step for no reason.
+   `font: inherit` is likewise gone and must stay gone: as a shorthand it reset
+   font-weight too, so the standalone variant's 700 was being thrown away and the
+   control rendered as 400-weight text that happened to be blue. font-family is the
+   one thing a button genuinely fails to inherit. */
+/* ── Why these two alignment lines exist ───────────────────────────────────
+   The icon leads the label, and the row this button sits in aligns on the baseline.
+   Those two facts fight unless told otherwise: .ap-link is display:inline-flex, so
+   this button is a flex container, and a flex container hands its parent the baseline
+   of its FIRST flex item — the icon. The row then baselined a glyph against the
+   timestamp's sentence and the label sat 2.5px high.
+   The fix is the flexbox rule that a container's baseline is generated from the items
+   that PARTICIPATE in baseline alignment: give the icon `align-self: center` and it
+   drops out of that set, leaving the label as the only participant, so the label's own
+   baseline is what the row receives. `align-items: baseline` here is what puts the
+   label in the set in the first place (the DS's own value is center).
+   Two lines of CSS instead of reordering the DOM, which was the first attempt and
+   cost the icon its leading position. */
 .pillar-sec__history {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
+  align-items: baseline;
   padding: 0;
   border: 0;
   background: none;
   font-family: inherit;
   cursor: pointer;
+}
+
+.pillar-sec__history > i {
+  align-self: center;
 }
 
 /* The status pill rides inside the section title, so it must not inherit the
@@ -517,6 +540,18 @@
    sizes and only baseline alignment keeps them sitting on one line. Wrapping is
    allowed — a frozen pillar's sentence is long, and a narrow column should break
    between the two halves rather than clip the timestamp. */
+/* BASELINE, and it took two tries to earn it.
+   The row holds two text runs at different sizes — a 14px/700 control and a 12px
+   caption — and text reads as aligned when it shares a BASELINE, not when its boxes
+   share a centre. So `baseline` is right in principle. It was visibly wrong in
+   practice because `.ap-link` is display:inline-flex (the DS sets it, to lay out the
+   icon), which makes the link a flex container whose baseline comes from its FIRST
+   FLEX ITEM — and that was the icon. The row was faithfully baselining a glyph
+   against a sentence, and the label came out 2.5px high.
+   `center` was the first fix and it was the wrong axis: it lined the boxes up and left
+   the two baselines 1.5px apart, which is exactly what "still slightly off" looked
+   like. The real fix is in the markup — the icon now TRAILS the label, so the link's
+   first flex item is the label and its baseline is the label's own. See pillar.js. */
 .pillar-sec__note--record {
   display: flex;
   align-items: baseline;

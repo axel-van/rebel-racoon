@@ -332,6 +332,12 @@ function renderContextTab(p) {
               // the SPLIT rather than by one size for both. Same size for a control
               // and its annotation is what made the control hard to find in the first
               // place; different sizes with the control leading is the hierarchy.
+              // Icon LEADS the label, as a marker for the control rather than a
+              // direction out of it. Getting that back without breaking the row's
+              // baseline is a CSS job, not a DOM-order one — see .pillar-sec__history:
+              // the icon opts out of baseline alignment so the LABEL is what the link
+              // offers the row as its baseline. Swapping the two in the markup was the
+              // blunt way to the same place and it cost the icon its leading position.
               `<button type="button"
                  class="ap-link standalone pillar-sec__history" data-pillar-history>
                  <i class="ap-icon-history" aria-hidden="true"></i>Context history</button>

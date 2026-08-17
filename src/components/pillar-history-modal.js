@@ -41,13 +41,16 @@
 import { html, raw, escapeAttr, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
 import { getPillarById, getPillarTimeline, setPillarFrozen, subscribe } from "../pillars-store.js?v=12";
+// Read-only, and only for the lane a topic belongs to: the link has to name the feed
+// it navigates into, and a pillar source carries the briefId but not the lane.
+import { getBriefById } from "../briefs-store.js?v=62";
 import { renderDiff } from "../text-diff.js?v=1";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "pillar-history";
 const PAGE = 6;
 
-let backdrop, modal, bodyEl, subEl;
+let backdrop, modal, bodyEl;
 let initialized = false;
 let unsubscribe = null;
 let state = { pillarId: null, open: new Set(), shown: PAGE };
@@ -62,9 +65,12 @@ const HTML = `
   aria-labelledby="pillarHistoryTitle"
   aria-hidden="true"
 >
+  <!-- Title only. The subtitle counted the entries and dated the newest ("3 entries ·
+       newest first") — both of which the list itself says, louder: every entry carries
+       its own counter and the order is visible the moment you look. A caption that
+       restates the thing it captions is height the list needs. -->
   <div class="ap-dialog-header">
-    <span class="ap-dialog-title" id="pillarHistoryTitle">History</span>
-    <span class="ap-dialog-subtitle" id="pillarHistorySub"></span>
+    <span class="ap-dialog-title" id="pillarHistoryTitle">Context History</span>
   </div>
   <button class="ap-dialog-close" type="button" data-history-close aria-label="Close">
     <i class="ap-icon-close"></i>
@@ -91,7 +97,6 @@ function injectOnce() {
   backdrop = document.getElementById("pillarHistoryBackdrop");
   modal = document.getElementById("pillarHistoryModal");
   bodyEl = document.getElementById("pillarHistoryBody");
-  subEl = document.getElementById("pillarHistorySub");
 
   backdrop.addEventListener("click", close);
   modal.addEventListener("keydown", (event) => {
@@ -111,6 +116,13 @@ function injectOnce() {
 
 function onClick(event) {
   if (event.target.closest("[data-history-close]")) return close();
+
+  // A "Read the full…" link navigates on its own — this only gets the dialog out of
+  // the way. No preventDefault: the href is doing the work, so cmd/middle-click open
+  // a new tab and leave this dialog (and the page under it) exactly where they were.
+  // Checked FIRST because closing must not be pre-empted by the accordion below; the
+  // link sits inside an entry's body, not its header, but the order says so plainly.
+  if (event.target.closest(".pillar-history__in-link")) return close();
 
   const row = event.target.closest("[data-history-entry]");
   if (row) {
@@ -137,6 +149,44 @@ function onChange(event) {
 
 // ── Rows ───────────────────────────────────────────────────────────────────
 
+// The way OUT to the thing itself. Until this existed the dialog could show you a
+// one-line excerpt of an input and then strand you with it — the reader's next
+// question after "what went in" is "what did it actually say", and the answer was
+// three navigations away in a surface they would have to remember to look for.
+//
+// A real <a href>, not a button: it is navigation, so it belongs to the browser —
+// middle-click, cmd-click and the status bar all work, and .ap-link's own usage rule
+// is "use .ap-link for navigation, not .ap-button". `standalone small` is the one
+// documented size+variant pair; it sits on its own line under the quote, which is
+// what standalone means.
+//
+// Targets, per kind:
+//   topic → the feed with that topic's article already open. `?topic=<briefId>` is
+//           built for exactly this arrival (research-feed's comment calls it "from a
+//           pillar's trail") and it widens the status filter on the way in, so a
+//           topic that has since been Used or Ignored still opens.
+//           The lane is named explicitly rather than relying on the rail's scope: a
+//           trail can outlive the brand you happen to be looking at.
+//   chat  → the session. Nothing to widen, nothing to open.
+//   note  → nothing. A note has no surface of its own, so it gets no link rather
+//           than a link that goes nowhere.
+function renderInputLink(s) {
+  if (s.kind === "chat" && s.chatId) {
+    return html`<a class="ap-link standalone small pillar-history__in-link" href="#/session/${escapeAttr(s.chatId)}"
+      >Read the full chat<i class="ap-icon-arrow-right" aria-hidden="true"></i
+    ></a>`;
+  }
+  if (s.kind !== "chat" && s.kind !== "note" && s.briefId) {
+    const brief = getBriefById(s.briefId);
+    if (!brief) return "";
+    const href = `#/topic-feeds/${encodeURIComponent(brief.laneId)}?topic=${encodeURIComponent(s.briefId)}`;
+    return html`<a class="ap-link standalone small pillar-history__in-link" href="${href}"
+      >Read the full topic<i class="ap-icon-arrow-right" aria-hidden="true"></i
+    ></a>`;
+  }
+  return "";
+}
+
 function renderInput(s) {
   const kind = s.kind === "chat" ? "orange" : s.kind === "note" ? "grey" : "blue";
   const label = s.kind === "chat" ? "Chat" : s.kind === "note" ? "Note" : "Topic";
@@ -144,7 +194,7 @@ function renderInput(s) {
       <span class="ap-tag ${kind} mini"><span>${label}</span></span>
       <span class="pillar-history__in-title">${s.title || "Untitled"}</span>
     </div>
-    ${raw(s.quote ? html`<p class="pillar-history__quote">“${s.quote}”</p>` : "")}`;
+    ${raw(s.quote ? html`<p class="pillar-history__quote">“${s.quote}”</p>` : "")} ${raw(renderInputLink(s))}`;
 }
 
 // A weekly run: the inputs it folded in, each with the excerpt it carried.
@@ -216,8 +266,6 @@ function paint() {
   const timeline = getPillarTimeline(state.pillarId);
   const shown = timeline.slice(0, state.shown);
   const more = timeline.length - shown.length;
-
-  subEl.textContent = `${timeline.length} ${timeline.length === 1 ? "entry" : "entries"} · newest first`;
 
   const rows = shown
     .map((entry) => {
