@@ -409,11 +409,21 @@
 
 /* The one route into the record. `.ap-link` assumes an <a>; this is a button,
    so the UA chrome comes off — the same patch ds-patches.css carries. */
+/* A <button> wearing .ap-link, because it OPENS A DIALOG — the DS is explicit that
+   the element follows the behaviour, and this navigates nowhere.
+   Only the resets a button needs are here. `font: inherit` used to be among them and
+   is deliberately gone: as a shorthand it also reset weight, so the standalone
+   variant's own emphasis was being thrown away and the control came out as 400-weight
+   body text that happened to be blue. font-family alone is what a button actually
+   fails to inherit; the DS owns the rest. */
 .pillar-sec__history {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
   padding: 0;
   border: 0;
   background: none;
-  font: inherit;
+  font-family: inherit;
   cursor: pointer;
 }
 
@@ -487,11 +497,43 @@
 /* Used inside a .pillar-sec and, on the trail tab, in .pillar-trail__head — it is
    the page's caption line wherever it appears, which is why the margin is reset
    here rather than assumed from a flex parent. */
+/* BODY size, not caption. This line is the only route to the context's record, and
+   at 12px the History link inside it rendered smaller than every other link in the
+   app — a control the reader had to hunt for on the one surface whose whole job is
+   explaining where the text came from.
+   One step up the ramp, and no further: it is the same 14px as the prose it
+   annotates but keeps --sys-text-color-light, so colour carries the hierarchy that
+   size used to. Equal size + lighter colour reads as "about the text above";
+   equal size + equal colour would read as a second paragraph of it. */
 .pillar-sec__note {
   margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* The record line: the control, then what it annotates.
+   A flex row rather than inline text, because the two halves are now different
+   sizes and only baseline alignment keeps them sitting on one line. Wrapping is
+   allowed — a frozen pillar's sentence is long, and a narrow column should break
+   between the two halves rather than clip the timestamp. */
+.pillar-sec__note--record {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+}
+
+/* CAPTION, while the link beside it stays at standalone's 14px/700.
+   Two asks landed on this one line — make the history easier to see as a link, and
+   put the sentence back in a small font — and they only conflict if both halves
+   have to be the same size. They do not: the control leads at body size and the
+   thing it annotates follows at caption, which is the hierarchy that equal sizes
+   were flattening. The Assets note keeps .pillar-sec__note's body size; this rule is
+   scoped to the timestamp inside the record line. */
+.pillar-sec__when {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--sys-text-color-light);
 }
 
 /* ── Assets ─────────────────────────────────────────────────────────────── */

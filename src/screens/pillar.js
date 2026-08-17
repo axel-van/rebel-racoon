@@ -72,6 +72,7 @@ let view = { id: null, showDiff: false, editing: null, nameWidth: 0 };
 let unsubscribe = null;
 let boundTarget = null;
 let boundClick = null;
+let boundInput = null;
 export function renderPillar(params, target) {
   if (!isFlagOn("contentStrategy")) {
     navigate("/");
@@ -121,14 +122,43 @@ function teardown() {
     unsubscribe = null;
   }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
+  // Removed by name, like the click handler. The listener is bound to #app, which the
+  // router does NOT replace between screens, so an anonymous one would outlive this
+  // screen and keep firing on whatever renders next. (The `change`, `dragover`,
+  // `dragleave` and `drop` handlers below are bound anonymously and do exactly that —
+  // pre-existing, not touched here, but worth knowing before adding a sixth.)
+  if (boundTarget && boundInput) boundTarget.removeEventListener("input", boundInput);
   boundTarget = null;
   boundClick = null;
+  boundInput = null;
 }
 
 function paint(target) {
   const p = getPillarById(view.id);
   if (!p) return;
   target.innerHTML = html`<section class="screen pillar-view">${raw(renderPage(p))}</section>`;
+  // After EVERY paint, not just when the edit opens: the pillars-store subscription
+  // repaints while the editor is on screen, and a fresh textarea comes back at its
+  // rows height with the height JS had set thrown away.
+  autosizeEditor(target);
+}
+
+// Grow the context editor to its own text. The whole trick is the reset on the first
+// line: a textarea's `height: auto` is its ROWS height, not its content height, so
+// after the reset `scrollHeight` reports whichever is taller — the content, or the
+// four rows the markup asks for. That single number is both requirements at once, so
+// there is no line arithmetic here to drift from the DS's line-height.
+//
+// The border delta is added because .ap-textarea-field's textarea is border-box:
+// scrollHeight covers content + padding but not the 1px frame, and leaving it out
+// clips the last line by two pixels — which reads as a rendering bug, not a rounding
+// one.
+function autosizeEditor(target) {
+  const el = target.querySelector("[data-pillar-context]");
+  if (!el) return;
+  el.style.height = "auto";
+  const borders = el.offsetHeight - el.clientHeight;
+  el.style.height = `${el.scrollHeight + borders}px`;
 }
 
 // ─── Render ────────────────────────────────────────────────────────────────
@@ -202,9 +232,23 @@ function renderContextTab(p) {
   // Without it the toggle would be a control that can only disappoint.
   const comparable = hasDiff(p.previousContext, text);
   const marked = view.showDiff && comparable;
+  // `autoresize`, not `resizable`. The DS ships both: `resizable` is a drag handle,
+  // `autoresize` is `overflow: hidden` on the textarea — the CSS half of a height that
+  // code keeps in step with the content (its Angular component sets the other half;
+  // here autosizeEditor() does). They are not combinable: with a handle you can drag
+  // the box shorter than its text, and overflow:hidden would then hide the text with
+  // no scrollbar to find it again.
+  //
+  // The handle is no loss. It existed because the box opened at a fixed 5 rows onto a
+  // context of any length, so the first thing you did was drag it; a box that already
+  // fits has nothing to drag for.
+  //
+  // rows="4" is the MINIMUM, expressed the way HTML expresses it: a textarea's
+  // intrinsic height comes from `rows`, so a short context still opens as four lines
+  // rather than collapsing onto one. autosizeEditor() never goes below it.
   const body = editing
-    ? `<div class="ap-textarea-field resizable pillar-sec__editor">
-         <textarea data-pillar-context rows="5">${escapeAttr(text)}</textarea>
+    ? `<div class="ap-textarea-field autoresize pillar-sec__editor">
+         <textarea data-pillar-context rows="4">${escapeAttr(text)}</textarea>
        </div>`
     : `<p class="pillar-sec__prose">${marked ? renderDiff(p.previousContext, text) : escapeAttr(text)}</p>`;
   return `
@@ -265,14 +309,35 @@ function renderContextTab(p) {
            two things this line alone can tell you — when it last ran, and where to
            read what it did — were the ones being read past. The FROZEN half stays:
            that is a state, not a cadence, and nothing else on the section says it. -->
-      <p class="pillar-sec__note">
+      <p class="pillar-sec__note pillar-sec__note--record">
         ${
           editing
             ? "Your words win. The context is rewritten whenever a source is added or removed — editing it now replaces what was there, and the change is kept in the history."
-            : `${p.frozen ? "Frozen — updates are held. " : ""}Last rewritten ${escapeAttr(
-                p.contextUpdatedAgo || "a while ago",
-              )}. <button type="button"
-                 class="ap-link pillar-sec__history" data-pillar-history>History</button>`
+            : // CONTROL FIRST, then what it annotates. The link used to follow the
+              // sentence, which put the line's only control at the end of a run of
+              // prose and left the reader scanning past a timestamp to find it. Lead
+              // with it and the line reads as "here is the record — and here is when
+              // it last changed".
+              //
+              // `standalone`, with a glyph. The default inline variant is for a link
+              // sitting INSIDE a sentence, underlined to match the prose around it —
+              // this one leads the line and is its only control, which is what
+              // standalone means. The DS notes that dropping the underline takes away
+              // the affordance the text had, so a standalone link highly recommends an
+              // icon; ap-icon-history is the same glyph the article dialog's "See past
+              // versions" link uses for the same kind of record.
+              //
+              // The link keeps standalone's 14px/700 and the sentence goes back to
+              // caption — the two asks that produced this line are both satisfied by
+              // the SPLIT rather than by one size for both. Same size for a control
+              // and its annotation is what made the control hard to find in the first
+              // place; different sizes with the control leading is the hierarchy.
+              `<button type="button"
+                 class="ap-link standalone pillar-sec__history" data-pillar-history>
+                 <i class="ap-icon-history" aria-hidden="true"></i>Context history</button>
+               <span class="pillar-sec__when">${p.frozen ? "Frozen — updates are held. " : ""}Last rewritten ${escapeAttr(
+                 p.contextUpdatedAgo || "a while ago",
+               )}.</span>`
         }
       </p>
     </section>
@@ -416,6 +481,16 @@ function bind(target) {
     }
   };
   target.addEventListener("click", boundClick);
+
+  // Keep growing as you type. This is what makes `autoresize`'s overflow:hidden safe
+  // — without it, text typed past the opening height would be clipped with no
+  // scrollbar and no handle to recover it. Delegated like every other listener here,
+  // and it repaints nothing: the height is the only thing that changes, so touching
+  // innerHTML would cost the caret its position on every keystroke.
+  boundInput = (event) => {
+    if (event.target.closest("[data-pillar-context]")) autosizeEditor(target);
+  };
+  target.addEventListener("input", boundInput);
 
   target.addEventListener("change", (event) => {
     // The diff toggle. `change` rather than click: it is a checkbox inside a
