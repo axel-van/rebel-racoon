@@ -257,18 +257,23 @@ function renderContextTab(p) {
         }
       </div>
       ${body}
-      <!-- The provenance line: what the cadence is, when it last ran, and the one
-           route to the record. It reads AFTER the prose because it is about the
-           prose — the output is the reason the page exists. -->
+      <!-- The provenance line: when the context last changed, and the one route to
+           the record. It reads AFTER the prose because it is about the prose — the
+           output is the reason the page exists.
+           It used to open by restating the cadence ("Updated weekly from every
+           topic, chat and note in this pillar"), which is the same sentence the
+           pillar's own description already carries and the History dialog says
+           again at the top of the record. Three statements of one fact, and the
+           two things this line alone can tell you — when it last ran, and where to
+           read what it did — were the ones being read past. The FROZEN half stays:
+           that is a state, not a cadence, and nothing else on the section says it. -->
       <p class="pillar-sec__note">
         ${
           editing
             ? "Your words win. The context is rewritten whenever a source is added or removed — editing it now replaces what was there, and the change is kept in the history."
-            : `${
-                p.frozen
-                  ? "Frozen — updates are held."
-                  : `Updated weekly from every topic, chat and note in this pillar.`
-              } Last rewritten ${escapeAttr(p.contextUpdatedAgo || "a while ago")}. <button type="button"
+            : `${p.frozen ? "Frozen — updates are held. " : ""}Last rewritten ${escapeAttr(
+                p.contextUpdatedAgo || "a while ago",
+              )}. <button type="button"
                  class="ap-link pillar-sec__history" data-pillar-history>History</button>`
         }
       </p>
