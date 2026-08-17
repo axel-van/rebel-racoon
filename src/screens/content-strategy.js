@@ -291,26 +291,41 @@ function renderCard(p) {
             : ""
         }
         ${
-          arrived
-            ? // The DS Badge, orange: a system-generated marker for "something
-              // landed here". It carries no NUMBER, for two reasons that point the
-              // same way.
+          p.frozen
+            ? // FROZEN wins the badge's slot outright — the two cannot both be
+              // true and honest. "Updated" reports that the weekly run touched
+              // this pillar; a frozen pillar is one the run is being held off,
+              // so a card carrying both would be telling you it changed and that
+              // it cannot. A stale unseen mark from before the freeze is the only
+              // way to reach that pair, and it is the freeze that is current.
               //
-              // Product: a pillar is rewritten by a weekly run, so the only thing a
-              // card can honestly report is that the run touched it. "3 to review"
-              // read as a queue of three things to work through — and nothing in
-              // this feature is a queue (see the file header). Worse, the number
-              // rewarded counting: two sources filed into a pillar is not twice the
-              // news of one.
-              //
-              // DS: badge.md's own usage rule is "use .ap-counter for numeric
-              // counts, not .ap-badge" — a count in a badge was the wrong component
-              // for the content. As a text label it is now what the badge is for.
-              //
-              // The aria-label says a little more than the word, since a screen
-              // reader hears it stripped of its position on the card.
-              `<span class="ap-badge orange" aria-label="Updated since you last looked">Updated</span>`
-            : ""
+              // .ap-status, not the badge: status.md's own line is "for showing
+              // item status", which is exactly what held-vs-running is, while a
+              // badge marks an event that happened. tagOrange to match the pill
+              // beside the section title on the pillar page — the same fact needs
+              // to be the same object in both places, or the page you open from
+              // this card looks like it is talking about something else.
+              `<span class="ap-status tagOrange">Frozen</span>`
+            : arrived
+              ? // The DS Badge, orange: a system-generated marker for "something
+                // landed here". It carries no NUMBER, for two reasons that point the
+                // same way.
+                //
+                // Product: a pillar is rewritten by a weekly run, so the only thing a
+                // card can honestly report is that the run touched it. "3 to review"
+                // read as a queue of three things to work through — and nothing in
+                // this feature is a queue (see the file header). Worse, the number
+                // rewarded counting: two sources filed into a pillar is not twice the
+                // news of one.
+                //
+                // DS: badge.md's own usage rule is "use .ap-counter for numeric
+                // counts, not .ap-badge" — a count in a badge was the wrong component
+                // for the content. As a text label it is now what the badge is for.
+                //
+                // The aria-label says a little more than the word, since a screen
+                // reader hears it stripped of its position on the card.
+                `<span class="ap-badge orange" aria-label="Updated since you last looked">Updated</span>`
+              : ""
         }
       </div>
       <button type="button" class="research-card__open" data-pillar-open="${escapeAttr(p.id)}">
