@@ -111,9 +111,20 @@
   padding: 20px;
 }
 
+/* LEFT, like the feed's article pane and like the DS.
+   .ap-dialog-footer is a plain left-aligned flex row; the DS only pushes content to
+   the trailing edge when you put it in the explicit .ap-dialog-footer-right slot.
+   This was flex-end, which right-aligned every foot EXCEPT one — the article views
+   pass renderUseButtons, whose .topics-use-flat is width:100%, so it filled the row
+   and laid its own buttons out from the left. Measured: the same two verbs sat at
+   20px in the dialog opened from a starter topic and at 501px in the one opened from
+   Pick a topic. One component, one footer, two places to look for the action.
+
+   Primary first, which falls out of it: "Use in chat" then "Close" reading left to
+   right is the order .topics-use-flat already had. */
 .research-modal__foot {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 10px;
   flex: 0 0 auto;
   padding: 16px 20px;
