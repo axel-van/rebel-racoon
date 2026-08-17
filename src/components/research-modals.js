@@ -34,10 +34,10 @@ import {
 } from "../briefs-store.js?v=62";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=65";
+import { renderUseButtons } from "./brief-card.js?v=66";
 import { getLanes } from "../research-store.js?v=49";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=41";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=42";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -58,7 +58,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=36";
-import { renderBriefCard } from "./brief-card.js?v=65";
+import { renderBriefCard } from "./brief-card.js?v=66";
 import { renderSocialPostCard } from "./social-post-card.js?v=35";
 import { showToast } from "./toast.js?v=21";
 
@@ -1321,9 +1321,14 @@ export function openFullResearch({ briefId }) {
  *
  * openFullResearch above is the READ-ONLY twin, opened from the Topic picker
  * where the only sensible verb is Close. This one is opened from the new-session
- * carousel, where the reader is deciding what to DO with the Topic — so it
- * carries the identical footer the feed's article pane carries: renderUseButtons,
- * the same component, so the three verbs cannot drift between the two surfaces.
+ * carousel, where the reader is deciding what to DO with the Topic — so it carries
+ * the feed pane's own footer, renderUseButtons, and the primary cannot drift
+ * between the two surfaces.
+ *
+ * `dismiss: "close"` is the one difference. In the pane the alternative to using a
+ * Topic is ignoring it, because the list is right there and the reader is triaging.
+ * In this dialog the article IS the screen, so the alternative is leaving — and
+ * every other dialog here puts Close in that slot.
  *
  * Why a dialog here and a pane there: the feed has a list to compare against and a
  * modal would black it out (research-feed.js says so at the pane's own handler).
@@ -1341,7 +1346,7 @@ export function openIdeaArticle({ briefId }) {
       wide: true,
       bareHead: true,
       body: renderResearchArticle(brief),
-      foot: renderUseButtons(brief),
+      foot: renderUseButtons(brief, { dismiss: "close" }),
     },
   );
 }

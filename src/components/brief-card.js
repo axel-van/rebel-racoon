@@ -517,7 +517,21 @@ function unlinkRow(briefId, pillar) {
  *                  colour was promising a consequence the action does not have. Ghost
  *                  keeps it from reading as a second equal choice.
  */
-export function renderUseButtons(brief) {
+/**
+ * The footer under an article: the one verb, plus a way out.
+ *
+ * `dismiss` names what that way out IS, and the two surfaces need different ones.
+ * In the feed's PANE the article sits beside the list it came from, so leaving it
+ * means deciding about the Topic — Ignore, which files it away and is undoable. In
+ * a DIALOG the article is the whole screen and the way out is Close, which is also
+ * what every other dialog in this component puts there. Ignore in a dialog offered
+ * a filing decision as the only alternative to the primary, on a surface the reader
+ * opened to read one topic.
+ *
+ * Close is wired to the shell's own [data-research-modal-close], so it needs no
+ * handler of its own and cannot fall out of step with the X in the corner.
+ */
+export function renderUseButtons(brief, { dismiss = "ignore" } = {}) {
   const ignored = brief.status === "ignored";
   // One verb and one taking-away. Save is gone (see the menu above), so the
   // main/alt split it existed to arbitrate went with it.
@@ -542,19 +556,25 @@ export function renderUseButtons(brief) {
          the button's own aria-label so a display:none element is not the only place
          they live. -->
     ${raw(
-      ignored
-        ? ""
-        : html`<span class="topics-use-flat__ignore">
-            <button
-              type="button"
-              class="ap-button ghost grey"
-              data-brief-ignore="${escapeAttr(brief.id)}"
-              aria-label="Ignore Topic. ${IGNORE_HINT}"
-            >
-              <span>Ignore</span>
-            </button>
-            <span class="ap-tooltip top-left topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
-          </span>`,
+      dismiss === "close"
+        ? // No tooltip: "Close" needs no explaining, and the hint the Ignore button
+          // carries is about a decision this button does not make.
+          html`<button type="button" class="ap-button ghost grey" data-research-modal-close>
+            <span>Close</span>
+          </button>`
+        : ignored
+          ? ""
+          : html`<span class="topics-use-flat__ignore">
+              <button
+                type="button"
+                class="ap-button ghost grey"
+                data-brief-ignore="${escapeAttr(brief.id)}"
+                aria-label="Ignore Topic. ${IGNORE_HINT}"
+              >
+                <span>Ignore</span>
+              </button>
+              <span class="ap-tooltip top-left topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
+            </span>`,
     )}
   </span>`;
 }
