@@ -732,3 +732,117 @@ button.ap-link {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── Filter Dropdown — a PORT of the DS component ──────────────────────────
+   `@agorapulse/ui-components/filter-dropdown` is Angular only: an
+   <ap-filter-dropdown> holding <ap-filter-leaf>s, all of its design in the
+   components' own SCSS and NOTHING in the CSS-UI layer. The classes below are
+   that SCSS, transcribed from
+   libs/ui-components/filter-dropdown/src/{filter-dropdown,filter-leaf}/*.scss.
+
+   Not a redeclaration — none of these exist in ds/css-ui — so this is the
+   missing-primitive case ds-patches.css is for, and the day they land in the DS
+   this block is a delete.
+
+   ⚠️ `validate_css` flags the --comp-action-dropdown-* tokens below as component
+   tokens in application code. That rule protects app CSS from reaching into a
+   component's internals; a PORT standing in for the missing component is the one
+   place they are correct, because the component's own SCSS uses exactly these —
+   substituting --ref equivalents would silently drift the day the DS retunes the
+   dropdown surface. .ap-status-card above already sets that precedent with 38
+   uses of --comp-status-card-*.
+
+   Not ported: presets (save / edit / update), the Apply button, feature-lock and
+   the disabled states. The one place this app uses it commits on change and has
+   no locked groups; those come back with the markup that needs them. Positioning
+   is the caller's — the DS anchors this through a CDK overlay, and here it hangs
+   off .research-filters (screens/research.css). */
+.ap-filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  width: 420px;
+  background-color: var(--comp-action-dropdown-background-color);
+  border-radius: var(--comp-action-dropdown-border-radius);
+  box-shadow: var(--comp-action-dropdown-box-shadow);
+  outline: none;
+  max-height: min(90vh, 750px);
+}
+
+.ap-filter-dropdown__content {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.ap-filter-dropdown__footer {
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  border-top: 1px solid var(--comp-action-dropdown-divider-color);
+}
+
+.ap-filter-dropdown__footer--apply {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ref-spacing-sm);
+}
+
+/* ── A leaf: one filter group ─────────────────────────────────────────── */
+.ap-filter-leaf {
+  display: flex;
+  flex-direction: column;
+}
+
+.ap-filter-leaf.with-border-bottom {
+  border-bottom: 1px solid var(--ref-color-grey-10);
+}
+
+.ap-filter-leaf__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ref-spacing-sm);
+}
+
+.ap-filter-leaf__header.ap-filter-leaf__expanded {
+  padding-bottom: var(--ref-spacing-xs);
+}
+
+.ap-filter-leaf__closable {
+  cursor: pointer;
+}
+
+.ap-filter-leaf__title {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  flex: 1 0 0;
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.ap-filter-leaf__label {
+  color: var(--ref-color-grey-100);
+  font-family: var(--ref-font-family);
+  font-size: var(--ref-font-size-sm);
+  font-weight: var(--ref-font-weight-regular);
+  line-height: var(--ref-font-line-height-sm);
+}
+
+.ap-filter-leaf__chevron--rotated {
+  transform: rotate(180deg);
+}
+
+.ap-filter-leaf__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: 0 var(--ref-spacing-sm) var(--ref-spacing-sm);
+}
+
+.ap-filter-leaf__option {
+  display: flex;
+  gap: var(--ref-spacing-xxs);
+  align-items: center;
+  justify-content: flex-start;
+}

@@ -1327,108 +1327,74 @@
   text-align: center;
 }
 
-/* ── Filters ─────────────────────────────────────────────────────────── */
+/* ── Filters ─────────────────────────────────────────────────────────────
+   The panel is a PORT of the DS Filter Dropdown and lives in ds-patches.css
+   (.ap-filter-dropdown / .ap-filter-leaf). What stays here is what the DS leaves
+   to the caller: where the panel hangs, and the two things this app adds to a
+   leaf — the status legend in a collapsed head, and the empty icon slot that
+   keeps the option labels in one column. */
 
 .research-filters {
   position: relative;
 }
 
+/* The trigger's count is the DS Counter (.ap-counter normal grey); only its
+   distance from the label is ours. */
 .research-filters__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  margin-left: 6px;
-  padding: 0 5px;
-  background: var(--ref-color-grey-10);
-  border-radius: var(--app-radius-pill);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--ref-color-grey-100);
+  margin-left: var(--ref-spacing-xxs);
 }
 
+/* Anchored under the trigger. The DS puts this in a CDK overlay, which is the one
+   part of the component a static port cannot borrow. */
 .research-filters__panel {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + var(--ref-spacing-xxxs));
   right: 0;
   z-index: var(--app-z-overlay);
-  width: 320px;
-  padding: 4px;
-  background: var(--ref-color-white);
-  border: 1px solid var(--ref-color-grey-10);
-  border-radius: var(--app-radius-starter);
-  box-shadow: var(--app-shadow-low);
 }
 
-.research-filters__group + .research-filters__group {
-  border-top: 1px solid var(--ref-color-grey-10);
-}
-
+/* The head is a <button>, so it needs the chrome reset the DS's <div> never
+   needed. */
 .research-filters__group-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   width: 100%;
-  padding: 10px 12px;
   background: none;
   border: 0;
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--app-convo-navy);
   cursor: pointer;
-}
-
-.research-filters__options {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 12px 10px;
 }
 
 /* The four status glyphs in the collapsed group head — a legend, so the panel that
    owns this axis also says what the cards' icons mean.
 
    margin-left: auto pushes the set to sit beside the chevron rather than beside the
-   label, so the head still reads label-then-control. The head is
-   justify-content: space-between with two children; this becomes the third, so the
-   auto margin is what keeps the chevron hard right. */
+   label: the head is justify-content: space-between with the title already at
+   flex: 1 0 0, so the auto margin is what keeps the chevron hard right. */
 .research-filters__legend {
   display: inline-flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
   margin-left: auto;
   margin-right: var(--ref-spacing-xs);
-  font-size: 14px;
+  font-size: var(--sys-icon-css-sm);
   line-height: 1;
   color: var(--sys-text-color-light);
 }
 
-.research-filters__option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ref-color-grey-80);
-  cursor: pointer;
+.research-filters__chevron {
+  flex: 0 0 auto;
+  color: var(--sys-text-color-light);
 }
 
-/* The glyph and the word are ONE unit, wrapped, with their own gap. The row's gap
-   then separates the checkbox from that unit rather than falling between the glyph
-   and the word it belongs to.
+/* The option row is .ap-checkbox-container + .ap-filter-leaf__option, both ported;
+   the label text is the DS body style the leaf gives its options. */
+.research-filters__option {
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
 
-   This replaces a negative margin, which had the spacing backwards: at
-   --ref-spacing-xxs (8px) pulled off a 10px row gap, the glyph sat 2px from its label
-   and 13px from the checkbox — nearly touching the word it labels while reading as a
-   separate column from the control it belongs to. Measured before: 13px / 2px.
-
-   Now 8px inside the pair, up from 4px, against 13px measured from the checkbox to
-   the pair. That is a 1:1.6 ratio where 4px gave 1:3.25 — the glyph is still nearer
-   the word it labels than the control beside it, so the grouping holds, but it is
-   closer than it was and further tightening would need the row's gap to grow with
-   it. Both steps are tokens: xxs here, and the row keeps its own. */
+/* The glyph and the word are ONE unit, wrapped, with their own gap, so the row's
+   gap separates the checkbox from that pair rather than falling between a glyph
+   and the word it labels. */
 .research-filters__option-name {
   display: inline-flex;
   align-items: center;
@@ -1438,38 +1404,16 @@
 
 .research-filters__option-icon {
   flex: 0 0 auto;
-  font-size: 14px;
+  font-size: var(--sys-icon-css-sm);
   line-height: 1;
   color: var(--sys-text-color-light);
 }
 
 /* The same slot, empty — the Topic status group's New option, which carries no
-   glyph. It holds the label column straight so the four names line up.
-   1em, not an icon token: --sys-icon-css-sm is 16px and these glyphs render at the
-   14px above, so the em ties the spacer to its siblings' actual size rather than to
-   a scale they don't use. */
+   glyph. It holds the label column straight so the four names line up. */
 .research-filters__option-icon.is-empty {
   display: inline-block;
-  width: 1em;
-}
-
-.research-filters__reset-row {
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px 12px;
-  border-top: 1px solid var(--ref-color-grey-10);
-}
-
-.research-filters__reset {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: 0;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--ref-color-electric-blue-100);
-  cursor: pointer;
+  width: var(--sys-icon-css-sm);
 }
 
 /* ── Trending notice ─────────────────────────────────────── */

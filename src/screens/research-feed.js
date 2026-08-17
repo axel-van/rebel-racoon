@@ -547,6 +547,10 @@ function teardown() {
   }
   if (boundTarget && boundClick) boundTarget.removeEventListener("click", boundClick);
   if (topbarEl && boundClick) topbarEl.removeEventListener("click", boundClick);
+  if (topbarEl && boundInput) {
+    topbarEl.removeEventListener("input", boundInput);
+    topbarEl.removeEventListener("change", boundInput);
+  }
   topbarEl = null;
   clearTopbarActions();
   if (boundTarget && boundInput) {
@@ -879,7 +883,11 @@ function renderTopbarActions(narrowed) {
     >
       <i class="ap-icon-filter" aria-hidden="true"></i>
       <span>Filters</span>
-      ${raw(narrowed ? html`<span class="research-filters__badge">${narrowed}</span>` : "")}
+      <!-- The DS Counter, not a hand-built pill. Same correction the segment counts
+           got: .ap-counter normal grey is how this product puts a number beside a
+           label, and the pill here was 11px/800 on grey-10 with a radius of its
+           own. -->
+      ${raw(narrowed ? html`<span class="ap-counter normal grey research-filters__badge">${narrowed}</span>` : "")}
     </button>
     ${raw(view.panelOpen ? renderFilterPanel() : "")}
   </div>`;
@@ -896,8 +904,21 @@ function renderTopbarActions(narrowed) {
 //
 // `filters.types` still exists and still defaults to both, so
 // getBriefsForLane's shape is unchanged; nothing narrows on it any more.
+// A PORT of the DS Filter Dropdown, like the segmented control before it.
+//
+// `@agorapulse/ui-components/filter-dropdown` ships Angular only —
+// <ap-filter-dropdown> + <ap-filter-leaf>, no CSS-UI classes — while the intent
+// lookup sends "filter dropdown" straight to it. The structure here was already
+// leaf-for-leaf identical (header + chevron, collapsible options, checkboxes), so
+// what the port changes is the class names and the values: 420px, the
+// --comp-action-dropdown-* surface, and the leaf's own spacing. CSS in
+// ds-patches.css.
+//
+// role="group", not the component's role="menu": its own children are menu items
+// and these are checkboxes, so "menu" would promise arrow-key semantics that do
+// not exist here. The label is what the DS gives it.
 function renderFilterPanel() {
-  return html`<div class="research-filters__panel" data-feed-panel>
+  return html`<div class="ap-filter-dropdown research-filters__panel" data-feed-panel role="group" aria-label="Filters">
     ${raw(
       renderGroup("status", "Topic status", REVIEW_STATUSES, filters.statuses, "statuses") +
         // Sources renders WITHOUT its glyphs, unlike Topic status. The difference is
@@ -911,10 +932,17 @@ function renderFilterPanel() {
           icons: false,
         }),
     )}
-    <div class="research-filters__reset-row">
-      <button type="button" class="research-filters__reset" data-feed-reset>
-        <i class="ap-icon-refresh" aria-hidden="true"></i><span>Reset filters</span>
-      </button>
+    <!-- The component's own footer: .ap-filter-dropdown__footer, right-aligned,
+         with a real ghost-blue .ap-button carrying the reset symbol on the left.
+         It was a hand-rolled link-button (14px/800 electric blue, no DS class).
+         No Apply beside it — every control here commits on change, so a second
+         button would promise something is pending. -->
+    <div class="ap-filter-dropdown__footer">
+      <div class="ap-filter-dropdown__footer--apply">
+        <button type="button" class="ap-button ghost blue" data-feed-reset>
+          <i class="ap-icon-refresh" aria-hidden="true"></i><span>Reset filters</span>
+        </button>
+      </div>
     </div>
   </div>`;
 }
@@ -949,14 +977,14 @@ function renderGroup(key, label, options, selected, field, { icons = true } = {}
   // Groups where NO option has an icon (Topic type) reserve nothing, so they keep
   // their tighter row.
   const mixedIcons = icons && options.some((o) => o.icon) && options.some((o) => !o.icon);
-  return html`<section class="research-filters__group">
+  return html`<section class="ap-filter-leaf research-filters__group ${raw(open ? "" : "with-border-bottom")}">
     <button
       type="button"
-      class="research-filters__group-head"
+      class="ap-filter-leaf__header ${raw(open ? "ap-filter-leaf__expanded" : "")} research-filters__group-head"
       data-feed-group="${key}"
       aria-expanded="${open ? "true" : "false"}"
     >
-      <span>${label}</span>
+      <span class="ap-filter-leaf__title">${label}</span>
       <!-- The status group's head carries the glyphs as a LEGEND, so the panel that
            owns this axis also says what the cards' icons mean. Three of them, not
            four — New has no marker on a card, so it has none here either.
@@ -969,23 +997,36 @@ function renderGroup(key, label, options, selected, field, { icons = true } = {}
            make the control harder to use, not easier, and the options below name
            each status properly. -->
       ${raw(key === "status" && !open ? renderStatusLegend() : "")}
-      <i class="${open ? "ap-icon-chevron-up" : "ap-icon-chevron-down"}" aria-hidden="true"></i>
+      <!-- One glyph, rotated — the component's own trick
+           (.ap-filter-leaf__chevron--rotated) rather than two icon names, so the
+           two states cannot pick up different marks. -->
+      <i
+        class="ap-icon-chevron-up research-filters__chevron ${raw(open ? "" : "ap-filter-leaf__chevron--rotated")}"
+        aria-hidden="true"
+      ></i>
     </button>
     ${raw(
       open
-        ? html`<div class="research-filters__options">
+        ? html`<div class="ap-filter-leaf__content research-filters__options">
             ${raw(
               options
                 .map(
                   (o) =>
-                    html`<label class="research-filters__option">
+                    html`<label class="ap-checkbox-container ap-filter-leaf__option research-filters__option">
+                      <!-- The DS checkbox: a <label> holding a visually-hidden
+                           <input> and an <i> that IS the box — the same shape as
+                           .ap-toggle-container, which this app already uses on the
+                           feed-settings form. It carried class="ap-checkbox", which
+                           exists nowhere in the CSS-UI layer, so every option
+                           rendered as a raw 13px OS checkbox: the only native form
+                           control left in the product. -->
                       <input
                         type="checkbox"
-                        class="ap-checkbox"
                         data-feed-filter="${escapeAttr(field)}"
                         value="${escapeAttr(o.id)}"
                         ${raw(selected.includes(o.id) ? "checked" : "")}
                       />
+                      <i aria-hidden="true"></i>
                       <!-- The icon, where a status has one — this is the row that
                            teaches the mapping, because it is the only place the glyph
                            and the word sit together. Types have none and the
@@ -1266,6 +1307,14 @@ function bind(target) {
   };
   target.addEventListener("input", boundInput);
   target.addEventListener("change", boundInput);
+  // …and on the topbar, for the same reason boundClick is bound there: the filter
+  // panel renders inside the topbar cluster, outside #app, so a change event from
+  // one of its checkboxes never reached a listener on #app. Ticking a source did
+  // nothing at all — the list did not narrow and the trigger's count stayed empty.
+  if (topbarEl) {
+    topbarEl.addEventListener("input", boundInput);
+    topbarEl.addEventListener("change", boundInput);
+  }
 
   // Close the filters panel and any open Use-in-chat menu on an outside click.
   // Bound on document because the click that dismisses them lands outside the
