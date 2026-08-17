@@ -1,6 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/serve",
-  "//": "Read automatically by `npx serve` (npm start). It exists because of ONE failure mode: the app is an ES module graph whose imports carry ?v= cache-busting queries, and index.html itself carries none. If the browser holds a stale index.html it asks for an old src/app.js?v=N, gets that old response back out of its own cache, and follows the imports IT names — so a module deleted since then 404s, the whole graph fails to instantiate, and the app renders nothing at all. It looks like a crash, and no console error names the real cause. Revalidating every document, script and stylesheet on each load removes the class.",
   "headers": [
     {
       "source": "**/*.@(html|js|css|json)",
