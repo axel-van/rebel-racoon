@@ -21,11 +21,11 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { renderTopbar } from "../components/topbar.js?v=452";
+import { renderTopbar } from "../components/topbar.js?v=453";
 import { showToast } from "../components/toast.js?v=21";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
 import { renderTopicCard } from "../components/topic-card.js?v=32";
-import { open as openTopicModal } from "../components/topic-modal.js?v=44";
+import { open as openTopicModal } from "../components/topic-modal.js?v=45";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { getContexts, getContextById, subscribe as subscribeContexts } from "../contexts-store.js?v=79";
 import { TOPIC_SOURCES, findTopicSource, findCadence } from "../topics-catalog.js?v=4";
