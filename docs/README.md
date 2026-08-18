@@ -35,6 +35,16 @@ Documentation qui décrit l'état actuel du code. À maintenir à jour quand le 
 
 ---
 
+## 📋 Specs — acceptance criteria for the build
+
+Critères de recette écrits depuis le proto, à destination des devs (et des agents qui testent l'implémentation). Décrivent ce que la prod doit faire, pas ce que le proto fait.
+
+| Document                                                             | Sujet                                                                                    |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| [`specs/AC-TOPIC-FEED-AND-CHAT.md`](specs/AC-TOPIC-FEED-AND-CHAT.md) | Topic Feed + les surfaces chat qu'il alimente. Content strategy explicitement hors scope |
+
+---
+
 ## ✍️ Copy — UX & voice
 
 | Document                                             | Sujet                                                                              |
