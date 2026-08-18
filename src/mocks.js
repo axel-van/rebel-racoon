@@ -2067,14 +2067,37 @@ export const contexts = [
   // matching Playbook the jiu-jitsu lane would have claimed to belong to
   // Pawtrack.
   //
-  // Everything below that the export actually stated is taken from it verbatim
-  // or near-verbatim: the objective ("drive local brand awareness and free trial
-  // sign-ups"), the positioning (elite coaching, safety-first culture, youth
-  // development over aggressive fighters), the audiences (Carlsbad parents,
-  // busy professionals returning after a break) and the three named competitors.
-  // Fields the export said nothing about — brand colours, typography, hooks —
-  // are left empty rather than invented, which is why this Playbook is thinner
-  // than the four seeded demo ones.
+  // TWO sources, kept separate on purpose — the same discipline as ctx-noba:
+  //
+  //   • The STRATEGY (objective, positioning, competitors, pillars, the
+  //     "explain the mechanism, not the milestone" angle) comes from the
+  //     listening export: "drive local brand awareness and free trial
+  //     sign-ups", elite coaching, safety-first culture, youth development
+  //     over aggressive fighters, and the three named local academies.
+  //
+  //   • Everything BRAND-side (voice, hooks, formatting, palette, type,
+  //     programs, the offer, links) was read off alliancecarlsbad.com and the
+  //     two social accounts on 18 Aug 2026. Site copy is quoted or paraphrased
+  //     close to verbatim: "Train Hard. Stay Humble", "Train with Purpose.
+  //     Belong to Something Bigger", "no ego, no intimidation", the free
+  //     30-minute one-on-one introduction, and "Since opening in 2017".
+  //
+  // The palette and type stack are OBSERVED, not guessed: computed styles off
+  // the live homepage give Teko 600 uppercase headings over Ubuntu 300 body,
+  // and #FFC20E on near-black as the only accent. Elementor's own global
+  // colour variables were ignored — that theme ships #61CE70/#54595F as
+  // untouched defaults and the site never paints with them.
+  //
+  // Still empty, deliberately: brandLogo (the real files are remote WordPress
+  // uploads behind Cloudflare, and every other Playbook points at a local
+  // assets/ path), referenceImages, imageVoice, and influencers — the export
+  // collected competitor posts only and the site names no creators.
+  //
+  // ⚠️ One honest tension worth keeping visible: the voice below is the one
+  // the STRATEGY argues for — patient, mechanism-first, never hypes results.
+  // The live Instagram does not always sound like that ("🏆 14X WORLD
+  // CHAMPION…", "Hey Alliance Carlsbad fam!"). The dontRules name that gap
+  // rather than paper over it.
   {
     id: "ctx-alliance-bjj",
     name: "Alliance Jiu Jitsu Carlsbad",
@@ -2082,13 +2105,15 @@ export const contexts = [
     isDefault: false,
     brandName: "Alliance Jiu Jitsu Carlsbad",
     brandLogo: null,
-    websiteUrl: null,
+    websiteUrl: "https://alliancecarlsbad.com/",
     audience: [
       "Active Carlsbad parents weighing martial arts for a child, and wary of programs that make kids aggressive",
       "Busy professionals and former practitioners returning to the mats after a multi-year break",
+      "Women who want self-defence without walking into a room of experienced men — the academy runs a women-only program",
+      "Teens and competitors who want structured progression under an Alliance black belt, not just open mats",
     ],
     businessSummary:
-      "Win on coaching quality and a safety-first mat culture, not on trophies. Local competitors are loud about youth programs, belt promotions and community events; the opening is to explain what those milestones actually build — self-control, problem-solving, resilience — for parents and adults who want capability without aggression.",
+      "Win on coaching quality and a safety-first mat culture, not on trophies. Open since 2017 on Roosevelt St and affiliated to Alliance — the team founded by Romero 'Jacaré' Cavalcanti, Fábio Gurgel and Alexandre Paiva — with programs split by who you are rather than by belt: adults, teens, kids, women, competition team, plus no-gi, boxing and yoga. The front door is a complimentary 30-minute one-on-one introduction followed by a free trial period. Local competitors are loud about youth programs, belt promotions and community events; the opening is to explain what those milestones actually build — self-control, problem-solving, resilience — for parents and adults who want capability without aggression.",
     briefSummary:
       "Win on coaching quality and a safety-first mat culture, not on trophies. Local competitors are loud about youth programs, belt promotions and community events; the opening is to explain what those milestones actually build.",
     tones: ["Reassuring", "Expert"],
@@ -2097,65 +2122,124 @@ export const contexts = [
       writingStyle:
         "Answers a parent's real hesitation before selling anything. Explains the mechanism — why grappling teaches control rather than aggression — then lets the conclusion follow. Long-form and patient; never hypes competition results.",
       vocabulary:
-        "Character development, self-control, problem-solving, structured progression, safety-first. Never 'dominate', 'destroy', 'killer instinct', or anything that frames training as fighting.",
-      sentenceStructure: null,
+        "Character development, self-control, problem-solving, structured progression, safety-first. The site's own recurring words are worth keeping: purpose, control, respect, structure, confidence, community, 'leave ego at the door'. Never 'dominate', 'destroy', 'killer instinct', or anything that frames training as fighting.",
+      sentenceStructure:
+        "Short declaratives, often in pairs — a two-word imperative followed by what it gets you ('Train smarter. Build real skill, strength, and confidence—both on and off the mats.'). One claim per sentence, and the claim names something checkable: a program, an age range, a coach, a class time.",
+      formality:
+        "Plain and direct. Second person throughout ('you or your child'), contractions allowed, no slang and no exclamation marks. Reads like a coach talking to a parent at the door, not like an ad.",
+      personality:
+        "Assured and unhurried. Confident enough to describe the room honestly — clean mats, beginners welcome, everyone trains with control — instead of claiming to be the best.",
+      rhetoricalDevices:
+        "Contrast the milestone with what it builds. Name the hesitation first, answer it second. Member and parent quotes as proof, since the strongest existing material on the site is testimonials about the coaches.",
+      emotionalTone:
+        "Reassuring. The reader is usually nervous — for themselves or for their kid — and the job of the first three lines is to make the room feel safe and legible.",
+      contentPatterns:
+        "Hesitation → mechanism → what it builds → an invitation with no pressure. Around 80–120 words. One audience per post; never write to parents and competitors in the same caption.",
+      uniqueTraits:
+        "Sorts everything by who it's for — adults, teens, kids, women, competition team — the way the site's own program menu does. Names the coach when the post is about instruction. States the offer precisely rather than saying 'free trial': a 30-minute one-on-one intro first, then the trial.",
       examples: [],
     },
     contentStyle: ["Educational", "Long-form"],
     objective: ["Brand awareness", "Lead generation"],
-    contentAction: ["Book a free trial"],
-    signatureHooks: [],
-    closingPatterns: [],
-    formattingStyle: null,
-    visualStyle: null,
-    brandPersonality: "expert, reassuring, disciplined",
-    brandTypography: null,
-    brandColors: [],
+    contentAction: ["Book a free intro class", "View the class schedule"],
+    // Real lines, taken off the homepage, the Our Academy page and the two
+    // social accounts. Kept as-is rather than rewritten — these are what the
+    // brand already sounds like at its best.
+    signatureHooks: [
+      "Train Hard. Stay Humble.",
+      "Train with Purpose. Belong to Something Bigger.",
+      "Confidence for kids. Discipline for teens. Growth for adults.",
+      "No ego, no intimidation.",
+      "When something goes wrong, there's always another move to progress.",
+    ],
+    closingPatterns: [
+      "Schedule your free introduction.",
+      "Come train with us.",
+      "No pressure — just a chance to train.",
+    ],
+    formattingStyle:
+      "Opens on the hesitation or the person, never on the academy. Two or three short lines, one idea each, with the em dash used to attach the payoff to the imperative. Names the audience explicitly. Closes on the free intro with no urgency language. At most one emoji, and no emoji strings or arrow stacks in long-form copy.",
+    visualStyle:
+      "Black backgrounds, one accent — the Alliance yellow — and nothing else. Condensed uppercase headings over light body text. Square edges: the site's buttons carry no radius. Photography is on the mats, in the gi, mid-instruction rather than posed; kids' and women's classes shot at eye level, not from the ceiling.",
+    brandPersonality:
+      "Expert, reassuring and disciplined. World-class credentials worn lightly — the lineage is stated once and then earned back through how the room is described.",
+    brandTypography: { headingFont: "Teko", bodyFont: "Ubuntu" },
+    // Observed on the live site, not inferred: yellow is the only accent, and
+    // it sits on near-black almost everywhere above the fold.
+    brandColors: [
+      { name: "Primary", hex: "#FFC20E" },
+      { name: "Secondary", hex: "#29282D" },
+      { name: "Background", hex: "#020101" },
+      { name: "Surface", hex: "#FFFFFF" },
+      { name: "Text", hex: "#9C9C9C" },
+    ],
     referenceImages: [],
-    // The three competitors the listening export names by hand. No websites or
-    // socials in the export, so those stay empty.
+    // The three competitors the listening export names by hand. Websites and
+    // social handles added from a public web check — everything about what they
+    // POST still comes from the export.
     competitors: [
       {
         id: "alliance-cmp-1",
-        name: "Gracie Barra",
+        name: "Gracie Barra Carlsbad",
         description:
-          "Most active locally. Promotes youth programs on character building, celebrates belt and stripe promotions, and ran a 1st-anniversary celebration plus belt-rank seminars.",
-        websiteUrl: null,
-        socials: [],
+          "Most active locally. Promotes youth programs on character building, celebrates belt and stripe promotions, and ran a 1st-anniversary celebration plus belt-rank seminars. Part of the largest BJJ association in the world, which gives it the same lineage argument Alliance uses.",
+        websiteUrl: "https://graciebarracarlsbad.com/",
+        socials: [{ network: "instagram", url: "https://instagram.com/gbcarlsbad" }],
       },
       {
         id: "alliance-cmp-2",
-        name: "Six Blades",
+        name: "Six Blades Jiu-Jitsu Carlsbad",
         description:
-          "Leans on welcome-back stories (a student returning after a three-year hiatus) and on very young beginners, alongside belt promotions.",
-        websiteUrl: null,
-        socials: [],
+          "Leans on welcome-back stories (a student returning after a three-year hiatus) and on very young beginners, alongside belt promotions. Ribeiro lineage, on Innovation Way in the business park rather than in the village.",
+        websiteUrl: "https://rjjcarlsbad.com/",
+        socials: [
+          { network: "instagram", url: "https://instagram.com/sixbladesbjjcarlsbad" },
+          { network: "facebook", url: "https://facebook.com/ribeirojjcarlsbad" },
+        ],
       },
       {
         id: "alliance-cmp-3",
-        name: "Freedom",
+        name: "Freedom Jiu Jitsu Academy Carlsbad",
         description:
-          "Posts belt and stripe promotions; part of the local cluster driving engagement around milestones.",
-        websiteUrl: null,
-        socials: [],
+          "Posts belt and stripe promotions; part of the local cluster driving engagement around milestones. Positions on inclusiveness — 'all ages and all experience levels' — which is the closest competitor claim to Alliance's safety-first angle.",
+        websiteUrl: "https://freedomjiujitsucarlsbad.com/",
+        socials: [{ network: "instagram", url: "https://instagram.com/freedomjiujitsucarlsbad" }],
       },
     ],
     topics: {
       enabledSourceIds: ["competitor-posts"],
       cadence: "monthly",
     },
-    ctaLinks: [],
+    // The real destinations, read off the site's own navigation.
+    ctaLinks: [
+      { label: "Book a free intro class", url: "alliancecarlsbad.com/get-started/", checked: true, suggested: false },
+      { label: "Class schedule", url: "alliancecarlsbad.com/schedule/", checked: true, suggested: false },
+      { label: "Programs", url: "alliancecarlsbad.com/classes/", checked: true, suggested: false },
+      {
+        label: "Meet our team",
+        url: "alliancecarlsbad.com/team-alliance-carlsbad/",
+        checked: false,
+        suggested: false,
+      },
+    ],
     language: "English",
     imageVoice: null,
     doRules: [
       "Address the fear that martial arts makes children aggressive, directly.",
       "Explain what a promotion or a technique teaches, not just that it happened.",
+      "Name the offer precisely — a complimentary 30-minute one-on-one introduction first, then a free trial period.",
+      "Say who the class is for before saying what it teaches; the academy sorts every program by person, not by belt.",
+      "Name the coach when the post is about instruction. Johnny Faria, Mark Vorgeas, Michael Nelms and Karolina Vorgeas are why the testimonials read the way they do.",
+      "State the Alliance lineage once, in plain terms — Jacaré, Gurgel, Paiva — then move on.",
     ],
     dontRules: [
       "Don't post generic holiday greetings — the export flagged competitors' Independence Day posts as carrying no brand angle.",
       "Don't mirror competitors' anniversary or seminar promotion; it doesn't translate into a credible theme for this brand.",
+      "Don't lean on 'world-class' and 'elite'. The site already says both on nearly every screen, and neither answers the question a nervous parent is actually asking.",
+      "Don't open on a medal count or a champion callout. Results are proof further down the post, never the hook — this is the one habit the live Instagram has that the strategy argues against.",
+      "No urgency or scarcity framing on the intro offer. 'No pressure' is the academy's own promise and countdown language breaks it.",
     ],
-    cta: "Book a free trial",
+    cta: "Book a free intro class",
     usedIn: 0,
     updatedAt: "just now",
     // Pillars taken straight from the four topics the listening export returned —
@@ -2194,8 +2278,9 @@ export const contexts = [
         },
       ],
     },
-    // Nothing in the export names creators — it collected competitor posts only.
-    // Left empty rather than invented; the section will show its empty state.
+    // Nothing in the export names creators — it collected competitor posts only,
+    // and the website names no partners either. Left empty rather than invented;
+    // the section will show its empty state.
     influencers: [],
     analysis: {
       voice: null,
@@ -2652,6 +2737,36 @@ export const contexts = [
       brand: null,
     },
   },
+  // ── Agorapulse ───────────────────────────────────────────────────────────
+  //
+  // Two sources, kept separate — the same discipline as ctx-alliance-bjj and
+  // ctx-noba:
+  //
+  //   • The STRATEGY (objective, competitors, pillars, the "lead with the job
+  //     removed" angle) comes from the listening export — see the notes on
+  //     `strategy.pillars` below, which record which model run produced what.
+  //
+  //   • Everything BRAND-side (voice, hooks, formatting, palette, type, the
+  //     proof numbers, the links) was read off agorapulse.com and the blog on
+  //     18 Aug 2026. Site copy is quoted or near-verbatim: "Keep tabs, without
+  //     switching tabs", "Drive Real Impact on Social Media. From Engagement to
+  //     ROI.", "the internal friction and downright annoyance of having to send
+  //     multiple emails", and the four proof figures (50% / 30% / 96% / 30 min).
+  //     Founding facts — Paris, 2010, Emeric Ernoult and Benoît Hédiard,
+  //     bootstrapped, first social inbox in 2014 — are public record.
+  //
+  // The palette and type are OBSERVED off the live homepage, not guessed, and
+  // they line up with what the design system ships: Averta throughout, #212E44
+  // navy as text and brand, #FF6726 orange for emphasis, #1863DC blue for the
+  // action. Note the app's own convention is the reverse of the marketing
+  // site's (orange = AI, blue = routine) — see CLAUDE.md; these values describe
+  // agorapulse.com, not the product UI.
+  //
+  // Still empty, deliberately: brandLogo (every other Playbook points at a
+  // local assets/ path and no local file exists), referenceImages, imageVoice,
+  // and influencers — the export collected competitor posts only, and the
+  // creators and advocates Agorapulse actually works with are not something the
+  // website states, so naming them here would be invention.
   {
     id: "ctx-agorapulse",
     name: "Agorapulse",
@@ -2664,9 +2779,11 @@ export const contexts = [
       "Social Media Managers running publishing, inbox and reporting day to day",
       "Marketing agencies handling several client accounts at once",
       "Growing marketing teams that need shared calendars and approval workflows",
+      "The social media manager who has to justify the budget upward — the one asked what the posting actually returned",
+      "Teams evaluating a switch off Hootsuite or Sprout Social on cost, usability and support",
     ],
     businessSummary:
-      "Agorapulse is an easy-to-use social media management platform for growing marketing teams, agencies and businesses: one dashboard for publishing, inbox, reporting, monitoring and team collaboration. Shared calendars, automated moderation and social ROI tracking are the levers — the pitch is saving time, staying organised, and being able to prove the value of the work.",
+      "Agorapulse is an easy-to-use social media management platform for growing marketing teams, agencies and businesses: one dashboard for publishing, inbox, reporting, monitoring and team collaboration. Shared calendars, automated moderation and social ROI tracking are the levers — the pitch is saving time, staying organised, and being able to prove the value of the work. Founded in Paris in 2010 by Emeric Ernoult and Benoît Hédiard and bootstrapped since, it shipped the first social media inbox in 2014 and now serves 31K+ social media managers daily. The site argues on four numbers rather than adjectives: 50% of content-creation time saved, 30% average saving for teams switching, 96% user satisfaction, and support answering in 30 minutes or less. Social ROI is the differentiator it claims outright — tracking sales, traffic and leads back to organic posts.",
     briefSummary:
       "One dashboard for publishing, inbox, reporting, monitoring and collaboration. The pitch is saving time, staying organised, and proving social ROI.",
     tones: ["Direct", "Helpful"],
@@ -2676,20 +2793,61 @@ export const contexts = [
         "Says the useful thing first and shows the workflow rather than describing it. Leans on what real teams did and what it changed. Educational without being abstract — every piece should leave a social media manager able to do something on Monday.",
       vocabulary:
         "Workflow, inbox, publishing, reporting, social ROI, approval, moderation, shared calendar. Concrete nouns over category language; never 'synergy', 'revolutionise' or 'game-changer'.",
-      sentenceStructure: null,
+      sentenceStructure:
+        "Short and load-bearing. The best lines on the site are built on a turn — 'Keep tabs, without switching tabs' — where the second half reverses the first. Body copy runs two or three sentences, then a list of what it lets you do.",
+      formality:
+        "Semi-formal and colloquial where it helps. Second person throughout, contractions everywhere, and willing to name the feeling out loud ('the internal friction and downright annoyance of having to send multiple emails'). Never corporate, never slangy.",
+      personality:
+        "A peer who has done the job. Speaks to the social media manager, not to the buyer above them, and takes their side — the recurring subtext is that this work is undervalued and measurable.",
+      rhetoricalDevices:
+        "Contradict the assumption, then explain ('The best time to post on social media isn't when you think'). Named customer with a number attached. Head-to-head comparisons answered plainly rather than dodged.",
+      emotionalTone:
+        "Reassuring and slightly conspiratorial. Acknowledges the chaos — tab-switching, approval chasing, proving your worth — and positions the product as relief rather than transformation.",
+      contentPatterns:
+        "Pain → mechanism → proof → try it free. Blog headlines lead with the reader's problem or a customer's number; product copy leads with the job and closes on a three-item capability list.",
+      uniqueTraits:
+        "Social ROI is the claim nothing else in the category makes as flatly. Customer names and figures carry the argument in place of adjectives. Competitors are named directly, trademark symbols and all, rather than alluded to.",
       examples: [],
     },
     contentStyle: ["Direct and actionable", "Customer-centric storytelling", "Tool-driven and educational"],
     objective: ["Lead generation", "Product adoption"],
     contentAction: ["Sign up for a free trial", "Book a personalized demo", "Try free social media tools"],
-    signatureHooks: [],
-    closingPatterns: [],
-    formattingStyle: null,
-    visualStyle: null,
-    brandPersonality: "direct, practical, customer-first",
-    brandTypography: null,
-    brandColors: [],
+    // Real lines off agorapulse.com and the blog index, kept as written.
+    signatureHooks: [
+      "Keep tabs, without switching tabs.",
+      "Drive real impact on social media. From engagement to ROI.",
+      "The best time to post on social media isn't when you think.",
+      "Is your social media strategy failing? Here's why.",
+      "Save time, stay organized, and easily manage your social media.",
+    ],
+    closingPatterns: [
+      "Try for free now — 30 days, no card required.",
+      "See how teams like yours did it.",
+      "Book a demo and we'll walk your workflow.",
+    ],
+    formattingStyle:
+      "Opens on the reader's problem or a customer's number, never on the product. Two or three short sentences, then a three-item list of what it lets you do. Headlines built on a reversal or a contradicted assumption. Numbers stated plainly — 50%, 30%, 96%, 30 minutes — with the customer named beside them. Free trial mentioned at the end, with the terms attached rather than as pressure.",
+    visualStyle:
+      "Navy text on white, orange for emphasis and blue for the action. Light peach and grey tints separate sections; nothing is dark. Product screenshots do the explaining — real dashboards and inboxes, not illustration. Sentence case in body copy, title case in headlines. Buttons are barely rounded.",
+    brandPersonality:
+      "Direct, practical and customer-first. A peer who has done the job, on the side of the social media manager rather than the buyer — and confident enough to name competitors and put its numbers next to theirs.",
+    brandTypography: { headingFont: "Averta", bodyFont: "Averta" },
+    // Observed off the live homepage, and the same family the design system
+    // ships: navy is the text and the brand, orange is emphasis, blue is the
+    // action colour.
+    brandColors: [
+      { name: "Primary", hex: "#212E44" },
+      { name: "Secondary", hex: "#344563" },
+      { name: "Accent", hex: "#FF6726" },
+      { name: "Action", hex: "#1863DC" },
+      { name: "Background", hex: "#FFFFFF" },
+      { name: "Surface", hex: "#FFEFE9" },
+    ],
     referenceImages: [],
+    // Descriptions are what the SCAN saw each account do. The websites were
+    // already here; the handles were verified off each company's own footer on
+    // 18 Aug 2026 — Hootsuite carries LinkedIn only because its footer social
+    // links could not be read, and a guessed handle is worse than a missing one.
     competitors: [
       {
         id: "agp-cmp-1",
@@ -2697,7 +2855,10 @@ export const contexts = [
         description:
           "Named in the brand brief. In the scan: pillar guides on analytics and a two-part Bluesky playbook — cornerstone content built to rank and anchor a topic cluster.",
         websiteUrl: "https://sproutsocial.com/",
-        socials: [],
+        socials: [
+          { network: "linkedin", url: "https://www.linkedin.com/company/sprout-social-inc-" },
+          { network: "instagram", url: "https://instagram.com/sproutsocial" },
+        ],
       },
       {
         id: "agp-cmp-2",
@@ -2705,21 +2866,27 @@ export const contexts = [
         description:
           "Named in the brand brief. In the scan: the loudest AI move of the window — Social OS, pitched as rebuilding the product around an agent layer rather than bolting AI onto it.",
         websiteUrl: "https://www.hootsuite.com/",
-        socials: [],
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/company/hootsuite" }],
       },
       {
         id: "agp-cmp-3",
         name: "Sendible",
         description: "Named in the brand brief. The scan returned no posts from this account in the window.",
         websiteUrl: "https://www.sendible.com/",
-        socials: [],
+        socials: [
+          { network: "linkedin", url: "https://www.linkedin.com/company/sendible" },
+          { network: "instagram", url: "https://instagram.com/sendible" },
+        ],
       },
       {
         id: "agp-cmp-4",
         name: "Loomly",
         description: "Named in the brand brief. The scan returned no posts from this account in the window.",
         websiteUrl: "https://www.loomly.com/",
-        socials: [],
+        socials: [
+          { network: "linkedin", url: "https://www.linkedin.com/company/loomly" },
+          { network: "instagram", url: "https://instagram.com/loomlysocial" },
+        ],
       },
       {
         id: "agp-cmp-5",
@@ -2727,7 +2894,10 @@ export const contexts = [
         description:
           "Not in the brand brief — surfaced by the scan. Practitioner-voice content on MCP servers and head-to-head comparisons, plus the Insights launch.",
         websiteUrl: "https://buffer.com/",
-        socials: [],
+        socials: [
+          { network: "linkedin", url: "https://www.linkedin.com/company/bufferapp" },
+          { network: "instagram", url: "https://instagram.com/buffer" },
+        ],
       },
       {
         id: "agp-cmp-6",
@@ -2735,7 +2905,10 @@ export const contexts = [
         description:
           "Not in the brand brief — surfaced by the scan. Ask Vista, a conversational command surface across 50+ tools, and image-to-video in the AI Assistant.",
         websiteUrl: "https://vistasocial.com/",
-        socials: [],
+        socials: [
+          { network: "linkedin", url: "https://www.linkedin.com/company/vistasocial" },
+          { network: "instagram", url: "https://instagram.com/vistasocialapp" },
+        ],
       },
       {
         id: "agp-cmp-7",
@@ -2743,26 +2916,52 @@ export const contexts = [
         description:
           "Not in the brand brief — surfaced by the scan. Enterprise framing: governed measurement definitions, and LLM Insights for brand visibility inside AI answers.",
         websiteUrl: "https://www.sprinklr.com/",
-        socials: [],
+        socials: [
+          { network: "linkedin", url: "https://www.linkedin.com/company/sprinklr" },
+          { network: "instagram", url: "https://instagram.com/sprinklr" },
+        ],
       },
     ],
     topics: {
       enabledSourceIds: ["competitor-posts"],
       cadence: "monthly",
     },
+    // `checked` matters: the detail view renders only checked links (see
+    // playbook-view.js `ctas` filter). The original two entries here predate
+    // that filter and were silently invisible.
     ctaLinks: [
-      { label: "Start a free trial", url: "https://www.agorapulse.com/free-trial/" },
-      { label: "Book a demo", url: "https://www.agorapulse.com/request-demo/" },
+      { label: "Start a free trial", url: "https://www.agorapulse.com/free-trial/", checked: true, suggested: false },
+      { label: "Book a demo", url: "https://www.agorapulse.com/request-demo/", checked: true, suggested: false },
+      { label: "Pricing", url: "https://www.agorapulse.com/pricing/", checked: true, suggested: false },
+      {
+        label: "Free social media tools",
+        url: "https://www.agorapulse.com/free-social-media-marketing-tools/",
+        checked: true,
+        suggested: false,
+      },
+      {
+        label: "Success stories",
+        url: "https://www.agorapulse.com/blog/success-stories/",
+        checked: false,
+        suggested: false,
+      },
+      { label: "Agorapulse Academy", url: "https://www.agorapulse.com/academy/", checked: false, suggested: false },
     ],
     language: "English",
     imageVoice: null,
     doRules: [
       "Show the workflow. A screenshot of the thing working beats a paragraph describing it.",
       "Answer the comparison question honestly — the scan shows head-to-head content is what captures bottom-funnel search.",
+      "Attach a number to a named customer. The site argues with 50%, 30%, 96% and 30 minutes rather than with adjectives; a claim without a name behind it is weaker than the brand's own baseline.",
+      "Write to the social media manager, not to the person who signs off. The brand's whole position is taking their side.",
+      "State the trial terms when you offer it — 30 days, no card required. It is the reason the offer reads as low-risk.",
     ],
     dontRules: [
       "Don't announce an AI capability without saying which job it removes. The window is full of agent launches and thin on what they actually replace.",
       "Don't publish a metrics list. Competitors already own 'here are 30 metrics'; the opening is which ones tie to a decision.",
+      "Don't lead with the platform. Every strong line on the site opens on the reader's problem and reaches the product second.",
+      "No hype vocabulary — 'revolutionary', 'game-changer', 'synergy'. The brand's credibility rests on sounding like a practitioner.",
+      "Don't claim ROI in the abstract. Social ROI means tracked sales, traffic and leads from organic posts; used loosely it becomes the category language it was meant to replace.",
     ],
     cta: "Start a free trial",
     usedIn: 0,
