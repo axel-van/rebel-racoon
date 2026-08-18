@@ -179,56 +179,59 @@
   background: var(--ref-color-grey-20);
 }
 
-/* ── .sentiment-container · .sentiment-main-container ───────────────────── */
-/* Ported from listening-sentiment-state-menu. In Listening this is the trigger
-   for the dropdown that CHANGES a sentiment, which is where its cursor:pointer
-   and hover ground come from — neither is ported, because this card is inert and
-   a hover state on a read-out promises a menu that will not open. The padding
-   stays: it is what keeps the glyph off the stats line above it.
+/* ── .post-sentiment ────────────────────────────────────────────────────── */
+/* post-sentiment.component.scss, verbatim. This is Listening's READ-ONLY
+   sentiment — the branch listening-feed-search-list-item takes when the user
+   cannot update it. The other branch, .sentiment-main-container, is a dropdown
+   trigger with a pointer and a hover ground, and porting that one onto an inert
+   card meant stripping the interaction back off it.
 
-   The colour is on a [data-tone] attribute rather than production's inline
-   [style.color], so the value comes from a token instead of the hex the model
-   carries. The model names the token beside each hex, so these are its own. */
-.sentiment-container {
+   Note where the colour is NOT: the section is grey-80 and only .sentiment-label
+   takes the sentiment's own colour. The symbol beside it stays grey. */
+.post-sentiment {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: var(--ref-spacing-xxxs);
-}
-
-.sentiment-main-container {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-xxxs);
-}
-
-.sentiment-main-container > span {
+  gap: var(--ref-spacing-xxs);
   font-size: var(--ref-font-size-xs);
-  font-style: normal;
-  font-weight: var(--ref-font-weight-bold);
-  line-height: var(--ref-font-line-height-xs);
-}
-
-/* ONE declaration paints both halves. The tone sits on the container and the
-   colour inherits: the label takes it as text colour, and the glyph takes it
-   because the DS sentiment icons are masks filled with `background-color:
-   currentColor`, not font glyphs. That is also why this needs no :has() — the
-   first version coloured the span and then reached back up for the icon. */
-.sentiment-main-container[data-tone="positive"] {
-  color: var(--ref-color-green-150);
-}
-.sentiment-main-container[data-tone="negative"] {
-  color: var(--ref-color-red-150);
-}
-.sentiment-main-container[data-tone="neutral"] {
   color: var(--ref-color-grey-80);
 }
 
-.sentiment-main-container > i {
+.post-sentiment > i {
   font-size: 16px;
   line-height: 1;
+}
+
+.post-sentiment .sentiment-label {
+  font-weight: var(--ref-font-weight-bold);
+}
+
+/* SENTIMENT_SETTINGS' own values. The model carries hexes with the token written
+   beside each one, so these are its tokens rather than a match by eye. */
+.post-sentiment .sentiment-label[data-tone="positive"] {
+  color: var(--ref-color-green-150);
+}
+.post-sentiment .sentiment-label[data-tone="negative"] {
+  color: var(--ref-color-red-150);
+}
+.post-sentiment .sentiment-label[data-tone="neutral"] {
+  color: var(--ref-color-grey-80);
+}
+
+/* ── .post__footer-actions ──────────────────────────────────────────────── */
+/* post.component.scss. The bottom's second line: the sentiment on the left, the
+   way out pushed to the right by the link's own margin. mini-post has no rule for
+   this because its one consumer never fills both of its slots; ap-post does, and
+   this is its answer. */
+.post__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+  width: 100%;
+}
+
+.post__view-on {
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 /* ── What this surface adds ─────────────────────────────────────────────── */
@@ -283,16 +286,10 @@
 
 /* The link's own type, colour and hover come from .top-post-view-on in
    top-post-card.css — the same class, so the affordance is identical on a winner
-   and on a piece of evidence. Nothing is redeclared here; this only places it.
-
-   flex-end, which is the rule production's own consumer sets on this exact class
-   (listening-screening-review-modal.component.scss). It reads: everything on the
-   left of this card describes the post, and the one thing that LEAVES it sits
-   opposite them. On the left it queued up under the stats and looked like a
-   fourth statistic. */
-.mini-post-view-on {
-  align-self: flex-end;
-}
+   and on a piece of evidence. Its PLACEMENT is .post__view-on above, which is
+   ap-post's own rule for this link. It used to be `align-self: flex-end` on an
+   article-level sibling, which is what mini-post's slot position suggested; that
+   put it on a third line of its own under the stats and the sentiment. */
 
 /* ── Compact: a single representative post riding inside another surface ── */
 

@@ -107,9 +107,21 @@ function accentFor(author) {
 }
 
 // ── Sentiment ──────────────────────────────────────────────────────────────
-// SENTIMENT_SETTINGS, ported from listening/model/sentiment. The production
-// model carries hexes with the token written beside each in a comment; those
-// comments are the tokens used here, so nothing is hardcoded.
+// `ap-post-sentiment` (commons/ui/components/post-sentiment), NOT
+// `.sentiment-main-container`. Listening has both and picks between them on one
+// `@if` in listening-feed-search-list-item: with update permission the slot gets
+// `ap-listening-sentiment-state-menu`, whose `.sentiment-main-container` is a
+// DROPDOWN TRIGGER — that is where its cursor:pointer, its hover ground and its
+// padding come from. Without the permission it gets `ap-post-sentiment`, a plain
+// read-out. This card cannot change a sentiment, so it is the read-out.
+//
+// The first version here ported the trigger and then stripped the interaction off
+// it, which produced the right pixels for the wrong reason and left a class named
+// after a menu on a card with no menu.
+//
+// Colours come from SENTIMENT_SETTINGS (listening/model/sentiment), whose entries
+// carry the token name in a comment beside each hex — so green-150 / red-150 /
+// grey-80 are its values, not ones chosen here.
 const SENTIMENT = {
   positive: { label: "Positive", icon: "ap-icon-sentiment-positive", tone: "positive" },
   negative: { label: "Negative", icon: "ap-icon-sentiment-negative", tone: "negative" },
@@ -144,69 +156,29 @@ function sentimentFor(post) {
   return SENTIMENT.neutral;
 }
 
-// .sentiment-container / .sentiment-main-container, ported from
-// listening-sentiment-state-menu. In Listening this is the trigger for a dropdown
-// that CHANGES the sentiment, which is where its cursor:pointer and hover ground
-// come from. Neither is ported: this card is inert, and a hover state on a
-// read-out promises a menu that will not open.
+// Only the LABEL takes the sentiment's colour. The symbol beside it inherits the
+// section's grey-80 — post-sentiment.component.scss puts [style.color] on
+// .sentiment-label alone. Worth being exact about: a green icon AND a green word
+// is two marks for one fact, and the version here that tinted both read louder
+// than the engagement figures it sits under.
 function renderSentiment(post) {
   const s = sentimentFor(post);
-  return html`<div class="sentiment-container">
-    <div class="sentiment-main-container" data-tone="${s.tone}">
-      <i class="${s.icon}" aria-hidden="true"></i>
-      <span>${s.label}</span>
-    </div>
-  </div>`;
-}
-
-// ── .mini-post-bottom · .post-engagement ───────────────────────────────────
-// The stats run, ported from ap-post-engagement: bold, xs, grey-80, with a 4px
-// round separator between entries rather than an icon in front of each.
-//
-// LABELS, not icon triples. The old row was a heart, a speech bubble and a
-// refresh glyph, each with its number and an sr-only noun — three glyphs a
-// sighted reader had to decode, and a noun only a screen reader ever got.
-// Production's default branch renders `stat.label`, which is one string both
-// readers get, and it is what makes a Repost legible as a Repost rather than as
-// "the circular arrow one".
-//
-// The comment stat's icon variant (commentDisplay: 'icon') is NOT ported: it
-// depends on ap-symbol and on a stat carrying a symbolId, and our posts carry
-// three plain counts. Nothing here would gain from one of the three being drawn
-// differently from the other two.
-//
-// The row collapses to nothing when there are no stats, the same way
-// `:host:not(:has(.mini-post-bottom > *))` does in production — here it is a
-// return rather than a selector, since we know at render time.
-function renderBottom(post) {
-  const stats = [
-    { count: post.likes, noun: "likes" },
-    { count: post.comments, noun: "comments" },
-    { count: post.reposts, noun: "reposts" },
-  ].filter((s) => Number(s.count) > 0);
-
-  // Production guards the run itself (`@if (stats.length > 0)`) rather than the
-  // bottom, because the sentiment beside it is a separate slot with its own
-  // reason to exist. Same shape here: a post with no engagement still has a
-  // sentiment, and dropping the whole row would take the sentiment with it.
-  const run = stats.length
-    ? html`<section class="post-engagement" aria-label="Post engagement statistics">
-        ${raw(
-          stats
-            .map((s) => html`<span>${formatCompact(s.count)} ${s.noun}</span>`)
-            .join('<span class="separator" aria-hidden="true"></span>'),
-        )}
-      </section>`
-    : "";
-
-  return html`<div class="mini-post-bottom">${raw(run)}${raw(renderSentiment(post))}</div>`;
+  return html`<section class="post-sentiment" aria-label="Post sentiment">
+    <i class="${s.icon}" role="img" aria-label="${s.label}"></i>
+    <span class="sentiment-label" data-tone="${s.tone}">${s.label}</span>
+  </section>`;
 }
 
 // "View on <network>" — the same affordance top-post-card.js offers on a winner,
 // deliberately identical so one gesture means one thing wherever a post appears.
-// A SIBLING of the bottom rather than a child of it, which is where mini-post's
-// own [mini-post-view-on] slot sits: the stats describe the post, the link leaves
-// it, and production keeps those two on separate lines.
+// `.top-post-view-on` paints it; `.post__view-on` places it, and is ap-post's own
+// class for this link — `margin-left: auto`, so it takes the right edge of the
+// actions row it now shares with the sentiment.
+//
+// It used to be a SIBLING of the bottom, on the strength of mini-post's
+// [mini-post-view-on] slot sitting at article level. That slot exists because
+// mini-post's one consumer projects nothing else; ap-post, the sibling component
+// that carries a sentiment AND a link, puts the two on one row. See renderBottom.
 //
 // The URL comes off the post (`post.url`), unlike top-post-card which BUILDS a
 // permalink from the id. It can here: these posts arrive from a listening export
@@ -219,13 +191,67 @@ function renderViewOn(post) {
   if (!post.url) return "";
   const network = labelFor(post.network);
   return html`<a
-    class="top-post-view-on mini-post-view-on"
+    class="top-post-view-on post__view-on"
     href="${post.url}"
     target="_blank"
     rel="noopener noreferrer"
     aria-label="View original post on ${network}"
     ><span>View on</span><i class="${iconFor(post.network)}" aria-hidden="true"></i
   ></a>`;
+}
+
+// ── .mini-post-bottom ──────────────────────────────────────────────────────
+// Two lines: the engagement run, then an actions row carrying the sentiment and
+// the way out.
+//
+// The ACTIONS ROW is `.post__footer-actions`, lifted from ap-post
+// (commons/ui/components/post) rather than invented. mini-post's own template
+// offers two separate holes — a [mini-post-sentiment] slot inside the bottom and
+// a [mini-post-view-on] slot after it — and its one consumer, the screening
+// modal, fills only the second, so it never had to decide how the two sit
+// together. ap-post is the sibling that carries BOTH, and its answer is one row:
+//
+//   .post__footer          column, flex-start, gap xxs   (= .mini-post-bottom)
+//   .post__footer-actions  row, centre, gap xs, width 100%
+//   .post__view-on         margin-left: auto
+//
+// That is why the link is no longer a sibling of the bottom with
+// `align-self: flex-end`. Stacked, it made three lines of chrome — stats, then
+// sentiment, then a link on its own — under a two-line post. On one row the
+// sentiment reads against the figures it belongs with, and the link keeps the
+// right edge to itself.
+//
+// The engagement run is guarded rather than the bottom, matching production's
+// `@if (stats.length > 0)`: a post with no engagement still has a sentiment and
+// still has somewhere to go.
+function renderBottom(post, { compact = false } = {}) {
+  const stats = [
+    { count: post.likes, noun: "likes" },
+    { count: post.comments, noun: "comments" },
+    { count: post.reposts, noun: "reposts" },
+  ].filter((s) => Number(s.count) > 0);
+
+  // compact keeps the way out and drops everything that is commentary on the
+  // post — it rides inside a chat turn, where three lines of chrome under two
+  // lines of quote is the tail wagging the dog.
+  const run =
+    compact || !stats.length
+      ? ""
+      : html`<section class="post-engagement" aria-label="Post engagement statistics">
+          ${raw(
+            stats
+              .map((s) => html`<span>${formatCompact(s.count)} ${s.noun}</span>`)
+              .join('<span class="separator" aria-hidden="true"></span>'),
+          )}
+        </section>`;
+
+  const sentiment = compact ? "" : renderSentiment(post);
+  const viewOn = renderViewOn(post);
+  const actions =
+    sentiment || viewOn ? html`<div class="post__footer-actions">${raw(sentiment)}${raw(viewOn)}</div>` : "";
+
+  if (!run && !actions) return "";
+  return html`<div class="mini-post-bottom">${raw(run)}${raw(actions)}</div>`;
 }
 
 export function renderSocialPostCard(post, { compact = false } = {}) {
@@ -271,6 +297,6 @@ export function renderSocialPostCard(post, { compact = false } = {}) {
     <div class="mini-post-content">
       <span class="mini-post-content-text">${post.text}</span>
     </div>
-    ${raw(compact ? "" : renderBottom(post))} ${raw(renderViewOn(post))}
+    ${raw(renderBottom(post, { compact }))}
   </article>`;
 }
