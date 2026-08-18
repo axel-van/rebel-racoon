@@ -179,41 +179,98 @@
   background: var(--ref-color-grey-20);
 }
 
-/* ── .post-sentiment ────────────────────────────────────────────────────── */
-/* post-sentiment.component.scss, verbatim. This is Listening's READ-ONLY
-   sentiment — the branch listening-feed-search-list-item takes when the user
-   cannot update it. The other branch, .sentiment-main-container, is a dropdown
-   trigger with a pointer and a hover ground, and porting that one onto an inert
-   card meant stripping the interaction back off it.
+/* ── .sentiment-container · .sentiment-main-container ───────────────────── */
+/* listening-sentiment-state-menu.component.scss. This is Listening's EDITABLE
+   sentiment — the branch listening-feed-search-list-item takes when the reader may
+   change the value. The read-only twin, .post-sentiment, was here until the menu
+   arrived; with something to open, the pointer and the hover ground are the
+   trigger's own affordance rather than decoration on an inert chip.
 
-   Note where the colour is NOT: the section is grey-80 and only .sentiment-label
-   takes the sentiment's own colour. The symbol beside it stays grey. */
-.post-sentiment {
+   Note where the colour is NOT: only the label carries the sentiment's colour.
+   The glyph beside it inherits grey-80, in the trigger AND in the read-only twin —
+   production passes no [color] to that symbol in either. Inside the MENU it is the
+   other way round; see .post-sentiment__menu below. */
+.sentiment-container {
+  position: relative;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-xs);
+  gap: var(--ref-spacing-xxxs);
   color: var(--ref-color-grey-80);
 }
 
-.post-sentiment > i {
+.sentiment-main-container {
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs);
+}
+
+.sentiment-main-container:hover {
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-05);
+}
+
+/* Not in production, which triggers from a directive rather than a focusable
+   element. This one is a role=button in the tab order, so it needs a visible ring
+   — the DS's own focus colour, inset so it does not escape the hover radius. */
+.sentiment-main-container:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -2px;
+  border-radius: var(--ref-border-radius-sm);
+}
+
+.sentiment-main-container > i {
   font-size: 16px;
   line-height: 1;
 }
 
-.post-sentiment .sentiment-label {
+.sentiment-main-container > span {
+  font-size: var(--ref-font-size-xs);
+  font-style: normal;
   font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-xs);
 }
 
 /* SENTIMENT_SETTINGS' own values. The model carries hexes with the token written
    beside each one, so these are its tokens rather than a match by eye. */
-.post-sentiment .sentiment-label[data-tone="positive"] {
+.sentiment-label[data-tone="positive"] {
   color: var(--ref-color-green-150);
 }
-.post-sentiment .sentiment-label[data-tone="negative"] {
+.sentiment-label[data-tone="negative"] {
   color: var(--ref-color-red-150);
 }
-.post-sentiment .sentiment-label[data-tone="neutral"] {
+.sentiment-label[data-tone="neutral"] {
+  color: var(--ref-color-grey-80);
+}
+
+/* ── The menu ───────────────────────────────────────────────────────────── */
+/* The DS Action Dropdown, unmodified — everything here is placement. It opens
+   UPWARDS: this row is the last line of the card, and in the Sources dialog the
+   card can be the last thing before the footer, where a downward menu would open
+   into the dialog's own edge.
+
+   250px is the DS's own width and it is kept: three one-word rows do not need it,
+   but a dropdown that is narrow here and 250 everywhere else is a second dropdown. */
+.post-sentiment__menu {
+  position: absolute;
+  bottom: calc(100% + var(--ref-spacing-xxxs));
+  left: 0;
+}
+
+/* Each row's glyph DOES carry its sentiment colour — production builds these items
+   with `startSymbolColor: item.color`, unlike the trigger where only the label is
+   tinted. In a list of three the colour is what separates them at a glance; on the
+   trigger there is only one, and the word already says which. */
+.post-sentiment__menu > .ap-action-dropdown-item[data-tone="positive"] > i {
+  color: var(--ref-color-green-150);
+}
+.post-sentiment__menu > .ap-action-dropdown-item[data-tone="negative"] > i {
+  color: var(--ref-color-red-150);
+}
+.post-sentiment__menu > .ap-action-dropdown-item[data-tone="neutral"] > i {
   color: var(--ref-color-grey-80);
 }
 

@@ -27,8 +27,10 @@
 //
 //   renderSocialPostCard(post, { compact }) → one evidence card
 //
-// Pure render, no store reads, no interactive children — the whole card is
-// inert. Post shape (see mocks.topics):
+// Pure render except for ONE thing: the sentiment is a menu, so this module keeps
+// the chosen values and the open state and binds a single delegated listener via
+// init(). Everything else is still a function of its arguments. Post shape (see
+// mocks.topics):
 //   { id, network, publishedOn,
 //     author: { name, handle, initials, accent }, text,
 //     likes, comments, reposts }
@@ -39,15 +41,15 @@
 // the one thing here production does not carry.
 //
 // NOT ported, and why: `--seen` and `--selected`, plus the hover border. All
-// three are states of a card you can click in a triage list. Nothing here is
-// clickable, and a hover accent on an inert card promises a click that never
-// happens.
+// three are states of a card you SELECT in a triage list. The sentiment is the
+// only thing here you can act on, and a whole-card hover accent would suggest the
+// card itself opens something.
 //
 // The network mark uses the DS `-official` glyphs, which carry the brand's own
 // colours baked into the icon (they're SVG data-URI backgrounds, not font
 // glyphs), so nothing here has to hardcode a third-party hex.
 
-import { html, raw } from "../utils.js?v=21";
+import { html, raw, escapeAttr } from "../utils.js?v=21";
 
 const NET_ICON = {
   linkedin: "ap-icon-linkedin-official",
@@ -146,6 +148,11 @@ const NEGATIVE_CUES =
 // there is always an answer, even if that answer is "neutral". A state nothing
 // can produce is a state to leave out rather than to render grey.
 function sentimentFor(post) {
+  // Three sources, most recent first: what the reader chose here, what the data
+  // shipped with, then the guess. The reader's choice wins outright — a menu whose
+  // pick can be overruled by a bag of cue words is a menu that does nothing.
+  const picked = chosen.get(post.id);
+  if (SENTIMENT[picked]) return SENTIMENT[picked];
   const explicit = (post.sentiment || "").toLowerCase();
   if (SENTIMENT[explicit]) return SENTIMENT[explicit];
   const text = String(post.text || "");
@@ -156,17 +163,135 @@ function sentimentFor(post) {
   return SENTIMENT.neutral;
 }
 
-// Only the LABEL takes the sentiment's colour. The symbol beside it inherits the
-// section's grey-80 — post-sentiment.component.scss puts [style.color] on
-// .sentiment-label alone. Worth being exact about: a green icon AND a green word
-// is two marks for one fact, and the version here that tinted both read louder
-// than the engagement figures it sits under.
-function renderSentiment(post) {
+// ── The sentiment, and its menu ────────────────────────────────────────────
+// Listening picks between two components on one @if in
+// listening-feed-search-list-item: `ap-post-sentiment` when the reader cannot
+// change the value, `ap-listening-sentiment-state-menu` when they can. This card
+// is the SECOND now — the sentiment is a judgement about someone else's post and
+// a reader looking at the evidence is exactly who would disagree with it.
+//
+// So `.sentiment-container` > `.sentiment-main-container` is back, and with it the
+// cursor and the hover ground the previous pass stripped: they are what the
+// trigger needs, and removing them was only right while nothing opened.
+//
+// The menu is the DS Action Dropdown, built from the CSS-UI classes the way the
+// topic card's kebab already builds one. Production passes ActionDropdownItems
+// with `startSymbolId` and `startSymbolColor: item.color`, so each row's glyph
+// carries its own sentiment colour — unlike the TRIGGER, where only the label is
+// coloured and the glyph stays grey. Both are deliberate and both are copied.
+//
+// `ap-action-dropdown__content` in the DOM you inspected is the Angular
+// component's own inner element, not something the CSS-UI layer ships — the
+// framework-agnostic anatomy the DS documents is `.ap-action-dropdown` holding
+// `.ap-action-dropdown-item`s, which is what this builds.
+const MENU_ORDER = ["positive", "neutral", "negative"];
+
+// Chosen values, by post id. A prototype store rather than a field on the post:
+// mocks.js is seed data, and a choice the reader makes at runtime is not seed.
+// This is the seam where a real app would PATCH the item and let the store
+// re-emit — sentimentFor() reads it first for exactly that reason.
+const chosen = new Map();
+
+// Rendered posts, by id, so the delegated handler can repaint one card's block
+// without its host knowing anything about sentiment. The hosts here — the Sources
+// dialog, the article, the topic dialog — render a list and never re-render on a
+// leaf's state, which is why the card owns this rather than taking `menuOpen` the
+// way brief-card takes it from its screen.
+const rendered = new Map();
+let openFor = null;
+let listening = false;
+
+function renderMenu(post) {
+  const current = sentimentFor(post).tone;
+  const rows = MENU_ORDER.map((tone) => {
+    const s = SENTIMENT[tone];
+    return html`<button
+      type="button"
+      role="menuitemradio"
+      aria-checked="${tone === current ? "true" : "false"}"
+      class="ap-action-dropdown-item"
+      data-sentiment-pick="${escapeAttr(post.id)}"
+      data-tone="${tone}"
+    >
+      <i class="${s.icon}"></i>
+      <div class="ap-action-dropdown-item-text">
+        <div class="ap-action-dropdown-item-label-container">
+          <span class="ap-action-dropdown-item-label">${s.label}</span>
+        </div>
+      </div>
+    </button>`;
+  }).join("");
+  return html`<div class="ap-action-dropdown post-sentiment__menu" role="menu">${raw(rows)}</div>`;
+}
+
+// The wrapper's INNER html, so the delegated handler can replace it in place.
+function renderSentimentInner(post) {
   const s = sentimentFor(post);
-  return html`<section class="post-sentiment" aria-label="Post sentiment">
-    <i class="${s.icon}" role="img" aria-label="${s.label}"></i>
-    <span class="sentiment-label" data-tone="${s.tone}">${s.label}</span>
-  </section>`;
+  const open = openFor === post.id;
+  return html`<div
+      class="sentiment-main-container"
+      role="button"
+      tabindex="0"
+      aria-haspopup="menu"
+      aria-expanded="${open ? "true" : "false"}"
+      data-sentiment-trigger="${escapeAttr(post.id)}"
+    >
+      <i class="${s.icon}" role="img" aria-label="Sentiment: ${s.label}"></i>
+      <span class="sentiment-label" data-tone="${s.tone}">${s.label}</span>
+    </div>
+    ${raw(open ? renderMenu(post) : "")}`;
+}
+
+function renderSentiment(post) {
+  rendered.set(post.id, post);
+  return html`<div class="sentiment-container" data-sentiment-wrap="${escapeAttr(post.id)}">
+    ${raw(renderSentimentInner(post))}
+  </div>`;
+}
+
+// Repaint one wrapper, wherever it is on the page. Two of them can be on screen
+// at once (a Topic dialog over a feed), so this addresses by id rather than by
+// "the open one".
+function repaint(postId) {
+  const post = rendered.get(postId);
+  const wrap = document.querySelector(`[data-sentiment-wrap="${CSS.escape(postId)}"]`);
+  if (post && wrap) wrap.innerHTML = renderSentimentInner(post);
+}
+
+// One listener for every card on the page, bound once. The card's hosts render
+// lists and own no sentiment state, so pushing this up to them would mean teaching
+// three modals about a leaf's menu; the coordinator modules in this repo take the
+// same shape for the same reason.
+export function init() {
+  if (listening) return;
+  listening = true;
+
+  document.addEventListener("click", (event) => {
+    const pick = event.target.closest("[data-sentiment-pick]");
+    if (pick) {
+      const id = pick.getAttribute("data-sentiment-pick");
+      chosen.set(id, pick.getAttribute("data-tone"));
+      openFor = null;
+      repaint(id);
+      return;
+    }
+
+    const trigger = event.target.closest("[data-sentiment-trigger]");
+    const id = trigger && trigger.getAttribute("data-sentiment-trigger");
+    const previous = openFor;
+    // Toggling, and closing whatever else was open — one menu at a time, the rule
+    // modal-coordinator enforces for overlays.
+    openFor = trigger && previous !== id ? id : null;
+    if (previous && previous !== openFor) repaint(previous);
+    if (openFor) repaint(openFor);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !openFor) return;
+    const id = openFor;
+    openFor = null;
+    repaint(id);
+  });
 }
 
 // "View on <network>" — the same affordance top-post-card.js offers on a winner,
