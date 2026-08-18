@@ -106,6 +106,59 @@ function accentFor(author) {
   return ACCENTS.has(a) ? a : "grey";
 }
 
+// ── Sentiment ──────────────────────────────────────────────────────────────
+// SENTIMENT_SETTINGS, ported from listening/model/sentiment. The production
+// model carries hexes with the token written beside each in a comment; those
+// comments are the tokens used here, so nothing is hardcoded.
+const SENTIMENT = {
+  positive: { label: "Positive", icon: "ap-icon-sentiment-positive", tone: "positive" },
+  negative: { label: "Negative", icon: "ap-icon-sentiment-negative", tone: "negative" },
+  neutral: { label: "Neutral", icon: "ap-icon-sentiment-neutral", tone: "neutral" },
+};
+
+// Cue words, English and Dutch — the seed's competitor posts are in both, and a
+// list that only reads English would mark every Belgian retailer neutral.
+//
+// This is a PROTOTYPE STAND-IN and nothing more. Real sentiment arrives on the
+// item from Listening's own scoring; `post.sentiment` overrides this whenever the
+// data carries it, which is the seam to keep when this stops being mock data.
+// Deliberately crude rather than clever: a bag of words cannot read irony, so it
+// stays on the safe side and answers "neutral" whenever the two sides tie.
+const POSITIVE_CUES =
+  /\b(favoriet\w*|geniet\w*|zonnig\w*|blij|mooi|top|shop|unlock\w*|reimagined?|introducing|announc\w*|excited?|delighted?|proud|love\b|best\b|winner|congrat\w*|thrilled)\b|[☀✨🌞🎉💡🙌]/i;
+const NEGATIVE_CUES =
+  /\b(turned it off|barely|never|without ever|problem\w*|broken|worse|fail\w*|disappoint\w*|frustrat\w*|annoy\w*|stop\w* arriving|argue|complain\w*|jammer|slecht|helaas)\b/i;
+
+// The four-state model has an UNDEFINED too, drawn with ap-icon-sentiment-none.
+// It is not reachable here: every post this card renders has text to read, so
+// there is always an answer, even if that answer is "neutral". A state nothing
+// can produce is a state to leave out rather than to render grey.
+function sentimentFor(post) {
+  const explicit = (post.sentiment || "").toLowerCase();
+  if (SENTIMENT[explicit]) return SENTIMENT[explicit];
+  const text = String(post.text || "");
+  const pos = POSITIVE_CUES.test(text);
+  const neg = NEGATIVE_CUES.test(text);
+  if (pos && !neg) return SENTIMENT.positive;
+  if (neg && !pos) return SENTIMENT.negative;
+  return SENTIMENT.neutral;
+}
+
+// .sentiment-container / .sentiment-main-container, ported from
+// listening-sentiment-state-menu. In Listening this is the trigger for a dropdown
+// that CHANGES the sentiment, which is where its cursor:pointer and hover ground
+// come from. Neither is ported: this card is inert, and a hover state on a
+// read-out promises a menu that will not open.
+function renderSentiment(post) {
+  const s = sentimentFor(post);
+  return html`<div class="sentiment-container">
+    <div class="sentiment-main-container" data-tone="${s.tone}">
+      <i class="${s.icon}" aria-hidden="true"></i>
+      <span>${s.label}</span>
+    </div>
+  </div>`;
+}
+
 // ── .mini-post-bottom · .post-engagement ───────────────────────────────────
 // The stats run, ported from ap-post-engagement: bold, xs, grey-80, with a 4px
 // round separator between entries rather than an icon in front of each.
@@ -131,15 +184,22 @@ function renderBottom(post) {
     { count: post.comments, noun: "comments" },
     { count: post.reposts, noun: "reposts" },
   ].filter((s) => Number(s.count) > 0);
-  if (!stats.length) return "";
 
-  const run = stats
-    .map((s) => html`<span>${formatCompact(s.count)} ${s.noun}</span>`)
-    .join('<span class="separator" aria-hidden="true"></span>');
+  // Production guards the run itself (`@if (stats.length > 0)`) rather than the
+  // bottom, because the sentiment beside it is a separate slot with its own
+  // reason to exist. Same shape here: a post with no engagement still has a
+  // sentiment, and dropping the whole row would take the sentiment with it.
+  const run = stats.length
+    ? html`<section class="post-engagement" aria-label="Post engagement statistics">
+        ${raw(
+          stats
+            .map((s) => html`<span>${formatCompact(s.count)} ${s.noun}</span>`)
+            .join('<span class="separator" aria-hidden="true"></span>'),
+        )}
+      </section>`
+    : "";
 
-  return html`<div class="mini-post-bottom">
-    <section class="post-engagement" aria-label="Post engagement statistics">${raw(run)}</section>
-  </div>`;
+  return html`<div class="mini-post-bottom">${raw(run)}${raw(renderSentiment(post))}</div>`;
 }
 
 // "View on <network>" — the same affordance top-post-card.js offers on a winner,

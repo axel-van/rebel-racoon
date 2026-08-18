@@ -37,7 +37,7 @@ import {
 import { renderUseButtons } from "./brief-card.js?v=67";
 import { getLanes } from "../research-store.js?v=49";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=44";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=46";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -59,7 +59,7 @@ import {
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=36";
 import { renderBriefCard } from "./brief-card.js?v=67";
-import { renderSocialPostCard } from "./social-post-card.js?v=36";
+import { renderSocialPostCard } from "./social-post-card.js?v=38";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";

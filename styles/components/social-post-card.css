@@ -179,6 +179,58 @@
   background: var(--ref-color-grey-20);
 }
 
+/* ── .sentiment-container · .sentiment-main-container ───────────────────── */
+/* Ported from listening-sentiment-state-menu. In Listening this is the trigger
+   for the dropdown that CHANGES a sentiment, which is where its cursor:pointer
+   and hover ground come from — neither is ported, because this card is inert and
+   a hover state on a read-out promises a menu that will not open. The padding
+   stays: it is what keeps the glyph off the stats line above it.
+
+   The colour is on a [data-tone] attribute rather than production's inline
+   [style.color], so the value comes from a token instead of the hex the model
+   carries. The model names the token beside each hex, so these are its own. */
+.sentiment-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+}
+
+.sentiment-main-container {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xxxs);
+}
+
+.sentiment-main-container > span {
+  font-size: var(--ref-font-size-xs);
+  font-style: normal;
+  font-weight: var(--ref-font-weight-bold);
+  line-height: var(--ref-font-line-height-xs);
+}
+
+/* ONE declaration paints both halves. The tone sits on the container and the
+   colour inherits: the label takes it as text colour, and the glyph takes it
+   because the DS sentiment icons are masks filled with `background-color:
+   currentColor`, not font glyphs. That is also why this needs no :has() — the
+   first version coloured the span and then reached back up for the icon. */
+.sentiment-main-container[data-tone="positive"] {
+  color: var(--ref-color-green-150);
+}
+.sentiment-main-container[data-tone="negative"] {
+  color: var(--ref-color-red-150);
+}
+.sentiment-main-container[data-tone="neutral"] {
+  color: var(--ref-color-grey-80);
+}
+
+.sentiment-main-container > i {
+  font-size: 16px;
+  line-height: 1;
+}
+
 /* ── What this surface adds ─────────────────────────────────────────────── */
 
 /* Accent tint on the DS avatar. Set as a plain background on this component's
@@ -231,10 +283,15 @@
 
 /* The link's own type, colour and hover come from .top-post-view-on in
    top-post-card.css — the same class, so the affordance is identical on a winner
-   and on a piece of evidence. Nothing is redeclared here; this only stops it
-   stretching to the card's full width now that it is a flex child of the column. */
+   and on a piece of evidence. Nothing is redeclared here; this only places it.
+
+   flex-end, which is the rule production's own consumer sets on this exact class
+   (listening-screening-review-modal.component.scss). It reads: everything on the
+   left of this card describes the post, and the one thing that LEAVES it sits
+   opposite them. On the left it queued up under the stats and looked like a
+   fourth statistic. */
 .mini-post-view-on {
-  align-self: flex-start;
+  align-self: flex-end;
 }
 
 /* ── Compact: a single representative post riding inside another surface ── */
