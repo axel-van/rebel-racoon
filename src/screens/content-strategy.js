@@ -23,13 +23,13 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=451";
+import { renderTopbar } from "../components/topbar.js?v=452";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { subscribe as subscribeContexts } from "../contexts-store.js?v=79";
-import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=42";
+import { getActivePlaybook, getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=43";
 import { open as openConfirm } from "../components/confirm-modal.js?v=22";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=38";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=39";
 import {
   getPillars,
   getPillarById,

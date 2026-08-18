@@ -13,12 +13,22 @@
 // page answers "what's spiking", not "what have I triaged" — showing triage
 // controls there invites the user to work a queue that isn't one.
 //
-// "picker" is the Pick-a-topic modal. It has NO footer at all, because in a
-// picker the card IS the control — the body button, which everywhere else opens
-// the full read, carries data-idea-pick instead. Everything above the footer is
-// identical to the feed on purpose: the modal used to show a compact one-line
-// row of its own, so the thing you picked looked nothing like the thing you had
-// been reading two seconds earlier.
+// "picker" is the Pick-a-topic modal, and its card BODY is now the feed's, part
+// for part: badge, source, age, status glyph, pillar mark, Trending/Updated,
+// headline, summary. The modal used to show a compact one-line row of its own, so
+// the thing you picked looked nothing like the thing you had been reading two
+// seconds earlier; the pillar mark was the last thing still telling them apart.
+//
+// What the variant still changes is BEHAVIOUR, not content: the body carries
+// data-idea-read rather than data-brief-research (the dialog opens the article
+// inside itself, not in a side pane beside a list), there is no aria-expanded
+// because nothing is being disclosed next to it, and there is no kebab — the
+// picker offers one verb, and it lives in the article's own footer.
+//
+// It used to be true that "in a picker the card IS the control", with the body
+// carrying data-idea-pick. That is what justified stripping things out of it, and
+// it stopped being true when the pick moved to the article footer — where the
+// reader has actually read the thing they are choosing.
 //
 // ── Two signals that must never read as peers ───────────────────────────────
 // A filled pill unambiguously means REVIEW STATUS in this app. Trending is
@@ -248,9 +258,15 @@ export function renderBriefCard(
         <!-- The pillar mark, after the triage glyph: source · age · status is the
              topic's own record, and the pillar is a RELATIONSHIP to something
              else — so it reads last in the facts group and before the signals.
-             Gated with the feature, and never on the picker, where the card IS a
-             control rather than something to read. -->
-        ${raw(pillar && !picker ? renderPillarMark(pillar) : "")}
+             Gated with the feature, and ON THE PICKER TOO.
+             It used to be suppressed there, on the argument that the picker's card
+             IS a control rather than something to read. That stopped being true when
+             the body button gave up data-idea-pick: it now opens the article inside
+             the dialog, so the picker's card is read exactly like the feed's — and
+             it was the one thing making the two look different. Which pillar a topic
+             is filed into is also more use here than anywhere, since picking one is
+             a decision about what to write next. -->
+        ${raw(pillar ? renderPillarMark(pillar) : "")}
         <!-- Trending / Updated, in the slot the route tag used to hold.
              THE ROW NO LONGER HAS A RIGHT-HAND SIDE. It used to: everything
              before the spacer answered "what is this", everything after it
@@ -299,10 +315,11 @@ export function renderBriefCard(
          where the reader has just finished reading and which shows all three at once
          rather than one plus a chevron.
 
-         The picker never had one — its body button already picks, so a row of actions
-         underneath would have been a second, different answer to the same click. The
-         feed and the trending page did, and both lose it here along with the hairline
-         separator that divided it from the summary. -->
+         The picker never had one, and still does not: it offers a single verb and
+         that verb sits under the article, so a row of actions here would be a second,
+         different answer to the same click. The feed and the trending page did have
+         one, and both lose it here along with the hairline separator that divided it
+         from the summary. -->
     <!-- …but there IS a kebab, and it is a SIBLING of the body button, never
          inside it: the body is one big button and nesting a second button is
          invalid HTML, which is the same reason the old footer was a sibling too.
@@ -311,8 +328,9 @@ export function renderBriefCard(
          forced to. Not a footer by the back door: four rows behind one trigger
          is a menu — if a fifth verb turns up, revisit rather than grow it.
 
-         Not on the picker, where the card IS the control, and NOT on the
-         trending page: that page answers "what's spiking", not "what have I
+         Not on the picker, which offers one verb and hosts it in the article's
+         footer — a four-row triage menu there would be the picker growing a second
+         job. And NOT on the trending page: that page answers "what's spiking", not "what have I
          triaged", and three of these four rows are triage. The pillar mark above
          still shows there — it is a fact about the topic, not something the user
          did. Same rule the reduced trending variant already followed. -->
