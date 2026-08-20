@@ -39,9 +39,9 @@ import { parseHashParams } from "../url-state.js?v=21";
 // The picker footer's "Create a Playbook" hands the context-builder its return route,
 // exactly as /contexts and the composer do.
 import { setHandoff } from "../handoff.js?v=20";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=470";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=471";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=71";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=72";
 import {
   openIgnoreReason,
   // PARKED with its handler and its link — kept imported so restoring is one uncomment.
@@ -52,8 +52,8 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=157";
-import { openBriefInChat } from "../brief-flow.js?v=40";
+} from "../components/research-modals.js?v=158";
+import { openBriefInChat } from "../brief-flow.js?v=41";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=14";
 import {
@@ -61,8 +61,8 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=63";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=49";
+} from "../active-playbook.js?v=64";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=50";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=52";
 import {
   getBriefById,
@@ -73,8 +73,9 @@ import {
   defaultFilters,
   narrowedGroupCount,
   setStatus,
+  unignoreBrief,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=66";
+} from "../briefs-store.js?v=67";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
@@ -1366,6 +1367,22 @@ function bind(target) {
     if (ignore) {
       view.openMenu = null;
       return openIgnoreReason({ briefId: ignore.dataset.briefIgnore });
+    }
+
+    // The way back out of Ignore. No confirmation and no reason prompt: ignoring
+    // asks for one because it is the decision that hides something, and undoing a
+    // decision does not need to be argued for.
+    //
+    // The toast is the whole feedback. Un-ignoring from the DEFAULT filter makes the
+    // card vanish from the list under the cursor — the topic is New now, and New is
+    // what the feed shows, but the reader was looking at Ignored to find it. Saying
+    // where it went is the difference between that and looking like a deletion.
+    const unignore = event.target.closest("[data-brief-unignore]");
+    if (unignore) {
+      view.openMenu = null;
+      const brief = unignoreBrief(unignore.dataset.briefUnignore);
+      if (brief) showToast("Topic back on the list as New");
+      return;
     }
 
     // ── The article opens IN THE PAGE, beside the list ──────────────────────

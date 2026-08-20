@@ -52,7 +52,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { findReviewStatus } from "../research-catalog.js?v=22";
 // One title per topic — the article's, not the scan's headline. See briefs-store.
-import { briefTitle } from "../briefs-store.js?v=66";
+import { briefTitle } from "../briefs-store.js?v=67";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief } from "../pillars-store.js?v=14";
 
@@ -67,6 +67,12 @@ import { pillarForBrief } from "../pillars-store.js?v=14";
 // decision is actually made — the infobox in the ignore-reason modal
 // (research-modals.openIgnoreReason).
 const IGNORE_HINT = "Kept off this list unless trending or updated";
+
+// The counterpart, and it says where the topic GOES rather than what un-ignoring
+// is. "Back on this list as New" is the fact the reader needs: the feed opens on
+// New, so this is also the sentence that tells them they will see it again
+// without changing a filter.
+const UNIGNORE_HINT = "Back on this list as New";
 
 // ── The ROUTE TAG WAS HERE, and it is gone ─────────────────────────────────
 // `renderRouteTag()` drew an .ap-tag naming the topic's type (Ready to post /
@@ -345,9 +351,9 @@ export function renderBriefCard(
 // Save for later, and whichever verb leads is not repeated below. That rule is
 // now invisible until the menu opens — the price of dropping the route tag.
 //
-// Unlink sits third because it is about the PILLAR, not the topic; Ignore last,
-// after a divider, and hidden once already ignored (a second press has nothing
-// to do — the same rule the old menu row followed).
+// Unlink sits third because it is about the PILLAR, not the topic. The triage row
+// is last, and it flips direction rather than disappearing: Ignore on a topic
+// that is not ignored, Un-ignore on one that is.
 function renderCardMore(brief, pillar, menuOpen) {
   const ignored = brief.status === "ignored";
   // ── Save is gone, and with it the route-driven ORDER ─────────────────────
@@ -390,10 +396,36 @@ function renderCardMore(brief, pillar, menuOpen) {
                  that a spike brings back — nothing is destroyed — so red-mode was
                  flagging a danger that is not there, and the rule was fencing it
                  off from actions it belongs with. Same correction the pane's
-                 Ignore button got. -->
+                 Ignore button got.
+
+                 ONE SLOT, TWO DIRECTIONS. An ignored topic used to have no row
+                 here at all, on the reasoning that a second press of Ignore has
+                 nothing to do — true of Ignore, and it left the decision with no
+                 way back on the surface that took it. The slot now carries
+                 whichever direction is available: Ignore, or Un-ignore. Never
+                 both, because they are one decision read from opposite ends.
+
+                 eye-on against eye-off: the same glyph inverted, which is what
+                 the pair means. The description states the OUTCOME rather than
+                 repeating the label — a topic coming back is worth saying it
+                 comes back as New, because that is where the reader will look
+                 for it. -->
             ${raw(
               ignored
-                ? ""
+                ? html`<button
+                    type="button"
+                    role="menuitem"
+                    class="ap-action-dropdown-item has-description"
+                    data-brief-unignore="${escapeAttr(brief.id)}"
+                  >
+                    <i class="ap-icon-eye-on"></i>
+                    <div class="ap-action-dropdown-item-text">
+                      <div class="ap-action-dropdown-item-label-container">
+                        <span class="ap-action-dropdown-item-label">Un-ignore</span>
+                      </div>
+                      <span class="ap-action-dropdown-item-description">${UNIGNORE_HINT}</span>
+                    </div>
+                  </button>`
                 : html`<button
                     type="button"
                     role="menuitem"
@@ -563,16 +595,22 @@ export function renderUseButtons(brief, { dismiss = "ignore" } = {}) {
     <button type="button" class="ap-button primary orange" ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}>
       <span>${main.label}</span>
     </button>
-    <!-- Hidden once ignored — the action has been taken and a second press has
-         nothing to do, the same rule the menu row followed.
+    <!-- The second slot, in whichever direction is available: Close in a dialog,
+         Un-ignore on an ignored topic, Ignore otherwise. It used to render nothing
+         at all once a topic was ignored, which left the pane offering no way to
+         undo the decision it had just taken.
 
-         The hint the menu row carried as a caption becomes a tooltip: a button has no
-         room for a second line, and the sentence is the whole reason a reader is
-         willing to press this (ignoring is not deleting, and a spike overrides it).
-         Same DS Tooltip construction as the card's status glyph — bubble after its
-         trigger, visibility on the app class, aria-hidden with the words repeated in
-         the button's own aria-label so a display:none element is not the only place
-         they live. -->
+         The Ignore hint the menu row carried as a caption becomes a tooltip here: a
+         button has no room for a second line, and the sentence is the whole reason a
+         reader is willing to press it (ignoring is not deleting, and a spike
+         overrides it). Same DS Tooltip construction as the card's status glyph —
+         bubble after its trigger, visibility on the app class, aria-hidden with the
+         words repeated in the button's own aria-label so a display:none element is
+         not the only place they live.
+
+         Un-ignore gets no tooltip, for the reason Close gets none: it needs no
+         talking into. The outcome still rides in the aria-label, where the words
+         cost nothing. -->
     ${raw(
       dismiss === "close"
         ? // No tooltip: "Close" needs no explaining, and the hint the Ignore button
@@ -581,7 +619,14 @@ export function renderUseButtons(brief, { dismiss = "ignore" } = {}) {
             <span>Close</span>
           </button>`
         : ignored
-          ? ""
+          ? html`<button
+              type="button"
+              class="ap-button ghost grey"
+              data-brief-unignore="${escapeAttr(brief.id)}"
+              aria-label="Un-ignore Topic. ${UNIGNORE_HINT}"
+            >
+              <span>Un-ignore</span>
+            </button>`
           : html`<span class="topics-use-flat__ignore">
               <button
                 type="button"

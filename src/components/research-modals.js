@@ -29,15 +29,16 @@ import {
   getBriefsForLane,
   groupBriefsByAge,
   ignoreBrief,
+  unignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=66";
+} from "../briefs-store.js?v=67";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=71";
+import { renderUseButtons } from "./brief-card.js?v=72";
 import { getLanes } from "../research-store.js?v=52";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=63";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=64";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -57,8 +58,8 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=40";
-import { renderBriefCard } from "./brief-card.js?v=71";
+import { openBriefInChat } from "../brief-flow.js?v=41";
+import { renderBriefCard } from "./brief-card.js?v=72";
 import { renderEmptyState } from "./empty-state.js?v=1";
 import { renderSocialPostCard } from "./social-post-card.js?v=43";
 import { showToast } from "./toast.js?v=21";
@@ -1787,6 +1788,16 @@ function onPanelClick(event) {
   const ignoreBtn = event.target.closest("[data-brief-ignore]");
   if (ignoreBtn) {
     return openIgnoreReason({ briefId: ignoreBtn.dataset.briefIgnore });
+  }
+
+  // Its pair, bound here for the same reason the Ignore above is: no dialog in this
+  // file renders either one today (the article dialog passes dismiss: "close"), but
+  // the two share one slot in renderUseButtons, and a dialog that ever renders that
+  // footer must not get one direction wired and not the other.
+  const unignoreBtn = event.target.closest("[data-brief-unignore]");
+  if (unignoreBtn) {
+    unignoreBrief(unignoreBtn.dataset.briefUnignore);
+    return showToast("Topic back on the list as New");
   }
 
   // "See all N posts", from the Full-article DIALOG. Same markup in the feed's

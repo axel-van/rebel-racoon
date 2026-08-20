@@ -38,6 +38,7 @@
 //   setStatus(briefId, status)         mutates + notifies
 //   toggleSaved(briefId)               → the resulting status
 //   ignoreBrief(briefId, reason)       mutates + notifies
+//   unignoreBrief(briefId)             back to 'new', reason cleared
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
@@ -428,6 +429,25 @@ export function ignoreBrief(briefId, reason = "") {
   const b = briefs.find((x) => x.id === briefId);
   if (!b) return null;
   triage.set(briefId, { status: "ignored", reason: String(reason || "").trim(), updatedAt: "just now" });
+  notify();
+  return withTriage(b);
+}
+
+// The way back. Its own function rather than setStatus(id, "new") because it has
+// to CLEAR the reason as well: setStatus spreads the previous triage row, so the
+// sentence the user typed when they ignored the topic would survive on a topic
+// that is no longer ignored — invisible while it sits there, and then wrong the
+// moment anything reads it.
+//
+// Back to `new`, not to whatever the status was before. Ignoring is the only
+// thing that can be undone here, and the two states it can be undone FROM are
+// `new` (nothing had happened) and `used` (the topic went into a chat) — and
+// restoring `used` would put a finished topic back on a list of things to do.
+// "Un-ignore" means "put it back in the queue", which is what `new` is.
+export function unignoreBrief(briefId) {
+  const b = briefs.find((x) => x.id === briefId);
+  if (!b) return null;
+  triage.set(briefId, { status: "new", reason: "", updatedAt: "just now" });
   notify();
   return withTriage(b);
 }
