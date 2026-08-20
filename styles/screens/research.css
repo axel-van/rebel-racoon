@@ -1352,14 +1352,15 @@
 }
 
 /* The infinite-load sentinel at the foot of the list — both the thing the
-   IntersectionObserver watches and the slot the spinner appears in, so it is
-   present whether or not a page is loading (see renderLoadMore).
+   IntersectionObserver watches and the spinner itself. One state, not two: the
+   "Load more" button it used to swap with is gone, so nothing here has to hold a
+   size across a swap (see renderMoreSentinel).
 
-   min-height holds the row's size across the caption/spinner swap, so the list
-   doesn't jump by the spinner's height the moment a load starts — which would
-   move the very cards the user is reading. The spinner is .ap-loader, sized and
-   coloured by DS modifiers with its contents supplied by initArchieLoader(), so
-   there is nothing to declare for it here. */
+   min-height is kept anyway, and for a different reason: the row is what the
+   observer's 200px margin reaches through, and a row shorter than its spinner
+   would let the last card sit tight against the foot of the scroller. The spinner
+   is .ap-loader, sized and coloured by DS modifiers with its contents supplied by
+   initArchieLoader(), so there is nothing to declare for it here. */
 .research-feed__more {
   display: flex;
   align-items: center;

@@ -108,7 +108,8 @@ import { getContextById, getContexts } from "../contexts-store.js?v=83";
 // ─── Infinite load ─────────────────────────────────────────────────────────
 // A page is 10 topics. The next 10 arrive when the sentinel below the list comes
 // into view, after a deliberate 2s — long enough that the spinner is legible in a
-// demo, short enough not to feel broken.
+// demo, short enough not to feel broken. Scrolling is the ONLY trigger; there is
+// no "Load more" button any more (see renderMoreSentinel).
 //
 // Paging is applied to the FLAT filtered list before grouping, not per age group.
 // The list is already sorted newest-first, so slicing the flat list and grouping
@@ -156,7 +157,7 @@ function renderList(briefs, view) {
         )
         .join(""),
     )}
-    ${raw(remaining > 0 ? renderLoadMore(remaining, view.loadingMore) : "")}
+    ${raw(remaining > 0 ? renderMoreSentinel() : "")}
   </div>`;
 }
 
@@ -174,31 +175,34 @@ function listOpensWithLabel(briefs, shown) {
 // load is running: an IntersectionObserver needs something in the DOM to watch, so
 // an element that only appeared once loading started could never start a load.
 //
-// Idle state is a REAL BUTTON, not just a "scroll to load" caption. Scrolling is
-// the primary trigger and the observer handles it, but an infinite list whose only
-// trigger is scroll position cannot be paged from the keyboard and gives a
-// screen-reader user nothing to activate. The button is the same gesture made
-// explicit — it is also what makes the load demoable on command rather than only
-// by scrolling. .ap-button stroked grey: secondary weight, because paging a list is
-// not the thing you came to this screen to do.
+// ── No button, by request: scrolling is the only trigger ───────────────────
+// This was an .ap-button in its idle state and a spinner while loading. The
+// argument for the button was keyboard and screen-reader access — an infinite list
+// triggered only by scroll position has nothing to activate. It turns out not to
+// need one: every card in the list holds a focusable kebab, so tabbing to the last
+// card scrolls it into view, which brings the sentinel inside the observer's 200px
+// margin and starts the load. The keyboard path is the same path, just made of
+// Tabs instead of a click.
 //
-// Loading state swaps it for .ap-loader — empty, because archie-loader.js sweeps
-// for the class and supplies the animated Archie mark, so this matches
-// renderGenerating above and every other spinner in the app. size-24 rather than
-// that page's 60: a row at the foot of a list, not a whole-screen state.
+// So the row is now the spinner, unconditionally. There is no idle state left to
+// draw: the row sits below the fold until the observer's margin reaches it, and by
+// the time it is on screen a load has already begun. Rendering an idle variant
+// would draw a state lasting a single frame — and the swap between the two is what
+// used to make the list jump.
 //
-// role="status" on the caption, so the swap is announced rather than silent.
-function renderLoadMore(remaining, loading) {
-  const label = `Load ${remaining === 1 ? "1 more Topic" : `${remaining > PAGE_SIZE ? PAGE_SIZE : remaining} more Topics`}`;
+// The spinner is an EMPTY .ap-loader — archie-loader.js sweeps for the class and
+// supplies the animated Archie mark, so this matches renderGenerating and every
+// other spinner in the app. size-24 rather than that page's 60: a row at the foot
+// of a list, not a whole-screen state.
+//
+// role="status" on the caption, so a screen reader is told the list is extending
+// rather than finding it silently longer. It is announced once per mount of this
+// element, not once per page, because the element survives the repaint that adds
+// the cards (loadMore no longer paints mid-load).
+function renderMoreSentinel() {
   return html`<div class="research-feed__more" data-research-more>
-    ${raw(
-      loading
-        ? `<span class="ap-loader orange size-24" aria-hidden="true"></span>
-           <p class="research-feed__more-caption" role="status">Loading more Topics…</p>`
-        : html`<button type="button" class="ap-button stroked grey" data-research-more-load>
-            <span>${label}</span>
-          </button>`,
-    )}
+    <span class="ap-loader orange size-24" aria-hidden="true"></span>
+    <p class="research-feed__more-caption" role="status">Loading more Topics…</p>
   </div>`;
 }
 
@@ -317,8 +321,10 @@ function freshView() {
     // sentinel adds a page at a time. View state, like articleId — "the feed with
     // three pages loaded" is a scroll position, not a place worth linking to.
     shown: PAGE_SIZE,
-    // Is a page in flight? Guards the observer against firing twice for the same
-    // sentinel (it stays intersecting for the whole 2s) and drives the spinner.
+    // Is a page in flight? A re-entry guard, nothing more — the sentinel stays
+    // intersecting for the whole 2s, so the observer would otherwise fire again
+    // and again inside one load. It drives no rendering: the sentinel is a
+    // spinner whether or not the timer is running.
     loadingMore: false,
   };
 }
@@ -646,12 +652,7 @@ function teardown() {
     window.clearTimeout(timer);
     timer = null;
   }
-  // The observer holds the sentinel from a screen that is being unmounted, and the
-  // timer would paint into a target the router has already replaced.
-  if (moreObserver) {
-    moreObserver.disconnect();
-    moreObserver = null;
-  }
+  // The timer would paint into a target the router has already replaced.
   if (moreTimer) {
     window.clearTimeout(moreTimer);
     moreTimer = null;
@@ -721,11 +722,11 @@ function paint(target) {
       next.scrollTop = scrollTop;
     }
   }
-  // The sentinel is destroyed and rebuilt by the innerHTML above, so the observer
-  // has to be re-pointed after every paint — not once at mount.
-  observeMore(target);
   watchPaneScroll(target);
   sizeArticlePane(target);
+  // After the pane is sized, because the pane's height is part of what decides
+  // whether the sentinel is within reach.
+  maybeLoadMore(target);
 }
 
 // Keep the pane's cap in step with the scroll. Re-bound on every paint for the same
@@ -739,14 +740,19 @@ function paint(target) {
 // and a write the epsilon guard usually skips, against scroll events the browser
 // already delivers at about frame rate, so coalescing bought little.
 //
-// Passive, so measuring never delays the scroll. Measure only — no repaint — so it
-// cannot fight what the user is doing.
+// Passive, so measuring never delays the scroll. Two jobs now: size the pane, and
+// check whether the next page is due (see maybeLoadMore). The pane sizing is
+// measure-only so it cannot fight what the user is doing; the page load does paint,
+// but only when it adds cards below the fold, never under the reader.
 function watchPaneScroll(target) {
   if (boundScrollEl && boundScroll) boundScrollEl.removeEventListener("scroll", boundScroll);
   boundScrollEl = target.querySelector(".research-feed__body");
   boundScroll = null;
   if (!boundScrollEl) return;
-  boundScroll = () => sizeArticlePane(target);
+  boundScroll = () => {
+    sizeArticlePane(target);
+    maybeLoadMore(target);
+  };
   boundScrollEl.addEventListener("scroll", boundScroll, { passive: true });
 }
 
@@ -804,51 +810,48 @@ const PANE_MIN_H = 320;
 
 // ── Infinite load plumbing ─────────────────────────────────────────────────
 
-let moreObserver = null;
+// The pending page's timer. Cleared on unmount so a load in flight cannot paint
+// into a target the router has already replaced.
 let moreTimer = null;
 
-function resetPaging() {
-  view.shown = PAGE_SIZE;
-  view.loadingMore = false;
-  // A page in flight belongs to the list that requested it. Cancel it, or it lands
-  // on the newly filtered list and pages it too.
-  if (moreTimer) {
-    clearTimeout(moreTimer);
-    moreTimer = null;
-  }
-}
-
-// Point the observer at the current sentinel. Cheap to call on every paint: the
-// observer is created once and simply re-targeted, and disconnect() drops the
-// stale element the paint just threw away.
+// ── The trigger is the scroll listener, not an IntersectionObserver ────────
+// This was an IntersectionObserver on a sentinel, and it had not fired since the
+// first repaint: paint() replaces target.innerHTML, so .research-feed__body is a
+// new element every time, and an observer's root is fixed at construction — it was
+// measuring against a detached scroller. The "Load more" button was doing all the
+// work, which is why nobody noticed.
 //
-// root is the scroll container, not the viewport — .research-feed__body is what
-// scrolls here, so a viewport-rooted observer would never see the sentinel cross
-// anything. rootMargin gives it a screenful of lead time so the next page is
-// already arriving as the user reaches the end.
-function observeMore(target) {
+// A distance check on the scroll event replaces it. watchPaneScroll already binds a
+// listener to this exact element and already re-binds it on every paint for exactly
+// this reason, so the mechanism that was broken is gone rather than repaired, and
+// there is one fewer thing to keep pointed at the right node. It also runs in a
+// hidden tab, where an observer delivers nothing at all — which is what made the
+// old path impossible to check in a browser harness.
+//
+// Called from paint() too, not only on scroll: a window tall enough to show the
+// sentinel without scrolling fires no scroll event, and the observer's initial
+// callback used to cover that case.
+const LOAD_AHEAD = 200;
+
+function maybeLoadMore(target) {
+  const scroller = target.querySelector(".research-feed__body");
   const sentinel = target.querySelector("[data-research-more]");
-  if (moreObserver) moreObserver.disconnect();
-  if (!sentinel) return;
-  const root = target.querySelector(".research-feed__body");
-  if (!moreObserver) {
-    moreObserver = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        loadMore(target);
-      },
-      { root, rootMargin: "200px" },
-    );
-  }
-  moreObserver.observe(sentinel);
+  if (!scroller || !sentinel) return;
+  // Same 200px of lead time the observer's rootMargin gave it, so the next page is
+  // already arriving as the reader reaches the end.
+  const gap = sentinel.getBoundingClientRect().top - scroller.getBoundingClientRect().bottom;
+  if (gap <= LOAD_AHEAD) loadMore(target);
 }
 
+// `loadingMore` is now a re-entry guard only, not a rendered state: the sentinel
+// looks the same either way, so there is nothing to repaint when a load STARTS.
+// It earns its keep — maybeLoadMore runs on every scroll event, so without it a
+// single flick past the sentinel would queue a dozen loads.
 function loadMore(target) {
   if (view.loadingMore) return;
   const total = segmentBriefs(view.segment).length;
   if (view.shown >= total) return;
   view.loadingMore = true;
-  paint(target); // swap the caption for the spinner
   moreTimer = setTimeout(() => {
     moreTimer = null;
     view.shown += PAGE_SIZE;
@@ -1561,12 +1564,6 @@ function bind(target) {
       if (details) details.open = false;
       setActivePlaybook(pbPick.dataset.feedPlaybookPick);
       return;
-    }
-
-    // The explicit half of the infinite load — same path the observer takes, so
-    // the two can never disagree about what a page is or how long it takes.
-    if (event.target.closest("[data-research-more-load]")) {
-      return loadMore(target);
     }
   };
   target.addEventListener("click", boundClick);
