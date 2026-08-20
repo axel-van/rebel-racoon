@@ -35,10 +35,10 @@ import {
 } from "../briefs-store.js?v=67";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=72";
+import { renderUseButtons } from "./brief-card.js?v=73";
 import { getLanes } from "../research-store.js?v=52";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=64";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=65";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -59,7 +59,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=41";
-import { renderBriefCard } from "./brief-card.js?v=72";
+import { renderBriefCard } from "./brief-card.js?v=73";
 import { renderEmptyState } from "./empty-state.js?v=1";
 import { renderSocialPostCard } from "./social-post-card.js?v=43";
 import { showToast } from "./toast.js?v=21";
@@ -266,7 +266,7 @@ export function openNeedSource({ sourceId }) {
     {
       title: "Need that source?",
       body: html`<p class="research-modal__lede">
-          This source isn't live yet. Tell me how you'd use it and the team will factor it into what we build next.
+          This source isn't live yet. Describe how you'd use it and the team will factor it into what we build next.
         </p>
         <textarea
           class="research-modal__textarea"
@@ -295,7 +295,7 @@ export function openIgnoreReason({ briefId, onDone = null }) {
       body: html`<textarea
           class="research-modal__textarea"
           rows="4"
-          placeholder="Tell me what was off…"
+          placeholder="What was off about it?"
           data-ignore-text
         ></textarea>
         <!-- The DS Infobox: the "info box" intent maps straight to it. The i
@@ -303,8 +303,8 @@ export function openIgnoreReason({ briefId, onDone = null }) {
         <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
           <div>
-            This helps me tailor Topics to your needs. I'll keep this Topic out of your feed unless it trends well above
-            its usual volume baseline — so you still catch real spikes without noise from recurring Topics.
+            The answer tunes which Topics arrive. This one is kept out of the feed unless it trends well above its usual
+            volume baseline — so real spikes still come through without noise from recurring Topics.
           </div>
         </div>
         <label class="research-modal__check">
@@ -1126,13 +1126,20 @@ function renderPickerArticle(ctx, brief) {
     // so a header would have printed it twice, directly above itself.
     bareHead: true,
     body: renderResearchArticle(brief),
+    // WAY OUT FIRST, then the verb. Every other dialog in this file already reads
+    // that way — Not now / Send feedback, Cancel / Submit and ignore — and these two
+    // article footers were the exception, so the primary sat where Cancel sits three
+    // dialogs over. One footer, one order.
+    //
     // data-idea-pick, NOT the article dialog's data-brief-use: both end at
     // openBriefInChat, but only this one goes through the picker's own onPick,
     // which is the contract the caller passed in.
-    foot: html`<button type="button" class="ap-button primary orange" data-idea-pick="${escapeAttr(brief.id)}">
-        <span>Use in chat</span>
+    foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
+        <span>Close</span>
       </button>
-      <button type="button" class="ap-button stroked grey" data-research-modal-close><span>Close</span></button>`,
+      <button type="button" class="ap-button primary orange" data-idea-pick="${escapeAttr(brief.id)}">
+        <span>Use in chat</span>
+      </button>`,
     back: { label: "Back to topics", go: () => renderIdeaPicker(ctx) },
   });
 }

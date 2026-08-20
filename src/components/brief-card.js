@@ -586,59 +586,77 @@ export function renderUseButtons(brief, { dismiss = "ignore" } = {}) {
   // One verb and one taking-away. Save is gone (see the menu above), so the
   // main/alt split it existed to arbitrate went with it.
   const main = { attr: "data-brief-use", label: "Use in chat" };
-  return html`<span class="topics-use-flat" data-brief-use-wrap="${escapeAttr(brief.id)}">
-    <!-- primary orange, not stroked blue. The house convention (CLAUDE.md) is
-         orange = AI / spotlight action, blue = routine list-page CTA — and
-         taking a topic into a chat is the AI action this whole pane exists to
-         set up. It is also now the only primary on screen, so the pane has one
-         obvious next step instead of three equal-weight buttons. -->
-    <button type="button" class="ap-button primary orange" ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}>
-      <span>${main.label}</span>
-    </button>
-    <!-- The second slot, in whichever direction is available: Close in a dialog,
-         Un-ignore on an ignored topic, Ignore otherwise. It used to render nothing
-         at all once a topic was ignored, which left the pane offering no way to
-         undo the decision it had just taken.
 
-         The Ignore hint the menu row carried as a caption becomes a tooltip here: a
-         button has no room for a second line, and the sentence is the whole reason a
-         reader is willing to press it (ignoring is not deleting, and a spike
-         overrides it). Same DS Tooltip construction as the card's status glyph —
-         bubble after its trigger, visibility on the app class, aria-hidden with the
-         words repeated in the button's own aria-label so a display:none element is
-         not the only place they live.
+  // primary orange, not stroked blue. The house convention (CLAUDE.md) is orange =
+  // AI / spotlight action, blue = routine list-page CTA — and taking a topic into a
+  // chat is the AI action this whole pane exists to set up. It is also the only
+  // primary on screen, so the surface has one obvious next step.
+  const primary = html`<button
+    type="button"
+    class="ap-button primary orange"
+    ${raw(`${main.attr}="${escapeAttr(brief.id)}"`)}
+  >
+    <span>${main.label}</span>
+  </button>`;
 
-         Un-ignore gets no tooltip, for the reason Close gets none: it needs no
-         talking into. The outcome still rides in the aria-label, where the words
-         cost nothing. -->
-    ${raw(
-      dismiss === "close"
-        ? // No tooltip: "Close" needs no explaining, and the hint the Ignore button
-          // carries is about a decision this button does not make.
-          html`<button type="button" class="ap-button ghost grey" data-research-modal-close>
-            <span>Close</span>
+  // The second slot, in whichever direction is available: Close in a dialog,
+  // Un-ignore on an ignored topic, Ignore otherwise. It used to render nothing at
+  // all once a topic was ignored, which left the surface offering no way to undo
+  // the decision it had just taken.
+  //
+  // The Ignore hint the menu row carried as a caption becomes a tooltip here: a
+  // button has no room for a second line, and the sentence is the whole reason a
+  // reader is willing to press it (ignoring is not deleting, and a spike overrides
+  // it). Same DS Tooltip construction as the card's status glyph — bubble after its
+  // trigger, visibility on the app class, aria-hidden with the words repeated in the
+  // button's own aria-label so a display:none element is not the only place they
+  // live.
+  //
+  // Neither Close nor Un-ignore gets a tooltip: one needs no explaining, and the
+  // other's outcome rides in its aria-label where the words cost nothing.
+  const secondary =
+    dismiss === "close"
+      ? html`<button type="button" class="ap-button ghost grey" data-research-modal-close>
+          <span>Close</span>
+        </button>`
+      : ignored
+        ? html`<button
+            type="button"
+            class="ap-button ghost grey"
+            data-brief-unignore="${escapeAttr(brief.id)}"
+            aria-label="Un-ignore Topic. ${UNIGNORE_HINT}"
+          >
+            <span>Un-ignore</span>
           </button>`
-        : ignored
-          ? html`<button
+        : html`<span class="topics-use-flat__ignore">
+            <button
               type="button"
               class="ap-button ghost grey"
-              data-brief-unignore="${escapeAttr(brief.id)}"
-              aria-label="Un-ignore Topic. ${UNIGNORE_HINT}"
+              data-brief-ignore="${escapeAttr(brief.id)}"
+              aria-label="Ignore Topic. ${IGNORE_HINT}"
             >
-              <span>Un-ignore</span>
-            </button>`
-          : html`<span class="topics-use-flat__ignore">
-              <button
-                type="button"
-                class="ap-button ghost grey"
-                data-brief-ignore="${escapeAttr(brief.id)}"
-                aria-label="Ignore Topic. ${IGNORE_HINT}"
-              >
-                <span>Ignore</span>
-              </button>
-              <span class="ap-tooltip top-left topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
-            </span>`,
-    )}
+              <span>Ignore</span>
+            </button>
+            <span class="ap-tooltip top-left topics-use-flat__tip" aria-hidden="true">${IGNORE_HINT}</span>
+          </span>`;
+
+  // ── Order depends on the SURFACE, and deliberately so ─────────────────────
+  // In a DIALOG the way out comes first: every other dialog in research-modals
+  // already reads Not now / Send feedback and Cancel / Submit and ignore, so a
+  // primary in the leading slot put it exactly where Cancel sits three dialogs
+  // over. `dismiss === "close"` is only ever true in a dialog, so it is also the
+  // test for "am I a dialog footer".
+  //
+  // In the feed's article PANE the verb leads. That is not a dialog footer — it is
+  // the action bar under the article you have just read, the pane exists to set that
+  // action up, and Ignore beside it is the alternative rather than the way out.
+  //
+  // DOM order, not row-reverse: the tab order has to match what the eye sees, and a
+  // CSS reversal leaves the keyboard reaching the primary first on a footer where it
+  // is drawn second.
+  const dialogFooter = dismiss === "close";
+  return html`<span class="topics-use-flat" data-brief-use-wrap="${escapeAttr(brief.id)}">
+    ${raw(dialogFooter ? secondary : primary)}${raw(dialogFooter ? primary : secondary)}
   </span>`;
 }
 
