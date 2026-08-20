@@ -1096,6 +1096,25 @@ function filterableSources() {
   return RESEARCH_SOURCES.filter((s) => LIVE_SOURCE_IDS.includes(s.id));
 }
 
+// Two of the seven non-live sources are shown anyway, DISABLED and badged — which
+// is not a walk-back of the note above. That note refuses a working filter row for
+// a source that cannot produce a topic, because unticking it removes nothing while
+// implying there were topics being hidden. A disabled row makes no such claim: it
+// cannot be unticked, and the badge says why. It signposts, it does not filter.
+//
+// Two, not the remaining seven. The panel's job is still to filter, and seven dead
+// rows under one live one would invert that — the group would read as a roadmap
+// with a checkbox at the top. Influencers and Brand website are the two nearest
+// (both `defaultEnabled: true` in the catalogue, so they ship on the moment they
+// land), which makes them the two a reader is most likely to go looking for here.
+const SOON_SOURCE_IDS = ["influencer-posts", "brand-website"];
+
+// Catalogue order, not the order of the array above, so this list can never
+// disagree with the settings form about which comes first.
+function comingSoonSources() {
+  return RESEARCH_SOURCES.filter((s) => SOON_SOURCE_IDS.includes(s.id));
+}
+
 function renderFilterPanel() {
   return html`<div class="ap-filter-dropdown research-filters__panel" data-feed-panel role="group" aria-label="Filters">
     ${raw(
@@ -1109,6 +1128,7 @@ function renderFilterPanel() {
         // The icons stay in the catalogue: the source cards on the form use them.
         renderGroup("sources", "Sources", filterableSources(), filters.sources, "sources", {
           icons: false,
+          soon: comingSoonSources(),
           // The component's isLastLeaf: the final leaf owns no separator, because the
           // panel's own footer border is the line under it.
           isLast: true,
@@ -1150,7 +1170,39 @@ function renderStatusLegend() {
 // `icons: false` suppresses the option glyphs for a group whose data happens to
 // carry them (Sources) — the catalogue keeps them for the surfaces that do use
 // them, and only this panel opts out.
-function renderGroup(key, label, options, selected, field, { icons = true, isLast = false } = {}) {
+// A source that is declared but not yet listening: the row is there, greyed, and
+// says so.
+//
+// No `data-feed-filter`, and `disabled` rather than a class that only LOOKS
+// disabled — a disabled input fires no change event, so the row cannot reach the
+// filter handler even if the attribute were the only thing stopping it. The greys
+// are the DS's own: .ap-checkbox-container ships `:has(input:disabled)` rules for
+// the box and for the label text, so nothing here restyles a .ap-* class.
+//
+// ── The badge is a GRANDCHILD of the label, and has to be ──────────────────
+// .ap-checkbox-container styles its direct `> span` as the form label — 14px/400,
+// and grey-60 once the input is disabled. Both selectors are more specific than
+// .ap-badge.blue, so a badge sitting directly in the row came out at 14px/400 in
+// grey on the badge's pale-blue tint: the DS label rule beating the DS badge rule.
+// Nested inside the name span it is out of `> span` reach, and its own colour and
+// size declarations beat what it inherits.
+//
+// Un-hidden from the accessible name deliberately: the label IS the control's
+// name, so this reads "Influencers, Coming soon, checkbox, disabled" — which is
+// the row's whole point. Blue, not orange: the DS reserves orange for the single
+// "look here" marker per view, and this one repeats.
+function renderSoonOption(source) {
+  return html`<label class="ap-checkbox-container ap-filter-leaf__option research-filters__option is-soon">
+    <input type="checkbox" disabled />
+    <i aria-hidden="true"></i>
+    <span class="research-filters__option-name">
+      <span>${source.name}</span>
+      <span class="ap-badge blue research-filters__option-soon">Coming soon</span>
+    </span>
+  </label>`;
+}
+
+function renderGroup(key, label, options, selected, field, { icons = true, isLast = false, soon = [] } = {}) {
   const open = view.groups[key];
   // Does this group MIX iconless options with iconed ones? Only Topic status does,
   // now that New carries no glyph, and without this its label would sit a glyph's
@@ -1237,7 +1289,7 @@ function renderGroup(key, label, options, selected, field, { icons = true, isLas
                       </span>
                     </label>`,
                 )
-                .join(""),
+                .join("") + soon.map(renderSoonOption).join(""),
             )}
           </div>`
         : "",

@@ -1478,6 +1478,21 @@
   color: var(--sys-text-color-light);
 }
 
+/* The "Coming soon" pill on a disabled source row.
+
+   The name span has to stretch for the pill's auto margin to reach the row's
+   trailing edge — it is inline-flex and would otherwise shrink to its text. Only
+   on `.is-soon` rows: stretching the live rows' name span would change nothing
+   visually, but it would make the row's own gap meaningless. */
+.research-filters__option.is-soon .research-filters__option-name {
+  flex: 1 1 auto;
+}
+
+.research-filters__option-soon {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
 /* The same slot, empty — the Topic status group's New option, which carries no
    glyph. It holds the label column straight so the four names line up. */
 .research-filters__option-icon.is-empty {
