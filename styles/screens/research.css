@@ -1702,6 +1702,24 @@
   margin: 0 auto;
 }
 
+/* The two ways out, side by side. A row rather than a stack: they are
+   alternatives, not steps, and stacked they read as a sequence to work through.
+   Wrapping is allowed so the pair drops to two lines in the split layout rather
+   than shrinking the buttons. */
+.research-feed__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Collapses when neither way out applies — the state is then the icon, the
+   heading and the waiting line, which is the whole of what it has to say. */
+.research-feed__empty-actions:empty {
+  display: none;
+}
+
 .research-feed__empty--fresh > p {
   margin: 0;
   line-height: 1.6;
