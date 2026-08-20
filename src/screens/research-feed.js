@@ -963,89 +963,62 @@ function renderPage() {
   </div>`;
 }
 
-// Two different emptinesses, and calling them the same thing is a lie one way or
-// the other. A feed that has NEVER returned anything — a Playbook whose feed was
-// just provisioned, listening to competitors and waiting for its first scan — is
-// not a filter problem, and telling that reader to widen their filters sends them
-// to a panel where nothing is narrowed. The filter message is kept for the case
-// it actually describes: topics exist, and the current narrowing hides them all.
+// ── The feed has nothing to show ───────────────────────────────────────────
+// ONE state, not two. There were two — a rich "Nothing has landed yet" block for a
+// feed that had never returned anything, and a separate one for a filter that hides
+// everything — and keeping them apart cost more than it bought: the second was
+// written by borrowing the first's `--fresh` class, so the filtered state ended up
+// wearing a modifier meaning "this feed has never returned anything", the opposite
+// of what it said.
+//
+// THE HEADING is the only thing that varies, and it has to: "No Topics match these
+// filters" on a feed that has never returned anything would blame a filter that is
+// hiding nothing, and "Nothing has landed yet" on a narrowed feed would hide the
+// fact that the reader did this to themselves.
+//
+// THE BODY is the same four options every time — wait, the other segment, other
+// statuses, another Playbook — and deliberately says them WITHOUT counts. An earlier
+// version composed itself from what was actually available and named the numbers
+// ("Ready to draft has 4"), which reads as a promise and dates the moment it is
+// read: the count is of the list as it stands, and the reader is about to change the
+// thing it was counted from. Naming the places instead is an invitation to look,
+// which is all a full list can honestly be. It also means there is nothing to
+// recompute and nothing to keep in step.
+//
+// NEUTRAL, not first person. The state used to say "I scan monthly". CLAUDE.md puts
+// empty states among the places Archie talks, which is why it was written that way,
+// but this one is not conversation — it is a description of what the feed does and
+// where else to look, which is the register settings copy uses.
+//
+// DESCRIBED, NOT BUTTONED. This had two buttons that switched the segment and ticked
+// the statuses, and the fresh state had a third to Feed settings. All were shortcuts
+// to controls already on screen — the segmented control is six inches up, Filters
+// beside it, the Playbook switcher in the rail — so the state was growing a second
+// copy of the page's own chrome, and the second copy is the one that drifts.
+//
+// Still a hand-built pattern-1 empty state, and still a candidate for
+// components/empty-state.js — now a single one, which is what made that migration
+// worth doing rather than worth arguing about.
 function renderEmpty() {
-  const anyAtAll = getBriefsForLane(laneId, null).length > 0;
-  if (anyAtAll) return renderFilteredEmpty();
-  return html`<div class="research-feed__empty research-feed__empty--fresh">
-    <span class="research-feed__nofeed-mark"><i class="ap-icon-antenna"></i></span>
-    <h2 class="ap-h3">Nothing has landed yet</h2>
-    <p class="muted">
-      I'm listening on this Playbook's sources. Topics show up here as they arrive — add more sources if you want me
-      watching wider.
-    </p>
-    <button type="button" class="ap-button stroked grey" data-feed-empty-settings>
-      <i class="ap-icon-cog" aria-hidden="true"></i><span>Feed settings</span>
-    </button>
-  </div>`;
-}
-
-// ── Nothing matches the filter ─────────────────────────────────────────────
-// It was one muted line — "No Topics match these filters. Try widening them, or
-// reset to the defaults." — which named the problem and left the reader to find
-// the panel and work out which tick to undo. The three ways out of an empty feed
-// are known, so the state names them:
-//
-//   1. WAIT. The feed scans on a cadence, so the list refilling needs nothing
-//      from the reader. Said first because it is true whatever the filter says.
-//      It names the feed's OWN cadence, and is replaced when the feed is paused,
-//      where it would be a promise nothing is going to keep.
-//   2. THE OTHER SEGMENT. Named only when it holds something: pointing someone
-//      at an empty list is worse than saying nothing.
-//   3. WIDEN THE STATUS FILTER. Named only when Used or Ignored is unticked AND
-//      ticking it would reveal something IN THIS SEGMENT — counted against the
-//      widened filter rather than the whole lane, so the sentence cannot promise
-//      topics the source filter or the segment still hides.
-//
-// DESCRIBED, NOT BUTTONED. This had two buttons that switched the segment and
-// ticked the statuses. They were shortcuts to controls already on screen — the
-// segmented control is six inches up, Filters is beside it — so the state was
-// growing a second copy of the page's own chrome, and the second copy is the one
-// that drifts. Sentences point at the real controls and cannot fall out of step
-// with them. It is also why this state has no button at all where its --fresh
-// sibling does: that one's Feed settings is a real destination, not a duplicate.
-//
-// The shape still mirrors --fresh deliberately: the two are the same kind of
-// thing. Both are hand-built pattern-1 empty states and both are candidates for
-// components/empty-state.js — migrating one alone is what would make them diverge.
-//
-// First person, like --fresh and unlike the dialogs: an empty state is one of the
-// places Archie talks (CLAUDE.md).
-function renderFilteredEmpty() {
   const lane = getLaneById(laneId);
   const cadence = findCadence(lane?.cadence);
-  const other = view.segment === "later" ? "ready" : "later";
-  const otherCount = segmentBriefs(other).length;
-  const otherLabel = other === "later" ? "Topics for later" : "Ready to draft";
+  const neverScanned = getBriefsForLane(laneId, null).length === 0;
 
-  // What ticking Used and Ignored would actually surface, in THIS segment.
-  const hiddenStatuses = REVIEW_STATUSES.map((st) => st.id).filter((id) => !filters.statuses.includes(id));
-  const widened = hiddenStatuses.length
-    ? getBriefsForLane(laneId, { ...filters, statuses: [...filters.statuses, ...hiddenStatuses] }).filter((b) =>
-        inSegment(b, view.segment),
-      ).length
-    : 0;
+  // Paused replaces the cadence line rather than joining it: a paused feed has no
+  // next batch, so promising one would be the one sentence here that is false.
+  const arriving = lane?.paused
+    ? "This feed is paused, so nothing new arrives until you start it again."
+    : `This feed refreshes ${cadence?.adverb || "regularly"}, so more Topics land on their own.`;
 
-  // Built as parts and joined rather than nested ternaries: four combinations of
-  // two optional clauses is where a ternary chain stops being readable, and the
-  // sentence has to end up as ONE paragraph however many clauses survive.
-  const parts = [
-    lane?.paused
-      ? "This feed is paused, so nothing new will arrive until you start it again."
-      : `I scan ${cadence?.adverb || "regularly"}, so the next batch lands here on its own.`,
-  ];
-  if (otherCount) parts.push(`${otherLabel} has ${otherCount}.`);
-  if (widened) parts.push("Tick Used and Ignored under Filters to bring back the ones you have already handled.");
-
-  return html`<div class="research-feed__empty research-feed__empty--fresh">
-    <span class="research-feed__nofeed-mark"><i class="ap-icon-filter"></i></span>
-    <h2 class="ap-h3">No Topics match these filters</h2>
-    <p class="muted">${parts.join(" ")}</p>
+  return html`<div class="research-feed__empty research-feed__empty--rich">
+    <span class="research-feed__nofeed-mark"
+      ><i class="${raw(neverScanned ? "ap-icon-antenna" : "ap-icon-filter")}"></i
+    ></span>
+    <h2 class="ap-h3">${neverScanned ? "Nothing has landed yet" : "No Topics match these filters"}</h2>
+    <p class="muted">
+      ${arriving} There may be more to see under Ready to draft or Topics for later, under other statuses in Filters, or
+      in another Playbook's feed.
+    </p>
   </div>`;
 }
 
@@ -1325,8 +1298,6 @@ function bind(target) {
     // and it opens /topic-feeds/settings — this feed's own sources form.
     if (event.target.closest("[data-feed-trending]"))
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
-
-    if (event.target.closest("[data-feed-empty-settings]")) return navigate("/topic-feeds/settings");
 
     if (event.target.closest("[data-feed-resume]")) {
       toggleLanePause(laneId);

@@ -1691,7 +1691,15 @@
    screen — because the pane may be open beside it. Same mark as the no-sources
    state, which is its neighbour in meaning: one has nothing to listen to, this
    one is listening and has not heard anything yet. */
-.research-feed__empty--fresh {
+/* The RICH shape — icon, heading, paragraph — used by the screen's one full empty
+   state. The modifier named `--fresh` until two states shared it, at which point the
+   filtered one was wearing a class meaning "this feed has never returned anything",
+   the opposite of what it said. There is one state now, and the modifier names the
+   SHAPE rather than either occasion for it — which is also empty-state.js's own word
+   for this pattern, where this belongs eventually.
+   The bare `.research-feed__empty` above stays for the thin one-line variant the
+   attention page uses. */
+.research-feed__empty--rich {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1702,7 +1710,7 @@
   margin: 0 auto;
 }
 
-.research-feed__empty--fresh > p {
+.research-feed__empty--rich > p {
   margin: 0;
   line-height: 1.6;
 }
