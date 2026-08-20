@@ -39,9 +39,9 @@ import { parseHashParams } from "../url-state.js?v=21";
 // The picker footer's "Create a Playbook" hands the context-builder its return route,
 // exactly as /contexts and the composer do.
 import { setHandoff } from "../handoff.js?v=20";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=475";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=477";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=75";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=77";
 import {
   openIgnoreReason,
   // PARKED with its handler and its link — kept imported so restoring is one uncomment.
@@ -52,8 +52,8 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=162";
-import { openBriefInChat } from "../brief-flow.js?v=43";
+} from "../components/research-modals.js?v=164";
+import { openBriefInChat } from "../brief-flow.js?v=45";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=15";
 import {
@@ -61,9 +61,9 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=69";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=54";
-import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=53";
+} from "../active-playbook.js?v=71";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=56";
+import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=55";
 import {
   getBriefById,
   briefTitle,
@@ -75,14 +75,14 @@ import {
   setStatus,
   unignoreBrief,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=69";
+} from "../briefs-store.js?v=71";
 import {
   RESEARCH_SOURCES,
   REVIEW_STATUSES,
   LIVE_SOURCE_IDS,
   findResearchSource,
   findCadence,
-} from "../research-catalog.js?v=22";
+} from "../research-catalog.js?v=24";
 import { getContextById, getContexts } from "../contexts-store.js?v=82";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
@@ -1426,7 +1426,7 @@ function bind(target) {
     if (unignore) {
       view.openMenu = null;
       const brief = unignoreBrief(unignore.dataset.briefUnignore);
-      if (brief) showToast("Topic back on the list as New");
+      if (brief) showToast("Topic back on the list to review");
       return;
     }
 

@@ -318,24 +318,38 @@ export function findResearchType(id) {
 export const REVIEW_STATUSES = Object.freeze([
   {
     id: "new",
-    label: "New",
-    statusColor: "grey",
-    // No icon, and no hint to put in a tooltip — New is the ABSENCE of a marker.
+    // "To review", not "New". The id stays `new` — it is data, written on thirty
+    // seeded briefs, carried in the filter state and defaulted to by
+    // DEFAULT_STATUS_IDS — and renaming data to change a word buys nothing a reader
+    // can see. Same label-vs-id split RESEARCH_TYPES already runs, and the same one
+    // CLAUDE.md records for Playbook/Context.
     //
-    // The other three statuses all record something the reader DID to the topic:
-    // saved it, used it, ignored it. New records that they haven't, so there is no
-    // event for a glyph to stand for. A marker meaning "nothing has happened" is
-    // the one thing a marker cannot say, and it was the most common value in the
-    // lane — so the feed spent a glyph on almost every row to convey nothing.
+    // The word changed because "New" describes the TOPIC and the reader needs it to
+    // describe THEIR relationship to it. Every topic in this feed is new — they all
+    // arrived on the same scan — so "New" was a property of the whole list and told
+    // nobody anything. "To review" is the one thing that separates this state from
+    // Used and Ignored: those two are answers the reader has given, and this is the
+    // one still waiting for one. It also matches the new-chat list, which has said
+    // "Fresh topics to review" all along.
+    label: "To review",
+    statusColor: "grey",
+    // No icon, and no hint to put in a tooltip — this state is the ABSENCE of a
+    // marker.
+    //
+    // The other statuses record something the reader DID to the topic: used it,
+    // ignored it. This one records that they haven't, so there is no event for a
+    // glyph to stand for. A marker meaning "nothing has happened" is the one thing a
+    // marker cannot say, and it was the most common value in the lane — so the feed
+    // spent a glyph on almost every row to convey nothing.
     //
     // Sparkles was tried and is what prompted this: it is the app's AI mark, and
-    // every topic in the feed is Archie's, so it separated New from nothing. An
-    // hourglass fixed the semantics but not the arithmetic — the glyph still sat on
-    // most rows, competing with Trending and Updated, the two marks in that row that
-    // the reader genuinely cannot know without being told.
+    // every topic in the feed is Archie's, so it separated this state from nothing.
+    // An hourglass fixed the semantics but not the arithmetic — the glyph still sat
+    // on most rows, competing with Trending and Updated, the two marks in that row
+    // that the reader genuinely cannot know without being told.
     //
-    // So New now reads off the absence: no glyph means untriaged. The Filters panel
-    // still lists New with its label, which is where the word belongs.
+    // So it reads off the absence: no glyph means untriaged. The Filters panel still
+    // lists it by label, which is where the word belongs.
   },
   // "Saved", not "Saved for later". The long form was chosen to echo the card
   // action that sets it ("Save for later"), but a pill states a STATE and the
@@ -345,7 +359,7 @@ export const REVIEW_STATUSES = Object.freeze([
   // this", which is exactly what the Topics-for-later segment now means — and a
   // status that duplicates a view is a second answer to one question. Every
   // surface lost its Save affordance with it: the card menu, the article footer
-  // and this filter. A seeded `saved` brief reads as New.
+  // and this filter. A seeded `saved` brief reads as To review.
   {
     id: "used",
     label: "Used",
@@ -362,7 +376,7 @@ export const REVIEW_STATUSES = Object.freeze([
   },
 ]);
 
-/** Filter default: New and Saved. Reset restores exactly this. */
+/** Filter default: To review alone. Reset restores exactly this. */
 // UNTRIAGED and PARKED, not all four. Used and Ignored are both answers the reader
 // has already given — a topic taken into a chat, or one pushed off the list — so
 // opening on them puts finished work in front of someone looking for what to do next.

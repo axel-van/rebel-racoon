@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=475";
+import { renderTopbar } from "../components/topbar.js?v=477";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=96";
 import {
   getConnectedProfiles,
@@ -72,7 +72,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=15";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=69";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=71";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -84,12 +84,12 @@ import {
   countFreshTopics,
   subscribe as subscribeBriefs,
   briefTitle,
-} from "../briefs-store.js?v=69";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=43";
+} from "../briefs-store.js?v=71";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=45";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=22";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=62";
-import { getLaneById, getLanes } from "../research-store.js?v=53";
-import * as contextBuilder from "../context-builder.js?v=442";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=64";
+import { getLaneById, getLanes } from "../research-store.js?v=55";
+import * as contextBuilder from "../context-builder.js?v=444";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -126,15 +126,15 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=162";
-import { findResearchSource } from "../research-catalog.js?v=22";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=164";
+import { findResearchSource } from "../research-catalog.js?v=24";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=609";
+} from "../components/right-panel.js?v=611";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=44";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";

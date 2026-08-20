@@ -32,7 +32,7 @@ import { researchLanes as seed } from "./mocks.js?v=96";
 import { getContexts } from "./contexts-store.js?v=82";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
-import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=22";
+import { DEFAULT_ENABLED_IDS, DEFAULT_CADENCE, findCadence, findResearchSource } from "./research-catalog.js?v=24";
 
 // First-time user mode starts empty so /topic-feeds renders its empty state and the
 // sidebar row carries no count. Returning user keeps the mock seed. Same guard

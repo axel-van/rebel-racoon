@@ -12,7 +12,7 @@
 //
 // The consequences the views depend on:
 //   • In the FEED, a trending brief shows under its own status — a trending New
-//     brief appears only when "New" is ticked and vanishes when it isn't.
+//     brief appears only when "To review" is ticked and vanishes when it isn't.
 //     Trending is not a feed-level override. (This is the whole reason trending
 //     moved out of a collapsible feed section: as a section it had to override
 //     the status filter, which made the filter lie.)
@@ -45,7 +45,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=96";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=22";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=24";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -86,7 +86,7 @@ function cloneBrief(b) {
     // does below: a status is a state the topic is IN, so re-labelling it is honest,
     // while a history row is an EVENT that happened. Being saved can no longer
     // happen, so there is no event left to show — and normalising would have printed
-    // a second "New" row beside the first.
+    // a second "To review" row beside the first.
     history: Array.isArray(b.history)
       ? b.history.filter((h) => !!findReviewStatus(h?.status)).map((h) => ({ ...h }))
       : [],

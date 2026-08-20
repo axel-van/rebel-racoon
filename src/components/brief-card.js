@@ -50,9 +50,9 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=22";
+import { findReviewStatus } from "../research-catalog.js?v=24";
 // One title per topic — the article's, not the scan's headline. See briefs-store.
-import { briefTitle } from "../briefs-store.js?v=69";
+import { briefTitle } from "../briefs-store.js?v=71";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief } from "../pillars-store.js?v=15";
 
@@ -69,10 +69,9 @@ import { pillarForBrief } from "../pillars-store.js?v=15";
 const IGNORE_HINT = "Kept off this list unless trending or updated";
 
 // The counterpart, and it says where the topic GOES rather than what un-ignoring
-// is. "Back on this list as New" is the fact the reader needs: the feed opens on
-// New, so this is also the sentence that tells them they will see it again
-// without changing a filter.
-const UNIGNORE_HINT = "Back on this list as New";
+// is. The feed opens on To review, so this is also the sentence that tells the
+// reader they will see it again without changing a filter.
+const UNIGNORE_HINT = "Back on this list to review";
 
 // ── The ROUTE TAG WAS HERE, and it is gone ─────────────────────────────────
 // `renderRouteTag()` drew an .ap-tag naming the topic's type (Ready to post /
@@ -408,7 +407,7 @@ function renderCardMore(brief, pillar, menuOpen) {
                  eye-on against eye-off: the same glyph inverted, which is what
                  the pair means. The description states the OUTCOME rather than
                  repeating the label — a topic coming back is worth saying it
-                 comes back as New, because that is where the reader will look
+                 comes back to review, because that is where the reader will look
                  for it. -->
             ${raw(
               ignored

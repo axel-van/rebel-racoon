@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=22";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=24";
 import {
   ageMinutes,
   getBriefById,
@@ -32,13 +32,13 @@ import {
   unignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=69";
+} from "../briefs-store.js?v=71";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=75";
-import { getLanes } from "../research-store.js?v=53";
+import { renderUseButtons } from "./brief-card.js?v=77";
+import { getLanes } from "../research-store.js?v=55";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=69";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=71";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -58,8 +58,8 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=43";
-import { renderBriefCard } from "./brief-card.js?v=75";
+import { openBriefInChat } from "../brief-flow.js?v=45";
+import { renderBriefCard } from "./brief-card.js?v=77";
 import { renderEmptyState } from "./empty-state.js?v=1";
 import { renderSocialPostCard } from "./social-post-card.js?v=44";
 import { showToast } from "./toast.js?v=21";
@@ -1682,7 +1682,19 @@ function renderHistory(history, currentStatus, briefId = "") {
   // left. (It used to say "New, Saved and Ignored". Save was scrapped, and the two
   // seeded history rows that still claimed it are gone with it — briefs-store now
   // filters any row whose status no longer exists, so the timeline cannot print one.)
-  const note = currentStatus === "used" ? "Used to draft a post" : `Currently ${meta ? meta.label : currentStatus}.`;
+  // Two statuses get their own sentence rather than the "Currently X." shape:
+  //   used     — it describes something that already happened, and naming the action
+  //              is what a history row is for.
+  //   new      — since the label became "To review", the generic shape produced
+  //              "Currently To review.", which is not a sentence. The label is a
+  //              QUEUE NAME and reads as one; the row needs a state.
+  // Ignored still takes the generic shape, and reads correctly: "Currently Ignored."
+  const note =
+    currentStatus === "used"
+      ? "Used to draft a post"
+      : currentStatus === "new"
+        ? "Waiting for review."
+        : `Currently ${meta ? meta.label : currentStatus}.`;
   const entries = [...history, { status: currentStatus, when: "now", note }];
   // The "See past versions" link that used to close this section is gone with the V1
   // trim — the tombstone inside the section below records what it was and how to put
@@ -1804,7 +1816,7 @@ function onPanelClick(event) {
   const unignoreBtn = event.target.closest("[data-brief-unignore]");
   if (unignoreBtn) {
     unignoreBrief(unignoreBtn.dataset.briefUnignore);
-    return showToast("Topic back on the list as New");
+    return showToast("Topic back on the list to review");
   }
 
   // "See all N posts", from the Full-article DIALOG. Same markup in the feed's

@@ -66,14 +66,14 @@ Two segments, side by side above the list, each with a count.
 
 One control: a **Filters** dropdown above the list, with a badge.
 
-| ID          | Title                                     | Criterion                                                                                                                                                    |
-| ----------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AC-FILT-1` | Two filter groups, both multi-select      | Two groups, in this order: **Topic status** (New, Used, Ignored) and **Sources**. Both let you pick several.                                                 |
-| `AC-FILT-2` | Defaults are New only, every source       | Defaults: **New only**, every source. No filter for the two segments — the segmented control already does that job, and a second one could disagree with it. |
-| `AC-FILT-3` | Badge counts narrowed groups, not options | The badge counts **groups that are narrowed**, not options ticked. Two narrowed groups shows "2". At the defaults, no badge.                                 |
-| `AC-FILT-4` | Reset restores the exact defaults         | **Reset filters** puts the defaults above back exactly.                                                                                                      |
-| `AC-FILT-5` | Any filter change returns to page one     | Any filter change goes back to page one. Narrowing must never leave the reader three pages deep in a list that's now wider than it looks.                    |
-| `AC-FILT-6` | The filter is never overridden            | The list is **exactly** what the filter says. Nothing overrides it — see `AC-SIG-2`.                                                                         |
+| ID          | Title                                     | Criterion                                                                                                                                                          |
+| ----------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AC-FILT-1` | Two filter groups, both multi-select      | Two groups, in this order: **Topic status** (To review, Used, Ignored) and **Sources**. Both let you pick several.                                                 |
+| `AC-FILT-2` | Defaults are To review only, every source | Defaults: **To review only**, every source. No filter for the two segments — the segmented control already does that job, and a second one could disagree with it. |
+| `AC-FILT-3` | Badge counts narrowed groups, not options | The badge counts **groups that are narrowed**, not options ticked. Two narrowed groups shows "2". At the defaults, no badge.                                       |
+| `AC-FILT-4` | Reset restores the exact defaults         | **Reset filters** puts the defaults above back exactly.                                                                                                            |
+| `AC-FILT-5` | Any filter change returns to page one     | Any filter change goes back to page one. Narrowing must never leave the reader three pages deep in a list that's now wider than it looks.                          |
+| `AC-FILT-6` | The filter is never overridden            | The list is **exactly** what the filter says. Nothing overrides it — see `AC-SIG-2`.                                                                               |
 
 ### 2.5 Attention signals
 
@@ -130,7 +130,7 @@ One control: a **Filters** dropdown above the list, with a badge.
 | ID           | Title                                            | Criterion                                                                                                                                                                                                                                               |
 | ------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AC-FRESH-1` | Fresh list shows at most 6 Topics                | A new chat shows a list of Topics from the **active Playbook**, at most **6**.                                                                                                                                                                          |
-| `AC-FRESH-2` | Only New Topics under a week old qualify         | Only Topics that are **New** and under seven days old. The list is called "fresh," so it has to actually be fresh.                                                                                                                                      |
+| `AC-FRESH-2` | Only to-review Topics under a week old qualify   | Only Topics that are **To review** and under seven days old. The list is called "fresh," so it has to actually be fresh.                                                                                                                                |
 | `AC-FRESH-3` | Order: trending, then updated, then newest       | Order: the newest **trending** Topic first, then the newest **updated** one, then the newest of the rest. The top row is the one most worth acting on.                                                                                                  |
 | `AC-FRESH-4` | Used, ignored, and older Topics are excluded     | Used, ignored, and older Topics are all excluded — either the reader already answered, or the Topic isn't fresh anymore.                                                                                                                                |
 | `AC-FRESH-5` | Footer's total never shrinks as you triage       | The footer reads **"N out of M shown"**, where **M is every Topic under a week old in this Playbook**, regardless of what the reader did with it. M doesn't shrink as they triage — it describes the week, not a to-do list. M is never smaller than N. |
@@ -202,7 +202,7 @@ anywhere else.
 
 | ID       | Title                                                | Criterion                                                                                                                                                                              |
 | -------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-X-1` | Sidebar counter is New Topics in this Playbook       | The sidebar's **Topic Feed** counter is the number of **New** Topics in the active Playbook's feed. Using or ignoring one drops it right away.                                         |
+| `AC-X-1` | Sidebar counter is to-review Topics in this Playbook | The sidebar's **Topic Feed** counter is the number of **To review** Topics in the active Playbook's feed. Using or ignoring one drops it right away.                                   |
 | `AC-X-2` | Every surface reflects the active Playbook only      | Every list and counter reflects the **active Playbook** only. There's no "all Playbooks" view.                                                                                         |
 | `AC-X-3` | Triage syncs everywhere at once, no reload           | Triaging a Topic anywhere shows up everywhere else without a reload.                                                                                                                   |
 | `AC-X-4` | Keyboard-operable; colour is never the only signal   | Every control works by keyboard, and anything shown by colour alone — segments, sentiment, signals — is also readable as text for a screen reader.                                     |
@@ -276,7 +276,7 @@ Allowed values:
 
 | Property               | Values                                                                   |
 | ---------------------- | ------------------------------------------------------------------------ |
-| `Topic_status`         | `new` · `used` · `ignored`                                               |
+| `Topic_status`         | `new` · `used` · `ignored` — `new` is labelled **To review** in the UI   |
 | `Topic_trending`       | `true` · `false`                                                         |
 | `Topic_updated`        | `true` · `false`                                                         |
 | `Topic_title`          | the article's title — the same sentence the reader saw, see `AC-TITLE-1` |
