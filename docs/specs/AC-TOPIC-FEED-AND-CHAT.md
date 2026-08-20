@@ -35,13 +35,13 @@ and a Topic's review state silently overwrites what the scan found about it.
 
 ### 2.1 Arriving at a feed
 
-| ID           | Criterion                                                                                                                                                                                                                                                                                |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-ROUTE-1` | Opening the Topic Feed from the sidebar shows the **active Playbook's** feed. The reader never picks a feed from a list.                                                                                                                                                                 |
-| `AC-ROUTE-2` | A link to one specific feed opens that feed. Deep links rely on this — a pillar's trail into the feed, for one.                                                                                                                                                                          |
-| `AC-ROUTE-3` | Switching the active Playbook while looking at the feed swaps the feed under the reader, without them navigating.                                                                                                                                                                        |
-| `AC-ROUTE-4` | A Playbook whose feed has **no sources** shows a "No sources yet" state saying the feed has nothing to listen to yet. It must not render an empty list as though the feed were working. The state has no action while there is no surface for choosing sources — see §7.                 |
-| `AC-ROUTE-5` | A link that names one Topic opens the feed with that Topic's article already showing. The status filter widens to **every state** for that visit, because a Used or Ignored Topic is not in the default view and the article would otherwise open onto a card the list does not contain. |
+| ID           | Criterion                                                                                                                                                                                                                                                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-ROUTE-1` | Opening the Topic Feed from the sidebar shows the **active Playbook's** feed. The reader never picks a feed from a list.                                                                                                                                                                                                         |
+| `AC-ROUTE-2` | A link to one specific feed opens that feed. Deep links rely on this — a pillar's trail into the feed, for one.                                                                                                                                                                                                                  |
+| `AC-ROUTE-3` | Switching the active Playbook while looking at the feed swaps the feed under the reader, without them navigating.                                                                                                                                                                                                                |
+| `AC-ROUTE-4` | **Every Playbook has a feed, and it is already listening.** A brand new to the app is never met by a screen asking it to configure something before anything can happen: the feed listens to competitor posts from the first day, which is the one source every brand can already answer for. There is no "no sources yet" wall. |
+| `AC-ROUTE-5` | A link that names one Topic opens the feed with that Topic's article already showing. The status filter widens to **every state** for that visit, because a Used or Ignored Topic is not in the default view and the article would otherwise open onto a card the list does not contain.                                         |
 
 ### 2.2 The list: order and grouping
 
@@ -117,10 +117,11 @@ One control: a **Filters** dropdown above the list, with a badge.
 
 ### 2.9 States
 
-| ID           | Criterion                                                                                                                                                                |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AC-STATE-1` | **Scanning** — a working state shows while the feed is being assembled, on the reader's first arrival. It does not show when arriving on a link to one Topic.            |
-| `AC-STATE-2` | **Empty after filtering** — when the filter excludes everything, say so and offer the way back: reset the filter. This is a different state from a feed with no sources. |
+| ID           | Criterion                                                                                                                                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-STATE-1` | **Scanning** — a working state shows while the feed is being assembled, on the reader's first arrival. It does not show when arriving on a link to one Topic.                                                                                                       |
+| `AC-STATE-2` | **Empty after filtering** — when the filter excludes everything, say so and offer the way back: reset the filter. This is a different state from a feed that has found nothing yet — see `AC-STATE-4`.                                                              |
+| `AC-STATE-4` | **Nothing found yet** — a feed that is listening but has produced nothing shows the working state first, then says nothing has landed and that it is listening, with a way to widen the sources. It must never read as an error, or as a feed that is switched off. |
 
 ---
 
@@ -349,6 +350,6 @@ Two things that will bite whoever implements this:
 | 5   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?                                                                                                       | `AC-TRK-1`, `AC-TRK-2`     |
 | 6   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention?                                                                                             | `AC-TRK-2`, `AC-TRK-3`     |
 | 7   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?                                                                                                   | `AC-TRK-5`                 |
-| 8   | With no settings surface, what gives a feed its sources, its cadence and its notify choice? Every one of those controls has lost its home.                                                                                             | `AC-ROUTE-4`               |
+| 8   | A feed starts out listening to competitor posts (`AC-ROUTE-4`), but with no settings surface nothing can ever change that — nor its cadence, nor its notify choice. Is competitors-only acceptable for V1?                             | `AC-ROUTE-4`               |
 | 9   | With no version history and no "what changed", the **Updated** mark tells a reader something changed but gives them no way to see what. Does the mark still earn its place?                                                            | `AC-SIG-1`, `AC-PANE-6`    |
 | 10  | With the notice and the attention page both gone, nothing surfaces a spike on a Topic the reader has already triaged — the only way to see one is to re-tick Ignored in the filter. Is that acceptable, or do the signals need a home? | `AC-SIG-1`, `AC-SIG-2`     |
