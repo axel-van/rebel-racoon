@@ -303,28 +303,36 @@ they need values of their own. See §7.
 
 ### 6.2 New event — a Topic was ignored
 
-| ID         | Criterion                                                                                                                                                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-TRK-4` | Ignoring a Topic fires the event **once**, from either surface that offers it. Opening the reason dialog and cancelling fires nothing — the Topic was not ignored.                                                                                 |
-| `AC-TRK-5` | The event carries all seven properties: `Topic_status`, `Topic_trending`, `Topic_updated`, `Topic_title`, `Topic_summary`, `Topic_playbook`, `Topic_source`. None may be absent or empty.                                                          |
-| `AC-TRK-6` | `Topic_status`, `Topic_trending` and `Topic_updated` are reported **independently**. Ignoring a trending Topic sends the ignored status _and_ trending true — this is `AC-CORE-1` on the wire, and a payload that collapses them is a failed test. |
+| ID          | Criterion                                                                                                                                                                                                                                                                                                                                                  |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-TRK-4`  | Ignoring a Topic fires the event **once**, from either surface that offers it. Opening the reason dialog and cancelling fires nothing — the Topic was not ignored.                                                                                                                                                                                         |
+| `AC-TRK-5`  | The event carries all eight properties: `Topic_status`, `Topic_trending`, `Topic_updated`, `Topic_title`, `Topic_summary`, `Topic_playbook`, `Topic_source`, `Topic_ignored_reason`. Every one is present on every event.                                                                                                                                  |
+| `AC-TRK-5b` | `Topic_ignored_reason` is the only one that may be **empty**, because the reason box is optional — the dialog submits with nothing typed. It is then present and empty, never absent: a missing property and an unanswered question are different findings, and an analysis that cannot tell them apart cannot report how often people explain themselves. |
+| `AC-TRK-6`  | `Topic_status`, `Topic_trending` and `Topic_updated` are reported **independently**. Ignoring a trending Topic sends the ignored status _and_ trending true — this is `AC-CORE-1` on the wire, and a payload that collapses them is a failed test.                                                                                                         |
 
 Allowed values:
 
-| Property         | Values                                                                   |
-| ---------------- | ------------------------------------------------------------------------ |
-| `Topic_status`   | `new` · `used` · `ignored`                                               |
-| `Topic_trending` | `true` · `false`                                                         |
-| `Topic_updated`  | `true` · `false`                                                         |
-| `Topic_title`    | the article's title, the same sentence the reader saw — see `AC-TITLE-1` |
-| `Topic_summary`  | the Topic's summary                                                      |
-| `Topic_playbook` | the Playbook the Topic belongs to                                        |
-| `Topic_source`   | the listening source it came from — competitor, influencer, website, …   |
+| Property               | Values                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `Topic_status`         | `new` · `used` · `ignored`                                                            |
+| `Topic_trending`       | `true` · `false`                                                                      |
+| `Topic_updated`        | `true` · `false`                                                                      |
+| `Topic_title`          | the article's title, the same sentence the reader saw — see `AC-TITLE-1`              |
+| `Topic_summary`        | the Topic's summary                                                                   |
+| `Topic_playbook`       | the Playbook the Topic belongs to                                                     |
+| `Topic_source`         | the listening source it came from — competitor, influencer, website, …                |
+| `Topic_ignored_reason` | the text the reader typed in the reason box, verbatim — empty when they typed nothing |
 
 ⚠️ **`Topic_status` needs a decision before this can be tested.** On an ignore event the
 status is always `ignored` once the action lands, which makes the property constant and
 tells you nothing. It is only useful as the status the Topic held **before** the ignore —
 which is how these criteria read it. See §7.
+
+**Two things about the reason text.** It is what the reader wrote, so it is prose in
+whatever language they use, of whatever length, and it can carry personal detail — it
+needs the same handling as any other free-text field the product collects. And the same
+dialog also collects a **Don't show this again** checkbox, which is a second answer to
+the same question and is not in the property list above. See §7.
 
 ### 6.3 New — Topic traces on AI calls
 
@@ -378,3 +386,4 @@ Two things that will bite whoever implements this:
 | 6   | Is `Topic_status` on an ignore event the status **before** the ignore, or after? After makes it a constant (§6.2).                         | `AC-TRK-5`, `AC-TRK-6`     |
 | 7   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?           | `AC-TRK-1`, `AC-TRK-2`     |
 | 8   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention? | `AC-TRK-2`, `AC-TRK-3`     |
+| 9   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?       | `AC-TRK-5`                 |
