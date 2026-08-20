@@ -104,7 +104,7 @@ One control: a **Filters** dropdown above the list, with a badge.
 | `AC-PANE-3`  | On a narrow window the article stacks under the list instead of sitting beside it. The switch happens on the width available to the two of them, not on the size of the browser window.                                                 |
 | `AC-PANE-4`  | The article's bottom — and so its actions — stays within view as the page scrolls.                                                                                                                                                      |
 | `AC-PANE-5`  | Its actions are **Use in chat** (primary) and **Ignore**.                                                                                                                                                                               |
-| `AC-PANE-6`  | The article shows: its title, the prose in its two sections, a **See all N posts** link, and a **See past versions** link when there is more than one version. One version is not a history, so the link is absent.                     |
+| `AC-PANE-6`  | The article shows: its title, the prose in its two sections, and a **See all N posts** link. There is no version history — an Updated Topic simply reads as its current version.                                                        |
 | `AC-TITLE-1` | Every surface showing a Topic's title shows **the article's title**. The scan's original headline is a fallback used only where no article has been written. A card and the article opened from it must never show different sentences. |
 
 ### 2.8 Card actions
@@ -156,15 +156,14 @@ One control: a **Filters** dropdown above the list, with a badge.
 The one flow behind **Use in chat**, from all four places offering it: a feed card, the
 attention page, the fresh-topics list, and the picker.
 
-| ID          | Criterion                                                                                                                                                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-CHAT-1` | A **new** chat is created. The Topic is never added to the chat the reader is already in.                                                                                                                                               |
-| `AC-CHAT-2` | The chat belongs to the Topic's Playbook and is named after the Topic, **as it first appears** — not renamed a moment later.                                                                                                            |
-| `AC-CHAT-3` | The Topic arrives as an already-processed **source**, so everything the chat can already do with a source — extract ideas, draft a post, ask about it, list it in the Sources panel — works on it with no special case.                 |
-| `AC-CHAT-4` | The thread shows a source entry naming the Topic. No echoed message and no follow-up question — the entry already names it and the composer is right there.                                                                             |
-| `AC-CHAT-5` | The chat's **Sources** count includes it.                                                                                                                                                                                               |
-| `AC-CHAT-6` | Choosing a **past version** brings that version in as its own source, named for the version, with that version's opening line as its preview. It must be distinguishable from the current Topic in the thread and in the Sources panel. |
-| `AC-CHAT-7` | A link to a Topic that no longer exists opens nothing and goes nowhere.                                                                                                                                                                 |
+| ID          | Criterion                                                                                                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-CHAT-1` | A **new** chat is created. The Topic is never added to the chat the reader is already in.                                                                                                                               |
+| `AC-CHAT-2` | The chat belongs to the Topic's Playbook and is named after the Topic, **as it first appears** — not renamed a moment later.                                                                                            |
+| `AC-CHAT-3` | The Topic arrives as an already-processed **source**, so everything the chat can already do with a source — extract ideas, draft a post, ask about it, list it in the Sources panel — works on it with no special case. |
+| `AC-CHAT-4` | The thread shows a source entry naming the Topic. No echoed message and no follow-up question — the entry already names it and the composer is right there.                                                             |
+| `AC-CHAT-5` | The chat's **Sources** count includes it.                                                                                                                                                                               |
+| `AC-CHAT-7` | A link to a Topic that no longer exists opens nothing and goes nowhere.                                                                                                                                                 |
 
 ### 3.3 The composer's Pick from the Topic Feed
 
@@ -190,7 +189,7 @@ Shared by the fresh-topics list, the picker, and the feed's full-article view.
 | `AC-DLG-2` | When the article itself carries the Topic's title, the dialog does not print a header above it — it would be the same sentence twice. The dialog is still named for screen readers in that case. |
 | `AC-DLG-3` | Its actions are **Use in chat** (primary) and **Close**.                                                                                                                                         |
 | `AC-DLG-4` | The close control sits in the dialog's top-right corner, whether or not a header is shown.                                                                                                       |
-| `AC-DLG-5` | Views opened inside it — Sources, Past versions — carry a back action that names where it returns to.                                                                                            |
+| `AC-DLG-5` | A view opened inside it — the source posts — carries a back action that names where it returns to.                                                                                               |
 
 ### 3.5 Evidence posts
 
@@ -346,14 +345,15 @@ Two things that will bite whoever implements this:
 
 ## 7. Open questions for product
 
-| #   | Question                                                                                                                                              | Blocks                     |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| 1   | With the notice dropped, how does a reader reach the attention page — or does it go too?                                                              | `AC-ATT-0`                 |
-| 2   | Should the picker resurface ignored-but-trending Topics?                                                                                              | `AC-PICK-2b`               |
-| 3   | Can a Playbook ever have more than one feed? Everything here assumes one.                                                                             | `AC-ROUTE-1`, `AC-FRESH-5` |
-| 4   | Is a Topic's review state per reader or shared by the workspace? This document assumes per reader.                                                    | `AC-ACT-5`                 |
-| 5   | Is `Topic_status` on an ignore event the status **before** the ignore, or after? After makes it a constant (§6.2).                                    | `AC-TRK-5`, `AC-TRK-6`     |
-| 6   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?                      | `AC-TRK-1`, `AC-TRK-2`     |
-| 7   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention?            | `AC-TRK-2`, `AC-TRK-3`     |
-| 8   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?                  | `AC-TRK-5`                 |
-| 9   | With no settings surface, what gives a feed its sources, its cadence, its notify choice and its pause? Every one of those controls has lost its home. | `AC-ROUTE-4`, `AC-STATE-3` |
+| #   | Question                                                                                                                                                                    | Blocks                     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1   | With the notice dropped, how does a reader reach the attention page — or does it go too?                                                                                    | `AC-ATT-0`                 |
+| 2   | Should the picker resurface ignored-but-trending Topics?                                                                                                                    | `AC-PICK-2b`               |
+| 3   | Can a Playbook ever have more than one feed? Everything here assumes one.                                                                                                   | `AC-ROUTE-1`, `AC-FRESH-5` |
+| 4   | Is a Topic's review state per reader or shared by the workspace? This document assumes per reader.                                                                          | `AC-ACT-5`                 |
+| 5   | Is `Topic_status` on an ignore event the status **before** the ignore, or after? After makes it a constant (§6.2).                                                          | `AC-TRK-5`, `AC-TRK-6`     |
+| 6   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?                                            | `AC-TRK-1`, `AC-TRK-2`     |
+| 7   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention?                                  | `AC-TRK-2`, `AC-TRK-3`     |
+| 8   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?                                        | `AC-TRK-5`                 |
+| 9   | With no settings surface, what gives a feed its sources, its cadence, its notify choice and its pause? Every one of those controls has lost its home.                       | `AC-ROUTE-4`, `AC-STATE-3` |
+| 10  | With no version history and no "what changed", the **Updated** mark tells a reader something changed but gives them no way to see what. Does the mark still earn its place? | `AC-SIG-1`, `AC-PANE-6`    |
