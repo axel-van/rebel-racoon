@@ -42,10 +42,10 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=95";
+import { researchBriefs as seed } from "./mocks.js?v=96";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS } from "./research-catalog.js?v=22";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=22";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -77,7 +77,19 @@ function cloneBrief(b) {
       subheads: Array.isArray(b.research?.subheads) ? b.research.subheads.slice() : [],
     },
     posts: Array.isArray(b.posts) ? b.posts.map((p) => ({ ...p, author: { ...(p.author || {}) } })) : [],
-    history: Array.isArray(b.history) ? b.history.map((h) => ({ ...h })) : [],
+    // History rows are FILTERED to statuses that still exist, not just copied. Two
+    // seeded rows said `saved`, and Save was scrapped — so the timeline rendered a
+    // raw lowercase "saved" in a grey pill, because findReviewStatus() has nothing to
+    // map it to and the row falls back to printing the id.
+    //
+    // Dropped rather than normalised to `new`, which is what a seedStatus of `saved`
+    // does below: a status is a state the topic is IN, so re-labelling it is honest,
+    // while a history row is an EVENT that happened. Being saved can no longer
+    // happen, so there is no event left to show — and normalising would have printed
+    // a second "New" row beside the first.
+    history: Array.isArray(b.history)
+      ? b.history.filter((h) => !!findReviewStatus(h?.status)).map((h) => ({ ...h }))
+      : [],
     // Past article versions. Cloned a level deeper than the spread for the same
     // reason `research` is: each carries its own paragraphs array, and a shallow
     // copy would hand a view a reference straight into the mocks module.

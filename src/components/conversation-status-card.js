@@ -25,13 +25,13 @@ import {
   openSources as openSourcesPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=606";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=103";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=95";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=97";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=73";
-import { subscribe as subscribeSessions } from "../sessions-store.js?v=44";
-import { addMention } from "../composer-mentions.js?v=71";
+} from "./right-panel.js?v=609";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=104";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=96";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=98";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=74";
+import { subscribe as subscribeSessions } from "../sessions-store.js?v=45";
+import { addMention } from "../composer-mentions.js?v=72";
 import { isFlagOn } from "../feature-flags.js?v=23";
 
 // Two-level structure:

@@ -5431,7 +5431,6 @@ export const researchBriefs = [
     history: [
       { status: "new", when: "3 days ago", note: "Surfaced from the 1–31 July competitor scan (10 matching posts)." },
       { status: "new", when: "2 days ago", note: "Flagged trending — engagement above the window baseline." },
-      { status: "saved", when: "1 day ago", note: "Saved for later." },
     ],
     seedStatus: "saved",
     seedReason: "",
@@ -6047,10 +6046,7 @@ export const researchBriefs = [
         url: "https://www.instagram.com/p/Da25kKljGEX/",
       },
     ],
-    history: [
-      { status: "new", when: "6 days ago", note: "Surfaced from the competitor scan (4 matching items)." },
-      { status: "saved", when: "2 days ago", note: "Saved for later." },
-    ],
+    history: [{ status: "new", when: "6 days ago", note: "Surfaced from the competitor scan (4 matching items)." }],
     seedStatus: "saved",
     seedReason: "",
   },

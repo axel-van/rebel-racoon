@@ -32,18 +32,18 @@ import {
   unignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=67";
+} from "../briefs-store.js?v=69";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=73";
-import { getLanes } from "../research-store.js?v=52";
+import { renderUseButtons } from "./brief-card.js?v=75";
+import { getLanes } from "../research-store.js?v=53";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=65";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=69";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
 // list and a different object entirely.
-import { pillarForBrief } from "../pillars-store.js?v=14";
+import { pillarForBrief } from "../pillars-store.js?v=15";
 import {
   getContexts,
   getContextById,
@@ -54,14 +54,14 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=81";
+} from "../contexts-store.js?v=82";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=41";
-import { renderBriefCard } from "./brief-card.js?v=73";
+import { openBriefInChat } from "../brief-flow.js?v=43";
+import { renderBriefCard } from "./brief-card.js?v=75";
 import { renderEmptyState } from "./empty-state.js?v=1";
-import { renderSocialPostCard } from "./social-post-card.js?v=43";
+import { renderSocialPostCard } from "./social-post-card.js?v=44";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -921,9 +921,10 @@ export function openPlaybookList({ playbookId, kind }) {
 // the research that produced it, and the lane name is the only thing that says
 // which brand and which sources it came from.
 //
-// IGNORED topics are left out. Everything else — New, Saved, Used — is offered,
+// IGNORED topics are left out. Everything else — New and Used — is offered,
 // because re-using a topic in a second chat is legitimate, but "Ignore" is the
-// one status that means "not this one".
+// one status that means "not this one". (It used to say New, Saved, Used; Save was
+// scrapped.)
 // ONE STEP. It used to open on a grid of Playbooks — "whose topics?" — and only
 // then show the list. That question has moved: the rail's switcher answers it for
 // every surface in the app, permanently and visibly, so asking again inside a
@@ -1674,11 +1675,13 @@ function paintVersions() {
 // says it is — an authored history that stopped one step short read as a bug.
 function renderHistory(history, currentStatus, briefId = "") {
   const meta = findReviewStatus(currentStatus);
-  // Used gets its own sentence. The other three statuses describe a state that is
-  // still true, which "Currently X." says well; Used describes something that
-  // already happened to the topic, and naming the action is what a history row is
-  // for. Only this one is special-cased — the shape still covers New, Saved and
-  // Ignored.
+  // Used gets its own sentence. The other statuses describe a state that is still
+  // true, which "Currently X." says well; Used describes something that already
+  // happened to the topic, and naming the action is what a history row is for. Only
+  // this one is special-cased — the shape covers New and Ignored, the two that are
+  // left. (It used to say "New, Saved and Ignored". Save was scrapped, and the two
+  // seeded history rows that still claimed it are gone with it — briefs-store now
+  // filters any row whose status no longer exists, so the timeline cannot print one.)
   const note = currentStatus === "used" ? "Used to draft a post" : `Currently ${meta ? meta.label : currentStatus}.`;
   const entries = [...history, { status: currentStatus, when: "now", note }];
   // The "See past versions" link that used to close this section is gone with the V1
@@ -1775,16 +1778,13 @@ function onPanelClick(event) {
 
   // The article dialog's three verbs. Deliberately the SAME semantics as
   // research-feed.js's handlers, because they are the same buttons: Use marks the
-  // Topic used before navigating (the status has to change while this code
-  // still runs), Save toggles and says so, Ignore hands over to the reason dialog.
+  // Topic used before navigating (the status has to change while this code still
+  // runs); Ignore hands over to the reason dialog.
   //
-  // All three LEAVE this dialog: Use navigates, Ignore replaces the dialog's
-  // contents, and Save closes. Save kept the dialog open for a while, on the
-  // argument that the label flips to Remove from saved and the reader should see
-  // it — but saving IS the decision, and holding a full-screen article open after
-  // it asks the reader to close a thing they have finished with. The toast carries
-  // the confirmation, and the flipped label is there on the card and in the feed
-  // the moment they look.
+  // Both LEAVE this dialog: Use navigates, Ignore replaces the dialog's contents.
+  // A third branch, Save, sat between them until Save was scrapped — it closed the
+  // dialog rather than holding a full-screen article open after the decision had
+  // been made.
   const useBtn = event.target.closest("[data-brief-use]");
   if (useBtn) {
     const id = useBtn.dataset.briefUse;
