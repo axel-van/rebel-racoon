@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=21";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=22";
 import {
   ageMinutes,
   getBriefById,
@@ -31,18 +31,18 @@ import {
   ignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=62";
+} from "../briefs-store.js?v=66";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=67";
-import { getLanes } from "../research-store.js?v=49";
+import { renderUseButtons } from "./brief-card.js?v=71";
+import { getLanes } from "../research-store.js?v=52";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=49";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=63";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
 // list and a different object entirely.
-import { pillarForBrief } from "../pillars-store.js?v=12";
+import { pillarForBrief } from "../pillars-store.js?v=14";
 import {
   getContexts,
   getContextById,
@@ -53,13 +53,14 @@ import {
   addPillarFromTopic,
   addTopicToPillar,
   PILLAR_LIMIT,
-} from "../contexts-store.js?v=79";
+} from "../contexts-store.js?v=81";
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=36";
-import { renderBriefCard } from "./brief-card.js?v=67";
-import { renderSocialPostCard } from "./social-post-card.js?v=41";
+import { openBriefInChat } from "../brief-flow.js?v=40";
+import { renderBriefCard } from "./brief-card.js?v=71";
+import { renderEmptyState } from "./empty-state.js?v=1";
+import { renderSocialPostCard } from "./social-post-card.js?v=43";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
@@ -981,6 +982,56 @@ function renderIdeaPicker(ctx) {
 // means every card in this list now carries the same string. What does not change
 // from row to row is not information. (Same reason the "Playbook › Topic feed"
 // breadcrumb left the new-session cards.)
+// The Playbook select, at the top of the picker's list.
+//
+// Same control as the Topic feed's topbar, part for part — .ap-select > summary
+// .ap-select-trigger.composer-playbook__trigger with an inline label, and the same
+// .research-playbook__dropdown that keeps the DS's downward `top: 100%` instead of the
+// composer's upward `bottom: 100%`.
+//
+// ⚠️ It writes DIFFERENT state from the feed's, and the difference is deliberate.
+// The feed's select is a view of the rail's global scope and calls
+// setActivePlaybook(); this one writes `pickerPlaybookId`, which is module state this
+// picker already owned. A picker is a transient lens for one pick: opening it from the
+// composer, glancing at another brand's topics and having the rail, the feed, the
+// pillar counters and the next new chat all follow you there is a side effect nobody
+// asked for. It opens ON the active Playbook, so the default still agrees with the
+// app; only browsing away from it stays local.
+//
+// This is also what the removed step-1 "Which Playbook do you want Topics from?" used
+// to do, minus the step: same choice, no navigation, and the list is visible while you
+// make it.
+function renderPickerPlaybookSelect() {
+  const playbooks = getContexts();
+  const current = pickerPlaybookId ? getContextById(pickerPlaybookId) : getActivePlaybook();
+  const items = playbooks
+    .map((c) => {
+      const isSel = current && c.id === current.id;
+      return html`<div
+        class="ap-select-option${raw(isSel ? " selected" : "")}"
+        data-picker-playbook-pick="${escapeAttr(c.id)}"
+        role="option"
+        aria-selected="${isSel ? "true" : "false"}"
+      >
+        <span class="ap-select-option-text">${c.name}</span>
+        ${raw(isSel ? html`<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+      </div>`;
+    })
+    .join("");
+  return html`<div class="research-pick__scope">
+    <details class="ap-select research-playbook" data-picker-playbook>
+      <summary class="ap-select-trigger composer-playbook__trigger" title="Choose the Playbook to pick a Topic from">
+        <span class="ap-select-inline-label">Playbook</span>
+        <span class="ap-select-value">${current ? current.name : "Select a playbook"}</span>
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown research-playbook__dropdown" role="listbox" aria-label="Choose a Playbook">
+        <div class="ap-select-options">${raw(items)}</div>
+      </div>
+    </details>
+  </div>`;
+}
+
 function renderTopicStep(ctx) {
   const lanes = pickerLanes().map((lane) => ({ lane, ...pickerSplit(lane.id) }));
   const shown = [];
@@ -1005,8 +1056,12 @@ function renderTopicStep(ctx) {
     //
     // Trending-but-ignored goes FIRST, for the same reason the feed puts its
     // notice above the list: it is the thing you would otherwise not see.
+    // The select leads the body in BOTH branches: an empty Playbook is exactly when
+    // you need the way to another one, so hiding the control with the list would
+    // strand the reader on the one Playbook that has nothing.
     body:
-      shownTotal || trending.length
+      renderPickerPlaybookSelect() +
+      (shownTotal || trending.length
         ? (trending.length
             ? html`<section class="research-pick__group research-pick__group--trending">
                 <h4 class="research-pick__group-title">Trending, normally hidden</h4>
@@ -1029,7 +1084,7 @@ function renderTopicStep(ctx) {
         : html`<p class="research-pick__empty muted">
             Nothing ready to draft in this Playbook. Topics parked for later show up here once they are linked to a
             content pillar.
-          </p>`,
+          </p>`),
     // One button. The back to Playbooks went with the step it returned to.
     foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
       <span>Close</span>
@@ -1114,6 +1169,37 @@ export function renderResearchArticle(brief, { withLabel = true, withTitle = tru
   //
   // Defaults are ON so the dialog reads unchanged and any future caller gets the
   // complete article rather than a silently headless one.
+  // ── A "Topics for later" topic has no write-up, and says so ───────────────
+  // The two routes mean two different things about the same scan. A Draft-ready topic
+  // was written up because the scan gave enough to write from; a Topics-for-later one
+  // was not, and printing four paragraphs of prose for it would present the same
+  // artefact for both — the reader could not tell which they were holding, and would
+  // draft from a write-up the model never actually stood behind.
+  //
+  // So the body becomes an empty state that names the gap, and the rest of the pane
+  // stays exactly as it is: Topic Relevance still says how much backed it and why now,
+  // the history still says when it arrived, and Sources still lists the posts. Those
+  // are what the scan DID produce, and they are what a reader needs to judge whether
+  // their own assets close the distance.
+  //
+  // The two ways out are the two that actually exist: bring assets to it in a chat
+  // (the pane's own primary, "Use in chat"), or leave it for a later run to grow. No
+  // third invented affordance, and no button of its own here — the footer's primary is
+  // the action this copy names, and a second orange button two inches above it would
+  // be the same verb asking twice.
+  const later = brief.researchType === "content-strategy";
+  const bodySection = later
+    ? renderEmptyState({
+        icon: "ap-icon-note",
+        title: "Not enough data to write a detailed version yet",
+        body:
+          "There's not enough content or assets around this topic to create a draft yet. " +
+          "Use the topic in chat if you have assets that fill the gaps, or leave it here and let a future run add more details.",
+        wrapperClass: "research-article__empty",
+      })
+    : html`${raw(withTitle ? html`<h3 class="research-article__title">${brief.research?.title || ""}</h3>` : "")}
+      ${raw(renderArticleBody(brief.research))}`;
+
   return html`<section class="research-article">
       ${raw(
         withLabel
@@ -1122,10 +1208,9 @@ export function renderResearchArticle(brief, { withLabel = true, withTitle = tru
             >`
           : "",
       )}
-      ${raw(withTitle ? html`<h3 class="research-article__title">${brief.research?.title || ""}</h3>` : "")}
-      ${raw(renderArticleBody(brief.research))}
+      ${raw(bodySection)}
     </section>
-    ${raw(renderTrendLevels(brief))} ${raw(renderHistory(brief.history || [], brief.status, brief.id))}
+    ${raw(renderTopicRelevance(brief))} ${raw(renderHistory(brief.history || [], brief.status, brief.id))}
     ${raw(renderSources(brief))}`;
 }
 
@@ -1204,54 +1289,92 @@ export function openSourcePosts({ briefId, from = null }) {
   );
 }
 
-// ── Trend levels ───────────────────────────────────────────────────────────
-// The two attention signals, explained. Both used to sit on the CARD as tinted
-// two-line blocks; they now live here, together, because they answer one question
-// — why is this topic flagged right now — and reading them side by side is the
-// only way to tell a spike apart from a rewrite.
+// ── Topic Relevance ────────────────────────────────────────────────────────
+// What the scan judged about this topic, before the article argues anything: how
+// much of the scan backed it (Volume), who feels it (Relevance), and why it landed
+// in this window (Why now). All three come from the listening-insights export, and
+// they are the model's judgement of the TOPIC rather than the article's argument —
+// which is why they sit in their own section above the prose.
 //
-// One section for both, not two: they are the same kind of claim about the same
-// moment. A topic CAN carry both — isTrending and isUpdated are independent
-// booleans, which is the invariant briefs-store exists to protect — though no
-// seeded topic currently does, so the both-signals case is untested against real
-// copy. Two sections would have made such a topic look like it had two unrelated
-// notices; one section stacks Why now above What changed and reads as one answer.
+// It renders for EVERY topic that has any of the three. That is a change from the
+// section this replaces: "Trend levels" was gated on the attention BOOLEANS and so
+// appeared only on a spike or a rewrite, which meant the volume and relevance of an
+// ordinary topic had nowhere to go.
 //
-// Rendered only when a signal is actually present, so an untriaged topic with no
-// spike and no rewrite gets no empty heading. The gates are the SIGNAL BOOLEANS,
-// not just the text: briefs-store keeps isTrending / isUpdated separate from
-// `status` precisely so a view can ask "is this flagged" without inferring it, and
-// a whyNow string on a topic that is not trending is stale copy rather than a
-// reason to show the block.
+// ── The highlight is the signal, and only the signal ──────────────────────
+// Tint carries meaning here, so it is spent only where a signal justifies it:
 //
-// Reuses .topics-card__whynow and .topics-card__changed — the two tinted blocks the
-// card used to own. They are still the right treatment (a coloured left rule, warm
-// for a spike, cool for a rewrite) and moving the markup does not make them a new
-// component. Neither carries the card's inner clamp span, so both read in full,
-// which is the whole reason for being here rather than there.
-function renderTrendLevels(brief) {
-  const trending = brief.isTrending && brief.whyNow;
-  const updated = brief.isUpdated && brief.whatChanged;
-  if (!trending && !updated) return "";
+//   trending → Why now in .topics-card__whynow (peach + orange rule). It used to tint
+//              Volume as well, on the argument that a spike is a claim about volume in
+//              a moment; with Volume gone the reason row carries the signal alone.
+//   updated  → Why now in .topics-card__changed (menthol + green rule).
+//   neither  → nothing tinted. An ordinary topic's rows are information, and tinting
+//              them would spend the spike's colour on a topic with no spike.
+//
+// Reuses the card's own two blocks rather than inventing a third treatment: they are
+// the coloured left rules the card used to own, warm for a spike and cool for a
+// rewrite, and moving the markup does not make them a new component. Neither carries
+// the card's inner clamp, so both read in full.
+
+function renderTopicRelevance(brief) {
+  const trending = !!brief.isTrending;
+  const updated = !!brief.isUpdated;
+  const rows = [];
+
+  // ── Two rows: Relevance, then Why now ─────────────────────────────────────
+  // Relevance says who the topic is for and is the one that decides whether to read on
+  // at all; Why now says what put it in front of you.
+  //
+  // Volume was the third and is gone. It was one word — high / medium / low — and the
+  // only row here that measured the scan rather than describing the topic, so it read
+  // as a statistic parked among sentences. What it was actually good for is already
+  // said better elsewhere: Why now names the concentration in words ("14 items, every
+  // major competitor inside thirty days") and Sources lists the posts to count.
+  // `brief.volume` still exists on the seeded topics and now has no reader.
+
+  if (brief.relevance) {
+    // Never tinted, under any signal: relevance is who the topic is for, which does
+    // not change because the pile grew or the story moved.
+    rows.push(
+      html`<p class="research-relevance__row">
+        <strong class="research-relevance__label">Relevance:</strong> ${brief.relevance}
+      </p>`,
+    );
+  }
+
+  if (brief.whyNow) {
+    const cls = trending ? "topics-card__whynow" : updated ? "topics-card__changed" : "research-relevance__row";
+    const labelCls = trending
+      ? "topics-card__whynow-label"
+      : updated
+        ? "topics-card__changed-label"
+        : "research-relevance__label";
+    rows.push(html`<p class="${cls}"><strong class="${labelCls}">Why now:</strong> ${brief.whyNow}</p>`);
+  }
+
+  // ── Two rows, and nothing else ────────────────────────────────────────────
+  // Three things used to render here and all three are gone: "What changed", which
+  // narrated a rewrite between two runs; whyNowDetail, authored prose elaborating a
+  // claim the row above had already made; and Volume, a one-word measurement of the
+  // scan among sentences about the topic. What is left describes the topic — who it is
+  // for, and why it landed now.
+  //
+  // `updated` still decides the TINT on Why now (menthol rather than peach), which is
+  // the whole of what the rewrite signal needs to say here — the row it colours is the
+  // reason, and the reason is the field.
+  //
+  // Neither field is deleted from the data. `whatChanged` still seeds the
+  // Add-to-strategy textarea and the pillar-picker infobox below, so it is live
+  // elsewhere; `whyNowDetail` now has no reader at all and is dead seed data.
+
+  if (!rows.length) return "";
   return html`<section class="research-article">
-    <!-- ap-icon-arrow-up, the same glyph the card's Trending badge carries — the
-         section explains that badge, so it should be recognisable as its
-         continuation. There is no ap-icon-trending-up in the DS. -->
-    <span class="research-article__label"><i class="ap-icon-arrow-up" aria-hidden="true"></i> Trend levels</span>
-    ${raw(
-      trending
-        ? html`<p class="topics-card__whynow">
-            <strong class="topics-card__whynow-label">Why now:</strong> ${brief.whyNow}
-          </p>` + (brief.whyNowDetail ? html`<p>${brief.whyNowDetail}</p>` : "")
-        : "",
-    )}
-    ${raw(
-      updated
-        ? html`<p class="topics-card__changed">
-            <strong class="topics-card__changed-label">What changed:</strong> ${brief.whatChanged}
-          </p>`
-        : "",
-    )}
+    <!-- ap-icon-target, not the arrow-up this section carried as "Trend levels". The
+         arrow was the Trending badge's own glyph and belonged to a section that only
+         appeared on a spike; this one appears on every topic, so a glyph that means
+         "this is what it is worth" beats one that means "this is rising". -->
+    <span class="research-article__label"><i class="ap-icon-target" aria-hidden="true"></i> Topic Relevance</span>
+    ${raw(rows.join(""))}
   </section>`;
 }
 
@@ -1550,61 +1673,54 @@ function renderHistory(history, currentStatus, briefId = "") {
   // Ignored.
   const note = currentStatus === "used" ? "Used to draft a post" : `Currently ${meta ? meta.label : currentStatus}.`;
   const entries = [...history, { status: currentStatus, when: "now", note }];
-  // Offered only when there IS more than one version. A link promising past
-  // versions that opens a dialog holding one is worse than no link.
-  //
-  // .ap-link STANDALONE on a real <button>, with an icon. Three things the DS's
-  // link guidance settles, and this had all three wrong first time:
-  //
-  //   • Element. It opens a dialog, so it is an action, and the guidance is
-  //     explicit that the element must match the behaviour — <button> for an
-  //     action, <a href> for navigation. It was an <a role="button" tabindex="0">,
-  //     which is the "an <a> used as a button" anti-pattern by name.
-  //   • Variant. `standalone` is the on-its-own action variant (the guidance's own
-  //     examples are "see more" and "edit"); the default inline variant is for a
-  //     link sitting inside a sentence and is underlined to match it. This is on
-  //     its own line, so it is standalone. `small` keeps it at the density of the
-  //     timeline it follows.
-  //   • Icon. Standalone links are documented as highly recommending one, since
-  //     dropping the underline takes away the affordance the text had on its own.
-  //     ap-icon-history rather than the ap-icon-clock on the section label just
-  //     above it — the same glyph twice in six lines reads as a repeat.
-  //
-  // It sits BELOW the timeline because it is the same subject continued: the
-  // timeline says the topic changed, this is where you see what the change was.
-  const versions = briefId ? getBriefVersions(briefId) : [];
-  const past = versions.length ? versions.length - 1 : 0;
+  // The "See past versions" link that used to close this section is gone with the V1
+  // trim — the tombstone inside the section below records what it was and how to put
+  // it back. The DS reasoning it carried is worth keeping wherever a standalone link
+  // lands next: <button> for an action and <a href> for navigation, `standalone` for a
+  // link on its own line rather than inside a sentence, and an icon with it, since
+  // dropping the underline takes away the affordance the text had.
   return html`<section class="research-article">
     <span class="research-article__label"><i class="ap-icon-clock" aria-hidden="true"></i> Topic history</span>
+    <!-- ── The DS Status component, and nothing hand-built around it ───────────
+         This list used to draw three things the DS already ships. All three are gone:
+           • .topics-status — a hand-rolled pill (3px 10px, radius 24, 11px/800,
+             uppercase, four hardcoded --ref-color fills) that re-created .ap-status.
+             The three review statuses map 1:1 onto its variants, so nothing was
+             gained by drawing it: grey / blue / red, from statusColor in
+             research-catalog.js.
+           • .research-timeline__dot — a 22px circle with a 3px white ring, filled
+             with the PILL's background token. .ap-status carries its own 8px dot by
+             default, coloured from --comp-status-*-dot-background-color, so the app's
+             version was a second drawing of one idea in the wrong colour.
+           • the row's ::before rail — a 2px connector at left:10px, top:22px, every
+             number derived from that dot's geometry, so the dot could not change size
+             without silently breaking the line. It carried no meaning the <ol> and the
+             dates do not already carry.
+         What is left is one flex row per entry. The <ol> stays: this is an ordered
+         sequence of events and the markup should say so. -->
     <ol class="research-timeline">
       ${raw(
         entries
           .map((e) => {
             const m = findReviewStatus(e.status);
             return html`<li class="research-timeline__row">
-              <span class="research-timeline__dot topics-status--${e.status}" aria-hidden="true"></span>
-              <span class="research-timeline__body">
-                <span class="topics-status topics-status--${e.status}">${m ? m.label : e.status}</span>
-                <span class="research-timeline__when">${e.when}</span>
-                <span class="research-timeline__note">${e.note}</span>
-              </span>
+              <span class="ap-status ${m && m.statusColor ? m.statusColor : "grey"}">${m ? m.label : e.status}</span>
+              <span class="research-timeline__when">${e.when}</span>
+              <span class="research-timeline__note">${e.note}</span>
             </li>`;
           })
           .join(""),
       )}
     </ol>
-    ${raw(
-      past > 0
-        ? html`<button
-            type="button"
-            class="ap-link standalone small research-article__versions"
-            data-brief-versions="${escapeAttr(briefId)}"
-          >
-            <i class="ap-icon-history" aria-hidden="true"></i>
-            See past versions of this Topic
-          </button>`
-        : "",
-    )}
+    <!-- The "See past versions of this Topic" link is GONE (V1 scope), with its
+         handler in research-feed. openVersionHistory() below is still exported and
+         still works — it is simply unreachable, so restoring the link is one block
+         here plus one handler there.
+         What it was: .ap-link standalone small with ap-icon-history, rendered only
+         when a topic had more than one version, sitting under the timeline because
+         it continued the same subject — the timeline says the topic changed, that
+         link showed what the change was. V1 ships the fact of the change without
+         the diff behind it. -->
   </section>`;
 }
 
@@ -1624,6 +1740,17 @@ function onPanelClick(event) {
     return close();
   }
   if (!active) return;
+
+  // Picking a Playbook in the topics picker. Local to the picker (pickerPlaybookId),
+  // never the global scope — see renderPickerPlaybookSelect for why — and it re-renders
+  // the step in place so the list under the trigger simply becomes the new Playbook's.
+  const pickerPb = event.target.closest("[data-picker-playbook-pick]");
+  if (pickerPb) {
+    const details = pickerPb.closest("[data-picker-playbook]");
+    if (details) details.open = false;
+    pickerPlaybookId = pickerPb.dataset.pickerPlaybookPick;
+    return renderTopicStep(active.ctx);
+  }
 
   // The "See past versions" link inside the Full-article DIALOG. The feed's
   // article PANE renders the same markup and wires the same attribute in

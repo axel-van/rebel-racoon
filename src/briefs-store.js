@@ -41,10 +41,10 @@
 //   updateSummary(briefId, text)       — Adapt mode commits through here
 //   subscribe(fn)                      → unsubscribe
 
-import { researchBriefs as seed } from "./mocks.js?v=93";
+import { researchBriefs as seed } from "./mocks.js?v=95";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, RESEARCH_SOURCES } from "./research-catalog.js?v=21";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS } from "./research-catalog.js?v=22";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -200,7 +200,13 @@ function byRecency(a, b) {
   return ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel);
 }
 
-const ALL_SOURCE_IDS = RESEARCH_SOURCES.map((s) => s.id);
+// The LIVE sources, not every declared one. Seven of the eight in research-catalog.js
+// are `live: false` — declared for the settings form, unable to produce a topic — and
+// the Filters panel only offers the live ones (see research-feed.filterableSources).
+// This has to be the same set: "all sources" is what the panel can tick, so deriving it
+// from the full eight would leave the group permanently narrowed against a default it
+// could never reach, and pin the Filters badge to 1.
+const ALL_SOURCE_IDS = LIVE_SOURCE_IDS.slice();
 
 /** The filter state a fresh feed opens with. Reset restores exactly this. */
 export function defaultFilters() {

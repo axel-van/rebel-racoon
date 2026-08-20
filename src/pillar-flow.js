@@ -24,8 +24,8 @@
 
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
-import { addReadySource } from "./sources-stream.js?v=93";
-import { getContextById, getPillarById } from "./contexts-store.js?v=79";
+import { addReadySource } from "./sources-stream.js?v=95";
+import { getContextById, getPillarById } from "./contexts-store.js?v=81";
 
 export const PILLAR_CHAT_HANDOFF = "pendingPillarChat";
 

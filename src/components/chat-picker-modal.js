@@ -12,10 +12,10 @@
 //     onPick({ kind: "new" } | { kind: "existing", session })
 //   });
 
-import { recentSessions } from "../mocks.js?v=93";
-import { getSources } from "../sources-stream.js?v=93";
-import { getIdeas } from "../library.js?v=95";
-import { getPosts } from "../posts-store.js?v=71";
+import { recentSessions } from "../mocks.js?v=95";
+import { getSources } from "../sources-stream.js?v=95";
+import { getIdeas } from "../library.js?v=97";
+import { getPosts } from "../posts-store.js?v=73";
 import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=21";
 
 const MODAL_ID = "chatPicker";

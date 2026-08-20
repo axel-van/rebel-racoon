@@ -40,10 +40,10 @@
 
 import { html, raw, escapeAttr, escapeHtml } from "../utils.js?v=21";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { getPillarById, getPillarTimeline, setPillarFrozen, subscribe } from "../pillars-store.js?v=12";
+import { getPillarById, getPillarTimeline, setPillarFrozen, subscribe } from "../pillars-store.js?v=14";
 // Read-only, and only for the lane a topic belongs to: the link has to name the feed
 // it navigates into, and a pillar source carries the briefId but not the lane.
-import { getBriefById } from "../briefs-store.js?v=62";
+import { getBriefById } from "../briefs-store.js?v=66";
 import { renderDiff } from "../text-diff.js?v=1";
 import { showToast } from "./toast.js?v=21";
 

@@ -341,56 +341,14 @@
   display: block;
 }
 
-/* Status pills — the four review states. Still used by the article's Topic-history
-   timeline (research-modals.renderHistory); the CARD shows the glyph above instead. */
-.topics-status {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 24px;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.5;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.topics-status--new {
-  background: var(--ref-color-grey-10);
-  color: var(--ref-color-grey-100);
-}
-.topics-status--saved {
-  background: var(--ref-color-tag-orange-20);
-  color: var(--ref-color-tag-orange-150);
-}
-/* Used is BLUE, not green, and green is not free any more: the Ready-to-post tag
-   took it, and .ap-tag green computes the identical #ECF7ED — two chips on one row
-   with the same fill meaning different things.
-
-   Blue is the only Status colour left. Measured against every fill that appears in
-   a card row: green and grey are both taken by the two route tags exactly, red by
-   Ignored, tagOrange by Saved, and Status orange (#FFEFE9) sits on top of
-   --app-peach (#FFF1EC), the Why-now block inside this very card.
-
-   It is also the better meaning. The house rules give Status blue as "info /
-   neutral-info — neither success nor error, e.g. Scheduled, DRAFT", and Used means
-   a draft was made from this topic. Green means success/validation, which Used
-   never was: it records that the topic went somewhere, not that it went well.
-   --ref-color-* rather than --comp-status-blue-*, because component tokens are not
-   allowed in app CSS and the sibling pills all take --ref-* too.
-   
-   Watch: blue is this app's action colour, so a pale blue pill could read as
-   clickable. Survivable because nothing blue and interactive shares this row any
-   more — the type chips moved into the Filters panel — and the selected-card
-   treatment is a border, not a fill. */
-.topics-status--used {
-  background: var(--ref-color-electric-blue-10);
-  color: var(--ref-color-electric-blue-150);
-}
-.topics-status--ignored {
-  background: var(--ref-color-red-10);
-  color: var(--ref-color-red-100);
-}
+/* .topics-status and its colour rules are GONE — ~50 lines, the last of them the long
+   argument for Used being blue rather than green.
+   They were a hand-built pill: the card stopped using them when its status became a
+   glyph, and the article's Topic-history timeline was the only caller left. That
+   timeline now renders the DS's .ap-status, which ships this pill with its own dot and
+   with the three colours the statuses need. The colour reasoning did not die with the
+   CSS — it moved to `statusColor` in research-catalog.js, beside the label and the
+   icon, where the mapping belongs. */
 
 .topics-card__headline {
   display: block;

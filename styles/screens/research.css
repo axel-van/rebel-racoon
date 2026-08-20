@@ -130,6 +130,52 @@
   margin-top: var(--ref-spacing-md);
 }
 
+/* The Playbook picker in the topbar's RIGHT slot, immediately before Filters.
+   An explicit WIDTH, not a max-width — the same fix .research-view__filter above
+   carries, for the same reason. The DS ships `.ap-select` at width:100%, so as a flex
+   item its hypothetical size is the whole slot: that is a deficit, and the deficit is
+   paid by whatever is shrinkable beside it. It cost the section title its text when
+   this control was in the LEAD slot ("Topic Feed" rendered as "T…"); in the right slot
+   the same basis would squeeze the Filters button, which .ap-button turns into a cut
+   label rather than a visible overflow because it ships overflow:hidden. A max-width
+   clamps what the item finally draws but never gives it a basis to be capped from, so
+   the deficit survives either way. A fixed basis removes the fight.
+   260px fits the longest seeded Playbook name ("Alliance Jiu Jitsu Carlsbad") at the
+   trigger's inline-label width; longer names ellipsise inside .ap-select-value. */
+.research-playbook {
+  flex: 0 0 auto;
+  width: 260px;
+}
+
+/* The picker's panel — used by the Topic feed's topbar AND by the Pick-a-Topic modal
+   (research-modals.renderPickerPlaybookSelect), which is the same control answering the
+   same question in a different seat.
+   It deliberately does NOT wear .composer-playbook__dropdown:
+   that class exists to open UPWARD (`bottom: calc(100% + xxs)`), which is right for a
+   control docked at the bottom of the screen and upside down for one in the topbar.
+   Inheriting the DS's own `top: 100%` is the whole fix; everything below is width and
+   alignment.
+   `left: 0; right: auto` overrides the DS's `left: 0; right: 0`, which would stretch
+   the panel to the trigger's 260px and wrap the longer Playbook names. */
+.research-playbook__dropdown {
+  left: 0;
+  right: auto;
+  /* The app's overlay layer, like .research-filters__panel two rules down, rather than
+     the DS's bare z-index: 1000. Both panels hang out of the same topbar over the same
+     feed, so they belong on the same layer. */
+  z-index: var(--app-z-overlay);
+  min-width: 100%;
+  width: max-content;
+  max-width: 320px;
+  text-align: left;
+}
+
+/* The colour dot, spaced off its label. The composer's dropdown has the same rule
+   under its own class; this is the same 8px, not a second opinion about it. */
+.research-playbook__dropdown .composer-context__dot {
+  margin-right: var(--ref-spacing-xxs);
+}
+
 /* ── Lane grid ────────────────────────────────────────────────────────── */
 
 .research-grid {

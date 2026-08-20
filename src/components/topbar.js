@@ -14,25 +14,25 @@ import {
   getMode as getRightPanelMode,
   getActiveBatchRef as getActiveDraftsBatchRef,
   subscribe as subscribeRightPanel,
-} from "./right-panel.js?v=592";
-import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=93";
-import { getThread, subscribe as subscribeThread } from "../assistant.js?v=101";
-import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=95";
-import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=71";
+} from "./right-panel.js?v=604";
+import { getSources as getSessionSources, subscribeSources } from "../sources-stream.js?v=95";
+import { getThread, subscribe as subscribeThread } from "../assistant.js?v=103";
+import { getIdeas, subscribe as subscribeLibrary } from "../library.js?v=97";
+import { getPosts, subscribe as subscribePosts } from "../posts-store.js?v=73";
 import {
   isEnabled as isStatusCardEnabled,
   toggle as toggleStatusCard,
   subscribeVisibility as subscribeStatusCardVisibility,
-} from "./conversation-status-card.js?v=385";
-import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=42";
+} from "./conversation-status-card.js?v=397";
+import { getSessionById, updateSession, subscribe as subscribeSessions } from "../sessions-store.js?v=44";
 import { open as openRenameModal } from "./rename-modal.js?v=2";
-import { subscribe as subscribeContexts } from "../contexts-store.js?v=79";
+import { subscribe as subscribeContexts } from "../contexts-store.js?v=81";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import {
   getPickerState as getTopPostsState,
   subscribePicker as subscribeTopPosts,
   backToProfiles as topPostsBackToProfiles,
-} from "../top-posts-flow.js?v=122";
+} from "../top-posts-flow.js?v=124";
 
 // The playbook/context pill now lives in the composer (session.js
 // renderPlaybookControl) — selectable on a New Chat, then a static
@@ -122,36 +122,18 @@ export function renderTopbar(_options = {}) {
   const left = back ? renderBack(back) : isTopPostsBoard() ? renderTopPostsBack() : renderTitle(onSession);
   el.innerHTML = html`
     <div class="app-topbar__left">${raw(left)}${raw(onSession ? "" : screenLead)}</div>
-    <div class="app-topbar__right">${raw(rightSide)}${raw(isFeedRoute(getPath()) ? renderSettingsCog() : "")}</div>
+    <div class="app-topbar__right">${raw(rightSide)}</div>
   `;
 }
 
-// The Feed-settings cog — on the Topic feed's topbar and NOWHERE else.
-//
-// It was briefly on every topbar, leading to a global settings space. Both are
-// gone: there is no global settings space to lead to, and a cog on a chat's
-// topbar promised configuration for a screen that has none. What is left is the
-// control it always was — this feed's sources, one click from the feed.
-//
-// It opens the FORM, not a table of every Playbook's feed. You are looking at one
-// feed; the sources it listens to are what "settings" can mean here, and routing
-// through a list to find the row you were already on was a detour dressed as a
-// destination.
-function isFeedRoute(path) {
-  return path === "/topic-feeds" || path.startsWith("/topic-feeds/");
-}
-
-function renderSettingsCog() {
-  return html`<button
-    type="button"
-    class="ap-icon-button transparent app-topbar__settings"
-    data-topbar-settings
-    title="Feed settings"
-    aria-label="Feed settings"
-  >
-    <i class="ap-icon-cog"></i>
-  </button>`;
-}
+// ── The Feed-settings cog is GONE (V1 scope) ──────────────────────────────
+// It rendered on /topic-feeds* only and opened that feed's own sources form. It
+// went with the V1 trim, not because it was wrong: a feed's sources are real
+// configuration and the cog was one click from the feed that used them. What it
+// cost was a second way into a screen V1 does not ship, and a control whose only
+// destination is /topic-feeds/settings.
+// If it comes back, it comes back with that route, and it belongs in
+// .app-topbar__right ahead of the screen's own actions — isFeedRoute() gated it.
 
 // True when the active session is showing the repurposing board (step 2) —
 // i.e. there's a "Change profile" step to go back to.
@@ -258,10 +240,6 @@ export function initTopbar() {
     const backBtn = event.target.closest("[data-topbar-back]");
     if (backBtn) {
       navigate(backBtn.dataset.topbarBack || "/");
-      return;
-    }
-    if (event.target.closest("[data-topbar-settings]")) {
-      navigate("/topic-feeds/settings");
       return;
     }
     // "Change profile" — back to the repurposing profile chooser (step 1).

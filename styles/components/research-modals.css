@@ -331,59 +331,110 @@
 /* ── Topic history timeline ───────────────────────────────────────────── */
 
 .research-timeline {
+  /* Column with a gap, where the rows used to carry their own padding-bottom and a
+     2px ::before rail anchored to a hand-built dot. Both are gone with the dot — see
+     the tombstone in research-modals.renderHistory(). */
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* One entry: the DS Status pill, when it happened, and what happened, in that order.
+   BASELINE, not center: the pill is a 24px box and the two text runs are 12px and
+   14px, so aligning the boxes would leave the sentence floating against the pill's
+   leading. (The pill is .ap-status — display:inline-flex with its dot as ::before, so
+   its own baseline comes from its label, not from the dot.) */
 .research-timeline__row {
-  position: relative;
-  display: flex;
-  gap: 12px;
-  padding-bottom: 16px;
-}
-
-/* The connector: a 2px line behind the dots, stopped on the last row so it
-   doesn't dangle past the final entry. */
-.research-timeline__row:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  top: 22px;
-  bottom: 0;
-  width: 2px;
-  background: var(--ref-color-grey-10);
-}
-
-.research-timeline__dot {
-  position: relative;
-  z-index: 1;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
-  border-radius: var(--app-radius-circle);
-  border: 3px solid var(--ref-color-white);
-}
-
-.research-timeline__body {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--ref-color-grey-80);
+  align-items: baseline;
+  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
 }
 
+/* Caption size, on the ramp. This was 13px — which is not a DS step (12 / 14 / 18) —
+   in --ref-color-grey-40. --sys-text-color-light is the semantic name for that grey
+   and it is what every other secondary line in this component uses. */
 .research-timeline__when {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   font-weight: 700;
-  color: var(--ref-color-grey-40);
+  color: var(--sys-text-color-light);
 }
 
+/* The note takes the whole second line, so the pill and the date read as one header
+   above the sentence rather than as three things competing on one row. Body size:
+   it is prose, and it was 13px/500 in grey-80 before. */
 .research-timeline__note {
   flex-basis: 100%;
-  font-weight: 500;
+  font-size: var(--sys-text-style-body-size);
   line-height: 1.5;
+  color: var(--sys-text-color-default);
 }
+
+/* ── A later topic's missing write-up ──────────────────────────────────────
+   The shared empty state (components/empty-state.js) with this section's own chrome:
+   it brings the icon disc, the subtitle and the muted body, and this only has to place
+   the block inside the article's measure and give it room to breathe.
+   Padded rather than centred in the whole pane: the sections below it — Topic
+   Relevance, Topic history, Sources — are real content and the empty state is one
+   section among them, not the state of the page. */
+.research-article__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  max-width: var(--topics-measure);
+  margin: 0;
+  padding: var(--ref-spacing-lg) var(--ref-spacing-md);
+  text-align: center;
+  background: var(--ref-color-grey-05);
+  border-radius: var(--app-radius-md);
+}
+
+/* The body reads as prose, not as a caption: it is two sentences carrying the two ways
+   out, and .muted alone left it at the icon-label size. */
+.research-article__empty .muted {
+  max-width: 56ch;
+  font-size: var(--sys-text-style-body-size);
+  line-height: 1.55;
+}
+
+/* The Playbook select above the picker's list. The control itself is the Topic feed's
+   (.research-playbook + .research-playbook__dropdown in screens/research.css) — this is
+   only its seat in the modal: full width of the body's measure, with the list starting
+   below it rather than beside it. */
+.research-pick__scope {
+  display: flex;
+  margin-bottom: var(--ref-spacing-sm);
+}
+
+/* ── Topic Relevance rows ──────────────────────────────────────────────────
+   The UNTINTED row: an ordinary topic's Volume, Relevance and Why now. Same measure,
+   type and leading as the two tinted blocks it sits beside (.topics-card__whynow /
+   __changed) so a highlighted row differs from a plain one only by its fill and its
+   left rule — which is the whole point of spending tint on the signal.
+   No padding and no border: the tint blocks pay 11/13px for their fill, and matching
+   that on a row with no fill would indent the plain topics for nothing. */
+.research-relevance__row {
+  display: block;
+  max-width: var(--topics-measure);
+  margin: var(--ref-spacing-xs) 0 0;
+  font-size: var(--sys-text-style-body-size);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--sys-text-color-default);
+}
+
+/* The field name, at the weight the tinted blocks give theirs. */
+.research-relevance__label {
+  font-weight: 800;
+}
+
+/* .research-relevance__detail is gone with the paragraph it styled: the section carries
+   Volume, Relevance and Why now and nothing else now. */
 
 /* ── Read-only Playbook competitors / influencers list ─────────────────────
    Opened from the research form. Read-only by design, so there is no edit
@@ -656,15 +707,10 @@
 
    margin-top is the only spacing: the last timeline row would otherwise sit tight
    against it. */
-.research-article__versions {
-  display: inline-flex;
-  margin-top: var(--ref-spacing-xs);
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  text-align: left;
-}
+/* .research-article__versions is gone with the link it styled (V1 scope) — see the
+   tombstone in research-modals.js. It was the button reset a <button class="ap-link">
+   needs: display:inline-flex, a top margin, and padding/border/background/font
+   cleared. */
 
 .research-versions {
   display: flex;

@@ -50,11 +50,11 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=21";
+import { findReviewStatus } from "../research-catalog.js?v=22";
 // One title per topic — the article's, not the scan's headline. See briefs-store.
-import { briefTitle } from "../briefs-store.js?v=62";
+import { briefTitle } from "../briefs-store.js?v=66";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { pillarForBrief } from "../pillars-store.js?v=12";
+import { pillarForBrief } from "../pillars-store.js?v=14";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the

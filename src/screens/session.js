@@ -1,7 +1,7 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=458";
-import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=93";
+import { renderTopbar } from "../components/topbar.js?v=470";
+import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=95";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
@@ -11,11 +11,11 @@ import {
   NETWORK_ICON_BY_PLATFORM,
   NETWORK_LABEL,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=67";
-import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=47";
+} from "../social-profiles.js?v=69";
+import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=49";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
-import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=42";
-import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=79";
+import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=44";
+import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=81";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
   getThread,
@@ -36,43 +36,43 @@ import {
   markConnectPromptResolved,
   toggleTopPostsWidgetPick,
   answerTopPostsWidget,
-} from "../assistant.js?v=101";
+} from "../assistant.js?v=103";
 import { iconFor as fileIconForKind } from "../file-kinds.js?v=20";
-import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=95";
-import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=84";
+import { getSources, getIdeas, extractVideoIdeas } from "../library.js?v=97";
+import { wireLibraryActions, renderSourcesBulkBar, renderIdeasBulkBar } from "../library-actions.js?v=86";
 import {
   renderInto as renderComposerMentions,
   removeMention as removeComposerMention,
   subscribe as subscribeComposerMentions,
   addMention as addComposerMention,
-} from "../composer-mentions.js?v=69";
-import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=71";
-import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=99";
-import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=81";
-import * as topPostsFlow from "../top-posts-flow.js?v=122";
+} from "../composer-mentions.js?v=71";
+import { getPosts, addPostDraft, setSubtitleStyle, subscribe as subscribePostsStore } from "../posts-store.js?v=73";
+import { startDraftFlow, executeDraft, executeDraftBatch, getAnglesForIdea } from "../draft-flow.js?v=101";
+import { startActionPickerFlow, handleActionPick } from "../start-flow.js?v=83";
+import * as topPostsFlow from "../top-posts-flow.js?v=124";
 import {
   renderTopPostsBoard,
   renderTopPostEcho,
   renderTopPostsWidget,
   TOP_POSTS_LIMIT,
-} from "../components/top-post-card.js?v=135";
-import { getTopPost } from "../top-posts-store.js?v=90";
+} from "../components/top-post-card.js?v=139";
+import { getTopPost } from "../top-posts-store.js?v=94";
 import { renderEmptyState } from "../components/empty-state.js?v=1";
-import * as sidebarWizard from "../sidebar-wizard.js?v=87";
+import * as sidebarWizard from "../sidebar-wizard.js?v=89";
 import * as inlineQuestion from "../inline-question.js?v=48";
-import * as clipStudio from "../clip-studio.js?v=65";
+import * as clipStudio from "../clip-studio.js?v=67";
 import * as batchStudio from "../batch-studio.js?v=4";
-import { askConnector } from "../connector-ask.js?v=43";
-import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=63";
-import { renderConnectorLogo } from "../connectors-view.js?v=45";
+import { askConnector } from "../connector-ask.js?v=45";
+import { getConnectedConnectors, findConnector, setConnectorStatus } from "../connectors-store.js?v=65";
+import { renderConnectorLogo } from "../connectors-view.js?v=47";
 import {
   getActiveConnector,
   clearActiveConnector,
   subscribe as subscribeComposerConnector,
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=12";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=49";
+import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=14";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=63";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -84,12 +84,12 @@ import {
   countFreshTopics,
   subscribe as subscribeBriefs,
   briefTitle,
-} from "../briefs-store.js?v=62";
-import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=36";
-import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=19";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=45";
-import { getLaneById, getLanes } from "../research-store.js?v=49";
-import * as contextBuilder from "../context-builder.js?v=425";
+} from "../briefs-store.js?v=66";
+import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=40";
+import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=21";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=57";
+import { getLaneById, getLanes } from "../research-store.js?v=52";
+import * as contextBuilder from "../context-builder.js?v=437";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -100,10 +100,10 @@ import {
   rerenderContentWorkspaceBody,
   renderContentEmptyState,
 } from "../components/content-workspace.js?v=25";
-import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=95";
-import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=103";
-import { open as openAddSourceModal } from "../components/add-source-modal.js?v=104";
-import { open as openConnectorsModal } from "../components/connectors-modal.js?v=47";
+import { open as openVideoClipsModal } from "../components/video-clips-modal.js?v=97";
+import { open as openChatPickerModal } from "../components/chat-picker-modal.js?v=105";
+import { open as openAddSourceModal } from "../components/add-source-modal.js?v=106";
+import { open as openConnectorsModal } from "../components/connectors-modal.js?v=49";
 import { dropzoneHTML } from "../components/dropzone.js?v=1";
 import {
   classifyFile,
@@ -120,27 +120,27 @@ import {
   extractClipsForSource,
   setSourceIdeaCount,
   addReadySource,
-} from "../sources-stream.js?v=93";
-import { renderClipCard } from "../components/clip-card.js?v=57";
+} from "../sources-stream.js?v=95";
+import { renderClipCard } from "../components/clip-card.js?v=59";
 import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=145";
-import { findResearchSource } from "../research-catalog.js?v=21";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=157";
+import { findResearchSource } from "../research-catalog.js?v=22";
 import {
   openDrafts as openDraftsPanel,
   openIdeas as openIdeasPanel,
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=592";
+} from "../components/right-panel.js?v=604";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
-import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=41";
+import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=43";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
-import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=59";
-import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=67";
-import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=83";
+import { updateLoadingWatchdog, stopThinkingTimer } from "./session/thinking-chip.js?v=61";
+import { startIntakeLifecycle } from "./session/intake-lifecycle.js?v=69";
+import { rebindWizardKeyboard } from "./session/wizard-keyboard.js?v=85";
 // Pure thread-turn renderers — shared with the component handoff gallery so
 // the previews there never drift from the app (handoff/components.html).
 import {
@@ -2150,6 +2150,24 @@ function scopedLaneIds() {
     .map((l) => l.id);
 }
 
+// The Playbook head row for the WORKFLOW starter cards. Same shape as the topic
+// cards' — icon plus name, in .starter-topic__head — so the two rows of cards on
+// this screen carry one label rather than two treatments of it.
+//
+// A workflow card has no provenance of its own to state: "Batch from a source" does
+// not come out of a Playbook the way a topic does. What it names is the Playbook the
+// work is ABOUT to happen in, which is the rail's scope — the same brand every draft
+// this chat produces will be written for. That is the honest reading of the label on
+// these cards, and it is why they read the scope while the topic cards read their
+// own lane.
+function starterPlaybookHead() {
+  const brand = getActivePlaybook();
+  if (!brand) return "";
+  return `<span class="starter-topic__head"><span class="starter-topic__crumb"><span class="starter-topic__pb" title="For ${escapeHtml(
+    brand.name,
+  )}"><i class="ap-icon-target" aria-hidden="true"></i><span>${escapeHtml(brand.name)}</span></span></span></span>`;
+}
+
 function renderStarterTopicCard(brief) {
   // The same mark the feed's topic card carries, said in WORDS here rather than
   // as a glyph with a tooltip: this card has no hover surface of its own to
@@ -2171,9 +2189,28 @@ function renderStarterTopicCard(brief) {
   // are identical on every row is decoration. What is NOT the same from row to
   // row is which pillar a topic was filed under, and that is the one thing worth
   // a line here.
-  const crumb = pillar
-    ? `<span class="starter-topic__crumb"><span class="starter-topic__pillar" title="Filed under ${escapeHtml(pillar.name)}"><i class="ap-icon-stack" aria-hidden="true"></i><span>${escapeHtml(pillar.name)}</span></span></span>`
+  // The head row NAMES THE PLAYBOOK again, and then the pillar if there is one.
+  //
+  // It said "Playbook › Topic feed" once and both halves were dropped as
+  // decoration: every card on the screen was the active Playbook's, and every one
+  // came from that Playbook's single feed, so two segments repeated on every row.
+  // V1 puts the Playbook back for the opposite reason — the card is a thing you
+  // draft FROM, and the brand it came out of is the first thing to know about it
+  // before you act on it. It is derived from the topic's own LANE rather than from
+  // the rail's scope, so it states provenance rather than restating the filter; the
+  // feed and the pillar list are what the crumb's dropped second segment carried.
+  //
+  // ap-icon-target is the Playbook glyph everywhere else in the app — the feed
+  // card's meta line, the Playbook page's sections, a pillar's default icon.
+  const lane = getLaneById(brief.laneId);
+  const brand = (lane && lane.playbookId ? getContextById(lane.playbookId) : null) || getActivePlaybook();
+  const pbLabel = brand
+    ? `<span class="starter-topic__pb" title="From ${escapeHtml(brand.name)}"><i class="ap-icon-target" aria-hidden="true"></i><span>${escapeHtml(brand.name)}</span></span>`
     : "";
+  const pillarLabel = pillar
+    ? `<span class="starter-topic__pillar" title="Filed under ${escapeHtml(pillar.name)}"><i class="ap-icon-stack" aria-hidden="true"></i><span>${escapeHtml(pillar.name)}</span></span>`
+    : "";
+  const crumb = pbLabel || pillarLabel ? `<span class="starter-topic__crumb">${pbLabel}${pillarLabel}</span>` : "";
   // The marks are the feed's own components (trending-mark.css), not a second
   // drawing of the same idea — the accent says "something is up with this one"
   // and the mark says which.
@@ -2395,6 +2432,7 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
         return `
           <div class="starter-card starter-card--${tone} starter-card--soon" data-starter="${s.id}" aria-disabled="true">
             <i class="starter-card__art ${s.icon}" aria-hidden="true"></i>
+            ${starterPlaybookHead()}
             <span class="starter-card__title">${s.title}</span>
             <span class="starter-card__subtitle">${s.subtitle}</span>
             <span class="starter-card__cta--soon ap-badge blue">${s.cta}</span>
@@ -2409,6 +2447,7 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
       return `
         <button type="button" class="starter-card starter-card--${tone}" data-starter="${s.id}"${actionAttr} data-starter-prompt="${escapeHtml(resolvedPrompt)}">
           <i class="starter-card__art ${s.icon}" aria-hidden="true"></i>
+          ${starterPlaybookHead()}
           <span class="starter-card__title">${s.title}</span>
           <span class="starter-card__subtitle">${s.subtitle}</span>
           <span class="starter-card__cta ap-link standalone small">${s.cta}<i class="ap-icon-arrow-right" aria-hidden="true"></i></span>

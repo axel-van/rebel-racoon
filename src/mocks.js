@@ -5553,6 +5553,13 @@ export const researchBriefs = [
     summary:
       "Fourteen posts across Hootsuite, Vista Social and Buffer pitch conversational agents as a replacement for the dashboard. The claims are about architecture — orchestration layers, autonomous teammates — not about which job disappears on a Tuesday.",
     researchType: "ready-to-post",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "high",
+    relevance:
+      "Social media managers spend their working days inside publishing and monitoring dashboards, so shifting execution to conversational AI agents fundamentally alters their daily operations. Teams managing high-volume channels feel the need for automated triage first.",
     isTrending: true,
     whyNow:
       "The highest-volume theme in the whole scan — 14 items, and every major competitor moved within the same thirty days.",
@@ -5685,6 +5692,15 @@ export const researchBriefs = [
     summary:
       "Eight items, three quarters of them blog posts, frame connectors as the glue between social data and the AI tools people already draft in. Every one is pitched at a technical reader — and the person who would benefit most isn't one.",
     researchType: "ready-to-post",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "medium",
+    relevance:
+      "Marketing teams increasingly rely on external AI tools for strategy and drafting, making direct data connectors essential for bridging the gap between social data and AI generation. Technical operators running multi-channel pipelines adopt these integrations first.",
+    whyNow:
+      "Concentrated thought-leadership and guide publications from Buffer and Hootsuite throughout July 2026 highlight the growing adoption of MCP.",
     isTrending: false,
     isUpdated: true,
     whatChanged:
@@ -5854,6 +5870,15 @@ export const researchBriefs = [
     summary:
       "Every account in this window agrees the chat replaces the dashboard. They split on where the agent lives — one rebuilds the suite into apps behind a central agent and bridges out to the AI you already use, the other is a command surface you move into. That is the choice nobody is putting to the buyer.",
     researchType: "ready-to-post",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "high",
+    relevance:
+      "Social media managers spend much of their working day inside publishing, inbox, and analytics dashboards, so a shift toward conversational agent layers directly alters how daily team and account operations are managed.",
+    whyNow:
+      "Concentrated messaging across June and July 2026 driven by Hootsuite's Social OS release, Vista Social's Ask Vista launch, and Buffer's practitioner content on MCP integrations.",
     isTrending: false,
     isUpdated: false,
     research: {
@@ -5936,8 +5961,15 @@ export const researchBriefs = [
     summary:
       "Sprinklr says analytics break down when teams use inconsistent definitions. Buffer shipped Insights to turn numbers into next steps. Sprout published the pillar guide. Four items, one shared premise: volume of metrics is not insight.",
     researchType: "ready-to-post",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "low",
+    relevance:
+      "Marketing leaders struggle to prove social ROI when dealing with disconnected platform metrics and multiple unaligned dashboards. Agencies and growing teams handling multiple client accounts feel the pressure of metric fragmentation most acutely.",
     isTrending: false,
-    whyNow: "",
+    whyNow: "Featured insights and product updates from Sprinklr and Buffer clustered densely in mid-July 2026.",
     whyNowDetail: "",
     research: {
       title: "Everyone tracks more. Almost nobody says which number changes a decision",
@@ -6031,8 +6063,16 @@ export const researchBriefs = [
     summary:
       "Sprinklr launched LLM Insights to track how brands appear in AI answers, and its content playbook argues search is moving into AI Overviews. Two items — thin — but it is the one theme in the scan with no incumbent.",
     researchType: "ready-to-post",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "low",
+    relevance:
+      "Marketing teams responsible for corporate reputation must track how conversational AI tools represent their brand, as prospective customers rely on direct AI answers during product research.",
     isTrending: false,
-    whyNow: "",
+    whyNow:
+      "Launch announcements for LLM tracking tools and published guidance on generative engine optimization appeared in mid-2026.",
     whyNowDetail: "",
     research: {
       title: "The comparison page that matters most may be one you never see",
@@ -6110,8 +6150,15 @@ export const researchBriefs = [
     summary:
       "Two Sprout pieces: what Bluesky is, and how to build a brand presence on it. Both answer 'how'. Neither answers the question a social media manager actually has, which is whether it is worth the hours.",
     researchType: "ready-to-post",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "low",
+    relevance:
+      "Social media managers regularly evaluate whether emerging networks merit dedicated resource investment and how to establish brand presence without overextending operational capacity.",
     isTrending: false,
-    whyNow: "",
+    whyNow: "Dedicated strategy guides and platform explainers were published by monitored accounts in mid-July 2026.",
     whyNowDetail: "",
     research: {
       title: "Not 'how to post on Bluesky' — 'is it worth your Thursday'",
@@ -6194,8 +6241,16 @@ export const researchBriefs = [
     summary:
       "Keyword-triggered DMs through Meta's official API, framed as the single biggest driver of their Instagram growth. Two items, both Buffer, both first-person — and the format is the whole reason it lands.",
     researchType: "content-strategy",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "medium",
+    relevance:
+      "Creator account managers and social marketers experience manual inbox strain when delivering resource links at scale.",
     isTrending: false,
-    whyNow: "",
+    whyNow:
+      "Multiple posts published in June and July 2026 outline specific automation setups and account growth results.",
     whyNowDetail: "",
     research: {
       title: "The tactic is public. The proof is what's missing",
@@ -6270,8 +6325,15 @@ export const researchBriefs = [
     summary:
       "Vista Social ran two posts pulling apart the same week's viral moments: one a format you can build on, one a template where every brand's output is identical but the logo. The test underneath it is reusable.",
     researchType: "content-strategy",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "high",
+    relevance:
+      "Social media teams waste significant creative hours jumping on fleeting fads that fail to deliver enduring audience connection.",
     isTrending: false,
-    whyNow: "",
+    whyNow: "Concentrated commentary and tactical guides emerged across multiple publishing channels in mid-July.",
     whyNowDetail: "",
     research: {
       title: "A format you can build on, or a template you can only copy",
@@ -6419,8 +6481,15 @@ export const researchBriefs = [
     summary:
       "Sprinklr's line — 76% of tech brands stuck because they all say the same thing — next to Vista Social's case study where organic LinkedIn was the biggest lead source of the year. Three items, one argument.",
     researchType: "content-strategy",
+    // Volume + relevance, verbatim from the listening-insights export
+    // (insights-comparison-agorapulse.pdf). Both are the model's own judgement of the
+    // topic, not the article's: volume is how much of the scan backed it, relevance is
+    // who feels it and why now matters to them.
+    volume: "high",
+    relevance:
+      "Marketing leaders struggling with low engagement rates need alternative approaches to capture attention in saturated feeds.",
     isTrending: false,
-    whyNow: "",
+    whyNow: "Several reports and podcast highlights focused on organic strategy throughout July.",
     whyNowDetail: "",
     research: {
       title: "Posting more didn't work. Posting about something else did",

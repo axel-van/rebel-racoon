@@ -1,0 +1,1529 @@
+<!doctype html>
+<!-- mode: html-prototype · design-guidelines · DS: @agorapulse/ui-theme (synced in ../../ds) -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topic history — DS-compliant proposals</title>
+    <!-- SELF-CONTAINED on purpose. This file was first written with <link> tags to
+         ../../ds/*.css, which resolve only when it is opened from inside the repo —
+         anywhere else the page loads unstyled and unreadable. The DS token block and
+         the 36 component rules this page actually uses (.ap-status, .ap-stepper,
+         .ap-badge) are inlined below, extracted verbatim from ds/desktop_variables.css
+         and ds/css-ui/index.css. No network, no relative paths, no font files: Averta
+         falls back to the system UI stack, which changes the typeface and nothing else
+         about the components under review. -->
+    <style>
+      :root {
+        --ref-animation-long: 400ms;
+        --ref-animation-normal: 250ms;
+        --ref-animation-short: 150ms;
+        --ref-animation-xshort: 75ms;
+        --ref-border-radius-sm: 4px;
+        --ref-border-radius-md: 8px;
+        --ref-color-white: #ffffff;
+        --ref-color-background: #f9f9fa;
+        --ref-color-orange-10: #ffefe9;
+        --ref-color-orange-20: #ffe1d4;
+        --ref-color-orange-40: #ffc2a8;
+        --ref-color-orange-60: #ffa47d;
+        --ref-color-orange-80: #ff7e46;
+        --ref-color-orange-100: #ff6726;
+        --ref-color-orange-150: #c83e07;
+        --ref-color-electric-blue-10: #e8f4ff;
+        --ref-color-electric-blue-20: #d1e8ff;
+        --ref-color-electric-blue-40: #a2d1ff;
+        --ref-color-electric-blue-60: #74bbfe;
+        --ref-color-electric-blue-80: #3a9efe;
+        --ref-color-electric-blue-100: #178dfe;
+        --ref-color-electric-blue-150: #0e72d6;
+        --ref-color-electric-blue-05: #f3f9ff;
+        --ref-color-soft-blue-10: #eff5fc;
+        --ref-color-soft-blue-20: #dfedfa;
+        --ref-color-soft-blue-40: #c0dbf4;
+        --ref-color-soft-blue-60: #a0c8ef;
+        --ref-color-soft-blue-80: #78b1e8;
+        --ref-color-soft-blue-100: #61a4e4;
+        --ref-color-soft-blue-150: #2873ba;
+        --ref-color-grey-10: #eaecef;
+        --ref-color-grey-20: #d6dae0;
+        --ref-color-grey-40: #aeb5c1;
+        --ref-color-grey-60: #858fa1;
+        --ref-color-grey-80: #5d6a82;
+        --ref-color-grey-100: #344563;
+        --ref-color-grey-150: #212e44;
+        --ref-color-grey-05: #f5f5f7;
+        --ref-color-grey-bg: #f9f9fa;
+        --ref-color-green-10: #ecf7ed;
+        --ref-color-green-20: #daf1dd;
+        --ref-color-green-40: #b5e3bb;
+        --ref-color-green-60: #8fd498;
+        --ref-color-green-80: #61c26d;
+        --ref-color-green-100: #45b854;
+        --ref-color-green-150: #0f821d;
+        --ref-color-tag-orange-10: #fff8e6;
+        --ref-color-tag-orange-20: #fef0cc;
+        --ref-color-tag-orange-40: #fde199;
+        --ref-color-tag-orange-60: #fdd366;
+        --ref-color-tag-orange-80: #fcc026;
+        --ref-color-tag-orange-100: #fbb500;
+        --ref-color-tag-orange-150: #a66200;
+        --ref-color-yellow-10: #fffde9;
+        --ref-color-yellow-20: #fffbd2;
+        --ref-color-yellow-40: #fff6a5;
+        --ref-color-yellow-60: #fff279;
+        --ref-color-yellow-80: #ffec41;
+        --ref-color-yellow-100: #ffe91f;
+        --ref-color-yellow-150: #a56608;
+        --ref-color-red-10: #fde7e7;
+        --ref-color-red-20: #fad0d0;
+        --ref-color-red-40: #f6a1a1;
+        --ref-color-red-60: #f17171;
+        --ref-color-red-80: #eb3636;
+        --ref-color-red-100: #e81313;
+        --ref-color-red-150: #d80505;
+        --ref-color-purple-10: #efedf8;
+        --ref-color-purple-20: #e0ddf2;
+        --ref-color-purple-40: #c1bbe6;
+        --ref-color-purple-60: #a398d9;
+        --ref-color-purple-80: #7c6dc9;
+        --ref-color-purple-100: #6554c0;
+        --ref-color-purple-150: #3c2c95;
+        --ref-color-purple-05: #f6f8ff;
+        --ref-color-mermaid-10: #f5f1ff;
+        --ref-color-mermaid-20: #ebe3ff;
+        --ref-color-mermaid-gradient-from: #578fff;
+        --ref-color-mermaid-gradient-to: #df52ff;
+        --ref-color-mermaid-gradient-from40: rgba(87, 143, 255, 0.4);
+        --ref-color-mermaid-gradient-to40: rgba(223, 82, 255, 0.4);
+        --ref-color-mermaid-gradient-background: linear-gradient(90deg, #578fff 0%, #df52ff 100%);
+        --ref-color-menthol-10: #f1f9f8;
+        --ref-color-menthol-20: #cfecea;
+        --ref-color-menthol-40: #9fd9d6;
+        --ref-color-menthol-60: #64c8bc;
+        --ref-color-menthol-80: #1dbeb0;
+        --ref-color-menthol-100: #0fa09b;
+        --ref-color-menthol-150: #057e7a;
+        --ref-color-web-100: #1f1f1f;
+        --ref-color-facebook-10: #e7f1fd;
+        --ref-color-facebook-100: #0866ff;
+        --ref-color-instagram-10: #fbe9f1;
+        --ref-color-instagram-100: #dd2a7b;
+        --ref-color-twitter-10: #e8f5fd;
+        --ref-color-twitter-100: #1da1f2;
+        --ref-color-google-my-business-10: #e9f0f7;
+        --ref-color-google-my-business-100: #2668b2;
+        --ref-color-threads-10: #e8f5fd;
+        --ref-color-threads-100: #000000;
+        --ref-color-bluesky-10: #e7f3ff;
+        --ref-color-bluesky-100: #1185fe;
+        --ref-color-x-100: #000000;
+        --ref-color-linkedin-10: #e6eff9;
+        --ref-color-linkedin-100: #2668b2;
+        --ref-color-youtube-10: #fee5e5;
+        --ref-color-youtube-100: #fe0101;
+        --ref-color-tiktok-default-10: #e5e5e5;
+        --ref-color-tiktok-default-100: #000000;
+        --ref-color-tiktok-blue-10: #e9fdfd;
+        --ref-color-tiktok-blue-100: #25f4ee;
+        --ref-color-tiktok-red-10: #fee9ee;
+        --ref-color-tiktok-red-100: #fe2c55;
+        --ref-color-pinterest-10: #fee5e5;
+        --ref-color-pinterest-100: #e60023;
+        --ref-color-reddit-100: #ff4500;
+        --ref-font-family: Averta;
+        --ref-font-size-xs: 12px;
+        --ref-font-size-sm: 14px;
+        --ref-font-size-md: 16px;
+        --ref-font-size-lg: 18px;
+        --ref-font-size-xl: 20px;
+        --ref-font-size-xxl: 24px;
+        --ref-font-size-xxxl: 28px;
+        --ref-font-weight-regular: 400;
+        --ref-font-weight-bold: 700;
+        --ref-font-weight-extra-bold: 800;
+        --ref-font-weight-black: 900;
+        --ref-font-line-height-xxs: 14px;
+        --ref-font-line-height-xs: 16px;
+        --ref-font-line-height-sm: 18px;
+        --ref-font-line-height-md: 20px;
+        --ref-font-line-height-lg: 24px;
+        --ref-font-line-height-xl: 32px;
+        --ref-font-line-height-xxl: 36px;
+        --ref-spacing-xxxs: 4px;
+        --ref-spacing-xxs: 8px;
+        --ref-spacing-xs: 12px;
+        --ref-spacing-sm: 16px;
+        --ref-spacing-md: 24px;
+        --ref-spacing-lg: 32px;
+        --ref-spacing-xl: 40px;
+        --ref-spacing-xxl: 48px;
+        --ref-spacing-xxxl: 60px;
+        --ref-transition-duration: 250ms;
+        --sys-border-color-default: #eaecef;
+        --sys-border-color-active: #178dfe;
+        --sys-border-color-error: #e81313;
+        --sys-border-radius-sm: 4px;
+        --sys-border-radius-md: 4px;
+        --sys-border-radius-lg: 8px;
+        --sys-color-main-default-bg-default: #ff6726;
+        --sys-color-main-default-bg-hover: #ff7e46;
+        --sys-color-main-default-bg-clicked: #ffa47d;
+        --sys-color-main-default-bg-disabled: #ffe1d4;
+        --sys-color-main-default-text: #ffffff;
+        --sys-color-main-light-bg: #ffefe9;
+        --sys-color-main-light-text: #c83e07;
+        --sys-color-main-text: #ff6726;
+        --sys-color-accent-default-bg-default: #178dfe;
+        --sys-color-accent-default-bg-hover: #3a9efe;
+        --sys-color-accent-default-bg-clicked: #74bbfe;
+        --sys-color-accent-default-bg-disabled: #d1e8ff;
+        --sys-color-accent-default-text: #ffffff;
+        --sys-color-accent-light-bg: #f3f9ff;
+        --sys-color-accent-light-text: #0e72d6;
+        --sys-color-accent-text: #178dfe;
+        --sys-color-error-default-bg-default: #e81313;
+        --sys-color-error-default-bg-hover: #eb3636;
+        --sys-color-error-default-bg-clicked: #f17171;
+        --sys-color-error-default-bg-disabled: #fad0d0;
+        --sys-color-error-default-text: #ffffff;
+        --sys-color-error-light-bg: #fde7e7;
+        --sys-color-error-light-text: #d80505;
+        --sys-color-error-text: #e81313;
+        --sys-color-warning-default-bg-default: #ffe91f;
+        --sys-color-warning-default-bg-hover: #ffec41;
+        --sys-color-warning-default-bg-clicked: #fff279;
+        --sys-color-warning-default-bg-disabled: #fffbd2;
+        --sys-color-warning-default-text: #ffffff;
+        --sys-color-warning-light-bg: #fffde9;
+        --sys-color-warning-light-text: #a56608;
+        --sys-color-warning-text: #ffe91f;
+        --sys-color-success-default-bg-default: #45b854;
+        --sys-color-success-default-bg-hover: #61c26d;
+        --sys-color-success-default-bg-clicked: #8fd498;
+        --sys-color-success-default-bg-disabled: #daf1dd;
+        --sys-color-success-default-text: #ffffff;
+        --sys-color-success-light-bg: #ecf7ed;
+        --sys-color-success-light-text: #0f821d;
+        --sys-color-success-text: #45b854;
+        --sys-color-feature-lock-default-bg-default: #6554c0;
+        --sys-color-feature-lock-default-bg-hover: #7c6dc9;
+        --sys-color-feature-lock-default-bg-clicked: #a398d9;
+        --sys-color-feature-lock-default-bg-disabled: #e0ddf2;
+        --sys-color-feature-lock-default-text: #ffffff;
+        --sys-color-feature-lock-light-bg: #efedf8;
+        --sys-color-feature-lock-light-text: #3c2c95;
+        --sys-color-feature-lock-text: #6554c0;
+        --sys-icon-sm: 14px;
+        --sys-icon-md: 16px;
+        --sys-icon-css-xxs: 8px;
+        --sys-icon-css-nano: 10px;
+        --sys-icon-css-xs: 12px;
+        --sys-icon-css-sm: 16px;
+        --sys-icon-css-mini-sm: 18px;
+        --sys-icon-css-md: 24px;
+        --sys-icon-css-lg: 32px;
+        --sys-icon-css-xl: 40px;
+        --sys-icon-css-xxl: 48px;
+        --sys-icon-css-xxxl: 64px;
+        --sys-radio-transition-duration: 250ms;
+        --sys-settings-content-max-width-md: 700px;
+        --sys-settings-content-max-width-lg: 1200px;
+        --sys-settings-content-internal-margin: 24px;
+        --sys-settings-content-vertical-spacing: 16px;
+        --sys-settings-content-background-color: #f9f9fa;
+        --sys-settings-card-border-color: #eaecef;
+        --sys-settings-card-border-radius: 8px;
+        --sys-settings-card-background-color: #ffffff;
+        --sys-settings-card-internal-padding: 16px;
+        --sys-settings-card-feature-background-color: #efedf8;
+        --sys-settings-card-feature-lock-border-color: #e0ddf2;
+        --sys-text-color-default: #344563;
+        --sys-text-color-light: #5d6a82;
+        --sys-text-color-error: #e81313;
+        --sys-text-style-h0-font-family: Averta;
+        --sys-text-style-h0-size: 20px;
+        --sys-text-style-h0-weight: 900;
+        --sys-text-style-h0-line-height: 36px;
+        --sys-text-style-marketing-font-family: Averta;
+        --sys-text-style-marketing-size: 24px;
+        --sys-text-style-marketing-weight: 800;
+        --sys-text-style-marketing-line-height: 36px;
+        --sys-text-style-h1-font-family: Averta;
+        --sys-text-style-h1-size: 24px;
+        --sys-text-style-h1-weight: 700;
+        --sys-text-style-h1-line-height: 32px;
+        --sys-text-style-h2-font-family: Averta;
+        --sys-text-style-h2-size: 18px;
+        --sys-text-style-h2-weight: 700;
+        --sys-text-style-h2-line-height: 24px;
+        --sys-text-style-subtitle-font-family: Averta;
+        --sys-text-style-subtitle-size: 16px;
+        --sys-text-style-subtitle-weight: 400;
+        --sys-text-style-subtitle-line-height: 20px;
+        --sys-text-style-h3-font-family: Averta;
+        --sys-text-style-h3-size: 16px;
+        --sys-text-style-h3-weight: 700;
+        --sys-text-style-h3-line-height: 24px;
+        --sys-text-style-h4-font-family: Averta;
+        --sys-text-style-h4-size: 14px;
+        --sys-text-style-h4-weight: 700;
+        --sys-text-style-h4-line-height: 20px;
+        --sys-text-style-body-font-family: Averta;
+        --sys-text-style-body-size: 14px;
+        --sys-text-style-body-weight: 400;
+        --sys-text-style-body-line-height: 18px;
+        --sys-text-style-body-bold-font-family: Averta;
+        --sys-text-style-body-bold-size: 14px;
+        --sys-text-style-body-bold-weight: 700;
+        --sys-text-style-body-bold-line-height: 18px;
+        --sys-text-style-caption-font-family: Averta;
+        --sys-text-style-caption-size: 12px;
+        --sys-text-style-caption-weight: 400;
+        --sys-text-style-caption-line-height: 16px;
+        --sys-text-style-caption-bold-font-family: Averta;
+        --sys-text-style-caption-bold-size: 12px;
+        --sys-text-style-caption-bold-weight: 700;
+        --sys-text-style-caption-bold-line-height: 16px;
+        --sys-button-height: 36px;
+        --sys-icon-button-padding: 10px;
+        --sys-icon-button-width: 36px;
+        --sys-icon-button-height: 36px;
+        --comp-action-dropdown-background-color: #ffffff;
+        --comp-action-dropdown-box-shadow:
+          0px 4px 25px -2px rgba(52, 69, 99, 0.15), 0px 4px 6px -2px rgba(52, 69, 99, 0.15);
+        --comp-action-dropdown-border-radius: 4px;
+        --comp-action-dropdown-padding: 8px 0;
+        --comp-action-dropdown-item-padding: 8px 16px;
+        --comp-action-dropdown-item-text-size: 14px;
+        --comp-action-dropdown-item-text-line-height: 18px;
+        --comp-action-dropdown-item-text-color: #344563;
+        --comp-action-dropdown-item-text-color-red-mode: #d80505;
+        --comp-action-dropdown-item-background-color: #ffffff;
+        --comp-action-dropdown-item-background-color-hover: #e8f4ff;
+        --comp-action-dropdown-item-background-color-focused: #d1e8ff;
+        --comp-action-dropdown-item-background-color-red-mode-hover: #fde7e7;
+        --comp-action-dropdown-item-background-color-red-mode-focused: #fad0d0;
+        --comp-action-dropdown-item-background-color-feature-lock-hover: #efedf8;
+        --comp-action-dropdown-item-background-color-feature-lock-focused: #e0ddf2;
+        --comp-action-dropdown-item-icon-spacing: 8px;
+        --comp-action-dropdown-item-label-spacing: 8px;
+        --comp-action-dropdown-item-description-color: #5d6a82;
+        --comp-action-dropdown-item-description-size: 12px;
+        --comp-action-dropdown-item-description-line-height: 18px;
+        --comp-action-dropdown-divider-color: #eaecef;
+        --comp-action-dropdown-divider-margin: 8px 0;
+        --comp-avatar-border-radius: 4px;
+        --comp-avatar-background-color: #aeb5c1;
+        --comp-avatar-background-shadow: 0 0 0 1px #eaecef;
+        --comp-avatar-symbol-color: #ffffff;
+        --comp-avatar-initials-weight: 700;
+        --comp-avatar-initials-color: #ffffff;
+        --comp-avatar-online-background: #45b854;
+        --comp-avatar-online-border-color: #ffffff;
+        --comp-badge-text-style-font-family: Averta;
+        --comp-badge-text-style-size: 12px;
+        --comp-badge-text-style-font-weight: 700;
+        --comp-badge-text-style-line-height: 16px;
+        --comp-badge-height: 16px;
+        --comp-badge-padding-left: 2px;
+        --comp-badge-padding-right: 2px;
+        --comp-badge-orange-color: #ffffff;
+        --comp-badge-orange-background-color: #ff6726;
+        --comp-badge-blue-color: #0e72d6;
+        --comp-badge-blue-background-color: #e8f4ff;
+        --comp-button-text-size: 14px;
+        --comp-button-text-font-family: Averta;
+        --comp-button-text-weight: 700;
+        --comp-button-text-line-height: 20px;
+        --comp-button-padding-horizontal: 8px;
+        --comp-button-padding-vertical: 16px;
+        --comp-button-height: 36px;
+        --comp-button-border-radius: 4px;
+        --comp-button-spacing: 8px;
+        --comp-close-button-size: 20px;
+        --comp-close-button-padding: 10px;
+        --comp-close-button-hover-background: #3445631a;
+        --comp-close-button-active-background: #34456333;
+        --comp-counter-text-style-font-family: Averta;
+        --comp-counter-text-style-size: 12px;
+        --comp-counter-text-style-font-weight: 700;
+        --comp-counter-text-style-line-height: 16px;
+        --comp-counter-big-text-style-font-family: Averta;
+        --comp-counter-big-text-style-size: 14px;
+        --comp-counter-big-text-style-font-weight: 700;
+        --comp-counter-big-text-style-line-height: 18px;
+        --comp-counter-big-height: 18px;
+        --comp-counter-height: 16px;
+        --comp-counter-border-radius: 2px;
+        --comp-counter-notif-border-radius: 16px;
+        --comp-counter-notif-min-width: 16px;
+        --comp-counter-notif-color: #ffffff;
+        --comp-counter-notif-background-color: #ff6726;
+        --comp-counter-orange-color: #c83e07;
+        --comp-counter-orange-with-background-color: #ffffff;
+        --comp-counter-orange-with-background-background-color: #ff6726;
+        --comp-counter-blue-color: #0e72d6;
+        --comp-counter-blue-with-background-background-color: #e8f4ff;
+        --comp-counter-grey-color: #344563;
+        --comp-counter-grey-with-background-background-color: #eaecef;
+        --comp-dot-stepper-dot-size: 12px;
+        --comp-dot-stepper-dot-active-background-color: #0e72d6;
+        --comp-dot-stepper-dot-inactive-hovered-background-color: #74bbfe;
+        --comp-dot-stepper-dot-inactive-clicked-background-color: #178dfe;
+        --comp-dot-stepper-dot-inactive-focused-background-color: #74bbfe;
+        --comp-dot-stepper-dot-inactive-border-width: 2px;
+        --comp-dot-stepper-dot-inactive-border-color: #aeb5c1;
+        --comp-dot-stepper-spacing: 8px;
+        --comp-icon-button-padding: 10px;
+        --comp-icon-button-width: 36px;
+        --comp-icon-button-height: 36px;
+        --comp-icon-button-border-radius: 8px;
+        --comp-infobox-border-width: 4px;
+        --comp-infobox-border-radius: 4px;
+        --comp-infobox-text-title-size: 16px;
+        --comp-infobox-text-title-font-family: Averta;
+        --comp-infobox-text-title-weight: 700;
+        --comp-infobox-text-title-line-height: 24px;
+        --comp-infobox-text-content-size: 14px;
+        --comp-infobox-text-content-font-family: Averta;
+        --comp-infobox-text-content-weight: 400;
+        --comp-infobox-text-content-line-height: 18px;
+        --comp-infobox-padding-right: 12px;
+        --comp-infobox-padding-left: 16px;
+        --comp-infobox-padding-bottom: 12px;
+        --comp-infobox-padding-top: 12px;
+        --comp-infobox-button-margin-right: 8px;
+        --comp-infobox-button-margin-left: 8px;
+        --comp-infobox-gap: 12px;
+        --comp-infobox-error-background-color: #fad0d0;
+        --comp-infobox-error-border-left-color: #d80505;
+        --comp-infobox-error-icon-color: #d80505;
+        --comp-infobox-warning-background-color: #fef0cc;
+        --comp-infobox-warning-border-left-color: #a66200;
+        --comp-infobox-warning-icon-color: #a66200;
+        --comp-infobox-info-background-color: #d1e8ff;
+        --comp-infobox-info-border-left-color: #0e72d6;
+        --comp-infobox-info-icon-color: #0e72d6;
+        --comp-infobox-success-background-color: #daf1dd;
+        --comp-infobox-success-border-left-color: #0f821d;
+        --comp-infobox-success-icon-color: #0f821d;
+        --comp-input-width-default: 256px;
+        --comp-input-height: 36px;
+        --comp-input-padding-horizontal: 12px;
+        --comp-input-spacing-horizontal: 8px;
+        --comp-input-border-radius: 4px;
+        --comp-input-border-default-color: #d6dae0;
+        --comp-input-border-hover-color: #aeb5c1;
+        --comp-input-border-focused-color: #178dfe;
+        --comp-input-border-error-color: #e81313;
+        --comp-input-border-success-color: #45b854;
+        --comp-input-border-disabled-color: #d6dae0;
+        --comp-input-fill-color: #ffffff;
+        --comp-input-fill-disabled-color: #d6dae0;
+        --comp-input-icon-size: 16px;
+        --comp-input-icon-color: #858fa1;
+        --comp-input-text-font-family: Averta;
+        --comp-input-text-size: 14px;
+        --comp-input-text-font-weight: 400;
+        --comp-input-text-line-height: 18px;
+        --comp-input-text-default-color: #344563;
+        --comp-input-text-disabled-color: #5d6a82;
+        --comp-input-text-placeholder-color: #858fa1;
+        --comp-forms-label-font-family: Averta;
+        --comp-forms-label-size: 14px;
+        --comp-forms-label-font-weight: 400;
+        --comp-forms-label-line-height: 18px;
+        --comp-forms-label-text-color: #344563;
+        --comp-forms-label-description-text-font-family: Averta;
+        --comp-forms-label-description-text-size: 12px;
+        --comp-forms-label-description-text-font-weight: 400;
+        --comp-forms-label-description-text-line-height: 16px;
+        --comp-forms-label-description-text-color: #5d6a82;
+        --comp-forms-label-spacing-vertical: 4px;
+        --comp-forms-label-padding-bottom: 8px;
+        --comp-forms-status-icon-size: 16px;
+        --comp-forms-status-icon-error-color: #e81313;
+        --comp-forms-status-icon-success-color: #45b854;
+        --comp-forms-status-spacing-vertical: 4px;
+        --comp-forms-status-text-font-family: Averta;
+        --comp-forms-status-text-size: 14px;
+        --comp-forms-status-text-font-weight: 400;
+        --comp-forms-status-text-line-height: 18px;
+        --comp-forms-status-text-error-color: #e81313;
+        --comp-forms-status-text-success-color: #0f821d;
+        --comp-text-area-width-default: 256px;
+        --comp-text-area-height: 80px;
+        --comp-text-area-padding-horizontal: 12px;
+        --comp-text-area-spacing-horizontal: 8px;
+        --comp-text-area-border-radius: 4px;
+        --comp-text-area-border-default-color: #858fa1;
+        --comp-text-area-border-hover-color: #5d6a82;
+        --comp-text-area-border-focused-color: #178dfe;
+        --comp-text-area-border-error-color: #e81313;
+        --comp-text-area-border-success-color: #45b854;
+        --comp-text-area-border-disabled-color: #d6dae0;
+        --comp-text-area-fill-color: #ffffff;
+        --comp-text-area-fill-disabled-color: #d6dae0;
+        --comp-text-area-icon-size: 16px;
+        --comp-text-area-icon-color: #858fa1;
+        --comp-text-area-text-font-family: Averta;
+        --comp-text-area-text-size: 14px;
+        --comp-text-area-text-font-weight: 400;
+        --comp-text-area-text-line-height: 18px;
+        --comp-text-area-text-default-color: #344563;
+        --comp-text-area-text-disabled-color: #5d6a82;
+        --comp-text-area-text-placeholder-color: #858fa1;
+        --comp-label-text-style-font-family: Averta;
+        --comp-label-text-style-size: 14px;
+        --comp-label-text-style-font-weight: 400;
+        --comp-label-text-style-line-height: 18px;
+        --comp-label-text-color: #344563;
+        --comp-label-border-radius: 24px;
+        --comp-label-background-color: #d1e8ff;
+        --comp-label-height: 24px;
+        --comp-label-padding-left: 8px;
+        --comp-label-padding-right: 8px;
+        --comp-label-closable-spacing: 4px;
+        --comp-label-closable-padding-right: 2px;
+        --comp-link-text-font-family: Averta;
+        --comp-link-text-size: 14px;
+        --comp-link-text-font-weight: 400;
+        --comp-link-text-line-height: 18px;
+        --comp-link-small-text-style-font-family: Averta;
+        --comp-link-small-text-style-size: 12px;
+        --comp-link-small-text-style-font-weight: 400;
+        --comp-link-small-text-style-line-height: 16px;
+        --comp-link-big-text-style-font-family: Averta;
+        --comp-link-big-text-style-size: 16px;
+        --comp-link-big-text-style-font-weight: 400;
+        --comp-link-big-text-style-line-height: 20px;
+        --comp-link-standalone-default-text-style-font-family: Averta;
+        --comp-link-standalone-default-text-style-size: 14px;
+        --comp-link-standalone-default-text-style-font-weight: 700;
+        --comp-link-standalone-default-text-style-line-height: 18px;
+        --comp-link-standalone-small-text-style-font-family: Averta;
+        --comp-link-standalone-small-text-style-size: 12px;
+        --comp-link-standalone-small-text-style-font-weight: 700;
+        --comp-link-standalone-small-text-style-line-height: 16px;
+        --comp-link-default-color: #0e72d6;
+        --comp-link-hover-color: #3a9efe;
+        --comp-link-clicked-color: #0e72d6;
+        --comp-link-disabled-color: #d1e8ff;
+        --comp-link-visited-color: #3c2c95;
+        --comp-link-spacing: 4px;
+        --comp-link-icon-size: 16px;
+        --comp-radio-transition-duration: 250ms;
+        --comp-select-icon-focused-color: #178dfe;
+        --comp-select-inline-label-text-font-family: Averta;
+        --comp-select-inline-label-text-size: 14px;
+        --comp-select-inline-label-text-font-weight: 400;
+        --comp-select-inline-label-text-line-height: 18px;
+        --comp-select-inline-label-text-color: #5d6a82;
+        --comp-select-inline-separator-color: #aeb5c1;
+        --comp-select-one-line-height: 40px;
+        --comp-select-one-line-spacing: 8px;
+        --comp-select-one-line-padding-horizontal: 16px;
+        --comp-select-one-line-background-color: #ffffff;
+        --comp-select-one-line-text-font-family: Averta;
+        --comp-select-one-line-text-size: 14px;
+        --comp-select-one-line-text-font-weight: 400;
+        --comp-select-one-line-text-line-height: 18px;
+        --comp-select-one-line-text-color: #344563;
+        --comp-select-one-line-selected-text-font-family: Averta;
+        --comp-select-one-line-selected-text-size: 14px;
+        --comp-select-one-line-selected-text-font-weight: 700;
+        --comp-select-one-line-selected-text-line-height: 18px;
+        --comp-select-one-line-selectable-selected-text-font-family: Averta;
+        --comp-select-one-line-selectable-selected-text-size: 14px;
+        --comp-select-one-line-selectable-selected-text-font-weight: 700;
+        --comp-select-one-line-selectable-selected-text-line-height: 18px;
+        --comp-select-two-line-height: unset;
+        --comp-select-two-line-padding-vertical: 8px;
+        --comp-select-two-line-title-text-font-family: Averta;
+        --comp-select-two-line-title-text-size: 14px;
+        --comp-select-two-line-title-text-font-weight: 700;
+        --comp-select-two-line-title-text-line-height: 18px;
+        --comp-select-two-line-title-text-color: #344563;
+        --comp-select-two-line-title-spacing: 8px;
+        --comp-select-two-line-caption-text-font-family: Averta;
+        --comp-select-two-line-caption-text-size: 12px;
+        --comp-select-two-line-caption-text-font-weight: 400;
+        --comp-select-two-line-caption-text-line-height: 16px;
+        --comp-select-two-line-caption-text-color: #5d6a82;
+        --comp-select-group-padding-horizontal: 16px;
+        --comp-select-group-padding-vertical: 8px;
+        --comp-select-group-border-top-color: #eaecef;
+        --comp-select-group-background-color: #f9f9fa;
+        --comp-select-group-selected-gap: 8px;
+        --comp-select-group-text-font-family: Averta;
+        --comp-select-group-text-size: 12px;
+        --comp-select-group-text-font-weight: 700;
+        --comp-select-group-text-line-height: 16px;
+        --comp-select-group-text-color: #344563;
+        --comp-select-separator-padding-horizontal: 8px;
+        --comp-select-separator-padding-vertical: 8px;
+        --comp-select-separator-color: #eaecef;
+        --comp-select-padding-vertical: 8px;
+        --comp-select-background-color: #ffffff;
+        --comp-select-shadow: 0px 4px 6px -2px rgba(52, 69, 99, 0.15), 0px 4px 25px -2px rgba(52, 69, 99, 0.15);
+        --comp-select-search-bar-padding-horizontal: 8px;
+        --comp-select-search-bar-padding-bottom: 8px;
+        --comp-select-search-bar-margin-bottom: 8px;
+        --comp-select-search-bar-border-bottom-color: #eaecef;
+        --comp-select-search-bar-bottom-link-margin-top: 12px;
+        --comp-select-search-bar-bottom-link-padding-horizontal: 16px;
+        --comp-select-search-bar-bottom-link-padding-top: 12px;
+        --comp-select-search-bar-bottom-link-padding-bottom: 4px;
+        --comp-select-search-bar-bottom-link-border-top-color: #eaecef;
+        --comp-snackbar-text-style-font-family: Averta;
+        --comp-snackbar-text-style-size: 14px;
+        --comp-snackbar-text-style-font-weight: 400;
+        --comp-snackbar-text-style-line-height: 18px;
+        --comp-snackbar-text-color: #344563;
+        --comp-snackbar-width: 420px;
+        --comp-snackbar-border-radius: 8px;
+        --comp-snackbar-padding-horizontal: 16px;
+        --comp-snackbar-padding-vertical: 12px;
+        --comp-snackbar-spacing: 12px;
+        --comp-snackbar-success-background-color: #daf1dd;
+        --comp-snackbar-success-icon-color: #0f821d;
+        --comp-snackbar-error-background-color: #fad0d0;
+        --comp-snackbar-error-icon-color: #d80505;
+        --comp-snackbar-shadow: 0px 7px 50px 0px rgba(0, 0, 0, 0.08);
+        --comp-split-button-text-size: 14px;
+        --comp-split-button-text-font-family: Averta;
+        --comp-split-button-text-weight: 700;
+        --comp-split-button-text-line-height: 20px;
+        --comp-split-button-padding-horizontal: 8px;
+        --comp-split-button-padding-vertical: 16px;
+        --comp-split-button-border-radius: 4px;
+        --comp-split-button-spacing: 8px;
+        --comp-status-card-text-style-font-family: Averta;
+        --comp-status-card-text-style-size: 12px;
+        --comp-status-card-text-style-font-weight: 400;
+        --comp-status-card-text-style-line-height: 16px;
+        --comp-status-card-text-color: #344563;
+        --comp-status-card-user-text-style-font-family: Averta;
+        --comp-status-card-user-text-style-size: 12px;
+        --comp-status-card-user-text-style-font-weight: 700;
+        --comp-status-card-user-text-style-line-height: 16px;
+        --comp-status-card-caption-text-style-font-family: Averta;
+        --comp-status-card-caption-text-style-size: 12px;
+        --comp-status-card-caption-text-style-font-weight: 700;
+        --comp-status-card-caption-text-style-line-height: 16px;
+        --comp-status-card-caption-text-color: #5d6a82;
+        --comp-status-card-spacing-vertical: 8px;
+        --comp-status-card-spacing-horizontal: 8px;
+        --comp-status-card-content-spacing: 4px;
+        --comp-status-card-padding-vertical: 12px;
+        --comp-status-card-padding-horizontal: 8px;
+        --comp-status-card-green-icon-color: #45b854;
+        --comp-status-card-green-background-color: #ecf7ed;
+        --comp-status-card-green-border-color: #daf1dd;
+        --comp-status-card-tag-orange-icon-color: #a66200;
+        --comp-status-card-tag-orange-background-color: #fff8e6;
+        --comp-status-card-tag-orange-border-color: #fef0cc;
+        --comp-status-card-blue-icon-color: #178dfe;
+        --comp-status-card-blue-background-color: #e8f4ff;
+        --comp-status-card-blue-border-color: #d1e8ff;
+        --comp-status-card-red-icon-color: #e81313;
+        --comp-status-card-red-background-color: #fde7e7;
+        --comp-status-card-red-border-color: #fad0d0;
+        --comp-status-card-orange-icon-color: #ff6726;
+        --comp-status-card-orange-background-color: #ffefe9;
+        --comp-status-card-orange-border-color: #ffe1d4;
+        --comp-status-card-grey-icon-color: #344563;
+        --comp-status-card-grey-background-color: #f5f5f7;
+        --comp-status-card-grey-border-color: #d6dae0;
+        --comp-status-text-style-font-family: Averta;
+        --comp-status-text-style-size: 12px;
+        --comp-status-text-style-font-weight: 400;
+        --comp-status-text-style-line-height: 16px;
+        --comp-status-padding-horizontal: 8px;
+        --comp-status-height: 24px;
+        --comp-status-spacing: 4px;
+        --comp-status-color: #344563;
+        --comp-status-green-background-color: #ecf7ed;
+        --comp-status-green-dot-background-color: #45b854;
+        --comp-status-tag-orange-background-color: #fff8e6;
+        --comp-status-tag-orange-dot-background-color: #a66200;
+        --comp-status-red-background-color: #fde7e7;
+        --comp-status-red-dot-background-color: #e81313;
+        --comp-status-blue-background-color: #e8f4ff;
+        --comp-status-blue-dot-background-color: #178dfe;
+        --comp-status-orange-background-color: #ffefe9;
+        --comp-status-orange-dot-background-color: #ff6726;
+        --comp-status-grey-background-color: #eaecef;
+        --comp-status-grey-dot-background-color: #344563;
+        --comp-status-font-family: Averta;
+        --comp-status-font-size: 12px;
+        --comp-status-line-height: 16px;
+        --comp-tabs-text-font-family: Averta;
+        --comp-tabs-border-color: #eaecef;
+        --comp-tabs-tab-padding: 12px 16px;
+        --comp-tabs-tab-font-size: 14px;
+        --comp-tabs-tab-line-height: 18px;
+        --comp-tabs-tab-min-height: 48px;
+        --comp-tabs-tab-text-color-default: #344563;
+        --comp-tabs-tab-text-color-active: #0e72d6;
+        --comp-tabs-tab-text-color-disabled: #858fa1;
+        --comp-tabs-tab-text-color-feature-locked-focus: #6554c0;
+        --comp-tabs-tab-text-color-feature-locked-active: #6554c0;
+        --comp-tabs-tab-focus-color: #0e72d6;
+        --comp-tabs-tab-focus-border-radius: 4px;
+        --comp-tabs-tab-focus-background-color: #e8f4ff;
+        --comp-tabs-tab-hover-background-color: #e8f4ff;
+        --comp-tabs-tab-active-indicator-color: #0e72d6;
+        --comp-tabs-tab-active-background-color: #d1e8ff;
+        --comp-tabs-tab-feature-lock-color: #6554c0;
+        --comp-tabs-tab-feature-locked-indicator-color: #6554c0;
+        --comp-tabs-tab-feature-locked-hover-background-color: #efedf8;
+        --comp-tabs-tab-feature-locked-focus-background-color: #efedf8;
+        --comp-tabs-tab-feature-locked-active-background-color: #e0ddf2;
+        --comp-tabs-tab-content-gap: 4px;
+        --comp-tabs-tab-header-gap: 8px;
+        --comp-tag-text-style-font-family: Averta;
+        --comp-tag-text-style-size: 14px;
+        --comp-tag-text-style-font-weight: 400;
+        --comp-tag-text-style-line-height: 18px;
+        --comp-tag-border-radius: 4px;
+        --comp-tag-spacing: 4px;
+        --comp-tag-height: 24px;
+        --comp-tag-padding-left: 4px;
+        --comp-tag-padding-right: 4px;
+        --comp-tag-closable-padding-right: 2px;
+        --comp-tag-mini-padding-left: 2px;
+        --comp-tag-mini-padding-right: 2px;
+        --comp-tag-mini-height: 18px;
+        --comp-tag-blue-text-color: #0e72d6;
+        --comp-tag-blue-background-color: #e8f4ff;
+        --comp-tag-blue-border-color: #d1e8ff;
+        --comp-tag-blue-icon-color: #0e72d6;
+        --comp-tag-tag-orange-text-color: #a66200;
+        --comp-tag-tag-orange-background-color: #fff8e6;
+        --comp-tag-tag-orange-border-color: #fef0cc;
+        --comp-tag-tag-orange-icon-color: #a66200;
+        --comp-tag-menthol-text-color: #057e7a;
+        --comp-tag-menthol-background-color: #f1f9f8;
+        --comp-tag-menthol-border-color: #cfecea;
+        --comp-tag-menthol-icon-color: #057e7a;
+        --comp-tag-grey-text-color: #344563;
+        --comp-tag-grey-background-color: #eaecef;
+        --comp-tag-grey-border-color: #d6dae0;
+        --comp-tag-grey-icon-color: #212e44;
+        --comp-tag-green-text-color: #0f821d;
+        --comp-tag-green-background-color: #ecf7ed;
+        --comp-tag-green-border-color: #daf1dd;
+        --comp-tag-green-icon-color: #0f821d;
+        --comp-tag-red-text-color: #d80505;
+        --comp-tag-red-background-color: #fde7e7;
+        --comp-tag-red-border-color: #fad0d0;
+        --comp-tag-red-icon-color: #d80505;
+        --comp-tooltip-text-style-font-family: Averta;
+        --comp-tooltip-text-style-size: 14px;
+        --comp-tooltip-text-style-weight: 400;
+        --comp-tooltip-text-style-line-height: 18px;
+        --comp-tooltip-text-default-color: #ffffff;
+        --comp-tooltip-text-color-main-default-bg: #344563;
+      }
+
+      /* ── DS component rules used by this page, extracted from ds/css-ui/index.css ── */
+      .ap-action-dropdown-item .ap-badge {
+        flex-shrink: 0;
+      }
+      .ap-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 var(--comp-badge-padding-right) 0 var(--comp-badge-padding-left);
+        font-weight: var(--comp-badge-text-style-font-weight);
+        font-family: var(--comp-badge-text-style-font-family);
+        line-height: var(--comp-badge-text-style-line-height);
+        font-size: var(--comp-badge-text-style-size);
+        height: var(--comp-badge-height);
+        max-height: var(--comp-badge-height);
+        border-radius: 2px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+      .ap-badge.blue {
+        background-color: var(--comp-badge-blue-background-color);
+        color: var(--comp-badge-blue-color);
+      }
+      .ap-badge.orange {
+        text-transform: uppercase;
+        background-color: var(--comp-badge-orange-background-color);
+        color: var(--comp-badge-orange-color);
+      }
+      .ap-selection-dropdown-item > span:not(.ap-badge) {
+        flex: 0 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ap-selection-dropdown-item > .ap-badge {
+        flex: 0 0 auto;
+      }
+      .ap-status {
+        --dot-size: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 var(--comp-status-padding-horizontal);
+        gap: var(--comp-status-spacing);
+        width: fit-content;
+        height: var(--comp-status-height);
+        border-radius: var(--comp-status-height);
+        color: var(--comp-status-color);
+        font-family: var(--comp-status-font-family);
+        font-size: var(--comp-status-font-size);
+        line-height: var(--comp-status-line-height);
+        box-sizing: border-box;
+        white-space: nowrap;
+      }
+      .ap-status::before {
+        content: "";
+        display: flex;
+        width: var(--dot-size);
+        height: var(--dot-size);
+        min-width: var(--dot-size);
+        min-height: var(--dot-size);
+        max-width: var(--dot-size);
+        max-height: var(--dot-size);
+        border-radius: 100%;
+        flex-shrink: 0;
+      }
+      .ap-status.no-dot::before {
+        display: none;
+      }
+      .ap-status.blue {
+        background-color: var(--comp-status-blue-background-color);
+      }
+      .ap-status.blue::before {
+        background-color: var(--comp-status-blue-dot-background-color);
+      }
+      .ap-status.green {
+        background-color: var(--comp-status-green-background-color);
+      }
+      .ap-status.green::before {
+        background-color: var(--comp-status-green-dot-background-color);
+      }
+      .ap-status.orange {
+        background-color: var(--comp-status-orange-background-color);
+      }
+      .ap-status.orange::before {
+        background-color: var(--comp-status-orange-dot-background-color);
+      }
+      .ap-status.tagOrange {
+        background-color: var(--comp-status-tag-orange-background-color);
+      }
+      .ap-status.tagOrange::before {
+        background-color: var(--comp-status-tag-orange-dot-background-color);
+      }
+      .ap-status.grey {
+        background-color: var(--comp-status-grey-background-color);
+      }
+      .ap-status.grey::before {
+        background-color: var(--comp-status-grey-dot-background-color);
+      }
+      .ap-status.red {
+        background-color: var(--comp-status-red-background-color);
+      }
+      .ap-status.red::before {
+        background-color: var(--comp-status-red-dot-background-color);
+      }
+      .ap-stepper {
+        display: flex;
+        align-items: flex-start;
+      }
+      .ap-stepper.with-line .ap-stepper-item {
+        position: relative;
+      }
+      .ap-stepper.with-line .ap-stepper-item:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 12px;
+        top: 28px;
+        width: 1px;
+        height: calc(100% - 4px);
+        background-color: var(--ref-color-grey-20);
+      }
+      .ap-stepper.with-line .ap-stepper-item.completed:not(:last-child)::after {
+        background-color: var(--ref-color-electric-blue-100);
+      }
+      .ap-stepper-item {
+        display: flex;
+        align-items: center;
+        height: fit-content;
+      }
+      .ap-stepper-item > span:first-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        border-radius: 24px;
+        font-family: var(--ref-font-family);
+        font-size: var(--ref-font-size-sm);
+        font-weight: var(--ref-font-weight-regular);
+        line-height: 24px;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      .ap-stepper-item > span:last-child {
+        padding-left: var(--ref-spacing-xs);
+        height: fit-content;
+        margin: auto;
+        line-height: 24px;
+        vertical-align: middle;
+        font-family: var(--ref-font-family);
+        font-size: var(--ref-font-size-sm);
+        color: var(--ref-color-grey-100);
+      }
+      .ap-stepper-item.active > span:first-child {
+        background-color: var(--ref-color-electric-blue-100);
+        color: var(--ref-color-white);
+        box-shadow: 0 0 0 1.5px var(--ref-color-electric-blue-10);
+        border: 1.5px solid var(--ref-color-electric-blue-10);
+        line-height: 21px;
+      }
+      .ap-stepper-item.active > span:last-child {
+        font-weight: var(--ref-font-weight-bold);
+      }
+      .ap-stepper-item.completed > span:first-child {
+        background-color: var(--ref-color-electric-blue-10);
+        color: var(--ref-color-electric-blue-100);
+      }
+      .ap-stepper-item.pending > span:first-child {
+        background-color: transparent;
+        color: var(--ref-color-electric-blue-100);
+        border: 1px solid var(--ref-color-electric-blue-10);
+        line-height: 22px;
+      }
+      .ap-stepper-item.clickable > span:last-child {
+        cursor: pointer;
+      }
+      .ap-stepper-item.clickable > span:last-child:hover {
+        color: var(--ref-color-electric-blue-100);
+      }
+      .ap-stepper-separator {
+        display: inline-flex;
+        align-items: center;
+        margin: auto 10px;
+        color: var(--ref-color-grey-60);
+      }
+      .ap-stepper-separator > i {
+        width: 16px;
+        height: 16px;
+      }
+    </style>
+    <style>
+      /* Page chrome only. Every proposal below is rendered with DS classes and
+         nothing else — if a proposal needs app CSS, that CSS is shown in its
+         "what this still needs" note rather than applied invisibly here. */
+      /* Averta is not bundled here; the DS's font-family tokens fall through to this. */
+      :root {
+        --sys-text-style-body-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        --sys-text-style-h1-font-family: var(--sys-text-style-body-font-family);
+        --sys-text-style-h2-font-family: var(--sys-text-style-body-font-family);
+      }
+      body {
+        margin: 0;
+        padding: 40px 32px 96px;
+        background: var(--ref-color-grey-05);
+        font-family: var(--sys-text-style-body-font-family);
+        color: var(--sys-text-color-default);
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-family: var(--sys-text-style-h1-font-family);
+        font-size: var(--sys-text-style-h1-size);
+        line-height: var(--sys-text-style-h1-line-height);
+        font-weight: var(--sys-text-style-h1-weight);
+        margin: 0 0 8px;
+      }
+      .lede {
+        font-size: var(--sys-text-style-body-size);
+        line-height: 1.6;
+        color: var(--sys-text-color-light);
+        max-width: 72ch;
+        margin: 0 0 32px;
+      }
+      h2 {
+        font-family: var(--sys-text-style-h2-font-family);
+        font-size: var(--sys-text-style-h2-size);
+        line-height: var(--sys-text-style-h2-line-height);
+        font-weight: var(--sys-text-style-h2-weight);
+        margin: 40px 0 4px;
+      }
+      h3 {
+        font-size: var(--sys-text-style-h3-size);
+        line-height: var(--sys-text-style-h3-line-height);
+        font-weight: var(--sys-text-style-h3-weight);
+        margin: 24px 0 8px;
+      }
+      p {
+        font-size: var(--sys-text-style-body-size);
+        line-height: 1.6;
+        max-width: 78ch;
+      }
+      .panel {
+        background: var(--ref-color-white);
+        border: 1px solid var(--ref-color-grey-10);
+        border-radius: 12px;
+        padding: 24px;
+        margin: 12px 0 0;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .split {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: var(--sys-text-style-body-size);
+        margin: 8px 0 0;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--ref-color-grey-10);
+        vertical-align: top;
+        line-height: 1.5;
+      }
+      th {
+        font-weight: 700;
+        color: var(--sys-text-color-light);
+        font-size: var(--sys-text-style-caption-size);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        background: var(--ref-color-grey-05);
+        border: 1px solid var(--ref-color-grey-10);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      pre {
+        background: #0f1b2d;
+        color: #e6edf7;
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      pre .c {
+        color: #8fa6c4;
+      }
+      .verdict {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 12px;
+      }
+      .note {
+        font-size: var(--sys-text-style-caption-size);
+        line-height: 1.6;
+        color: var(--sys-text-color-light);
+        max-width: 76ch;
+      }
+      ul {
+        font-size: var(--sys-text-style-body-size);
+        line-height: 1.6;
+        padding-left: 20px;
+        max-width: 76ch;
+      }
+      .caption {
+        font-size: var(--sys-text-style-caption-size);
+        color: var(--sys-text-color-light);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+        margin: 0 0 10px;
+      }
+
+      /* ── The CURRENT implementation, copied verbatim from the app so the
+            comparison is honest. These four rules are the thing under review. ── */
+      .cur-timeline {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .cur-row {
+        position: relative;
+        display: flex;
+        gap: 12px;
+        padding-bottom: 16px;
+      }
+      .cur-row:not(:last-child)::before {
+        content: "";
+        position: absolute;
+        left: 10px;
+        top: 22px;
+        bottom: 0;
+        width: 2px;
+        background: var(--ref-color-grey-10);
+      }
+      .cur-dot {
+        position: relative;
+        z-index: 1;
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        border: 3px solid var(--ref-color-white);
+      }
+      .cur-body {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ref-color-grey-80);
+      }
+      .cur-when {
+        font-weight: 700;
+        color: var(--ref-color-grey-40);
+      }
+      .cur-note {
+        flex-basis: 100%;
+        font-weight: 500;
+        line-height: 1.5;
+      }
+      .cur-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 24px;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.5;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+      .cur-new {
+        background: var(--ref-color-grey-10);
+        color: var(--ref-color-grey-100);
+      }
+      .cur-used {
+        background: var(--ref-color-electric-blue-10);
+        color: var(--ref-color-electric-blue-150);
+      }
+      .cur-dot-new {
+        background: var(--ref-color-grey-10);
+      }
+      .cur-dot-used {
+        background: var(--ref-color-electric-blue-10);
+      }
+
+      /* Proposal-only helpers. Each is listed in that proposal's "still needs" note —
+         nothing here silently reinvents a DS component. */
+      .p-when {
+        font-size: var(--sys-text-style-caption-size);
+        color: var(--sys-text-color-light);
+        font-weight: 700;
+      }
+      .p-note {
+        font-size: var(--sys-text-style-body-size);
+        line-height: 1.5;
+        color: var(--sys-text-color-default);
+      }
+      .p-rows {
+        display: flex;
+        flex-direction: column;
+        gap: var(--ref-spacing-xs);
+      }
+      .p-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+      }
+      .p-row > .p-note {
+        flex-basis: 100%;
+      }
+      .p-stepper-label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Topic history — DS-compliant proposals</h1>
+      <p class="lede">
+        The <code>.research-article</code> Topic-history timeline in <code>research-modals.renderHistory()</code>. Three
+        of its four parts are hand-built re-implementations of things the DS already ships. Below: what is non-compliant
+        and why, then three proposals rendered live with real DS classes. Nothing is implemented in the app — this is a
+        decision aid.
+      </p>
+
+      <h2>1 · What is non-compliant today</h2>
+      <div class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 24%">Part</th>
+              <th style="width: 34%">What it does now</th>
+              <th>The rule it breaks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>.topics-status</code> +<br /><code>--new/saved/used/ignored</code></td>
+              <td>
+                A hand-built pill: <code>padding: 3px 10px</code>, <code>border-radius: 24px</code>, 11px/800,
+                uppercase, four hardcoded <code>--ref-color-*</code> fills.
+              </td>
+              <td>
+                <strong>Re-creates <code>.ap-status</code>.</strong> The DS ships a pill-shaped status indicator with
+                exactly these four colours. "Never hand-build a primitive that has a lookup entry."
+              </td>
+            </tr>
+            <tr>
+              <td><code>.research-timeline__dot</code></td>
+              <td>A 22px circle with a 3px white ring, filled by reusing the pill's background colour.</td>
+              <td>
+                <strong>Draws a dot the status pill already has.</strong> <code>.ap-status::before</code> is an 8px dot,
+                shown by default, coloured per variant from <code>--comp-status-*-dot-background-color</code>. Two
+                drawings of one idea, and the app's version borrows the <em>background</em> token for a <em>dot</em>, so
+                they are not even the same colour.
+              </td>
+            </tr>
+            <tr>
+              <td><code>.research-timeline__row</code> <code>::before</code></td>
+              <td>A 2px connector at <code>left: 10px; top: 22px</code>, hardcoded to the dot's geometry.</td>
+              <td>
+                <strong>Magic numbers, and a rail the DS has.</strong> <code>.ap-stepper.with-line</code> draws a 1px
+                connector from <code>--ref-color-grey-20</code>. Every number here is derived from the hand-built dot,
+                so the dot cannot change size without silently breaking the line.
+              </td>
+            </tr>
+            <tr>
+              <td><code>__body</code> / <code>__when</code> / <code>__note</code></td>
+              <td><code>font-size: 13px</code>; <code>--ref-color-grey-80</code> and <code>grey-40</code>.</td>
+              <td>
+                <strong>Off-scale type, reference tokens where semantic ones exist.</strong> 13px is not on the DS ramp
+                (12 / 14 / 18). <code>--sys-text-color-light</code> is the semantic name for the greys used.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top: 16px">
+          One thing is already right and should survive every proposal: the list is an
+          <code>&lt;ol&gt;</code>. It is an ordered sequence of events and the markup says so.
+        </p>
+      </div>
+
+      <h2>2 · The colour mapping is free</h2>
+      <div class="panel">
+        <p style="margin-top: 0">
+          The four review statuses map 1:1 onto <code>.ap-status</code> variants, so nothing needs a new token or a
+          house rule. This is the single strongest argument for the rework: the DS already has every colour this feature
+          invented.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%">Status</th>
+              <th style="width: 34%">Today (hand-built)</th>
+              <th style="width: 26%">DS variant</th>
+              <th>Rendered</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>New</td>
+              <td><code>grey-10</code> / <code>grey-100</code></td>
+              <td><code>.ap-status.grey</code></td>
+              <td><span class="ap-status grey">New</span></td>
+            </tr>
+            <tr>
+              <td>Saved</td>
+              <td><code>tag-orange-20</code> / <code>-150</code></td>
+              <td><code>.ap-status.tagOrange</code></td>
+              <td><span class="ap-status tagOrange">Saved</span></td>
+            </tr>
+            <tr>
+              <td>Used</td>
+              <td><code>electric-blue-10</code> / <code>-150</code></td>
+              <td><code>.ap-status.blue</code></td>
+              <td><span class="ap-status blue">Used</span></td>
+            </tr>
+            <tr>
+              <td>Ignored</td>
+              <td><code>red-10</code> / <code>red-100</code></td>
+              <td><code>.ap-status.red</code></td>
+              <td><span class="ap-status red">Ignored</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top: 16px">
+          The reasoning recorded in <code>brief-card.css</code> for why Used is blue rather than green survives intact —
+          <code>.ap-status.blue</code> is the DS's info/neutral colour, and green is taken by the Draft-ready tag.
+          Adopting the DS component keeps that decision and stops maintaining it by hand.
+        </p>
+      </div>
+
+      <h2>3 · Current state, for comparison</h2>
+      <div class="panel">
+        <p class="caption">As shipped today</p>
+        <ol class="cur-timeline">
+          <li class="cur-row">
+            <span class="cur-dot cur-dot-new"></span>
+            <span class="cur-body">
+              <span class="cur-pill cur-new">New</span>
+              <span class="cur-when">2 weeks ago</span>
+              <span class="cur-note">Surfaced from the competitor scan (1 matching item).</span>
+            </span>
+          </li>
+          <li class="cur-row">
+            <span class="cur-dot cur-dot-new"></span>
+            <span class="cur-body">
+              <span class="cur-pill cur-new">New</span>
+              <span class="cur-when">3 days ago</span>
+              <span class="cur-note">Re-scanned — 4 matching items, and a second account joined it.</span>
+            </span>
+          </li>
+          <li class="cur-row">
+            <span class="cur-dot cur-dot-used"></span>
+            <span class="cur-body">
+              <span class="cur-pill cur-used">Used</span>
+              <span class="cur-when">now</span>
+              <span class="cur-note">Used to draft a post</span>
+            </span>
+          </li>
+        </ol>
+        <p class="note" style="margin-top: 18px">
+          Note what the dot contributes: it repeats the pill's colour 12px to its left, at a different lightness, and
+          carries no label. Every proposal below either deletes it or replaces it with the DS's own.
+        </p>
+      </div>
+
+      <h2>4 · Proposal A — status pill only, no rail</h2>
+      <div class="panel">
+        <div class="split">
+          <div>
+            <p class="caption">Rendered · DS classes only</p>
+            <ol class="cur-timeline p-rows">
+              <li class="p-row">
+                <span class="ap-status grey">New</span>
+                <span class="p-when">2 weeks ago</span>
+                <span class="p-note">Surfaced from the competitor scan (1 matching item).</span>
+              </li>
+              <li class="p-row">
+                <span class="ap-status grey">New</span>
+                <span class="p-when">3 days ago</span>
+                <span class="p-note">Re-scanned — 4 matching items, and a second account joined it.</span>
+              </li>
+              <li class="p-row">
+                <span class="ap-status blue">Used</span>
+                <span class="p-when">now</span>
+                <span class="p-note">Used to draft a post</span>
+              </li>
+            </ol>
+          </div>
+          <div>
+            <p class="caption">Markup</p>
+            <pre><span class="c">&lt;!-- one &lt;li&gt; per entry --&gt;</span>
+&lt;li class="p-row"&gt;
+  &lt;span class="ap-status grey"&gt;New&lt;/span&gt;
+  &lt;span class="p-when"&gt;2 weeks ago&lt;/span&gt;
+  &lt;span class="p-note"&gt;Surfaced from…&lt;/span&gt;
+&lt;/li&gt;</pre>
+            <h3>What it removes</h3>
+            <ul>
+              <li>The hand-built pill → <code>.ap-status</code> with its own dot.</li>
+              <li>The 22px dot and its white ring — deleted, not replaced.</li>
+              <li>The <code>::before</code> connector and all four of its magic numbers.</li>
+            </ul>
+            <h3>What it still needs</h3>
+            <p class="note">
+              Three app rules, none of them a DS primitive: a flex row, a caption-size
+              <code>__when</code>, and a body-size <code>__note</code> on its own line (<code>flex-basis: 100%</code>).
+              All on DS tokens.
+            </p>
+            <h3>Cost</h3>
+            <p class="note">
+              Loses the visual rail. For a three-to-five row list inside a dialog that is a small loss — the
+              <code>&lt;ol&gt;</code> and the dates already say "sequence" — but it does read as a list of events rather
+              than a path through them.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2>5 · Proposal B — <code>.ap-stepper.with-line</code> as the rail</h2>
+      <div class="panel">
+        <div class="split">
+          <div>
+            <p class="caption">Rendered · DS classes only</p>
+            <div class="ap-stepper with-line" style="flex-direction: column; align-items: stretch; gap: 16px">
+              <div class="ap-stepper-item completed">
+                <span>1</span>
+                <span class="p-stepper-label">
+                  <span><span class="ap-status grey">New</span> <span class="p-when">2 weeks ago</span></span>
+                  <span class="p-note">Surfaced from the competitor scan (1 matching item).</span>
+                </span>
+              </div>
+              <div class="ap-stepper-item completed">
+                <span>2</span>
+                <span class="p-stepper-label">
+                  <span><span class="ap-status grey">New</span> <span class="p-when">3 days ago</span></span>
+                  <span class="p-note">Re-scanned — 4 matching items, and a second account joined it.</span>
+                </span>
+              </div>
+              <div class="ap-stepper-item active">
+                <span>3</span>
+                <span class="p-stepper-label">
+                  <span><span class="ap-status blue">Used</span> <span class="p-when">now</span></span>
+                  <span class="p-note">Used to draft a post</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="caption">Markup</p>
+            <pre>
+&lt;div class="ap-stepper with-line"&gt;
+  &lt;div class="ap-stepper-item completed"&gt;
+    &lt;span&gt;1&lt;/span&gt;
+    &lt;span&gt;… status + when + note …&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre
+            >
+            <h3>What it removes</h3>
+            <ul>
+              <li>Everything Proposal A removes, plus</li>
+              <li>
+                the connector is now the DS's (<code>1px</code>, <code>--ref-color-grey-20</code>, drawn by
+                <code>.with-line</code>).
+              </li>
+            </ul>
+            <h3>What it still needs</h3>
+            <p class="note">
+              An override to stack vertically — <code>.ap-stepper</code> is a horizontal row, and the rendering above
+              only stands up because of the inline <code>flex-direction: column</code>. That is app CSS on a DS class,
+              which belongs in <code>ds-patches.css</code> if this is chosen.
+            </p>
+            <h3>Cost — and why I would not ship this</h3>
+            <p class="note">
+              <strong>It asserts things that are false.</strong> A stepper is a <em>progress indicator</em>: numbered
+              steps, <code>completed</code> / <code>active</code> / <code>pending</code> states, and a defined end. A
+              topic's history has no step count, no final step, and no pending future — a re-scan can add a fourth entry
+              tomorrow. Numbering "1, 2, 3" invites the reader to expect a step 4. The DS's own usage rule says stepper
+              is "for multi-step flows, wizards, onboarding processes".
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2>6 · Proposal C — status pill + a rail from the dot it already has</h2>
+      <div class="panel">
+        <div class="split">
+          <div>
+            <p class="caption">Rendered · DS classes + one app rule for the rail</p>
+            <ol class="cur-timeline p-rows" style="--rail: 1px">
+              <li class="p-row" style="position: relative; padding-left: 0">
+                <span class="ap-status grey">New</span>
+                <span class="p-when">2 weeks ago</span>
+                <span class="p-note">Surfaced from the competitor scan (1 matching item).</span>
+              </li>
+              <li class="p-row">
+                <span class="ap-status grey">New</span>
+                <span class="p-when">3 days ago</span>
+                <span class="p-note">Re-scanned — 4 matching items, and a second account joined it.</span>
+              </li>
+              <li class="p-row">
+                <span class="ap-status blue">Used</span>
+                <span class="p-when">now</span>
+                <span class="p-note">Used to draft a post</span>
+              </li>
+            </ol>
+            <p class="note" style="margin-top: 12px">
+              Rendered identically to A here on purpose: the rail is one <code>::before</code> on the row, anchored to
+              the <em>pill's</em> left edge rather than to a hand-built dot, and it is omitted above rather than faked
+              with a magic number.
+            </p>
+          </div>
+          <div>
+            <p class="caption">The one app rule</p>
+            <pre><span class="c">/* The rail hangs off the DS pill's own geometry:
+   --comp-status-height (24px) is the only number,
+   and it comes from the DS. No dot to sync with. */</span>
+.research-timeline__row:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--comp-status-height) / 2);
+  top: var(--comp-status-height);
+  bottom: 0;
+  width: 1px;
+  background: var(--ref-color-grey-20);
+}</pre>
+            <h3>What it removes</h3>
+            <ul>
+              <li>The hand-built pill and the 22px dot, as in A.</li>
+              <li>The four magic numbers — the rail now derives from a DS token.</li>
+            </ul>
+            <h3>Cost</h3>
+            <p class="note">
+              Keeps one decorative <code>::before</code> in app CSS, and reads <code>--comp-status-*</code> — a
+              component token, which the token rules say app CSS should not use directly. That is a real (small)
+              violation to weigh against keeping the rail.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2>7 · Recommendation</h2>
+      <div class="panel">
+        <p class="verdict"><span class="ap-badge orange">Proposal A</span></p>
+        <p style="margin-top: 0">
+          <strong>Take A.</strong> It deletes all three re-implementations, needs no override of a DS class, and
+          introduces no component token into app CSS. The rail is the only thing lost, and the rail was never carrying
+          meaning — it connected dots whose colour merely repeated the pill beside them.
+        </p>
+        <ul>
+          <li>
+            <strong>B is the wrong component.</strong> A stepper claims a step count and a final step; a topic's history
+            has neither, and it needs a vertical override to render at all.
+          </li>
+          <li>
+            <strong>C is A plus a rail</strong>, at the price of one decorative pseudo-element and a
+            <code>--comp-*</code> read in app CSS. Worth it only if the rail tests as load-bearing with a reader.
+          </li>
+        </ul>
+        <p class="note">
+          Whichever is chosen, two things carry over: keep the <code>&lt;ol&gt;</code>, and move <code>__when</code> /
+          <code>__note</code> onto the DS ramp (12px caption, 14px body, <code>--sys-text-color-light</code>) so the
+          13px and the raw greys go with the rest.
+        </p>
+        <p class="note">
+          Knock-on worth knowing before implementing: <code>.topics-status</code> is used <em>only</em> by this timeline
+          (the feed card shows a glyph instead), so adopting <code>.ap-status</code> here lets the whole
+          <code>.topics-status</code> block — the pill and its four colour rules, ~50 lines of
+          <code>brief-card.css</code> — be deleted rather than left dormant.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1079,8 +1079,27 @@
   text-overflow: ellipsis;
 }
 
+/* The Playbook label — icon plus name, on the topic cards AND the workflow cards.
+   inline-flex with its own small gap so the glyph reads as part of the label rather
+   than as a separate item in the crumb's row; the name is what ellipsises (rule
+   above), the glyph never shrinks. */
 .starter-topic__pb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex: 0 1 auto;
+}
+
+.starter-topic__pb > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.starter-topic__pb > i {
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .starter-topic__sep {

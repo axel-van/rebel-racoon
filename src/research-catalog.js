@@ -297,6 +297,21 @@ export function findResearchType(id) {
 // over an icon labelled Saved is a tooltip that has told you nothing; each one says
 // what the status MEANS for the topic.
 //
+// `statusColor` is the DS .ap-status variant this status renders as, and it lives HERE
+// for the same reason `icon` does: two copies of "which colour means Ignored" would
+// drift the first time one changed. The three map 1:1 onto the DS's own variants, so
+// nothing here invents a colour —
+//
+//   new → grey      (not yet answered)
+//   used → blue     (the DS's info / neutral colour)
+//   ignored → red   (the taking-away one)
+//
+// Used is BLUE and green is NOT free: green is taken by the Draft-ready tag and
+// .ap-tag green computes the identical fill, so two chips in one row would share a
+// colour meaning different things. The house rules also give Status blue as
+// "info / neutral-info", and Used records that the topic went somewhere, not that it
+// went well — which is what green claims.
+//
 // Both fields are OPTIONAL. Every consumer already skips a status without an icon
 // (the card renders nothing, the Filters option row omits the glyph, the legend
 // filters the list), so leaving them off is how a status opts out of the marker.
@@ -304,6 +319,7 @@ export const REVIEW_STATUSES = Object.freeze([
   {
     id: "new",
     label: "New",
+    statusColor: "grey",
     // No icon, and no hint to put in a tooltip — New is the ABSENCE of a marker.
     //
     // The other three statuses all record something the reader DID to the topic:
@@ -333,12 +349,14 @@ export const REVIEW_STATUSES = Object.freeze([
   {
     id: "used",
     label: "Used",
+    statusColor: "blue",
     icon: "ap-icon-rounded-check",
     hint: "Taken into a chat to draft a post.",
   },
   {
     id: "ignored",
     label: "Ignored",
+    statusColor: "red",
     icon: "ap-icon-eye-off",
     hint: "Kept off this list unless it starts trending or gets updated.",
   },

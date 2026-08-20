@@ -36,11 +36,15 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { parseHashParams } from "../url-state.js?v=21";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=458";
+// The picker footer's "Create a Playbook" hands the context-builder its return route,
+// exactly as /contexts and the composer do.
+import { setHandoff } from "../handoff.js?v=20";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=470";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=67";
+import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=71";
 import {
   openIgnoreReason,
+  // PARKED with its handler and its link — kept imported so restoring is one uncomment.
   openVersionHistory,
   openSourcePosts,
   // PARKED with the handler below — kept imported so restoring is one uncomment.
@@ -48,13 +52,18 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=145";
-import { openBriefInChat } from "../brief-flow.js?v=36";
+} from "../components/research-modals.js?v=157";
+import { openBriefInChat } from "../brief-flow.js?v=40";
 import { showToast } from "../components/toast.js?v=21";
-import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=12";
-import { getActivePlaybookId, subscribe as subscribeScope } from "../active-playbook.js?v=49";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=37";
-import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=49";
+import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=14";
+import {
+  getActivePlaybook,
+  getActivePlaybookId,
+  setActivePlaybook,
+  subscribe as subscribeScope,
+} from "../active-playbook.js?v=63";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=49";
+import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=52";
 import {
   getBriefById,
   briefTitle,
@@ -65,9 +74,15 @@ import {
   narrowedGroupCount,
   setStatus,
   subscribe as subscribeBriefs,
-} from "../briefs-store.js?v=62";
-import { RESEARCH_SOURCES, REVIEW_STATUSES, findResearchSource, findCadence } from "../research-catalog.js?v=21";
-import { getContextById } from "../contexts-store.js?v=79";
+} from "../briefs-store.js?v=66";
+import {
+  RESEARCH_SOURCES,
+  REVIEW_STATUSES,
+  LIVE_SOURCE_IDS,
+  findResearchSource,
+  findCadence,
+} from "../research-catalog.js?v=22";
+import { getContextById, getContexts } from "../contexts-store.js?v=81";
 
 // How long the mock generation appears to run. The handoff's ~1.6s: long enough
 // to register that I'm doing work, short enough that nobody waits for it.
@@ -495,6 +510,80 @@ function segmentBriefs(segment) {
 // It takes the SEGMENT's state: grey while unselected, blue when selected, using
 // the DS's own two colour pairs so the number belongs to the segment it sits in
 // rather than floating grey against blue text.
+
+// The Playbook picker, in the topbar's LEAD slot beside the section title.
+//
+// ⚠️ It is a VIEW OF THE RAIL'S SCOPE, not a second scope. CLAUDE.md records that
+// active-playbook.js deliberately replaced four separate Playbook pickers — the
+// composer's, this feed's form, the New-pillar dialog's and /content-strategy's —
+// because "any two could disagree". Picking here therefore calls
+// setActivePlaybook(): the rail's switcher, this trigger, the feed, the pillar
+// counters and a new chat's Playbook all keep reading one value. A local
+// `view.playbook` would have put a second answer on the same screen as the first.
+//
+// "First Playbook selected by default" falls out of that for free rather than
+// needing its own rule: getActivePlaybook() already falls back to
+// getDefaultContext() || getContexts()[0], so with nothing chosen the trigger shows
+// the first Playbook in the list.
+//
+// Markup is the composer's, part for part — .ap-select > summary.ap-select-trigger
+// .composer-playbook__trigger with an inline label, then .ap-select-dropdown with
+// .ap-select-option rows. The one part NOT reused is the dropdown's own class:
+// .composer-playbook__dropdown pins itself with `bottom: 100%` because the composer
+// sits at the bottom of the screen and has to open UPWARD. In a topbar that is
+// upside down — the panel opened over the title instead of below the trigger — so
+// this uses .research-playbook__dropdown, which keeps the DS's own downward
+// `top: 100%`. Reused rather than re-derived: it is the same control
+// answering the same question, and the composer's already carries the DS's
+// details/summary behaviour, the selected check and the colour dot.
+function renderPlaybookPicker() {
+  const playbooks = getContexts();
+  const active = getActivePlaybook();
+  const items = playbooks
+    .map((c) => {
+      const isSel = active && c.id === active.id;
+      return `
+        <div
+          class="ap-select-option${isSel ? " selected" : ""}"
+          data-feed-playbook-pick="${escapeAttr(c.id)}"
+          role="option"
+          aria-selected="${isSel ? "true" : "false"}"
+        >
+          <span class="composer-context__dot" style="background: var(--ref-color-${escapeAttr(
+            c.color === "blue" ? "electric-blue" : c.color || "grey",
+          )}-100);"></span>
+          <span class="ap-select-option-text">${escapeAttr(c.name)}</span>
+          ${isSel ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : ""}
+        </div>`;
+    })
+    .join("");
+  const value = active
+    ? `<span class="ap-select-value">${escapeAttr(active.name)}</span>`
+    : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
+  return `
+    <details class="ap-select research-playbook" data-feed-playbook>
+      <summary class="ap-select-trigger composer-playbook__trigger" title="Choose the Playbook this feed listens for">
+        <span class="ap-select-inline-label">Playbook</span>
+        ${value}
+        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+      </summary>
+      <div class="ap-select-dropdown research-playbook__dropdown" role="listbox" aria-label="Choose a Playbook">
+        <div class="ap-select-options">${items}</div>
+        <!-- The DS's own footer, which brings the separator with it: .ap-select-footer
+             is a border-top plus a margin, and .ap-select-create is the blue bold row
+             inside it. Nothing here is app CSS — the composer's picker uses the same
+             three classes, and this is the same control offering the same way out of
+             an empty list. -->
+        <div class="ap-select-footer">
+          <button type="button" class="ap-select-create" data-feed-playbook-create>
+            <i class="ap-icon-plus ap-select-create-icon" aria-hidden="true"></i>
+            <span>Create a Playbook</span>
+          </button>
+        </div>
+      </div>
+    </details>`;
+}
+
 function renderSegments() {
   const counts = {
     ready: segmentBriefs("ready").length,
@@ -601,7 +690,12 @@ function pushTopbarActions() {
   // looking at, which is the same question the title answers — where Filters and
   // Export act ON that list. Grouping them with the actions made "Ready to
   // draft" read as a third button rather than as the name of the view.
-  setTopbarActions(renderTopbarActions(narrowedGroupCount(filters)), renderSegments());
+  // The picker sits in the RIGHT slot, immediately before the Filters button, and the
+  // lead slot keeps the title + segments. Both are scope controls, and the right slot
+  // is where this screen's controls already live: "which brand, then which of its
+  // topics" reads as one cluster there, where in the lead slot the picker was wedged
+  // between the section title and the segments that name the view.
+  setTopbarActions(renderPlaybookPicker() + renderTopbarActions(narrowedGroupCount(filters)), renderSegments());
 }
 
 function paint(target) {
@@ -938,6 +1032,22 @@ function renderTopbarActions(narrowed) {
 // role="group", not the component's role="menu": its own children are menu items
 // and these are checkboxes, so "menu" would promise arrow-key semantics that do
 // not exist here. The label is what the DS gives it.
+// LIVE sources only, which today is Competitors alone (V1 scope).
+//
+// The other seven are `live: false` in research-catalog.js — declared so the settings
+// form can show what is coming and open the "Need that source?" modal — and a filter
+// row for a source that cannot produce a topic is a control that can only ever remove
+// nothing or remove everything. It also misrepresents the feed: unticking "Global
+// trends" implied there were global-trends topics being hidden.
+//
+// briefs-store's ALL_SOURCE_IDS derives from the same LIVE set, so the panel and the
+// filter agree about what "all sources" means. Without that the group would read as
+// narrowed the moment it opened — a 1-id selection against an 8-id notion of full
+// breadth — and the Filters badge would be pinned to 1 forever.
+function filterableSources() {
+  return RESEARCH_SOURCES.filter((s) => LIVE_SOURCE_IDS.includes(s.id));
+}
+
 function renderFilterPanel() {
   return html`<div class="ap-filter-dropdown research-filters__panel" data-feed-panel role="group" aria-label="Filters">
     ${raw(
@@ -949,8 +1059,11 @@ function renderFilterPanel() {
         // the filter to repeat a pairing the reader has met on every card. Eight of
         // them down the panel also blunt the status icons, which do need reading.
         // The icons stay in the catalogue: the source cards on the form use them.
-        renderGroup("sources", "Sources", RESEARCH_SOURCES, filters.sources, "sources", {
+        renderGroup("sources", "Sources", filterableSources(), filters.sources, "sources", {
           icons: false,
+          // The component's isLastLeaf: the final leaf owns no separator, because the
+          // panel's own footer border is the line under it.
+          isLast: true,
         }),
     )}
     <!-- The component's own footer: .ap-filter-dropdown__footer, right-aligned,
@@ -989,7 +1102,7 @@ function renderStatusLegend() {
 // `icons: false` suppresses the option glyphs for a group whose data happens to
 // carry them (Sources) — the catalogue keeps them for the surfaces that do use
 // them, and only this panel opts out.
-function renderGroup(key, label, options, selected, field, { icons = true } = {}) {
+function renderGroup(key, label, options, selected, field, { icons = true, isLast = false } = {}) {
   const open = view.groups[key];
   // Does this group MIX iconless options with iconed ones? Only Topic status does,
   // now that New carries no glyph, and without this its label would sit a glyph's
@@ -998,7 +1111,13 @@ function renderGroup(key, label, options, selected, field, { icons = true } = {}
   // Groups where NO option has an icon (Topic type) reserve nothing, so they keep
   // their tighter row.
   const mixedIcons = icons && options.some((o) => o.icon) && options.some((o) => !o.icon);
-  return html`<section class="ap-filter-leaf research-filters__group ${raw(open ? "" : "with-border-bottom")}">
+  // `with-border-bottom` is the component's separator between leaves, and the component
+  // drives it from `isLastLeaf` — every leaf except the last carries it. This port drove
+  // it from the OPEN state instead, which is a different rule and a visible one: with
+  // two groups, expanding the first removed the line between them and collapsing it put
+  // the line back, so the panel's internal division appeared and disappeared as you
+  // used it. Position is stable; expansion is not.
+  return html`<section class="ap-filter-leaf research-filters__group ${raw(isLast ? "" : "with-border-bottom")}">
     <button
       type="button"
       class="ap-filter-leaf__header ${raw(open ? "ap-filter-leaf__expanded" : "")} research-filters__group-head"
@@ -1286,16 +1405,48 @@ function bind(target) {
     // "See past versions of this article", from the article PANE. The same link in
     // the Full-article dialog is wired inside research-modals' own panel handler —
     // the markup is shared, the delegation root is not.
-    const versionsLink = event.target.closest("[data-brief-versions]");
-    if (versionsLink) {
-      return openVersionHistory({ briefId: versionsLink.dataset.briefVersions });
-    }
+    // The past-versions link is gone (V1 scope), so its handler is too. It called
+    // openVersionHistory({ briefId }) — still exported from research-modals and still
+    // working, just unreachable. Restoring is this block plus the link.
 
     // "See all N posts", from the article PANE. Its twin in the Full-article dialog
     // is wired inside research-modals' own panel handler.
     const sourcesLink = event.target.closest("[data-brief-sources]");
     if (sourcesLink) {
       return openSourcePosts({ briefId: sourcesLink.dataset.briefSources });
+    }
+
+    // Picking a Playbook in the topbar. It writes the RAIL'S scope, not a local
+    // field, so the switcher and this trigger can never say different things — see
+    // renderPlaybookPicker. The scope subscription repaints and re-resolves which
+    // feed is shown, so there is nothing to do here but write and close.
+    // "Create a Playbook" from the picker's footer. It runs the SAME conversational
+    // flow as the /contexts "New Playbook" CTA and the composer's own create row —
+    // the integrated welcome-alt session — rather than inventing a third way to make
+    // a Playbook. The only thing that differs between the three callers is returnTo,
+    // which is where the recap sends you when it is done: here, back to this feed.
+    const pbCreate = event.target.closest("[data-feed-playbook-create]");
+    if (pbCreate) {
+      event.preventDefault();
+      const details = pbCreate.closest("[data-feed-playbook]");
+      if (details) details.open = false;
+      try {
+        window.sessionStorage.setItem("welcomeAltIntegrated", "1");
+        window.sessionStorage.setItem("welcomeAltReturnTo", "/topic-feeds");
+      } catch {
+        /* ignore — a private-mode sessionStorage failure must not block the flow */
+      }
+      setHandoff("pendingStartContextBuilder", { flow: "alt", prefilledUrl: "", returnTo: "/topic-feeds" });
+      navigate(`/session/welcome-alt-${Date.now().toString(36)}`);
+      return;
+    }
+
+    const pbPick = event.target.closest("[data-feed-playbook-pick]");
+    if (pbPick) {
+      const details = pbPick.closest("[data-feed-playbook]");
+      if (details) details.open = false;
+      setActivePlaybook(pbPick.dataset.feedPlaybookPick);
+      return;
     }
 
     // The explicit half of the infinite load — same path the observer takes, so
