@@ -63,6 +63,8 @@ Two segments, side by side above the list, each with a count.
 | `AC-SEG-2` | A Topic falls in _Topics for later_ when the scan classified it that way, and in _Ready to draft_ otherwise. The scan's classification is the whole rule — nothing else moves a Topic between the two segments. |
 | `AC-SEG-3` | Each segment's count is how many Topics are in it **after the current filters apply**. Switching segments does not change the filters.                                                                          |
 | `AC-SEG-4` | Switching segments closes any open article, returns to the first page, and then opens the new segment's own first Topic.                                                                                        |
+| `AC-SEG-5` | Every Topic the feed receives lands in exactly one segment, never both and never neither. The two counts add up to the number received, before filters apply.                                                   |
+| `AC-SEG-6` | A Topic whose classification is missing or unrecognised goes to **Topics for later**. Ready to draft would claim a readiness nothing established.                                                               |
 
 ### 2.4 Filters
 
@@ -153,6 +155,7 @@ menu, the article beside the feed, the fresh-topics list, and the picker.
 | `AC-CHAT-4` | The thread shows a source entry naming the Topic. No echoed message and no follow-up question — the entry already names it and the composer is right there.                                                             |
 | `AC-CHAT-5` | The chat's **Sources** count includes it.                                                                                                                                                                               |
 | `AC-CHAT-7` | A link to a Topic that no longer exists opens nothing and goes nowhere.                                                                                                                                                 |
+| `AC-CHAT-8` | Ideas extracted from a Topic use that Topic's own analysis and its evidence posts. Two different Topics must not produce the same ideas with the titles swapped.                                                        |
 
 ### 3.3 The composer's Pick from the Topic Feed
 
@@ -208,6 +211,9 @@ anywhere else.
 | `AC-X-3` | Triaging a Topic anywhere is reflected everywhere else without a reload.                                                                                                       |
 | `AC-X-4` | Every control is reachable and operable by keyboard, and anything carried by colour — segments, sentiment, signals — is also carried by text a screen reader can read.         |
 | `AC-X-5` | The signals, the segments and the age groups are all decided by the system that produces the Topics. The reader's own view must not invent state the feed does not know about. |
+| `AC-X-6` | A Topic only appears under the Playbook that owns it. Test with two Playbooks that both have Topics: nothing from one shows up under the other, in the list or in the counts.  |
+| `AC-X-7` | When a card shows a Playbook name, it is the Topic's owner, and it matches the Playbook the reader is scoped to. If the two can disagree, the label is the one that misleads.  |
+| `AC-X-8` | With no Playbook selected, every Topic surface shows nothing. It must not fall back to showing every Playbook's Topics.                                                        |
 
 ---
 
