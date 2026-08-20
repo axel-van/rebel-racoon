@@ -40,7 +40,7 @@ lying and the attention page stops being reachable for Topics the reader has tri
 | `AC-ROUTE-1` | Opening the Topic Feed from the sidebar shows the **active Playbook's** feed. The reader never picks a feed from a list.                                                                                                                                                                 |
 | `AC-ROUTE-2` | A link to one specific feed opens that feed. Deep links and the attention page's back action both rely on this.                                                                                                                                                                          |
 | `AC-ROUTE-3` | Switching the active Playbook while looking at the feed swaps the feed under the reader, without them navigating.                                                                                                                                                                        |
-| `AC-ROUTE-4` | A Playbook whose feed has **no sources** shows a "No sources yet" state with one action, which goes to that feed's settings. It must not send the reader back to the feed they just came from.                                                                                           |
+| `AC-ROUTE-4` | A Playbook whose feed has **no sources** shows a "No sources yet" state saying the feed has nothing to listen to yet. It must not render an empty list as though the feed were working. The state has no action while there is no surface for choosing sources — see §7.                 |
 | `AC-ROUTE-5` | A link that names one Topic opens the feed with that Topic's article already showing. The status filter widens to **every state** for that visit, because a Used or Ignored Topic is not in the default view and the article would otherwise open onto a card the list does not contain. |
 
 ### 2.2 The list: order and grouping
@@ -79,38 +79,21 @@ One control: a **Filters** dropdown above the list, with a badge.
 
 ### 2.5 Attention signals
 
-| ID         | Criterion                                                                                                                                                                                                                          |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-SIG-1` | A Topic may carry **Trending**, **Updated**, both, or neither, whatever its review state. Neither is ever shown as a review-state pill.                                                                                            |
-| `AC-SIG-2` | In the feed, a signalled Topic appears **under its own review state**. A trending Topic that has been ignored does not appear while Ignored is unticked. A signal does not override the filter.                                    |
-| `AC-SIG-3` | Signals are only valid inside **Last 7 days**. An older Topic shows neither mark, whatever the data says — a "trending" card under an _Earlier_ separator contradicts itself.                                                      |
-| `AC-SIG-4` | ⚠️ **Decision required — see the note below.** When a feed has any signalled Topic and the feed's own attention setting is on, a notice above the list reports the counts, broken down by signal, and links to the attention page. |
-| `AC-SIG-5` | The notice's total counts a Topic **once** even when it carries both signals, while the per-signal numbers do not, so the parts may add up to more than the total. The copy must never present them as a sum.                      |
-| `AC-SIG-6` | The notice reports what is flagged in the whole feed — not what the current filter hides, and not what the reader has yet to open. The feed's attention setting is the only way to switch it off.                                  |
-
-> **⚠️ The attention notice is switched off in the prototype and its rationale has
-> expired.**
->
-> It was switched off because, with every review state shown by default, a flagged Topic
-> was already visible in the list and the notice repeated it. **That default has since
-> changed** — the feed now opens on **New only**, so a trending Topic that has been used
-> or ignored is no longer in the list, and the notice would no longer be repeating
-> anything.
->
-> Two consequences, both needing a product decision before build:
->
-> 1. Whether the notice ships at all.
-> 2. If it does not, the attention page needs a different way in — see `AC-ATT-0`.
+| ID         | Criterion                                                                                                                                                                                       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-SIG-1` | A Topic may carry **Trending**, **Updated**, both, or neither, whatever its review state. Neither is ever shown as a review-state pill.                                                         |
+| `AC-SIG-2` | In the feed, a signalled Topic appears **under its own review state**. A trending Topic that has been ignored does not appear while Ignored is unticked. A signal does not override the filter. |
+| `AC-SIG-3` | Signals are only valid inside **Last 7 days**. An older Topic shows neither mark, whatever the data says — a "trending" card under an _Earlier_ separator contradicts itself.                   |
 
 ### 2.6 The attention page
 
-| ID         | Criterion                                                                                                                                                                                                                                |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-ATT-0` | ⚠️ **The page must have a way in from the UI.** In the prototype it has none: the only link to it lives inside the switched-off notice. Whatever is decided about the notice, this page needs an entry point, or it should not be built. |
-| `AC-ATT-1` | Lists every Topic in the feed carrying either signal, each once, newest first.                                                                                                                                                           |
-| `AC-ATT-2` | **The status filter is ignored entirely here.** This page is the home of the signals; a spike must never be hidden by what the reader did with the Topic.                                                                                |
-| `AC-ATT-3` | Cards here show no triage controls and no review-state marker — the page answers "what is spiking", not "what have I triaged".                                                                                                           |
-| `AC-ATT-4` | There is a back action to the feed.                                                                                                                                                                                                      |
+| ID         | Criterion                                                                                                                                                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-ATT-0` | ⚠️ **The page needs a way in, and nothing gives it one.** Its only link was the attention notice, which is not being built. Until some other surface links here, this page is unreachable and should not be built either. See §7. |
+| `AC-ATT-1` | Lists every Topic in the feed carrying either signal, each once, newest first.                                                                                                                                                    |
+| `AC-ATT-2` | **The status filter is ignored entirely here.** This page is the home of the signals; a spike must never be hidden by what the reader did with the Topic.                                                                         |
+| `AC-ATT-3` | Cards here show no triage controls and no review-state marker — the page answers "what is spiking", not "what have I triaged".                                                                                                    |
+| `AC-ATT-4` | There is a back action to the feed.                                                                                                                                                                                               |
 
 ### 2.7 The article, beside the list
 
@@ -145,24 +128,11 @@ One control: a **Filters** dropdown above the list, with a badge.
 
 ### 2.10 States
 
-| ID           | Criterion                                                                                                                                                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AC-STATE-1` | **Scanning** — a working state shows while the feed is being assembled: after saving feed settings, and on the reader's first arrival. It does not show when arriving on a link to one Topic, nor when coming back from the attention page or from settings. |
-| `AC-STATE-2` | **Empty after filtering** — when the filter excludes everything, say so and offer a way back: reset the filter, or open feed settings. This is a different state from a feed with no sources.                                                                |
-| `AC-STATE-3` | **Paused** — a paused feed says so and offers Resume. Topics already found stay readable.                                                                                                                                                                    |
-
-### 2.11 Feed settings
-
-| ID         | Criterion                                                                                                                                                                             |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-SET-1` | Reached from the feed, and settings always belong to the feed the reader came from.                                                                                                   |
-| `AC-SET-2` | One card per source: its name, a switch, and a plain-prose "how this source works". Never a disabled field — it reads as broken.                                                      |
-| `AC-SET-3` | A source that is not built yet must **not** silently switch on. The switch returns to off and a "Need that source?" prompt collects the interest. Today only **Competitors** is live. |
-| `AC-SET-4` | How often the feed runs is one of **Weekly / Monthly / Quarterly** — one choice.                                                                                                      |
-| `AC-SET-5` | Saving with **no** sources on is refused, with the error shown next to the sources and scrolled into view. It clears as soon as a source goes back on, and never shows on arrival.    |
-| `AC-SET-6` | Saving returns to the feed and shows the scanning state.                                                                                                                              |
-| `AC-SET-7` | Also here: **notify me after a run**, and **pause this feed**.                                                                                                                        |
-| `AC-SET-8` | How often the feed runs must actually govern when it runs. A reader who picks Weekly and comes back next week must find new Topics — the cadence is a promise, not a label.           |
+| ID           | Criterion                                                                                                                                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-STATE-1` | **Scanning** — a working state shows while the feed is being assembled, on the reader's first arrival. It does not show when arriving on a link to one Topic, nor when coming back from the attention page. |
+| `AC-STATE-2` | **Empty after filtering** — when the filter excludes everything, say so and offer the way back: reset the filter. This is a different state from a feed with no sources.                                    |
+| `AC-STATE-3` | **Paused** — a paused feed says so and offers Resume. Topics already found stay readable.                                                                                                                   |
 
 ---
 
@@ -198,17 +168,17 @@ attention page, the fresh-topics list, and the picker.
 
 ### 3.3 The composer's Pick from the Topic Feed
 
-| ID           | Criterion                                                                                                                                                                                                                                      |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AC-PICK-1`  | The composer's Add menu offers **Pick from the Topic Feed**, opening a picker for **this chat's Playbook** — a chat keeps the brand it was created in.                                                                                         |
-| `AC-PICK-2`  | The picker lists **ready-to-draft** Topics only, and never an ignored one — decided by the scan's classification alone, as in `AC-SEG-2`.                                                                                                      |
-| `AC-PICK-2b` | ⚠️ **Parked in the prototype:** a "Trending, normally hidden" group surfacing ignored-but-trending Topics that the rule above would otherwise drop. It is the picker's counterpart to the attention notice and should be decided alongside it. |
-| `AC-PICK-3`  | No Playbook-choosing step. The picker opens straight onto the Topic list.                                                                                                                                                                      |
-| `AC-PICK-4`  | Topics are grouped by the same age groups and ordered newest first, matching the feed.                                                                                                                                                         |
-| `AC-PICK-5`  | Cards are **identical to the feed's** — same source badge, age, signals, title and summary. A reader must not be shown a different-looking object from the one they were reading two seconds earlier.                                          |
-| `AC-PICK-6`  | Clicking a card's body opens the full article **inside the same dialog**, with a back action to the list.                                                                                                                                      |
-| `AC-PICK-7`  | From that article, **Use in chat** behaves exactly as in §3.2.                                                                                                                                                                                 |
-| `AC-PICK-8`  | An empty state when nothing qualifies.                                                                                                                                                                                                         |
+| ID           | Criterion                                                                                                                                                                                                                                                                                       |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-PICK-1`  | The composer's Add menu offers **Pick from the Topic Feed**, opening a picker for **this chat's Playbook** — a chat keeps the brand it was created in.                                                                                                                                          |
+| `AC-PICK-2`  | The picker lists **ready-to-draft** Topics only, and never an ignored one — decided by the scan's classification alone, as in `AC-SEG-2`.                                                                                                                                                       |
+| `AC-PICK-2b` | ⚠️ **Parked in the prototype:** a "Trending, normally hidden" group surfacing ignored-but-trending Topics that the rule above would otherwise drop. It was the picker's counterpart to the attention notice; with that notice dropped, this stays parked unless it is wanted on its own merits. |
+| `AC-PICK-3`  | No Playbook-choosing step. The picker opens straight onto the Topic list.                                                                                                                                                                                                                       |
+| `AC-PICK-4`  | Topics are grouped by the same age groups and ordered newest first, matching the feed.                                                                                                                                                                                                          |
+| `AC-PICK-5`  | Cards are **identical to the feed's** — same source badge, age, signals, title and summary. A reader must not be shown a different-looking object from the one they were reading two seconds earlier.                                                                                           |
+| `AC-PICK-6`  | Clicking a card's body opens the full article **inside the same dialog**, with a back action to the list.                                                                                                                                                                                       |
+| `AC-PICK-7`  | From that article, **Use in chat** behaves exactly as in §3.2.                                                                                                                                                                                                                                  |
+| `AC-PICK-8`  | An empty state when nothing qualifies.                                                                                                                                                                                                                                                          |
 
 ### 3.4 The Topic article dialog
 
@@ -260,7 +230,7 @@ Called out so nobody mistakes a demo trick for the behaviour.
 | In the prototype                                                    | What it must be                                                            |
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | A card's age is a fixed phrase, not a real date                     | A real publication date, with the phrase and the age group derived from it |
-| How often a feed runs is a label; nothing ever runs                 | An actual recurring run — see `AC-SET-8`                                   |
+| How often a feed runs is a label; nothing ever runs                 | An actual recurring run, on whatever cadence a feed is given               |
 | The scanning state lasts a fixed moment                             | As long as the work takes                                                  |
 | The fresh-topics waiting state lasts a fixed three seconds          | As long as the work takes — see `AC-FRESH-7`                               |
 | Sentiment is guessed from the post's words, and forgotten on reload | A real value, kept — see `AC-POST-9`                                       |
@@ -376,14 +346,14 @@ Two things that will bite whoever implements this:
 
 ## 7. Open questions for product
 
-| #   | Question                                                                                                                                   | Blocks                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
-| 1   | Does the attention notice ship? Its original reason for being switched off no longer holds (§2.5).                                         | `AC-SIG-4`, `AC-ATT-0`     |
-| 2   | If not, how does a reader reach the attention page?                                                                                        | `AC-ATT-0`                 |
-| 3   | Should the picker resurface ignored-but-trending Topics?                                                                                   | `AC-PICK-2b`               |
-| 4   | Can a Playbook ever have more than one feed? Everything here assumes one.                                                                  | `AC-ROUTE-1`, `AC-FRESH-5` |
-| 5   | Is a Topic's review state per reader or shared by the workspace? This document assumes per reader.                                         | `AC-ACT-5`                 |
-| 6   | Is `Topic_status` on an ignore event the status **before** the ignore, or after? After makes it a constant (§6.2).                         | `AC-TRK-5`, `AC-TRK-6`     |
-| 7   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?           | `AC-TRK-1`, `AC-TRK-2`     |
-| 8   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention? | `AC-TRK-2`, `AC-TRK-3`     |
-| 9   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?       | `AC-TRK-5`                 |
+| #   | Question                                                                                                                                              | Blocks                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1   | With the notice dropped, how does a reader reach the attention page — or does it go too?                                                              | `AC-ATT-0`                 |
+| 2   | Should the picker resurface ignored-but-trending Topics?                                                                                              | `AC-PICK-2b`               |
+| 3   | Can a Playbook ever have more than one feed? Everything here assumes one.                                                                             | `AC-ROUTE-1`, `AC-FRESH-5` |
+| 4   | Is a Topic's review state per reader or shared by the workspace? This document assumes per reader.                                                    | `AC-ACT-5`                 |
+| 5   | Is `Topic_status` on an ignore event the status **before** the ignore, or after? After makes it a constant (§6.2).                                    | `AC-TRK-5`, `AC-TRK-6`     |
+| 6   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?                      | `AC-TRK-1`, `AC-TRK-2`     |
+| 7   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention?            | `AC-TRK-2`, `AC-TRK-3`     |
+| 8   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?                  | `AC-TRK-5`                 |
+| 9   | With no settings surface, what gives a feed its sources, its cadence, its notify choice and its pause? Every one of those controls has lost its home. | `AC-ROUTE-4`, `AC-STATE-3` |
