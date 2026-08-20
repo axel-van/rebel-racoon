@@ -243,13 +243,16 @@ Called out so nobody mistakes a demo trick for the behaviour.
 this document a name would be implementation detail; here the names _are_ the thing being
 agreed, so they are written out and must match exactly.
 
-**One criterion per tracking update.** Each one is a single test.
+**One criterion per tracking update**, with one exception: the ten frontend controls
+share a single criterion. Attaching an attribute is the same mechanical check ten times
+over, and ten criteria would give it the weight of ten decisions when the decisions are
+all in §6.1 to §6.3.
 
-**What a frontend test proves, and what it does not.** For every criterion in §6.4, the
-test asserts that the element carries the stated `data-track` value and that clicking it
-fires. It says nothing about the event reaching the warehouse, and nothing about the
-payload — that is verified once, downstream, not per control. A missing attribute is a
-failed test even when the click still works.
+**What the frontend criterion proves, and what it does not.** It asserts that each
+element carries the stated `data-track` value and that clicking it fires. It says nothing
+about the event reaching the warehouse, and nothing about the payload — that is verified
+once, downstream, not per control. A missing attribute is a failure even when the click
+still works.
 
 ### 6.1 Updated — the workflow-start event
 
@@ -311,34 +314,38 @@ the same question and is not in the property list above. See §7.
 There is nothing for a frontend test to assert here: no control is involved and no
 attribute is added. It is verified on the trace itself.
 
-### 6.4 Frontend — the ten controls
+### 6.4 Frontend — ten controls, one criterion
 
-Each control carries a `data-track` value. The values below are proposals: snake*case,
-prefixed `topic*`, and naming the **surface** as well as the action, because the same
-action on two surfaces is two different things to a funnel.
+| ID         | Criterion                                                                                                                                                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AC-TRK-8` | Every control in the table below carries the `data-track` value named against it, and fires that value when clicked. A missing or wrong value on any one of the ten fails this criterion — there is no partial pass. |
 
-| ID          | The control                      | Where                              | `data-track`                   |
-| ----------- | -------------------------------- | ---------------------------------- | ------------------------------ |
-| `AC-TRK-8`  | **See more topics in your feed** | footer of the Fresh topics list    | `topic_feed_see_more`          |
-| `AC-TRK-9`  | **Pick from the Topic Feed**     | the composer's Add menu            | `topic_picker_open`            |
-| `AC-TRK-10` | a Topic card's body              | the Pick a topic dialog            | `topic_card_open_picker`       |
-| `AC-TRK-11` | a Topic card's body              | the Fresh topics list              | `topic_card_open_fresh_list`   |
-| `AC-TRK-12` | **Use in chat**                  | a feed card's action menu          | `topic_use_in_chat_card_menu`  |
-| `AC-TRK-13` | **Use in chat**                  | the article beside the feed        | `topic_use_in_chat_panel`      |
-| `AC-TRK-14` | **Use in chat**                  | the Pick a topic dialog            | `topic_use_in_chat_picker`     |
-| `AC-TRK-15` | **Use in chat**                  | reached from the Fresh topics list | `topic_use_in_chat_fresh_list` |
-| `AC-TRK-16` | **Ignore**                       | a feed card's action menu          | `topic_ignore_card_menu`       |
-| `AC-TRK-17` | **Ignore**                       | the article beside the feed        | `topic_ignore_panel`           |
+The values are proposals. They are `snake_case`, prefixed `topic_`, and each names the
+**surface** as well as the action, because the same action on two surfaces is two
+different things to a funnel.
+
+| The control                      | Where                              | `data-track`                   |
+| -------------------------------- | ---------------------------------- | ------------------------------ |
+| **See more topics in your feed** | footer of the Fresh topics list    | `topic_feed_see_more`          |
+| **Pick from the Topic Feed**     | the composer's Add menu            | `topic_picker_open`            |
+| a Topic card's body              | the Pick a topic dialog            | `topic_card_open_picker`       |
+| a Topic card's body              | the Fresh topics list              | `topic_card_open_fresh_list`   |
+| **Use in chat**                  | a feed card's action menu          | `topic_use_in_chat_card_menu`  |
+| **Use in chat**                  | the article beside the feed        | `topic_use_in_chat_panel`      |
+| **Use in chat**                  | the Pick a topic dialog            | `topic_use_in_chat_picker`     |
+| **Use in chat**                  | reached from the Fresh topics list | `topic_use_in_chat_fresh_list` |
+| **Ignore**                       | a feed card's action menu          | `topic_ignore_card_menu`       |
+| **Ignore**                       | the article beside the feed        | `topic_ignore_panel`           |
 
 Two things that will bite whoever implements this:
 
-- **`AC-TRK-14` and `AC-TRK-15` are the same button.** One article dialog serves both the
-  picker and the Fresh topics list (`AC-DLG-1`), so a fixed attribute cannot tell them
+- **The picker's _Use in chat_ and the Fresh-topics-list one are the same button.** A
+  single article dialog serves both (`AC-DLG-1`), so a fixed attribute cannot tell them
   apart. The value has to be set from wherever the dialog was opened, or the two events
-  will be indistinguishable — which defeats the reason for splitting them.
-- **Cards open, they do not choose.** `AC-TRK-10` and `AC-TRK-11` record a card being
-  read, not a Topic being taken (`AC-FRESH-8`). They are the top of the funnel whose
-  bottom is `AC-TRK-14` / `AC-TRK-15`, and reading them as intent will overcount.
+  will be indistinguishable — which defeats the reason for separating them.
+- **Cards open, they do not choose.** The two card-body values record a card being read,
+  not a Topic being taken (`AC-FRESH-8`). They are the top of a funnel whose bottom is
+  the _Use in chat_ values, and reading them as intent will overcount.
 
 ---
 
