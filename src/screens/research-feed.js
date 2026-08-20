@@ -987,25 +987,32 @@ function renderEmpty() {
 
 // ── Nothing matches the filter ─────────────────────────────────────────────
 // It was one muted line — "No Topics match these filters. Try widening them, or
-// reset to the defaults." — which named the problem and then left the reader to
-// find the panel and work out which tick to undo. The three ways out of an empty
-// feed are known, so they are offered:
+// reset to the defaults." — which named the problem and left the reader to find
+// the panel and work out which tick to undo. The three ways out of an empty feed
+// are known, so the state names them:
 //
-//   1. WAIT. The feed scans on a cadence, so the list filling up again needs
-//      nothing from the reader. Said first because it is the answer that is true
-//      whatever the filter says — and dropped when the feed is paused, where it
-//      would be a promise nothing is going to keep.
-//   2. THE OTHER SEGMENT. Offered only when it actually holds something: sending
-//      someone from one empty list to another is worse than saying nothing.
-//   3. WIDEN THE STATUS FILTER. Offered only when Used or Ignored is currently
-//      unticked AND ticking it would reveal something. Both halves matter — the
-//      button is otherwise a control that changes the filter and not the list.
+//   1. WAIT. The feed scans on a cadence, so the list refilling needs nothing
+//      from the reader. Said first because it is true whatever the filter says.
+//      It names the feed's OWN cadence, and is replaced when the feed is paused,
+//      where it would be a promise nothing is going to keep.
+//   2. THE OTHER SEGMENT. Named only when it holds something: pointing someone
+//      at an empty list is worse than saying nothing.
+//   3. WIDEN THE STATUS FILTER. Named only when Used or Ignored is unticked AND
+//      ticking it would reveal something IN THIS SEGMENT — counted against the
+//      widened filter rather than the whole lane, so the sentence cannot promise
+//      topics the source filter or the segment still hides.
 //
-// The shape mirrors --fresh, its sibling in this same slot, deliberately: the two
-// are the same kind of thing and a reader who sees both should not have to work
-// out that they are. Both are hand-built pattern-1 empty states and both are
-// candidates for components/empty-state.js — migrating one alone is what would
-// make them diverge.
+// DESCRIBED, NOT BUTTONED. This had two buttons that switched the segment and
+// ticked the statuses. They were shortcuts to controls already on screen — the
+// segmented control is six inches up, Filters is beside it — so the state was
+// growing a second copy of the page's own chrome, and the second copy is the one
+// that drifts. Sentences point at the real controls and cannot fall out of step
+// with them. It is also why this state has no button at all where its --fresh
+// sibling does: that one's Feed settings is a real destination, not a duplicate.
+//
+// The shape still mirrors --fresh deliberately: the two are the same kind of
+// thing. Both are hand-built pattern-1 empty states and both are candidates for
+// components/empty-state.js — migrating one alone is what would make them diverge.
 //
 // First person, like --fresh and unlike the dialogs: an empty state is one of the
 // places Archie talks (CLAUDE.md).
@@ -1016,9 +1023,7 @@ function renderFilteredEmpty() {
   const otherCount = segmentBriefs(other).length;
   const otherLabel = other === "later" ? "Topics for later" : "Ready to draft";
 
-  // What ticking Used and Ignored would actually surface, in THIS segment. Counted
-  // against the widened filter rather than against the whole lane, so the button
-  // cannot promise topics that the source filter or the segment still hides.
+  // What ticking Used and Ignored would actually surface, in THIS segment.
   const hiddenStatuses = REVIEW_STATUSES.map((st) => st.id).filter((id) => !filters.statuses.includes(id));
   const widened = hiddenStatuses.length
     ? getBriefsForLane(laneId, { ...filters, statuses: [...filters.statuses, ...hiddenStatuses] }).filter((b) =>
@@ -1026,33 +1031,21 @@ function renderFilteredEmpty() {
       ).length
     : 0;
 
+  // Built as parts and joined rather than nested ternaries: four combinations of
+  // two optional clauses is where a ternary chain stops being readable, and the
+  // sentence has to end up as ONE paragraph however many clauses survive.
+  const parts = [
+    lane?.paused
+      ? "This feed is paused, so nothing new will arrive until you start it again."
+      : `I scan ${cadence?.adverb || "regularly"}, so the next batch lands here on its own.`,
+  ];
+  if (otherCount) parts.push(`${otherLabel} has ${otherCount}.`);
+  if (widened) parts.push("Tick Used and Ignored under Filters to bring back the ones you have already handled.");
+
   return html`<div class="research-feed__empty research-feed__empty--fresh">
     <span class="research-feed__nofeed-mark"><i class="ap-icon-filter"></i></span>
     <h2 class="ap-h3">No Topics match these filters</h2>
-    <p class="muted">
-      ${raw(
-        lane?.paused
-          ? "This feed is paused, so nothing new will arrive until you start it again."
-          : `I scan ${escapeAttr(cadence?.adverb || "regularly")}, so the next batch lands here on its own.`,
-      )}
-    </p>
-    <div class="research-feed__empty-actions">
-      ${raw(
-        otherCount
-          ? html`<button type="button" class="ap-button stroked blue" data-feed-empty-segment="${escapeAttr(other)}">
-              <span>${otherLabel}</span>
-              <span class="ap-counter normal blue">${otherCount}</span>
-            </button>`
-          : "",
-      )}
-      ${raw(
-        widened
-          ? html`<button type="button" class="ap-button stroked grey" data-feed-empty-widen>
-              <i class="ap-icon-eye-on" aria-hidden="true"></i><span>Show used and ignored</span>
-            </button>`
-          : "",
-      )}
-    </div>
+    <p class="muted">${parts.join(" ")}</p>
   </div>`;
 }
 
@@ -1334,25 +1327,6 @@ function bind(target) {
       return navigate(`/topic-feeds/${encodeURIComponent(laneId)}/attention`);
 
     if (event.target.closest("[data-feed-empty-settings]")) return navigate("/topic-feeds/settings");
-
-    // The empty state's two ways out. Both go through the same paths the controls
-    // they stand in for use — the segment button writes `view.segment` exactly as the
-    // segmented control does, and the widen button writes `filters.statuses` exactly
-    // as a checkbox does — so neither can drift from the control it is shortcutting.
-    const emptySeg = event.target.closest("[data-feed-empty-segment]");
-    if (emptySeg) {
-      view.segment = emptySeg.dataset.feedEmptySegment;
-      view.articleId = null;
-      view.articleAuto = false;
-      resetPaging();
-      return paint(target);
-    }
-
-    if (event.target.closest("[data-feed-empty-widen]")) {
-      filters = { ...filters, statuses: REVIEW_STATUSES.map((st) => st.id) };
-      resetPaging();
-      return paint(target);
-    }
 
     if (event.target.closest("[data-feed-resume]")) {
       toggleLanePause(laneId);
