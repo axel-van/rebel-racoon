@@ -28,12 +28,12 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=477";
+import { renderTopbar } from "../components/topbar.js?v=478";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { parseHashParams } from "../url-state.js?v=21";
 import { renderDiff, hasDiff } from "../text-diff.js?v=1";
-import { open as openHistory } from "../components/pillar-history-modal.js?v=16";
+import { open as openHistory } from "../components/pillar-history-modal.js?v=17";
 import {
   getPillarById,
   addAsset,
@@ -44,7 +44,7 @@ import {
   subscribe as subscribePillars,
   recordContextEdit,
   NAME_MAX,
-} from "../pillars-store.js?v=15";
+} from "../pillars-store.js?v=16";
 
 const PAGE = 8;
 
