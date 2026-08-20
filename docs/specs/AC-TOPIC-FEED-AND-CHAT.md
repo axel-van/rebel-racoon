@@ -132,7 +132,6 @@ One control: a **Filters** dropdown above the list, with a badge.
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AC-STATE-1` | **Scanning** — a working state shows while the feed is being assembled, on the reader's first arrival. It does not show when arriving on a link to one Topic, nor when coming back from the attention page. |
 | `AC-STATE-2` | **Empty after filtering** — when the filter excludes everything, say so and offer the way back: reset the filter. This is a different state from a feed with no sources.                                    |
-| `AC-STATE-3` | **Paused** — a paused feed says so and offers Resume. Topics already found stay readable.                                                                                                                   |
 
 ---
 
@@ -355,5 +354,5 @@ Two things that will bite whoever implements this:
 | 6   | Do _Use in chat_ from a card's menu and from the picker get their own `entry_point` values, or fold into an existing one (§6.1)?                                            | `AC-TRK-1`, `AC-TRK-2`     |
 | 7   | `starter-topic_list` mixes a hyphen and an underscore while `topic-feed-panel` is all hyphens. Intended, or should both be one convention?                                  | `AC-TRK-2`, `AC-TRK-3`     |
 | 8   | The ignore dialog's **Don't show this again** checkbox is feedback too, but no property carries it. Should it join the event (§6.2)?                                        | `AC-TRK-5`                 |
-| 9   | With no settings surface, what gives a feed its sources, its cadence, its notify choice and its pause? Every one of those controls has lost its home.                       | `AC-ROUTE-4`, `AC-STATE-3` |
+| 9   | With no settings surface, what gives a feed its sources, its cadence and its notify choice? Every one of those controls has lost its home.                                  | `AC-ROUTE-4`               |
 | 10  | With no version history and no "what changed", the **Updated** mark tells a reader something changed but gives them no way to see what. Does the mark still earn its place? | `AC-SIG-1`, `AC-PANE-6`    |
