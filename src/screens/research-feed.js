@@ -814,6 +814,25 @@ const PANE_MIN_H = 320;
 // into a target the router has already replaced.
 let moreTimer = null;
 
+// Back to page one. Called by anything that changes WHICH topics the list is of —
+// the segmented control, a filter change, a brand switch — because `shown` counts
+// into the old list and would leave the new one opened three pages deep.
+//
+// It was lost for four commits: it lived inside the block the IntersectionObserver
+// was cut out of, and nothing here calls it, so only its three CALLERS broke. That
+// took out the segmented control, the filter panel and the scope switch — every
+// route into it threw ReferenceError before doing anything else.
+function resetPaging() {
+  view.shown = PAGE_SIZE;
+  view.loadingMore = false;
+  // A page in flight belongs to the list that requested it. Cancel it, or it lands
+  // on the newly filtered list and pages it too.
+  if (moreTimer) {
+    clearTimeout(moreTimer);
+    moreTimer = null;
+  }
+}
+
 // ── The trigger is the scroll listener, not an IntersectionObserver ────────
 // This was an IntersectionObserver on a sentinel, and it had not fired since the
 // first repaint: paint() replaces target.innerHTML, so .research-feed__body is a
