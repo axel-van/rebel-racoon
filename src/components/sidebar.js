@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=84";
+} from "../active-playbook.js?v=85";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=56";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=72";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=623";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=624";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=105";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=75";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=97";
@@ -858,14 +858,18 @@ function renderNav(path) {
       // it belongs to nav-left-primary, so the class name is the platform's and the
       // CSS is a port (see sidebar.css). Nothing carries both: a number beside a
       // dot would say the same thing twice.
-      // An ACTIVE row never carries an unread mark, whatever feedVisited says: you
-      // are looking at the thing. Checked here rather than by writing to
-      // feedVisited, because the route cannot say which Playbook you came for —
-      // /topic-feeds has no session to read a contextId from, so marking on arrival
-      // marked the rail's brand instead of the chat's and silenced a dot the user
-      // had never seen. The click is the only thing that spends the dot; the route
-      // just hides it while you are standing on it.
-      const dot = !!item.indicator && !item.match(path) && item.indicator(path);
+      // Being ON the row does NOT hide its dot, and that is deliberate. It used to:
+      // "you are looking at the thing" reads well until you switch Playbook from
+      // inside the feed, which is where the switcher lives and where switching is
+      // most natural — the new brand's unread topics are exactly what the reader
+      // wants flagged, and blanking the dot because the route happened to match
+      // hid it at the one moment it had something to say.
+      //
+      // So the dot answers one question only: does THIS Playbook's feed have
+      // anything to review that you have not been to see? Visiting spends it for
+      // that Playbook (feedVisited, written on the nav click); every other Playbook
+      // keeps its own answer, whichever route you are standing on.
+      const dot = !!item.indicator && item.indicator(path);
       const counter = item.indicator
         ? dot
           ? `<div class="nav-left-primary__item-counter-indicator" aria-hidden="true"></div>`

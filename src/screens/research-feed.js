@@ -39,7 +39,7 @@ import { parseHashParams } from "../url-state.js?v=21";
 // The picker footer's "Create a Playbook" hands the context-builder its return route,
 // exactly as /contexts and the composer do.
 import { setHandoff } from "../handoff.js?v=20";
-import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=489";
+import { renderTopbar, setTopbarActions, clearTopbarActions } from "../components/topbar.js?v=490";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { renderBriefCard, renderUseButtons } from "../components/brief-card.js?v=78";
 import {
@@ -52,7 +52,7 @@ import {
   renderResearchArticle,
   // researchArticleSub went with the pane's subtitle — the card's source row says
   // the same thing. Still exported and still used by the Full-research dialog.
-} from "../components/research-modals.js?v=176";
+} from "../components/research-modals.js?v=177";
 import { openBriefInChat } from "../brief-flow.js?v=46";
 import { showToast } from "../components/toast.js?v=21";
 import { unlinkBrief, pillarForBrief, subscribe as subscribePillars } from "../pillars-store.js?v=16";
@@ -61,8 +61,8 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=84";
-import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=68";
+} from "../active-playbook.js?v=85";
+import { open as openPillarPicker } from "../components/pillar-picker-modal.js?v=69";
 import { getLaneById, getLanes, toggleLanePause } from "../research-store.js?v=56";
 import {
   getBriefById,
