@@ -67,7 +67,7 @@ import { pillarForBrief } from "../pillars-store.js?v=16";
 // "Baseline" went earlier for length; the full version still lives where the
 // decision is actually made — the infobox in the ignore-reason modal
 // (research-modals.openIgnoreReason).
-const IGNORE_HINT = "Kept off this list, even if it trends or updates";
+const IGNORE_HINT = "Kept off this list, even if the topic trends or updates";
 
 // The counterpart, and it says where the topic GOES rather than what un-ignoring
 // is. The feed opens on To review, so this is also the sentence that tells the

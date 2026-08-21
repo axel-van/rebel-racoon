@@ -35,10 +35,10 @@ import {
 } from "../briefs-store.js?v=74";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=81";
+import { renderUseButtons } from "./brief-card.js?v=82";
 import { getLanes } from "../research-store.js?v=58";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=90";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=91";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -59,7 +59,7 @@ import {
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
 import { openBriefInChat } from "../brief-flow.js?v=48";
-import { renderBriefCard } from "./brief-card.js?v=81";
+import { renderBriefCard } from "./brief-card.js?v=82";
 import { renderEmptyState } from "./empty-state.js?v=1";
 import { renderSocialPostCard } from "./social-post-card.js?v=45";
 import { showToast } from "./toast.js?v=21";
@@ -297,8 +297,8 @@ export function openIgnoreReason({ briefId, onDone = null }) {
         <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
           <div>
-            The answer tunes which Topics arrive. Ignored Topics won&apos;t be shown, even if trending or updated — tick
-            Ignored under Filters to see them again.
+            Ignored Topics won&apos;t be shown, even if trending or updated. Tick Ignored under Filters to see them
+            again.
           </div>
         </div>
         <label class="research-modal__check">
