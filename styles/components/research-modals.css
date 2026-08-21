@@ -532,19 +532,6 @@
 
 /* ── Pick a topic (composer Add → Content Ideas) ─────────────────────────── */
 
-.research-pick__group + .research-pick__group {
-  margin-top: var(--ref-spacing-md);
-}
-
-.research-pick__group-title {
-  margin: 0 0 var(--ref-spacing-xxs);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--ref-color-grey-40);
-}
-
 .research-pick__empty {
   margin: 0;
 }
@@ -562,36 +549,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--ref-spacing-sm);
-}
-
-/* ── The trending-but-ignored group ──────────────────────────────────────── */
-
-/* Peach, the same surface every trending signal in this app uses — the feed's
-   notice and .topics-card__whynow both — so the exception reads as the same idea
-   rather than as a new kind of box. */
-.research-pick__group--trending {
-  padding: var(--ref-spacing-xs);
-  margin-bottom: var(--ref-spacing-md);
-  background: var(--app-peach);
-  border-radius: var(--app-radius-starter);
-}
-
-.research-pick__group--trending .research-pick__group-title {
-  color: var(--app-archie-orange-deep);
-}
-
-.research-pick__group-note {
-  margin: 0 0 var(--ref-spacing-xxs);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sys-text-color-light);
-}
-
-.research-pick__group--trending .topics-card--picker:hover,
-.research-pick__group--trending .topics-card--picker:focus-within {
-  /* The blue wash is invisible on peach; use white so the card still lifts. */
-  background: var(--ref-color-white);
-  border-color: var(--app-peach-border);
 }
 
 /* ── Add to Content strategy ───────────────────────────────────────────────

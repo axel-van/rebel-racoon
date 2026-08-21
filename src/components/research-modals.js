@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=25";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=26";
 import {
   ageMinutes,
   getBriefById,
@@ -32,13 +32,13 @@ import {
   unignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=73";
+} from "../briefs-store.js?v=74";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=79";
-import { getLanes } from "../research-store.js?v=57";
+import { renderUseButtons } from "./brief-card.js?v=81";
+import { getLanes } from "../research-store.js?v=58";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=88";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=90";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -58,19 +58,13 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=47";
-import { renderBriefCard } from "./brief-card.js?v=79";
+import { openBriefInChat } from "../brief-flow.js?v=48";
+import { renderBriefCard } from "./brief-card.js?v=81";
 import { renderEmptyState } from "./empty-state.js?v=1";
 import { renderSocialPostCard } from "./social-post-card.js?v=45";
 import { showToast } from "./toast.js?v=21";
 
 const MODAL_ID = "research";
-
-// The picker's "Trending, normally hidden" group — the counterpart to the feed's
-// attention notice, and switched off with it. It surfaced ignored-but-trending
-// topics that the picker's own ignored-exclusion would otherwise drop. One line
-// to restore; pickerSplit and the group's render are both still below.
-const SHOW_HIDDEN_TRENDING = false;
 
 let backdrop, panel, headEl, titleEl, bodyEl, footEl, backEl;
 let initialized = false;
@@ -303,8 +297,8 @@ export function openIgnoreReason({ briefId, onDone = null }) {
         <div class="ap-infobox info research-modal__infobox">
           <i class="ap-icon-info" aria-hidden="true"></i>
           <div>
-            The answer tunes which Topics arrive. This one is kept out of the feed unless it trends well above its usual
-            volume baseline — so real spikes still come through without noise from recurring Topics.
+            The answer tunes which Topics arrive. Ignored Topics won&apos;t be shown, even if trending or updated — tick
+            Ignored under Filters to see them again.
           </div>
         </div>
         <label class="research-modal__check">
@@ -943,22 +937,16 @@ export function openIdeaPicker({ onPick, playbookId = null }) {
   renderIdeaPicker({ onPick });
 }
 
-// A lane's topics, split by whether the picker would normally show them.
+// A lane's topics for the picker: ready to draft, and not ignored.
 //
-// `shown` is everything not ignored. `hiddenTrending` is the exception this
-// picker makes: a topic you ignored but which is now running above its baseline.
-// That is the trending page's rule — "a spike is never hidden by triage state" —
-// and it does NOT contradict the feed's no-override rule, because there the user
-// set the status filter themselves and gets told what it hides. Here the
-// exclusion is a built-in default nobody chose, so silently dropping a spike
-// would just lose it.
-function pickerSplit(laneId) {
-  const all = getBriefsForLane(laneId);
-  return {
-    shown: all.filter((b) => b.status !== "ignored" && isReadyToDraft(b)),
-    // Empty while the exception is off, so the group below simply never renders.
-    hiddenTrending: SHOW_HIDDEN_TRENDING ? all.filter((b) => b.status === "ignored" && b.isTrending) : [],
-  };
+// There WAS an exception here — a "Trending, normally hidden" group that showed
+// topics you had ignored but which were running above baseline again, on the old
+// rule that a spike is never hidden by triage state. It is gone, along with the
+// flag that had it switched off. Ignore now means ignore on every surface, and
+// the status filter in the feed is the only thing that brings one back; a picker
+// has no filter, so it simply has no ignored topics in it.
+function pickerTopics(laneId) {
+  return getBriefsForLane(laneId).filter((b) => b.status !== "ignored" && isReadyToDraft(b));
 }
 
 function pickerLanes() {
@@ -1006,14 +994,11 @@ function renderIdeaPicker(ctx) {
 // from the rail's, so this list can legitimately show a brand the sidebar is not
 // naming. Hence the lede line below, which is the name without the control.
 function renderTopicStep(ctx) {
-  const lanes = pickerLanes().map((lane) => ({ lane, ...pickerSplit(lane.id) }));
-  const shown = [];
-  for (const g of lanes) shown.push(...g.shown);
+  const shown = pickerLanes().flatMap((lane) => pickerTopics(lane.id));
   // Newest first inside a group, matching the feed's own sort.
   shown.sort((a, b) => ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel));
   const ageGroups = groupBriefsByAge(shown);
   const shownTotal = shown.length;
-  const trending = lanes.flatMap((g) => g.hiddenTrending);
   const pb = pickerPlaybookId ? getContextById(pickerPlaybookId) : getActivePlaybook();
 
   openShell("idea-picker", ctx, {
@@ -1027,27 +1012,18 @@ function renderTopicStep(ctx) {
     // something inside an html`` template — as innerHTML it stringifies to
     // "[object Object]" and the list silently vanishes.
     //
-    // Trending-but-ignored goes FIRST, for the same reason the feed puts its
-    // notice above the list: it is the thing you would otherwise not see.
-    // The select leads the body in BOTH branches: an empty Playbook is exactly when
-    // you need the way to another one, so hiding the control with the list would
-    // strand the reader on the one Playbook that has nothing.
+    // The lede leads the body in BOTH branches: an empty Playbook is exactly when
+    // you need to know which Playbook you are looking at, so hiding the line with
+    // the list would strand the reader with no idea whose feed came up empty.
+    //
+    // There is no "Trending, normally hidden" group above the list any more — an
+    // ignored topic is not shown here at all. See pickerTopics.
     body:
       html`<p class="research-modal__lede">
         Topics from <strong>${pb ? pb.name : "this Playbook"}</strong>, the Playbook this chat is in.
       </p>` +
-      (shownTotal || trending.length
-        ? (trending.length
-            ? html`<section class="research-pick__group research-pick__group--trending">
-                <h4 class="research-pick__group-title">Trending, normally hidden</h4>
-                <p class="research-pick__group-note">
-                  You ignored ${trending.length === 1 ? "this one" : "these"}, but
-                  ${trending.length === 1 ? "it is" : "they are"} running above baseline again.
-                </p>
-                ${raw(trending.map((b) => pickerCard(b)).join(""))}
-              </section>`
-            : "") +
-          ageGroups
+      (shownTotal
+        ? ageGroups
             .map(
               ({ group, briefs }) =>
                 html`<section class="topics-agegroup">

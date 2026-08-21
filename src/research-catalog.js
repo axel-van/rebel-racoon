@@ -372,7 +372,7 @@ export const REVIEW_STATUSES = Object.freeze([
     label: "Ignored",
     statusColor: "red",
     icon: "ap-icon-eye-off",
-    hint: "Kept off this list unless it starts trending or gets updated.",
+    hint: "Kept off this list, even if it starts trending or gets updated.",
   },
 ]);
 
@@ -384,8 +384,9 @@ export const REVIEW_STATUSES = Object.freeze([
 // this one", so showing it by default would put work you have actively pushed away
 // in front of someone looking for what to do next.
 //
-// Ignored is one tick away in the panel, and it comes back on its own when a topic
-// starts trending or gets updated — so nothing is lost by leaving it off.
+// Ignored is one tick away in the panel, and that tick is now the ONLY way back:
+// an ignored topic no longer resurfaces on a trend or an update. See the note on
+// getTrendingForLane in briefs-store for why the exception went.
 //
 // The count matters as much as the contents: narrowedGroupCount compares this
 // array's LENGTH against filters.statuses, so the Filters badge reads nothing at

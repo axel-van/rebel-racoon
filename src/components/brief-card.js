@@ -50,15 +50,16 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=25";
+import { findReviewStatus } from "../research-catalog.js?v=26";
 // One title per topic — the article's, not the scan's headline. See briefs-store.
-import { briefTitle } from "../briefs-store.js?v=73";
+import { briefTitle } from "../briefs-store.js?v=74";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief } from "../pillars-store.js?v=16";
 
 // No full stop — it is a caption on a menu row, not a sentence. This started as a
 // paragraph, became one line, and is now the shortest thing that still carries the
-// rule: ignoring is not deleting, and a spike overrides it.
+// rule: ignoring is not deleting — the Ignored filter brings it back. A spike no
+// longer does.
 //
 // "this list", not "feed": the user is standing in ONE Topic feed when they read
 // it, and that is the scope of what ignoring does. "Feed" was ambiguous with the
@@ -66,7 +67,7 @@ import { pillarForBrief } from "../pillars-store.js?v=16";
 // "Baseline" went earlier for length; the full version still lives where the
 // decision is actually made — the infobox in the ignore-reason modal
 // (research-modals.openIgnoreReason).
-const IGNORE_HINT = "Kept off this list unless trending or updated";
+const IGNORE_HINT = "Kept off this list, even if it trends or updates";
 
 // The counterpart, and it says where the topic GOES rather than what un-ignoring
 // is. The feed opens on To review, so this is also the sentence that tells the
@@ -391,8 +392,8 @@ function renderCardMore(brief, pillar, menuOpen) {
                       label: "Link to a Content pillar",
                     }),
             )}
-            <!-- A normal row, with no divider above it. Ignoring hides a topic
-                 that a spike brings back — nothing is destroyed — so red-mode was
+            <!-- A normal row, with no divider above it. Ignoring hides a topic the
+                 Ignored filter brings back — nothing is destroyed — so red-mode was
                  flagging a danger that is not there, and the rule was fencing it
                  off from actions it belongs with. Same correction the pane's
                  Ignore button got.
@@ -562,8 +563,8 @@ function unlinkRow(briefId, pillar) {
  *                  right: with only two buttons left, the gap read as a missing third
  *                  one, and a control alone at the opposite edge of a 620px pane looks
  *                  like it belongs to the pane rather than to the topic. Grey, not red —
- *                  ignoring hides a topic that a spike brings back, so the destructive
- *                  colour was promising a consequence the action does not have. Ghost
+ *                  ignoring hides a topic the Ignored filter brings back, so the
+ *                  destructive colour promises a consequence it does not have. Ghost
  *                  keeps it from reading as a second equal choice.
  */
 /**
@@ -605,8 +606,8 @@ export function renderUseButtons(brief, { dismiss = "ignore" } = {}) {
   //
   // The Ignore hint the menu row carried as a caption becomes a tooltip here: a
   // button has no room for a second line, and the sentence is the whole reason a
-  // reader is willing to press it (ignoring is not deleting, and a spike overrides
-  // it). Same DS Tooltip construction as the card's status glyph — bubble after its
+  // reader is willing to press it (ignoring is not deleting — the Ignored filter
+  // brings it back). Same DS Tooltip construction as the card's status glyph — bubble after its
   // trigger, visibility on the app class, aria-hidden with the words repeated in the
   // button's own aria-label so a display:none element is not the only place they
   // live.

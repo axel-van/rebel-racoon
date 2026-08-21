@@ -4,12 +4,16 @@
 // grew to carry both signals; the module name lags, the same split as
 // Playbook/Context and brief/topic.
 //
-// This page is the HOME of both ATTENTION SIGNALS — trending and updated — and
-// that has one consequence driving everything else here: it lists every brief
-// carrying either, REGARDLESS OF REVIEW STATUS, ignoring the feed's status filter
-// entirely. A spike must never be hidden because the user happened to have
-// triaged it — an Ignored topic now running at 4x baseline is exactly the thing
-// worth seeing, and the same holds for one whose story has just moved on.
+// This page is the HOME of both ATTENTION SIGNALS — trending and updated — and it
+// lists every brief carrying either, whatever its review status, with ONE
+// exception: an IGNORED brief is never listed here.
+//
+// That exception reverses the rule this page was built on ("a spike must never be
+// hidden because the user happened to have triaged it — an Ignored topic now
+// running at 4x baseline is exactly the thing worth seeing"). Ignore now means
+// ignore on every surface, and ticking Ignored in the feed's filter is the only
+// way back. The exclusion lives in briefs-store's getAttentionForLane rather than
+// here, so no caller can opt out of it.
 //
 // That is also why they aren't a section at the top of the feed. Trending was,
 // once (see the handoff's explorations/): as a section it competed with the triage
@@ -22,14 +26,14 @@
 
 import { html, raw } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=493";
+import { renderTopbar } from "../components/topbar.js?v=495";
 import { isFlagOn } from "../feature-flags.js?v=23";
-import { renderBriefCard } from "../components/brief-card.js?v=79";
-import { openFullResearch } from "../components/research-modals.js?v=180";
-import { openBriefInChat } from "../brief-flow.js?v=47";
-import { getLaneById } from "../research-store.js?v=57";
-import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=73";
-import { findResearchSource, findCadence } from "../research-catalog.js?v=25";
+import { renderBriefCard } from "../components/brief-card.js?v=81";
+import { openFullResearch } from "../components/research-modals.js?v=182";
+import { openBriefInChat } from "../brief-flow.js?v=48";
+import { getLaneById } from "../research-store.js?v=58";
+import { getAttentionForLane, setStatus, subscribe as subscribeBriefs } from "../briefs-store.js?v=74";
+import { findResearchSource, findCadence } from "../research-catalog.js?v=26";
 
 let laneId = null;
 let unsubscribe = null;

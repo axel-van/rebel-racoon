@@ -16,8 +16,12 @@
 //     Trending is not a feed-level override. (This is the whole reason trending
 //     moved out of a collapsible feed section: as a section it had to override
 //     the status filter, which made the filter lie.)
-//   • On the TRENDING PAGE, the status filter is ignored entirely. That page is
-//     the home of trending, so a spike is never hidden by triage state.
+//   • An IGNORED brief is never surfaced by a signal, anywhere. Ignore now means
+//     ignore: the only way to see one is to tick Ignored in the filter. The old
+//     rule — "a spike is never hidden by triage state", which let the trending
+//     and attention pages show ignored briefs — is gone. It made Ignore a
+//     suggestion rather than an answer, and the one thing a reader wants from
+//     "not this one" is that it stays gone.
 //
 // Triage is kept in its own map rather than written onto the brief, mirroring the
 // handoff's data model: a Brief is what the scan returned (server-owned), a
@@ -45,7 +49,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=97";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=25";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=26";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
@@ -299,28 +303,31 @@ export function getBriefsForLane(laneId, filters = null) {
   return list.sort(byRecency);
 }
 
-// Every trending brief in the lane, whatever its review status. Deliberately
-// does NOT take a filters argument — the trending page ignores the status filter
-// by design, and accepting one would invite a caller to pass it.
+// Every trending brief in the lane EXCEPT the ignored ones.
+//
+// It used to be "whatever its review status", on the rule that the trending page
+// was trending's home and a spike should never be hidden by triage. That rule is
+// reversed: an ignored brief is ignored everywhere, and the status filter is the
+// only thing that brings one back. Still takes no filters argument — the exclusion
+// is not a filter the caller chooses, it is the meaning of Ignore.
 export function getTrendingForLane(laneId) {
   return briefs
-    .filter((b) => b.laneId === laneId && b.isTrending)
+    .filter((b) => b.laneId === laneId && b.isTrending && getStatus(b.id) !== "ignored")
     .map(withTriage)
     .sort(byRecency);
 }
 
 export function countTrendingForLane(laneId) {
-  return briefs.filter((b) => b.laneId === laneId && b.isTrending).length;
+  return briefs.filter((b) => b.laneId === laneId && b.isTrending && getStatus(b.id) !== "ignored").length;
 }
 
-// Every brief carrying an ATTENTION SIGNAL — trending or updated — whatever its
-// review status. The union of the two, deduped by construction (one brief, one
-// entry, even when it is both). Like getTrendingForLane it takes no filters: the
-// attention page ignores triage by design, and accepting one would invite a
-// caller to pass it.
+// Every brief carrying an ATTENTION SIGNAL — trending or updated — except the
+// ignored ones. The union of the two, deduped by construction (one brief, one
+// entry, even when it is both). Same reversal as getTrendingForLane above: this
+// page used to ignore triage by design and no longer does.
 export function getAttentionForLane(laneId) {
   return briefs
-    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated))
+    .filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated) && getStatus(b.id) !== "ignored")
     .map(withTriage)
     .sort(byRecency);
 }
@@ -339,7 +346,11 @@ export function getAttentionForLane(laneId) {
 // labels, so the two numbers may sum to more than the total. The copy therefore
 // lists them as separate labels and never as an equation.
 export function attentionCountsForLane(laneId) {
-  const flagged = briefs.filter((b) => b.laneId === laneId && (b.isTrending || b.isUpdated));
+  // Ignored excluded, like the two getters above — a count that includes topics the
+  // page will not list is a notice promising work that is not there.
+  const flagged = briefs.filter(
+    (b) => b.laneId === laneId && (b.isTrending || b.isUpdated) && getStatus(b.id) !== "ignored",
+  );
   return {
     trending: flagged.filter((b) => b.isTrending).length,
     updated: flagged.filter((b) => b.isUpdated).length,
