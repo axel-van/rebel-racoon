@@ -41,7 +41,7 @@ import { renderTopicsSettings } from "./screens/topics-settings.js?v=266";
 import { renderContentStrategy } from "./screens/content-strategy.js?v=81";
 import { renderPillar } from "./screens/pillar.js?v=95";
 import { renderResearchForm } from "./screens/research-form.js?v=232";
-import { renderResearchFeed } from "./screens/research-feed.js?v=273";
+import { renderResearchFeed } from "./screens/research-feed.js?v=274";
 import { renderResearchTrending } from "./screens/research-trending.js?v=233";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar

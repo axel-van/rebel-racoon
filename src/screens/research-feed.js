@@ -1226,13 +1226,6 @@ function renderSoonOption(source) {
 
 function renderGroup(key, label, options, selected, field, { icons = true, isLast = false, soon = [] } = {}) {
   const open = view.groups[key];
-  // Does this group MIX iconless options with iconed ones? Only Topic status does,
-  // now that New carries no glyph, and without this its label would sit a glyph's
-  // width to the left of the other three — four checkboxes with a ragged label
-  // column read as a rendering bug rather than as a status without a marker.
-  // Groups where NO option has an icon (Topic type) reserve nothing, so they keep
-  // their tighter row.
-  const mixedIcons = icons && options.some((o) => o.icon) && options.some((o) => !o.icon);
   // `with-border-bottom` is the component's separator between leaves, and the component
   // drives it from `isLastLeaf` — every leaf except the last carries it. This port drove
   // it from the OPEN state instead, which is a different rule and a visible one: with
@@ -1293,19 +1286,22 @@ function renderGroup(key, label, options, selected, field, { icons = true, isLas
                            teaches the mapping, because it is the only place the glyph
                            and the word sit together. Types have none and the
                            expression renders nothing at all; Sources have them in the
-                           catalogue but this panel opts out (icons: false). New is the
-                           third case: it sits in a group whose other three options DO
-                           have glyphs, so it gets an empty slot of the same width to
-                           keep the labels in one column (see mixedIcons above).
-                           aria-hidden on both: the label beside it is the accessible
-                           name and the checkbox already owns it. -->
+                           catalogue but this panel opts out (icons: false).
+                           aria-hidden: the label beside it is the accessible name and
+                           the checkbox already owns it.
+
+                           An option with NO glyph now reserves NOTHING. "To review"
+                           used to get an empty slot of the icon's width so its label
+                           lined up with Used's and Ignored's — the argument being that
+                           a ragged label column reads as a rendering bug. It also left
+                           the one row with no marker holding a gap for a marker it
+                           will never have, which reads as a missing icon. The label
+                           sits against its checkbox instead. -->
                       <span class="research-filters__option-name">
                         ${raw(
                           icons && o.icon
                             ? html`<i class="${o.icon} research-filters__option-icon" aria-hidden="true"></i>`
-                            : mixedIcons
-                              ? html`<span class="research-filters__option-icon is-empty" aria-hidden="true"></span>`
-                              : "",
+                            : "",
                         )}
                         <span>${o.label || o.name}</span>
                       </span>

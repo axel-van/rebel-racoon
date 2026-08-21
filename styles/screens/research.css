@@ -1494,13 +1494,6 @@
   flex: 0 0 auto;
 }
 
-/* The same slot, empty — the Topic status group's New option, which carries no
-   glyph. It holds the label column straight so the four names line up. */
-.research-filters__option-icon.is-empty {
-  display: inline-block;
-  width: var(--sys-icon-css-sm);
-}
-
 /* ── Trending notice ─────────────────────────────────────── */
 
 /* The notice is the DS .ap-infobox and carries its own padding, radius, tint and
