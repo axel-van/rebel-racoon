@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=85";
+} from "../active-playbook.js?v=86";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=56";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=72";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=624";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=625";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=105";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=75";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=97";
@@ -192,6 +192,9 @@ export function initSidebar() {
       return;
     }
     // ── The scope switcher ────────────────────────────────────────────────
+    // PARKED with the switcher: nothing emits [data-scope-pick], [data-scope-manage]
+    // or [data-scope-create] while renderScopeSwitcher is commented out of the rail.
+    // Left in place because restoring the control means restoring these.
     const scopePick = event.target.closest("[data-scope-pick]");
     if (scopePick) {
       event.preventDefault();
@@ -512,8 +515,18 @@ export function renderSidebar() {
       </button>
     </div>
 
-    ${raw(renderScopeSwitcher())}
+    <!-- PARKED: the .app-scope switcher used to sit here, pinned above the nav.
+         The Playbook is a NAV ROW again (see NAV below), so the rail has one
+         Playbook affordance rather than two. renderScopeSwitcher is left intact
+         below, with its three click handlers, so putting it back is this one line
+         — the same way renderPlaybookControl survived being parked in session.js
+         and came back in a single call.
 
+         What goes with it: changing the rail's active Playbook from the rail. The
+         scope itself is untouched (active-playbook.js still persists it, and every
+         surface still reads it), and the Topic Feed's own topbar carries a Playbook
+         select that calls setActivePlaybook, so brand switching lives there and in
+         the composer. -->
     <nav class="app-sidebar__nav" aria-label="Library">${raw(renderNav(path))}</nav>
 
     ${raw(renderOrganizeHeader())}
@@ -743,11 +756,23 @@ function initialOf(name) {
 }
 
 const NAV = [
-  // No Playbook row. The scope switcher above the nav IS the entry point — a row
-  // pointing at the same object the switcher already names was a second door to
-  // one room, and the two competed for the same click. Reaching the Playbook's
-  // own page is now the switcher's job (its footer), which is also where "all my
-  // brands" lives.
+  // The Playbook row, restored — and it is the rail's ONLY Playbook affordance
+  // now, which is what makes it legitimate again. It was removed because the
+  // scope switcher sat directly above it naming the same object: two doors to one
+  // room, competing for the same click. The switcher is parked (see renderSidebar),
+  // so the objection is gone and the row is back to exactly what it was — same
+  // path, same glyph, same counter of how many Playbooks you have.
+  //
+  // ap-icon-target is the Playbook glyph everywhere in the app: the feed card's
+  // meta line, the Playbook page's sections, a pillar's default icon, the starter
+  // cards' head row.
+  {
+    path: "/contexts",
+    icon: "ap-icon-target",
+    label: "Playbooks",
+    match: (p) => p === "/contexts",
+    count: () => getContexts().length,
+  },
   {
     path: "/connectors",
     icon: "ap-icon-view-grid",
