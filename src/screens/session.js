@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=486";
+import { renderTopbar } from "../components/topbar.js?v=489";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=97";
 import {
   getConnectedProfiles,
@@ -17,7 +17,7 @@ import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=46";
 // The rail is repainted by hand when the composer re-scopes the chat — see the
 // [data-playbook-pick] handler for why a store notify cannot do it here.
-import { renderSidebar } from "../components/sidebar.js?v=453";
+import { renderSidebar } from "../components/sidebar.js?v=456";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=83";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
@@ -75,7 +75,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=16";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=81";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=84";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -90,9 +90,9 @@ import {
 } from "../briefs-store.js?v=72";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=46";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=23";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=73";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=76";
 import { getLaneById, getLanes } from "../research-store.js?v=56";
-import * as contextBuilder from "../context-builder.js?v=453";
+import * as contextBuilder from "../context-builder.js?v=456";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -129,7 +129,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=173";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=176";
 import { findResearchSource } from "../research-catalog.js?v=24";
 import {
   openDrafts as openDraftsPanel,
@@ -137,7 +137,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=620";
+} from "../components/right-panel.js?v=623";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=45";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -2157,8 +2157,26 @@ function starterTopicTone(brief) {
 
 // The active Playbook's feeds, as ids. Null when there is no scope at all, which
 // is the "show everything" the store defaults to.
+// The Playbook THIS CHAT is in, which is not always the rail's.
+//
+// Read off [data-composer-playbook] rather than from the session, and for the same
+// reason components/sidebar.js does it: on /session/new the session is a transient
+// object held in a local here, so nothing that runs outside a render — the
+// briefs-store subscription below, for one — can reach its contextId. The rendered
+// control is where that value lives.
+//
+// Falls back to the rail when there is no composer on screen (the topic list also
+// paints on surfaces without one).
+function chatPlaybookId() {
+  return document.querySelector("[data-composer-playbook]")?.dataset.composerPlaybook || getActivePlaybookId();
+}
+
 function scopedLaneIds() {
-  const scopeId = getActivePlaybookId();
+  // The CHAT's Playbook, not the rail's. The composer's select can re-scope a chat,
+  // and a list headed "Fresh topics to review" sitting above a composer that says
+  // Noba must not be showing Acme's topics — the same rule that put the rail's
+  // Topic Feed dot on the chat's Playbook.
+  const scopeId = chatPlaybookId();
   if (!scopeId) return null;
   return getLanes()
     .filter((l) => l.playbookId === scopeId)
@@ -2176,7 +2194,11 @@ function scopedLaneIds() {
 // these cards, and it is why they read the scope while the topic cards read their
 // own lane.
 function starterPlaybookHead() {
-  const brand = getActivePlaybook();
+  // The chat's Playbook, per the note above: what this row names is where the work
+  // is about to happen, and the work happens in this chat. Leaving it on the rail
+  // put two brands on one screen the moment the composer re-scoped the chat — the
+  // topic list following the chat and the workflow cards still naming the rail.
+  const brand = getContextById(chatPlaybookId());
   if (!brand) return "";
   return `<span class="starter-topic__head"><span class="starter-topic__crumb"><span class="starter-topic__pb" title="For ${escapeHtml(
     brand.name,
@@ -2395,23 +2417,42 @@ function renderStarterTopicSlot(sessionId) {
 // makes that free — no slot on screen, nothing to do. A per-render subscription would
 // need a teardown that renderEmptyHero has no hook for, and would leak one listener
 // per paint of the hero.
+// Repaints label + list together through a stable wrapper, and that wrapper is the
+// point. This used to replace the slot in place and, when the new render came back
+// empty, delete the slot AND the heading above it — which was correct for the case
+// it was written for (the last Topic leaving the queue: it never comes back) and
+// wrong for the one that exists now. A re-scope to a Playbook with no topics empties
+// the list, and re-scoping back has to refill it — with the nodes deleted there was
+// no anchor left to render into, so the block was gone until the next full paint.
+//
+// An empty render now writes an empty wrapper instead: nothing on screen, because
+// renderStarterTopicBlock returns "" and the div has no chrome of its own, but a
+// seat kept for the next one.
 function refreshStarterTopicList() {
-  const slot = document.querySelector("[data-starter-topic-slot]");
-  if (!slot || !document.body.contains(slot)) return;
-  const host = slot.parentElement;
-  const holder = document.createElement("div");
-  holder.innerHTML = renderStarterTopicSlot();
-  const fresh = holder.querySelector("[data-starter-topic-slot]");
-  // The block can legitimately render to nothing — the last Topic just left the queue.
-  // Removing it takes the label with it, or the heading outlives what it names.
-  if (!fresh) {
-    slot.previousElementSibling?.remove();
-    return slot.remove();
-  }
-  host.replaceChild(fresh, slot);
+  const block = document.querySelector("[data-starter-topics-block]");
+  if (!block || !document.body.contains(block)) return;
+  block.innerHTML = renderStarterTopicBlock();
 }
 
 subscribeBriefs(refreshStarterTopicList);
+
+// The workflow cards' Playbook head, repainted on the same trigger as the topic
+// list. Their head names the chat's Playbook now (see starterPlaybookHead), so a
+// re-scope that moved the list but left these behind put two brands on one screen —
+// which is the thing the scoping is supposed to prevent.
+//
+// Only the heads are rewritten, not the grid: a card carries the composer's own
+// state in nothing, but re-rendering the whole grid would rebuild the coming-soon
+// teasers and the prompt interpolation for no reason. The head is a leaf.
+function refreshStarterPlaybookHeads() {
+  const grid = document.querySelector("[data-starter-grid]");
+  if (!grid) return;
+  const head = starterPlaybookHead();
+  for (const card of grid.querySelectorAll(".starter-card")) {
+    const current = card.querySelector(".starter-topic__head");
+    if (current) current.outerHTML = head;
+  }
+}
 
 // Label + list, or nothing at all. One function so the label can't outlive
 // the block it names — renderStarterTopicSlot returns "" in three cases (flag
@@ -2489,9 +2530,9 @@ function renderEmptyHero(sessionId, composerMarkup = "") {
            It was the grid's first cell (see renderStarterTopicBlock for why the
            carousel needed its own block), which is also why the two share a
            max-width: same left edge, same right edge, one alignment. -->
-      ${raw(renderStarterTopicBlock(sessionId))}
+      <div data-starter-topics-block>${raw(renderStarterTopicBlock(sessionId))}</div>
       <h2 class="empty-chat__starter-label" id="starterGridLabel">Or jump into a workflow</h2>
-      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel">${raw(cards)}</div>
+      <div class="starter-grid" role="group" aria-labelledby="starterGridLabel" data-starter-grid>${raw(cards)}</div>
     </div>
   `;
 }
@@ -5542,6 +5583,11 @@ function bindSession(root, session) {
         // this any earlier renders the rail one pick behind. (It did, for a while:
         // every dot showed the previous Playbook's state.)
         renderSidebar();
+        // And the hero's "Fresh topics to review" list, which is scoped the same way
+        // (scopedLaneIds → chatPlaybookId). Same ordering rule as renderSidebar: it
+        // reads the attribute the swap above sets, so it cannot run before it.
+        refreshStarterTopicList();
+        refreshStarterPlaybookHeads();
         return;
       }
 
