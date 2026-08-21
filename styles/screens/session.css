@@ -820,6 +820,23 @@
    align-self overrides .empty-chat's align-items: center — the same trick
    .empty-chat__starter-label uses to sit in the grid's box rather than shrink to
    its own text. */
+/* The refresh wrapper around the topic label + list, and it must not be a box.
+   .empty-chat is a column flex with align-items: center and gap: sm; the label and
+   .starter-topic are written as its DIRECT children — each `width: 100%` with its
+   own max-width, and the gap between them is the parent's. Wrapped in a plain div
+   they resolved against the wrapper instead, which align-items: center had shrunk
+   to its content: the list came out 742px at x=399 against the untouched workflow
+   grid's 948px at x=296, and the 16px between label and list disappeared into a
+   wrapper with no gap of its own.
+
+   display: contents removes the box and leaves the children as flex items of
+   .empty-chat, so every rule below applies exactly as it did before the wrapper
+   existed. The element stays in the DOM, which is all refreshStarterTopicList needs
+   of it — it only ever sets innerHTML. */
+[data-starter-topics-block] {
+  display: contents;
+}
+
 .starter-topic {
   position: relative;
   display: flex;
