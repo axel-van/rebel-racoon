@@ -1149,7 +1149,6 @@ function renderFilterPanel() {
         // them down the panel also blunt the status icons, which do need reading.
         // The icons stay in the catalogue: the source cards on the form use them.
         renderGroup("sources", "Sources", filterableSources(), filters.sources, "sources", {
-          icons: false,
           soon: comingSoonSources(),
           // The component's isLastLeaf: the final leaf owns no separator, because the
           // panel's own footer border is the line under it.
@@ -1171,27 +1170,9 @@ function renderFilterPanel() {
   </div>`;
 }
 
-// The status glyphs, unlabelled, for the collapsed group head. Read from
-// REVIEW_STATUSES so it is the same list, in the same order, with the same icons the
-// cards use — a hand-written legend would drift the first time one icon changed.
-//
-// Filtered to statuses that HAVE an icon, which is three of the four: New renders no
-// marker on a card, so a legend entry for it would explain a glyph the reader will
-// never see. The filter, rather than a hardcoded list of three, is what keeps this
-// honest if a status gains or loses its icon later.
-function renderStatusLegend() {
-  return html`<span class="research-filters__legend" aria-hidden="true">
-    ${raw(
-      REVIEW_STATUSES.filter((s) => s.icon)
-        .map((s) => html`<i class="${s.icon}"></i>`)
-        .join(""),
-    )}
-  </span>`;
-}
-
-// `icons: false` suppresses the option glyphs for a group whose data happens to
-// carry them (Sources) — the catalogue keeps them for the surfaces that do use
-// them, and only this panel opts out.
+// The catalogue still carries an icon per status and per source; this panel is
+// simply not one of the surfaces that draws them. The feed's cards and the
+// settings form's source cards are.
 // A source that is declared but not yet listening: the row is there, greyed, and
 // says so.
 //
@@ -1224,7 +1205,7 @@ function renderSoonOption(source) {
   </label>`;
 }
 
-function renderGroup(key, label, options, selected, field, { icons = true, isLast = false, soon = [] } = {}) {
+function renderGroup(key, label, options, selected, field, { isLast = false, soon = [] } = {}) {
   const open = view.groups[key];
   // `with-border-bottom` is the component's separator between leaves, and the component
   // drives it from `isLastLeaf` — every leaf except the last carries it. This port drove
@@ -1240,18 +1221,14 @@ function renderGroup(key, label, options, selected, field, { icons = true, isLas
       aria-expanded="${open ? "true" : "false"}"
     >
       <span class="ap-filter-leaf__title">${label}</span>
-      <!-- The status group's head carries the glyphs as a LEGEND, so the panel that
-           owns this axis also says what the cards' icons mean. Three of them, not
-           four — New has no marker on a card, so it has none here either.
-           Shown only while the group is COLLAPSED: expanded, every option row below
-           carries its own icon beside its own name, which is the pairing that
-           actually teaches the mapping — the legend would then be the same glyphs
-           twice, once without labels.
-           aria-hidden, because the head is a button whose accessible name is the
-           group's label; a run of icon names read out before "Topic status" would
-           make the control harder to use, not easier, and the options below name
-           each status properly. -->
-      ${raw(key === "status" && !open ? renderStatusLegend() : "")}
+      <!-- No legend. The head carried the three status glyphs while the group was
+           collapsed, so the panel that owns this axis also said what the cards'
+           marks mean. It only worked as the collapsed stand-in for labelled option
+           rows: expanded, the rows named each glyph beside its word, which is the
+           pairing that teaches the mapping. With the option glyphs gone the legend
+           would be the only place a glyph appears in this panel and the one place
+           it is never named — a mark you cannot look up. The cards themselves are
+           where a status glyph is read, next to the topic it describes. -->
       <!-- One glyph, rotated — the component's own trick
            (.ap-filter-leaf__chevron--rotated) rather than two icon names, so the
            two states cannot pick up different marks. -->
@@ -1282,27 +1259,19 @@ function renderGroup(key, label, options, selected, field, { icons = true, isLas
                         ${raw(selected.includes(o.id) ? "checked" : "")}
                       />
                       <i aria-hidden="true"></i>
-                      <!-- The icon, where a status has one — this is the row that
-                           teaches the mapping, because it is the only place the glyph
-                           and the word sit together. Types have none and the
-                           expression renders nothing at all; Sources have them in the
-                           catalogue but this panel opts out (icons: false).
-                           aria-hidden: the label beside it is the accessible name and
-                           the checkbox already owns it.
+                      <!-- WORDS ONLY. No option in any group carries a glyph now, so
+                           every label sits against its own checkbox and the panel has
+                           one shape rather than two.
 
-                           An option with NO glyph now reserves NOTHING. "To review"
-                           used to get an empty slot of the icon's width so its label
-                           lined up with Used's and Ignored's — the argument being that
-                           a ragged label column reads as a rendering bug. It also left
-                           the one row with no marker holding a gap for a marker it
-                           will never have, which reads as a missing icon. The label
-                           sits against its checkbox instead. -->
+                           Sources had already opted out: a card's source badge carries
+                           the word beside the glyph, leaving the filter to repeat a
+                           pairing the reader has met on every card. The status rows are
+                           the same case once you look — a card's status glyph is read
+                           in the list, next to the topic it belongs to, and a filter
+                           row is where you go to change what the list contains, not to
+                           learn what its marks mean. Two of three statuses had a glyph
+                           and one never will, so the column was ragged either way. -->
                       <span class="research-filters__option-name">
-                        ${raw(
-                          icons && o.icon
-                            ? html`<i class="${o.icon} research-filters__option-icon" aria-hidden="true"></i>`
-                            : "",
-                        )}
                         <span>${o.label || o.name}</span>
                       </span>
                     </label>`,

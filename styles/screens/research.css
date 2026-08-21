@@ -1432,23 +1432,6 @@
   cursor: pointer;
 }
 
-/* The four status glyphs in the collapsed group head — a legend, so the panel that
-   owns this axis also says what the cards' icons mean.
-
-   margin-left: auto pushes the set to sit beside the chevron rather than beside the
-   label: the head is justify-content: space-between with the title already at
-   flex: 1 0 0, so the auto margin is what keeps the chevron hard right. */
-.research-filters__legend {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  margin-left: auto;
-  margin-right: var(--ref-spacing-xs);
-  font-size: var(--sys-icon-css-sm);
-  line-height: 1;
-  color: var(--sys-text-color-light);
-}
-
 .research-filters__chevron {
   flex: 0 0 auto;
   color: var(--sys-text-color-light);
@@ -1462,21 +1445,15 @@
   color: var(--ref-color-grey-100);
 }
 
-/* The glyph and the word are ONE unit, wrapped, with their own gap, so the row's
-   gap separates the checkbox from that pair rather than falling between a glyph
-   and the word it labels. */
+/* The label's wrapper. It held a glyph and a word as one unit, with its own gap so
+   the row's gap fell between the checkbox and the pair rather than between a glyph
+   and the word it labelled. There is no glyph any more, so the gap goes with it —
+   but the flex box stays: the "Coming soon" pill is a child of this span and needs
+   it both to centre against the text and for the .is-soon stretch below. */
 .research-filters__option-name {
   display: inline-flex;
   align-items: center;
-  gap: var(--ref-spacing-xxs);
   min-width: 0;
-}
-
-.research-filters__option-icon {
-  flex: 0 0 auto;
-  font-size: var(--sys-icon-css-sm);
-  line-height: 1;
-  color: var(--sys-text-color-light);
 }
 
 /* The "Coming soon" pill on a disabled source row.
