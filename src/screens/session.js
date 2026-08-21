@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=478";
+import { renderTopbar } from "../components/topbar.js?v=480";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=97";
 import {
   getConnectedProfiles,
@@ -72,7 +72,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=16";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=73";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=75";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -87,9 +87,9 @@ import {
 } from "../briefs-store.js?v=72";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=46";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=23";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=65";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=67";
 import { getLaneById, getLanes } from "../research-store.js?v=56";
-import * as contextBuilder from "../context-builder.js?v=445";
+import * as contextBuilder from "../context-builder.js?v=447";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -126,7 +126,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=165";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=167";
 import { findResearchSource } from "../research-catalog.js?v=24";
 import {
   openDrafts as openDraftsPanel,
@@ -134,7 +134,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=612";
+} from "../components/right-panel.js?v=614";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=45";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1772,12 +1772,15 @@ function renderComposer(attachedContext, session, selectable) {
               <i class="ap-icon-at"></i>
               <span>Reference</span>
             </button>
-            <!-- The Playbook control is gone from the composer. The rail's scope
-                 switcher says which brand this chat is in, and a second control
-                 here could only ever disagree with it. The PILLAR picker stays:
-                 a pillar is optional context chosen per chat, which is a real
-                 per-message decision rather than a scope. -->
-            ${renderPillarControl(attachedContext, session.id)}
+            <!-- The Playbook control is BACK, after a spell where the rail's scope
+                 switcher was the only one. The switcher still sets where a NEW chat
+                 starts; this says which Playbook this chat is actually in, and it is
+                 what the "Pick a Topic" picker reads — the picker's own Playbook
+                 select is gone, so this is the single place that choice is made.
+                 On an active chat it renders as a disabled indicator, not a select:
+                 a chat is a record of work done against one brand, and re-scoping it
+                 halfway through would rewrite that rather than filter it. -->
+            ${renderPlaybookControl(attachedContext, selectable)}${renderPillarControl(attachedContext, session.id)}
             <button
               type="button"
               class="ap-button primary orange session__composer-send"
@@ -5498,9 +5501,6 @@ function bindSession(root, session) {
       // just the control in place (keeps the textarea + its text). The
       // <details> open/close is owned by the native element; we just need
       // to keep the closing-on-outside-click logic below.
-      // PARKED with renderPlaybookControl — nothing emits [data-playbook-pick]
-      // from the composer any more. Left in place because restoring the control
-      // means restoring this, and because the pillar handler below mirrors it.
       const pbPick = event.target.closest("[data-playbook-pick]");
       if (pbPick) {
         event.preventDefault();

@@ -402,15 +402,6 @@
   line-height: 1.55;
 }
 
-/* The Playbook select above the picker's list. The control itself is the Topic feed's
-   (.research-playbook + .research-playbook__dropdown in screens/research.css) — this is
-   only its seat in the modal: full width of the body's measure, with the list starting
-   below it rather than beside it. */
-.research-pick__scope {
-  display: flex;
-  margin-bottom: var(--ref-spacing-sm);
-}
-
 /* ── Topic Relevance rows ──────────────────────────────────────────────────
    The UNTINTED row: an ordinary topic's Volume, Relevance and Why now. Same measure,
    type and leading as the two tinted blocks it sits beside (.topics-card__whynow /

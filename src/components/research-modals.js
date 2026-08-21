@@ -38,7 +38,7 @@ import {
 import { renderUseButtons } from "./brief-card.js?v=78";
 import { getLanes } from "../research-store.js?v=56";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=73";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=75";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -984,56 +984,20 @@ function renderIdeaPicker(ctx) {
 // means every card in this list now carries the same string. What does not change
 // from row to row is not information. (Same reason the "Playbook › Topic feed"
 // breadcrumb left the new-session cards.)
-// The Playbook select, at the top of the picker's list.
+// ── No Playbook select in here, by design ──────────────────────────────────
+// This step used to open with one, and before that with a whole grid of Playbooks
+// as step 1. Both are gone for the same reason: the picker is opened FROM a chat,
+// and a chat already has a Playbook — session.contextId, which openIdeaPicker
+// takes as `playbookId`. A second control here could only agree with the composer's
+// (making it redundant) or disagree with it (making the modal show topics from a
+// brand the chat is not in). The composer's own Playbook select is where that
+// choice is made now; this list just follows it.
 //
-// Same control as the Topic feed's topbar, part for part — .ap-select > summary
-// .ap-select-trigger.composer-playbook__trigger with an inline label, and the same
-// .research-playbook__dropdown that keeps the DS's downward `top: 100%` instead of the
-// composer's upward `bottom: 100%`.
-//
-// ⚠️ It writes DIFFERENT state from the feed's, and the difference is deliberate.
-// The feed's select is a view of the rail's global scope and calls
-// setActivePlaybook(); this one writes `pickerPlaybookId`, which is module state this
-// picker already owned. A picker is a transient lens for one pick: opening it from the
-// composer, glancing at another brand's topics and having the rail, the feed, the
-// pillar counters and the next new chat all follow you there is a side effect nobody
-// asked for. It opens ON the active Playbook, so the default still agrees with the
-// app; only browsing away from it stays local.
-//
-// This is also what the removed step-1 "Which Playbook do you want Topics from?" used
-// to do, minus the step: same choice, no navigation, and the list is visible while you
-// make it.
-function renderPickerPlaybookSelect() {
-  const playbooks = getContexts();
-  const current = pickerPlaybookId ? getContextById(pickerPlaybookId) : getActivePlaybook();
-  const items = playbooks
-    .map((c) => {
-      const isSel = current && c.id === current.id;
-      return html`<div
-        class="ap-select-option${raw(isSel ? " selected" : "")}"
-        data-picker-playbook-pick="${escapeAttr(c.id)}"
-        role="option"
-        aria-selected="${isSel ? "true" : "false"}"
-      >
-        <span class="ap-select-option-text">${c.name}</span>
-        ${raw(isSel ? html`<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
-      </div>`;
-    })
-    .join("");
-  return html`<div class="research-pick__scope">
-    <details class="ap-select research-playbook" data-picker-playbook>
-      <summary class="ap-select-trigger composer-playbook__trigger" title="Choose the Playbook to pick a Topic from">
-        <span class="ap-select-inline-label">Playbook</span>
-        <span class="ap-select-value">${current ? current.name : "Select a playbook"}</span>
-        <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-      </summary>
-      <div class="ap-select-dropdown research-playbook__dropdown" role="listbox" aria-label="Choose a Playbook">
-        <div class="ap-select-options">${raw(items)}</div>
-      </div>
-    </details>
-  </div>`;
-}
-
+// What the select DID carry, besides the choice, was the brand's name — and losing
+// that broke the rule that a scope which hides has to stay legible where it
+// filters. It matters more here than it did: the chat's Playbook can now differ
+// from the rail's, so this list can legitimately show a brand the sidebar is not
+// naming. Hence the lede line below, which is the name without the control.
 function renderTopicStep(ctx) {
   const lanes = pickerLanes().map((lane) => ({ lane, ...pickerSplit(lane.id) }));
   const shown = [];
@@ -1062,7 +1026,9 @@ function renderTopicStep(ctx) {
     // you need the way to another one, so hiding the control with the list would
     // strand the reader on the one Playbook that has nothing.
     body:
-      renderPickerPlaybookSelect() +
+      html`<p class="research-modal__lede">
+        Topics from <strong>${pb ? pb.name : "this Playbook"}</strong>, the Playbook this chat is in.
+      </p>` +
       (shownTotal || trending.length
         ? (trending.length
             ? html`<section class="research-pick__group research-pick__group--trending">
@@ -1763,17 +1729,6 @@ function onPanelClick(event) {
     return close();
   }
   if (!active) return;
-
-  // Picking a Playbook in the topics picker. Local to the picker (pickerPlaybookId),
-  // never the global scope — see renderPickerPlaybookSelect for why — and it re-renders
-  // the step in place so the list under the trigger simply becomes the new Playbook's.
-  const pickerPb = event.target.closest("[data-picker-playbook-pick]");
-  if (pickerPb) {
-    const details = pickerPb.closest("[data-picker-playbook]");
-    if (details) details.open = false;
-    pickerPlaybookId = pickerPb.dataset.pickerPlaybookPick;
-    return renderTopicStep(active.ctx);
-  }
 
   // The "See past versions" link inside the Full-article DIALOG. The feed's
   // article PANE renders the same markup and wires the same attribute in
