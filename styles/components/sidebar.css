@@ -144,6 +144,54 @@
   margin-left: auto;
 }
 
+/* ── Unread dot on the Topic Feed row ──────────────────────────────────────
+   A PORT of the platform's nav-left-primary indicator, class name included:
+   .nav-left-primary__item-counter-indicator is what web's own left nav puts on a
+   row with an unreviewed inbox. It is NOT a DS component — there is no .ap-* for
+   it and no token of its own — so this is a copy of that component's rule, kept
+   under its real name so the two are findable from each other.
+
+   Straight from the source: 10px square, 50% radius, orange-100 fill, 2px ring.
+   position: relative on the row is what the port adds — the platform's item is
+   already relative, ours was not.
+
+   ── One deliberate divergence ─────────────────────────────────────────────
+   The ring's job is to punch the dot out of whatever sits behind it, so it takes
+   the row's background: the sidebar's white at rest, grey-10 on hover, --app-bg
+   when the row is active. The platform instead switches the ring to
+   electric-blue-10 / -20 on hover and press, over a grey-10 / grey-20 row — the
+   ring and the thing it is cut out of do not match there, which looks like a slip
+   rather than an intent worth copying into a different palette. */
+.app-sidebar__nav-item {
+  position: relative;
+}
+.nav-left-primary__item-counter-indicator {
+  position: absolute;
+  height: 10px;
+  width: 10px;
+  /* The platform's own relationship, not its literal offsets: its row is a fixed
+     36px and ours is content-height, so the numbers had to be re-derived. The dot
+     straddles the icon's top-right corner, overlapping it by 2px on both axes —
+     padding-left + 16 (the icon's right edge) − 2, and the icon's top − 2.
+     Vertically that is expressed against the row's centre rather than its top: the
+     icon is centred, so its distance from the centre is constant (−8) while its
+     distance from the top is not. Measured against the live row: icon at 12/9 in a
+     34px row, dot lands at 26/7. */
+  top: 50%;
+  margin-top: -10px;
+  left: calc(var(--ref-spacing-xs) + 14px);
+  background-color: var(--ref-color-orange-100);
+  border-radius: 50%;
+  border: 2px solid var(--app-color-sidebar-bg);
+}
+.app-sidebar__nav-item:hover .nav-left-primary__item-counter-indicator,
+.app-sidebar__nav-item:focus-visible .nav-left-primary__item-counter-indicator {
+  border-color: var(--ref-color-grey-10);
+}
+.app-sidebar__nav-item.is-active .nav-left-primary__item-counter-indicator {
+  border-color: var(--app-bg);
+}
+
 /* Shortcut hint pill on the trailing edge of action nav rows
    (New conversation, Search). Hover-revealed so the resting state
    stays calm — the row still announces its shortcut on hover/focus
@@ -755,6 +803,14 @@ body.hide-playbook-colors .app-sidebar__row-color-dot {
   padding: 0;
   justify-content: center;
   gap: 0;
+}
+
+/* The icon is centred in a 40x40 box here, so the dot's offsets are relative to
+   that instead of to the expanded row's padding. It is NOT hidden with the label
+   and the counter below: collapsed, this dot is the only thing left that says the
+   feed has anything in it. */
+.app-shell.is-sidebar-collapsed .nav-left-primary__item-counter-indicator {
+  left: calc(50% + 6px);
 }
 
 /* Hide the label, ⇧⌘O/⌘K hint, and per-row counter — only the leading

@@ -1,9 +1,9 @@
 import { route, setAfterRender, start } from "./router.js?v=30";
 import { isFlagOn } from "./feature-flags.js?v=23";
 import { initArchieLoader } from "./archie-loader.js?v=2";
-import { initTopbar, renderTopbar } from "./components/topbar.js?v=480";
-import { initSidebar, renderSidebar } from "./components/sidebar.js?v=447";
-import { init as initRightPanel } from "./components/right-panel.js?v=614";
+import { initTopbar, renderTopbar } from "./components/topbar.js?v=486";
+import { initSidebar, renderSidebar } from "./components/sidebar.js?v=453";
+import { init as initRightPanel } from "./components/right-panel.js?v=620";
 import { init as initScheduleModal } from "./components/schedule-modal.js?v=101";
 import { init as initBugReportModal } from "./components/bug-report-modal.js?v=24";
 import { init as initFeedbackModal } from "./components/feedback-modal.js?v=26";
@@ -17,11 +17,11 @@ import { init as initTopicModal } from "./components/topic-modal.js?v=54";
 // The evidence card owns one delegated listener for its sentiment menu — see the
 // note in the module for why the menu is not driven by its hosts.
 import { init as initSocialPostCards } from "./components/social-post-card.js?v=45";
-import { init as initResearchModals } from "./components/research-modals.js?v=167";
+import { init as initResearchModals } from "./components/research-modals.js?v=173";
 import { init as initAddPlaybookEntryModal } from "./components/add-playbook-entry-modal.js?v=1";
-import { init as initPillarModal } from "./components/pillar-modal.js?v=67";
+import { init as initPillarModal } from "./components/pillar-modal.js?v=73";
 import { init as initPillarHistoryModal } from "./components/pillar-history-modal.js?v=17";
-import { init as initPillarPickerModal } from "./components/pillar-picker-modal.js?v=59";
+import { init as initPillarPickerModal } from "./components/pillar-picker-modal.js?v=65";
 import { init as initConfirmModal } from "./components/confirm-modal.js?v=22";
 import { init as initRenameModal } from "./components/rename-modal.js?v=2";
 import { init as initSaveFolderModal } from "./components/save-folder-modal.js?v=48";
@@ -31,23 +31,23 @@ import { init as initSearchModal } from "./components/search-modal.js?v=55";
 import {
   init as initConversationStatusCard,
   render as renderConversationStatusCard,
-} from "./components/conversation-status-card.js?v=407";
+} from "./components/conversation-status-card.js?v=413";
 import { renderDashboard } from "./screens/dashboard.js?v=98";
-import { renderSession } from "./screens/session.js?v=712";
-import { renderContexts } from "./screens/contexts.js?v=441";
-import { renderConnectors } from "./screens/connectors.js?v=380";
-import { renderTopics } from "./screens/topics.js?v=249";
-import { renderTopicsSettings } from "./screens/topics-settings.js?v=254";
-import { renderContentStrategy } from "./screens/content-strategy.js?v=69";
-import { renderPillar } from "./screens/pillar.js?v=83";
-import { renderResearchForm } from "./screens/research-form.js?v=220";
-import { renderResearchFeed } from "./screens/research-feed.js?v=260";
-import { renderResearchTrending } from "./screens/research-trending.js?v=221";
+import { renderSession } from "./screens/session.js?v=718";
+import { renderContexts } from "./screens/contexts.js?v=447";
+import { renderConnectors } from "./screens/connectors.js?v=386";
+import { renderTopics } from "./screens/topics.js?v=255";
+import { renderTopicsSettings } from "./screens/topics-settings.js?v=260";
+import { renderContentStrategy } from "./screens/content-strategy.js?v=75";
+import { renderPillar } from "./screens/pillar.js?v=89";
+import { renderResearchForm } from "./screens/research-form.js?v=226";
+import { renderResearchFeed } from "./screens/research-feed.js?v=266";
+import { renderResearchTrending } from "./screens/research-trending.js?v=227";
 import { renderWelcomeAlt } from "./screens/welcome-alt.js?v=4";
 // Settings route removed — the prototype Admin controls moved to the sidebar
 // cog popover (see admin-menu.js + sidebar.js); Social accounts page dropped.
-import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=438";
-import { renderPlaybook } from "./screens/playbook.js?v=452";
+import { renderWelcomeAltRecap } from "./screens/welcome-alt-recap.js?v=444";
+import { renderPlaybook } from "./screens/playbook.js?v=458";
 import * as __capAddSource from "./components/add-source-modal.js?v=108";
 import * as __capBug from "./components/bug-report-modal.js?v=24";
 import * as __capFeedback from "./components/feedback-modal.js?v=26";
@@ -58,7 +58,7 @@ import {
   openIdeas as __capOpenIdeas,
   openSources as __capOpenSources,
   openContextBriefPanel as __capOpenContextPanel,
-} from "./components/right-panel.js?v=614";
+} from "./components/right-panel.js?v=620";
 
 // Route table.
 // Every screen is responsible for calling renderTopbar() itself so the crumb

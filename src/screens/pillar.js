@@ -28,7 +28,7 @@
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate, getPath } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=480";
+import { renderTopbar } from "../components/topbar.js?v=486";
 import { showToast } from "../components/toast.js?v=21";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { parseHashParams } from "../url-state.js?v=21";

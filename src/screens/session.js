@@ -1,6 +1,6 @@
 import { html, raw, escapeHtml, escapeAttr as escapeHtmlAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
-import { renderTopbar } from "../components/topbar.js?v=480";
+import { renderTopbar } from "../components/topbar.js?v=486";
 import { socialAccounts, chatStarters, connectorDocs } from "../mocks.js?v=97";
 import {
   getConnectedProfiles,
@@ -15,6 +15,9 @@ import {
 import { FORMATS, formatsForNetwork, defaultFormatFor, clipFormatItems } from "../clip-formats.js?v=51";
 import { CLIP_SUBTITLE_ITEMS, CLIP_SUBTITLE_LABEL } from "../clip-subtitles.js?v=1";
 import { getSessionById, getSessions, subscribe as subscribeSessions } from "../sessions-store.js?v=46";
+// The rail is repainted by hand when the composer re-scopes the chat — see the
+// [data-playbook-pick] handler for why a store notify cannot do it here.
+import { renderSidebar } from "../components/sidebar.js?v=453";
 import { getContextById, getContexts, getDefaultContext, updateContext } from "../contexts-store.js?v=83";
 import { isNewUser } from "../user-mode.js?v=22";
 import {
@@ -72,7 +75,7 @@ import {
 } from "../composer-connector.js?v=2";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief, getPillarsForPlaybook, subscribe as subscribePillars } from "../pillars-store.js?v=16";
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=75";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=81";
 
 // sessionId → pillarId attached in the composer. Module state rather than a
 // store: like the composer's @mentions it describes what THIS composer is about
@@ -87,9 +90,9 @@ import {
 } from "../briefs-store.js?v=72";
 import { BRIEF_CHAT_HANDOFF, attachBriefToChat, openBriefInChat } from "../brief-flow.js?v=46";
 import { PILLAR_CHAT_HANDOFF, attachPillarToChat } from "../pillar-flow.js?v=23";
-import { open as openPillarModal } from "../components/pillar-modal.js?v=67";
+import { open as openPillarModal } from "../components/pillar-modal.js?v=73";
 import { getLaneById, getLanes } from "../research-store.js?v=56";
-import * as contextBuilder from "../context-builder.js?v=447";
+import * as contextBuilder from "../context-builder.js?v=453";
 import { renderPicker } from "./_analyse-common.js?v=55";
 import { renderSourceCard } from "../components/source-card.js?v=33";
 import { renderIdeaCard } from "../components/idea-card.js?v=27";
@@ -126,7 +129,7 @@ import { onFeedbackClick } from "../components/feedback-control.js?v=4";
 import { showToast } from "../components/toast.js?v=21";
 // The composer's Add menu reaches Topic feeds through this picker; the catalog
 // gives the picked topic's source its icon, matching the card it came from.
-import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=167";
+import { openIdeaArticle, openIdeaPicker, openPillarPicker } from "../components/research-modals.js?v=173";
 import { findResearchSource } from "../research-catalog.js?v=24";
 import {
   openDrafts as openDraftsPanel,
@@ -134,7 +137,7 @@ import {
   openClips as openClipsPanel,
   getMode as getRightPanelMode,
   subscribe as subscribeRightPanel,
-} from "../components/right-panel.js?v=614";
+} from "../components/right-panel.js?v=620";
 import { setHandoff, consumeHandoff, hasHandoff } from "../handoff.js?v=20";
 import { startTopicChat, TOPIC_CHAT_HANDOFF } from "../topic-flow.js?v=45";
 import { parseHashParams, setHashQuery } from "../url-state.js?v=21";
@@ -1202,6 +1205,15 @@ function dotColorVar(colorName) {
 // Playbook control in the composer toolbar — matches the Figma form-select
 // inline-label pattern (node 515:367): "Playbook" label + value + chevron,
 // inside a .ap-select-trigger.
+//
+// ⚠️ `data-composer-playbook` carries the Playbook's ID, and the sidebar reads it.
+// It has to come from the DOM rather than from the store: on /session/new the
+// session is a transient object session.js holds in a local, so getSessionById
+// returns null and nothing outside this file can see which Playbook the chat is
+// on. The rail's Topic Feed dot is scoped to exactly that value, so this attribute
+// is the contract — see feedScopeId in components/sidebar.js. The selector was
+// already `[data-composer-playbook]` (presence, not value), so giving it a value
+// breaks none of the existing uses.
 //   • selectable (New Chat / empty conversation) → a <details> wrapping the
 //     .ap-select-trigger + .ap-select-dropdown. Picking a playbook routes
 //     through the delegated [data-playbook-pick] handler in bindSession.
@@ -1213,7 +1225,7 @@ function renderPlaybookControl(ctx, selectable) {
   if (!selectable) {
     if (!ctx) return "";
     return `
-      <div class="composer-playbook" data-composer-playbook>
+      <div class="composer-playbook" data-composer-playbook="${escapeHtml(ctx.id)}">
         <div
           class="ap-select-trigger disabled composer-playbook__trigger"
           data-context-color="${escapeHtml(ctx.color || "grey")}"
@@ -1252,7 +1264,7 @@ function renderPlaybookControl(ctx, selectable) {
     ? `<span class="ap-select-value">${escapeHtml(ctx.name)}</span>`
     : `<span class="ap-select-value ap-select-placeholder">Select a playbook</span>`;
   return `
-    <details class="ap-select composer-playbook" data-composer-playbook>
+    <details class="ap-select composer-playbook" data-composer-playbook="${ctx ? escapeHtml(ctx.id) : ""}">
       <summary class="ap-select-trigger composer-playbook__trigger" title="Choose the playbook for this chat">
         <span class="ap-select-inline-label">Playbook</span>
         ${valueMarkup}
@@ -5504,6 +5516,12 @@ function bindSession(root, session) {
       const pbPick = event.target.closest("[data-playbook-pick]");
       if (pbPick) {
         event.preventDefault();
+        // A direct write, NOT updateSession — and this is not an oversight.
+        // On /session/new the session is a transient object the store has never
+        // seen, so updateSession's `sessions.find` returns null and the pick
+        // silently does nothing. That is the one route where this control is
+        // selectable at all, so routing through the store breaks the only case it
+        // has. (Tried it; the trigger kept reading the old Playbook.)
         session.contextId = pbPick.dataset.playbookPick;
         const container = root.querySelector("[data-composer-playbook]");
         if (container) container.outerHTML = renderPlaybookControl(getContextById(session.contextId), true);
@@ -5516,6 +5534,14 @@ function bindSession(root, session) {
         const nextPillar = renderPillarControl(getContextById(session.contextId), session.id);
         if (pillarBox) pillarBox.outerHTML = nextPillar;
         else if (nextPillar && container) container.insertAdjacentHTML("afterend", nextPillar);
+        // LAST, and the order matters. Nobody notified the stores — the write above
+        // is direct — so the rail is repainted by hand, and it has to be: the Topic
+        // Feed row's unread dot is scoped to the CHAT's Playbook now, so re-scoping
+        // the chat has to move the dot with it. It reads the id off
+        // [data-composer-playbook], which the swap above is what updates, so calling
+        // this any earlier renders the rail one pick behind. (It did, for a while:
+        // every dot showed the previous Playbook's state.)
+        renderSidebar();
         return;
       }
 

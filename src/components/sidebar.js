@@ -28,10 +28,10 @@ import {
   getActivePlaybookId,
   setActivePlaybook,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=75";
+} from "../active-playbook.js?v=81";
 import { getLanes, subscribe as subscribeLanes } from "../research-store.js?v=56";
 import { countNewForLane, subscribe as subscribeBriefs } from "../briefs-store.js?v=72";
-import { closePanel as closeRightPanel } from "./right-panel.js?v=614";
+import { closePanel as closeRightPanel } from "./right-panel.js?v=620";
 import { clearSession as clearAssistantSession } from "../assistant.js?v=105";
 import { clearSession as clearPostsSession } from "../posts-store.js?v=75";
 import { clearSession as clearSourcesSession } from "../sources-stream.js?v=97";
@@ -222,6 +222,12 @@ export function initSidebar() {
     const navItem = event.target.closest("[data-sidebar-nav]");
     if (navItem) {
       const to = navItem.dataset.sidebarNav;
+      // Spend the dot BEFORE navigating, while the current route is still the chat.
+      // The route-based marking in renderSidebar cannot do this one: by the time we
+      // are on /topic-feeds there is no session to read a contextId from, so
+      // feedScopeId falls back to the rail's Playbook and marks the wrong brand as
+      // seen — which is exactly what it did before this branch existed.
+      if (to === "/topic-feeds") feedVisited.add(feedScopeId(getPath()));
       navigate(to);
       return;
     }
@@ -693,12 +699,41 @@ function renderScopeSwitcher() {
   </details>`;
 }
 
-function countNewForScope() {
-  const scopeId = getActivePlaybookId();
+// ── Which Playbook the Topic Feed row speaks for ───────────────────────────
+// The CHAT's, when you are in a chat — session.contextId, the same value the
+// composer's Playbook select writes and the "Pick a Topic" picker reads. Off a
+// chat there is no chat-level answer, so it falls back to the rail's scope.
+//
+// The rail's scope is deliberately NOT the only answer. The two can differ now
+// that the composer can re-scope a chat, and when they do it is the chat that the
+// row has to agree with: a dot pointing at another brand's arrivals, while you are
+// writing for this one, is worse than no dot.
+function feedScopeId(path) {
+  // The composer's own attribute FIRST, before the store. On /session/new the
+  // session is a transient object session.js keeps in a local — getSessionById
+  // returns null for it — so the store cannot answer for the one route where the
+  // composer's select is even editable. The rendered control is the only place that
+  // value exists, so it is what gets read. (See renderPlaybookControl.)
+  const fromComposer = document.querySelector("[data-composer-playbook]")?.dataset.composerPlaybook;
+  if (fromComposer) return fromComposer;
+  const sid = matchSessionId(path);
+  const session = sid ? getSessionById(sid) : null;
+  return session?.contextId || getActivePlaybookId();
+}
+
+function countNewForPlaybook(playbookId) {
   return getLanes()
-    .filter((l) => !scopeId || l.playbookId === scopeId)
+    .filter((l) => !playbookId || l.playbookId === playbookId)
     .reduce((n, l) => n + countNewForLane(l.id), 0);
 }
+
+// Playbooks whose feed has been visited. Per Playbook, not one global flag: the
+// whole point of the indicator is that switching to a brand you have not looked at
+// brings it back, so a single boolean would silence every brand at once.
+//
+// Module state, not persisted — a reload is a fresh demo, and a dot that stays
+// dismissed across reloads is a dot nobody can show twice.
+const feedVisited = new Set();
 
 function initialOf(name) {
   return String(name || "?")
@@ -754,10 +789,17 @@ const NAV = [
     // the worst of both: it promises work that the page it opens will not show.
     count: () => getPillarsForPlaybook(getActivePlaybookId()).length,
   },
-  // The counter is the number of LANES, not briefs: unlike Topics this row is
-  // navigation, not a notification. "How many research operations do I have
-  // running" is the useful number; summing unread briefs across lanes would
-  // compete with the Topics badge for the same kind of attention.
+  // ── A DOT, not a counter ───────────────────────────────────────────────
+  // This row carried `.ap-counter normal grey` with the number of topics still to
+  // review. It is now the platform's own `.nav-left-primary__item-counter-indicator`
+  // — the 10px orange dot on the icon's shoulder that nav-left-primary uses for an
+  // unreviewed inbox — because the number was never the thing being read. "Six to
+  // review" and "two to review" lead to the same action, and a counter that only
+  // ever means "there is something" is a dot with extra digits.
+  //
+  // It also behaves differently from a counter, and had to. A count is a fact and
+  // stays true while it is true; this is an unread mark, so it goes when you have
+  // looked (see feedVisited) and comes back for a Playbook you have not.
   {
     path: "/topic-feeds",
     // Same antenna as Topics, deliberately: both rows are Agorapulse listening,
@@ -777,11 +819,13 @@ const NAV = [
     // Prefix, so the row stays lit on the feed, its settings and its trending
     // page.
     match: (p) => p.startsWith("/topic-feeds"),
-    // Untriaged topics in THIS Playbook's feed. It counted LANES before, which
-    // was navigation ("how many operations do I have running"); with one feed
-    // per Playbook that number is always 1 and says nothing. What is worth a
-    // counter now is whether the feed has anything in it.
-    count: () => countNewForScope(),
+    // Not `count` — `indicator`, which renderNav draws as the dot rather than a
+    // number. Shown when this Playbook's feed has anything to review AND its feed
+    // has not been visited yet.
+    indicator: (path) => {
+      const scope = feedScopeId(path);
+      return countNewForPlaybook(scope) > 0 && !feedVisited.has(scope);
+    },
   },
 ];
 
@@ -809,15 +853,37 @@ function renderNav(path) {
   const routeItems = NAV.filter((item) => !item.flag || isFlagOn(item.flag))
     .map((item) => {
       const count = item.count ? item.count() : 0;
-      const counter =
-        count > 0 ? `<span class="ap-counter ${item.notif ? "notif" : "normal grey"}">${count}</span>` : "";
+      // Two mutually-exclusive trailing marks. A `count` row gets the DS counter;
+      // an `indicator` row gets the platform's dot, which is not a DS component —
+      // it belongs to nav-left-primary, so the class name is the platform's and the
+      // CSS is a port (see sidebar.css). Nothing carries both: a number beside a
+      // dot would say the same thing twice.
+      // An ACTIVE row never carries an unread mark, whatever feedVisited says: you
+      // are looking at the thing. Checked here rather than by writing to
+      // feedVisited, because the route cannot say which Playbook you came for —
+      // /topic-feeds has no session to read a contextId from, so marking on arrival
+      // marked the rail's brand instead of the chat's and silenced a dot the user
+      // had never seen. The click is the only thing that spends the dot; the route
+      // just hides it while you are standing on it.
+      const dot = !!item.indicator && !item.match(path) && item.indicator(path);
+      const counter = item.indicator
+        ? dot
+          ? `<div class="nav-left-primary__item-counter-indicator" aria-hidden="true"></div>`
+          : ""
+        : count > 0
+          ? `<span class="ap-counter ${item.notif ? "notif" : "normal grey"}">${count}</span>`
+          : "";
+      // The dot is aria-hidden — it is a coloured circle with no text — so the
+      // fact it carries goes into the row's own name instead. Without this the
+      // only unread cue in the rail is invisible to a screen reader.
+      const name = dot ? `${item.label}, new topics to review` : item.label;
       return `
       <button
         type="button"
         class="app-sidebar__nav-item ${item.match(path) ? "is-active" : ""}"
         data-sidebar-nav="${item.path}"
-        title="${item.label}"
-        aria-label="${item.label}"
+        title="${name}"
+        aria-label="${name}"
       >
         <i class="${item.icon}"></i>
         <span>${item.label}</span>
