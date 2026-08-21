@@ -38,7 +38,7 @@ import {
 import { renderUseButtons } from "./brief-card.js?v=78";
 import { getLanes } from "../research-store.js?v=56";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=86";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=87";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -311,11 +311,18 @@ export function openIgnoreReason({ briefId, onDone = null }) {
           <input type="checkbox" class="ap-checkbox" data-ignore-mute />
           <span>Don't show this again</span>
         </label>`,
-      foot: html`<button type="button" class="ap-button stroked grey" data-research-modal-close>
-          <span>Cancel</span>
-        </button>
-        <button type="button" class="ap-button primary blue" data-ignore-submit>
+      // Submit first, Cancel to its right. .research-modal__foot is
+      // justify-content: flex-start, so source order IS reading order.
+      //
+      // NB this footer and the article dialog's (renderUseButtons, dismiss:"close")
+      // now put their primary on opposite sides — Submit left here, "Use in chat"
+      // right there. Same footer component, two orders; whichever one is meant to
+      // win, they should match.
+      foot: html`<button type="button" class="ap-button primary blue" data-ignore-submit>
           <span>Submit &amp; ignore</span>
+        </button>
+        <button type="button" class="ap-button stroked grey" data-research-modal-close>
+          <span>Cancel</span>
         </button>`,
     },
   );
