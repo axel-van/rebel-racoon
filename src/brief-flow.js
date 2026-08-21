@@ -31,9 +31,9 @@
 import { navigate } from "./router.js?v=30";
 import { setHandoff } from "./handoff.js?v=20";
 import { addReadySource } from "./sources-stream.js?v=97";
-import { getBriefById, getBriefVersions, briefTitle } from "./briefs-store.js?v=72";
-import { getLaneById } from "./research-store.js?v=56";
-import { findResearchSource } from "./research-catalog.js?v=24";
+import { getBriefById, getBriefVersions, briefTitle } from "./briefs-store.js?v=73";
+import { getLaneById } from "./research-store.js?v=57";
+import { findResearchSource } from "./research-catalog.js?v=25";
 
 export const BRIEF_CHAT_HANDOFF = "pendingBriefChat";
 

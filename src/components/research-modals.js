@@ -21,7 +21,7 @@
 import { html, raw, escapeAttr } from "../utils.js?v=21";
 import { navigate } from "../router.js?v=30";
 import { requestOpen, notifyClose } from "../modal-coordinator.js?v=21";
-import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=24";
+import { findResearchSource, findReviewStatus } from "../research-catalog.js?v=25";
 import {
   ageMinutes,
   getBriefById,
@@ -32,13 +32,13 @@ import {
   unignoreBrief,
   setStatus,
   briefTitle,
-} from "../briefs-store.js?v=72";
+} from "../briefs-store.js?v=73";
 // The article dialog's footer is the feed's footer — same component, same three
 // verbs — so it comes from the same module rather than being re-written here.
-import { renderUseButtons } from "./brief-card.js?v=78";
-import { getLanes } from "../research-store.js?v=56";
+import { renderUseButtons } from "./brief-card.js?v=79";
+import { getLanes } from "../research-store.js?v=57";
 // The scope the whole app hangs off — this modal reads it instead of asking.
-import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=87";
+import { getActivePlaybook, getActivePlaybookId } from "../active-playbook.js?v=88";
 // pillars-store, not contexts-store: this is the Content-strategy pillar a topic
 // gets FILED into, which is what decides whether it is ready to draft. The
 // getPillars imported below from contexts-store is the older per-Playbook pillar
@@ -58,8 +58,8 @@ import {
 // No cycle: brief-flow reaches briefs-store / sources-stream / router, never back
 // into this file. The version dialog goes through it rather than calling
 // addReadySource directly so "use in chat" has one definition.
-import { openBriefInChat } from "../brief-flow.js?v=46";
-import { renderBriefCard } from "./brief-card.js?v=78";
+import { openBriefInChat } from "../brief-flow.js?v=47";
+import { renderBriefCard } from "./brief-card.js?v=79";
 import { renderEmptyState } from "./empty-state.js?v=1";
 import { renderSocialPostCard } from "./social-post-card.js?v=45";
 import { showToast } from "./toast.js?v=21";

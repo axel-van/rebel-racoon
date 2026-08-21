@@ -50,9 +50,9 @@
 // still load-bearing — don't undo it.
 
 import { html, raw, escapeAttr } from "../utils.js?v=21";
-import { findReviewStatus } from "../research-catalog.js?v=24";
+import { findReviewStatus } from "../research-catalog.js?v=25";
 // One title per topic — the article's, not the scan's headline. See briefs-store.
-import { briefTitle } from "../briefs-store.js?v=72";
+import { briefTitle } from "../briefs-store.js?v=73";
 import { isFlagOn } from "../feature-flags.js?v=23";
 import { pillarForBrief } from "../pillars-store.js?v=16";
 

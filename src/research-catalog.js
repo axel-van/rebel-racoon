@@ -376,18 +376,22 @@ export const REVIEW_STATUSES = Object.freeze([
   },
 ]);
 
-/** Filter default: To review alone. Reset restores exactly this. */
-// UNTRIAGED and PARKED, not all four. Used and Ignored are both answers the reader
-// has already given — a topic taken into a chat, or one pushed off the list — so
-// opening on them puts finished work in front of someone looking for what to do next.
-// Both are one tick away in the panel, and Ignored also comes back on its own when a
-// topic starts trending or gets updated.
+/** Filter default: To review + Used. Reset restores exactly this. */
+// Ignored is the one left out, and it is the only one that earns being left out.
+// "Used" is a topic you took into a chat: the work exists, it is findable, and
+// hiding it makes the feed forget what you did with it — which is also how you end
+// up drafting the same topic twice. "Ignored" is the one answer that means "not
+// this one", so showing it by default would put work you have actively pushed away
+// in front of someone looking for what to do next.
 //
-// This is NOT the old New-only default, which was reverted for a good reason: under
-// it, saving a topic made it vanish the instant you triaged it, and the attention
-// notice existed largely to explain that gap. Saved stays visible here, so the act of
-// parking something never removes it from view.
-export const DEFAULT_STATUS_IDS = Object.freeze(["new"]);
+// Ignored is one tick away in the panel, and it comes back on its own when a topic
+// starts trending or gets updated — so nothing is lost by leaving it off.
+//
+// The count matters as much as the contents: narrowedGroupCount compares this
+// array's LENGTH against filters.statuses, so the Filters badge reads nothing at
+// rest and 1 the moment the reader changes the group. Adding an id here without
+// that being true would pin the badge on permanently.
+export const DEFAULT_STATUS_IDS = Object.freeze(["new", "used"]);
 
 export function findResearchSource(id) {
   return RESEARCH_SOURCES.find((s) => s.id === id) || null;

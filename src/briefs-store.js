@@ -45,7 +45,7 @@
 import { researchBriefs as seed } from "./mocks.js?v=97";
 import { isNewUser } from "./user-mode.js?v=22";
 import { createNotifier } from "./store-utils.js?v=3";
-import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=24";
+import { DEFAULT_STATUS_IDS, DEFAULT_TYPE_IDS, LIVE_SOURCE_IDS, findReviewStatus } from "./research-catalog.js?v=25";
 
 const briefs = isNewUser() ? [] : seed.map(cloneBrief);
 
