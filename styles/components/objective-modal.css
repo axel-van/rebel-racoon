@@ -511,20 +511,37 @@
   white-space: nowrap;
 }
 
-/* Not-yet-available metrics — muted, not clickable, with the proxy Archie uses
-   meanwhile. */
-/* Same inline padding as a pickable row, so the two kinds of row share a left
-   edge. */
-.objc__soon {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+/* ── A row that is OUT OF PLAY ─────────────────────────────────────────────
+   Already on the objective, or a metric the platform cannot serve yet. It was
+   a muted `div` at grey-80 — one grey step off a pickable row, which at 14px
+   is no step at all: the reader saw sixteen identical metrics and learned by
+   clicking which ones did nothing.
+
+   It is the SAME `.ap-list-panel-item` as its neighbours now, so the geometry
+   and the left edge come from the DS, plus:
+   • grey-60 ink, the step this house reserves for disabled (the ink band is
+     grey-80 → grey-100 precisely so that grey-60 can mean "not available"),
+     carried by `color` so both lines inherit it;
+   • no hover, and `not-allowed` — the DS's own list-item sibling
+     (`.ap-action-dropdown-item:disabled`) adds `opacity: .4` on top, which we
+     do not take: at 40% the reason under the name ("Already measured", or the
+     proxy to use instead) stops being legible, and a disabled row that cannot
+     say why it is disabled is worse than a live one.
+
+   The `taken` rows carry the real `disabled` attribute, so they leave the tab
+   order and announce themselves. The unavailable ones stay a `div`: they hold a
+   live link to the proxy, and a disabled button cannot contain a working one. */
+.objc__row--off {
+  color: var(--ref-color-grey-60);
+  cursor: not-allowed;
 }
 
-.objc__soon .objc__row-name {
-  flex: 0 0 auto;
-  color: var(--sys-text-color-light);
+.objc__row--off:hover {
+  background-color: transparent;
+}
+
+.objc__row--off .objc__row-name {
+  color: inherit;
 }
 
 /* The reason and the way round it, on one wrapping line under the name. It was
@@ -533,7 +550,7 @@
 .objc__soonwhy {
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
-  color: var(--sys-text-color-light);
+  color: inherit;
 }
 
 .objc__empty {

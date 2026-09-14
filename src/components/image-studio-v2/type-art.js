@@ -46,7 +46,7 @@
 //
 // Ids inside <defs> are namespaced per drawing (`ita-h-*`): two SVGs sharing a
 // gradient id would silently swap fills.
-import { escapeHtml } from "../../utils.js?v=1171";
+import { escapeHtml } from "../../utils.js?v=1172";
 
 const VISUAL_HOOK = `<svg class="isv2-option-art isv2-option-art--dark" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
   <defs>

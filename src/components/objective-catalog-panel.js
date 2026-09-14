@@ -14,15 +14,15 @@
 // the design's own "the panel slides"), and `open()` wraps the same flow in a
 // standalone body-level dialog for the Playbook block's edit mode.
 
-import { escapeHtml as esc } from "../utils.js?v=1171";
+import { escapeHtml as esc } from "../utils.js?v=1172";
 import {
   NETWORK_LABEL,
   getConnectedProfiles,
   renderProfileTag,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1171";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1171";
-import { getContextById } from "../contexts-store.js?v=1171";
+} from "../social-profiles.js?v=1172";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1172";
+import { getContextById } from "../contexts-store.js?v=1172";
 import {
   catalogEntries,
   metricLabel,
@@ -31,7 +31,7 @@ import {
   proposeTargetFrom,
   isRateMetric,
   isAdditiveMetric,
-} from "../objective-measures.js?v=1171";
+} from "../objective-measures.js?v=1172";
 
 const COMPUTE_MS = 900;
 
@@ -198,17 +198,23 @@ export function createCatalogFlow({
         if (!metrics.length) return "";
         const rows = metrics
           .map((m) => {
-            // ⚠️ Already on the objective — the row says so and cannot be
-            // picked. Adding is one click now (§ adding in one step), so
+            // ⚠️ Already on the objective — a REAL disabled list item, not a
+            // muted div: same geometry and same left edge as the rows around
+            // it, `disabled` so assistive tech announces it as unavailable and
+            // the tab order skips it, and grey-60 ink (the house's reserved
+            // disabled step) so it reads as out of play at a glance rather than
+            // as one more pickable metric one grey step darker. Adding is one click now (§ adding in one step), so
             // nothing stands between a double-click and two identical measures;
             // it took the configurator's three screens to make that unlikely
             // before, never impossible.
             if (taken.includes(m.id)) {
               return `
-                <div class="objc__soon">
-                  <span class="objc__row-name">${esc(m.label)}</span>
-                  <span class="objc__soonwhy">Already measured</span>
-                </div>`;
+                <button type="button" class="ap-list-panel-item objc__row objc__row--off" disabled>
+                  <span class="ap-list-panel-item-text">
+                    <span class="objc__row-name">${esc(m.label)}</span>
+                    <span class="objc__soonwhy">Already measured</span>
+                  </span>
+                </button>`;
             }
             if (!m.available) {
               // A real metric the platform cannot serve yet: the name greyed, the
@@ -216,10 +222,12 @@ export function createCatalogFlow({
               // only control — so the row is honest about being unpickable
               // without being a dead end.
               return `
-                <div class="objc__soon">
-                  <span class="objc__row-name">${esc(m.label)}</span>
-                  <span class="objc__soonwhy">Needs Google Analytics ·
-                    <button type="button" class="ap-link standalone small" data-objc-proxy-pick="${m.proxyId}">use ${esc(m.proxyLabel || "the proxy")}</button>
+                <div class="ap-list-panel-item objc__row objc__row--off">
+                  <span class="ap-list-panel-item-text">
+                    <span class="objc__row-name">${esc(m.label)}</span>
+                    <span class="objc__soonwhy">Needs Google Analytics ·
+                      <button type="button" class="ap-link standalone small" data-objc-proxy-pick="${m.proxyId}">use ${esc(m.proxyLabel || "the proxy")}</button>
+                    </span>
                   </span>
                 </div>`;
             }
