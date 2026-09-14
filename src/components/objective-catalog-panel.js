@@ -14,15 +14,15 @@
 // the design's own "the panel slides"), and `open()` wraps the same flow in a
 // standalone body-level dialog for the Playbook block's edit mode.
 
-import { escapeHtml as esc } from "../utils.js?v=1160";
+import { escapeHtml as esc } from "../utils.js?v=1162";
 import {
   NETWORK_LABEL,
   getConnectedProfiles,
   renderProfileTag,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1160";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1160";
-import { getContextById } from "../contexts-store.js?v=1160";
+} from "../social-profiles.js?v=1162";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1162";
+import { getContextById } from "../contexts-store.js?v=1162";
 import {
   catalogEntries,
   metricLabel,
@@ -31,7 +31,7 @@ import {
   proposeTargetFrom,
   isRateMetric,
   isAdditiveMetric,
-} from "../objective-measures.js?v=1160";
+} from "../objective-measures.js?v=1162";
 
 const COMPUTE_MS = 900;
 
@@ -144,15 +144,17 @@ export function createCatalogFlow({
     return pinned?.platform ? { network: pinned.platform } : undefined;
   }
 
+  // The measure lands with its SCOPE and nothing else: `computing` says Archie
+  // has not answered yet, and the host settles it (objective-modal.js
+  // § the measure settles). Deliberately not pre-computed here — the card's own
+  // loader IS the beat, so the values must arrive when the beat ends, not
+  // before.
   function addNow(metricId) {
-    const scope = defaultScope();
-    const baseline = scopedBaselineFor(metricId, contextId, scope);
-    const target = proposeTargetFrom(metricId, baseline, contextId, scope);
     onAdd({
       id: `m-${flowSeq.toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
       metricId,
-      scope,
-      target: target || undefined,
+      scope: defaultScope(),
+      computing: true,
     });
   }
 

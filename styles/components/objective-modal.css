@@ -343,6 +343,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* While Archie reads the window: the loader on the line the suggestion will
+   take, so the card fills instead of growing. `align-items: center` because a
+   spinner has no baseline to sit on. */
+.objm__cardhint--computing {
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
 .objm__spacer,
 .objc__spacer {
   flex: 1;

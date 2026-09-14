@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1160";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1160";
-import { getContexts } from "../contexts-store.js?v=1160";
-import { getActivePlaybookId } from "../active-playbook.js?v=1160";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1160";
+import { escapeHtml as esc } from "../utils.js?v=1162";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1162";
+import { getContexts } from "../contexts-store.js?v=1162";
+import { getActivePlaybookId } from "../active-playbook.js?v=1162";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1162";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -33,8 +33,9 @@ import {
   isRateMetric,
   scopedBaselineFor,
   scopeLabel,
+  proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1160";
+} from "../objective-measures.js?v=1162";
 
 const MODAL_ID = "objectiveModal";
 
@@ -51,6 +52,9 @@ let idSeq = 0;
 // The staged draft — nothing below writes to the Playbook until Create/Save.
 let draft = null; // { mode, data, contextId, originalLabel, name, window, measures[], onChange }
 let catalogFlow = null; // the embedded 2c/2d flow, when open
+// Measures waiting on Archie — one timer per card, cleared on close so a
+// dialog that goes away never repaints over a dead draft.
+const settling = new Map();
 let catalogEditIndex = null; // the measure being re-picked (null = adding a new one)
 
 const SHELL = `
@@ -149,6 +153,7 @@ export function open({ data = null, label = null, mode = "adjust", contextId = n
 
 export function close() {
   if (!backdrop || backdrop.hidden) return;
+  clearSettling();
   catalogFlow?.dispose();
   catalogFlow = null;
   catalogEditIndex = null;
@@ -208,7 +213,11 @@ function setSubtitle(text) {
 }
 
 function canSave() {
-  return !!draft.name.trim() && !!draft.contextId && draft.measures.length > 0;
+  // Not while a measure is still settling: a target that hasn't landed would be
+  // written as empty, and the button would have committed a half-read measure.
+  return (
+    !!draft.name.trim() && !!draft.contextId && draft.measures.length > 0 && !draft.measures.some((m) => m.computing)
+  );
 }
 
 // ⚠️ NO `for <Playbook>` CLAUSE. An objective is created in the Playbook the
@@ -329,6 +338,7 @@ function renderInlineSelect({ value, options, attr, placeholder = "" }) {
 // volume) and the from→to vs hold-above shape already says which.
 function renderMeasureCard(entry, i) {
   const rate = isRateMetric(entry.metricId);
+  const computing = !!entry.computing;
   // The baseline is suggested from the catalogue but editable — the current
   // value is the user's to correct.
   const baseline = entry.baseline ?? scopedBaselineFor(entry.metricId, draft.contextId, entry.scope);
@@ -336,17 +346,24 @@ function renderMeasureCard(entry, i) {
   const suggestedPct = pctDelta(baseline, target);
   const scopeText = entry.scope?.network ? scopeLabel(entry.scope) : "all networks";
   const name = metricLabel(entry.metricId);
+  // While it computes, the SAME two fields render empty and disabled, with the
+  // loader on the line the suggestion will take. Same geometry throughout, so
+  // the card fills rather than jumping — and the empty boxes say where the
+  // numbers are about to land. `.ap-loader` is the Archie mark app-wide
+  // (archie-loader.css), which is what makes this read as "Archie is working".
+  const field = (kind, value, label) =>
+    `<div class="ap-input-group objm__${kind}"><input type="text" data-objm-${kind === "from" ? "baseline" : "target"} data-objm-i="${i}" value="${computing ? "" : esc(value)}" aria-label="${label}"${computing ? " disabled" : ""} /></div>`;
   const body = rate
     ? `
       <span class="objm__word">hold above</span>
-      <div class="ap-input-group objm__target"><input type="text" data-objm-target data-objm-i="${i}" value="${esc(target)}" aria-label="Target" /></div>
+      ${field("target", target, "Target")}
       <span class="objm__word">now at</span>
-      <div class="ap-input-group objm__from"><input type="text" data-objm-baseline data-objm-i="${i}" value="${esc(baseline)}" aria-label="Current value" /></div>`
+      ${field("from", baseline, "Current value")}`
     : `
       <span class="objm__word">from</span>
-      <div class="ap-input-group objm__from"><input type="text" data-objm-baseline data-objm-i="${i}" value="${esc(baseline)}" aria-label="Current value" /></div>
+      ${field("from", baseline, "Current value")}
       <span class="objm__word">to</span>
-      <div class="ap-input-group objm__target"><input type="text" data-objm-target data-objm-i="${i}" value="${esc(target)}" aria-label="Target" /></div>`;
+      ${field("target", target, "Target")}`;
   // Derived line under the inputs — kept out of the from→to run so the two
   // numbers pair cleanly. The orange tag marks a target Archie proposed and the
   // user hasn't touched (orange because it is AI provenance, the repo's own
@@ -363,6 +380,24 @@ function renderMeasureCard(entry, i) {
   // pulling the eye before the metric's own name. It keeps the AI orange
   // (orange-150, the ink step, on white) because that is what this app's orange
   // means, and loses the pill.
+  if (computing) {
+    return `
+      <div class="objm__card">
+        <span class="objm__id">
+          <span class="objm__cardname">${esc(name)}</span>
+          <span class="objm__scope">${esc(scopeText)}</span>
+        </span>
+        <div class="objm__cardbody">${body}</div>
+        <div class="objm__cardverbs">
+          <button type="button" class="ap-icon-button transparent" data-objm-remove="${i}" aria-label="Remove ${esc(name)}"><i class="ap-icon-close"></i></button>
+        </div>
+        <p class="objm__cardhint objm__cardhint--computing">
+          <span class="ap-loader blue size-16" aria-hidden="true"><svg><circle></circle><circle></circle></svg></span>
+          <span>Reading your last 30 days…</span>
+        </p>
+      </div>`;
+  }
+
   const hint =
     showSuggested || deltas.length
       ? `<p class="objm__cardhint">
@@ -454,6 +489,7 @@ function openCatalog(editIndex = null) {
       } else {
         draft.measures.push(entry);
       }
+      startSettling(draft.measures[editIndex != null ? editIndex : draft.measures.length - 1]);
       paint();
     },
     onBack() {
@@ -465,6 +501,45 @@ function openCatalog(editIndex = null) {
     requestRender: (opts) => paint(opts),
   });
   paint();
+}
+
+// ── The measure settles ──────────────────────────────────────────────────
+//
+// A measure added from the catalogue arrives with its scope and NO target: the
+// card shows its fields empty behind a loader while Archie "reads the window",
+// then the baseline and the suggestion land in them.
+//
+// ⚠️ The beat is on the CARD, which is the whole point. It used to be a screen
+// of its own — the configurator, with a spinner and "computing from your
+// profiles…" — and when that screen went, the beat went with it. Wrong thing to
+// drop: the wait is what says a number was WORKED OUT rather than typed in, and
+// it belongs where the number lands. The values themselves are synchronous
+// (objective-measures.js); the delay stands in for the round-trip a real
+// integration would make.
+const SETTLE_MS = 1400;
+
+function settleMeasure(entryId) {
+  settling.delete(entryId);
+  if (!draft) return;
+  const entry = draft.measures.find((e) => e.id === entryId);
+  if (!entry || !entry.computing) return;
+  const baseline = scopedBaselineFor(entry.metricId, draft.contextId, entry.scope);
+  entry.target = proposeTargetFrom(entry.metricId, baseline, draft.contextId, entry.scope) || undefined;
+  delete entry.computing;
+  paint();
+}
+
+function startSettling(entry) {
+  if (!entry?.computing || settling.has(entry.id)) return;
+  settling.set(
+    entry.id,
+    window.setTimeout(() => settleMeasure(entry.id), SETTLE_MS),
+  );
+}
+
+function clearSettling() {
+  settling.forEach((t) => window.clearTimeout(t));
+  settling.clear();
 }
 
 function save() {
