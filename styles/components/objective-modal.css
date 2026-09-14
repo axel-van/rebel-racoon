@@ -360,6 +360,24 @@
   .objm__cardbody {
     justify-content: flex-start;
   }
+
+  /* The pair SHARES the line instead of stacking: `14,800` above `20,000` with
+     an arrow between them reads as two fields, not as one run. Fixed widths are
+     what align the arrow across cards, and there is no such column to align to
+     once the card is one column wide, so here they flex. */
+  .objm__cardbody .objm__from,
+  .objm__cardbody .objm__target {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* On its own wrapped line the hint has no right edge to hold — the card's one
+     column is the left one, so it joins it. Specificity, not order: the base
+     rule's `margin-left: auto` is declared further down the file. */
+  .objm__cardbody .objm__meta {
+    margin-left: 0;
+  }
 }
 
 .objm__cardverbs {
@@ -388,17 +406,31 @@
   white-space: nowrap;
 }
 
-/* The supporting line: scope · Suggested · what the target is worth. One 12px
-   grey-80 run with a single orange word in it — the card's only accent. */
+/* ── What the target is WORTH ──────────────────────────────────────────────
+   `Suggested · +35% · +173/day`, held against the card's right edge on the row
+   of the values it is about.
+
+   ⚠️ It was 12px, left-packed 8px after the target input, with 230px of nothing
+   after it — "le suggested est vraiment perdu et tout petit". Two things were
+   wrong. It was floating: nothing anchored it, so it read as leftover text
+   rather than as part of the row. And it was a caption: a target's jump is what
+   a reader CHECKS before accepting the number, not a footnote to it. So it
+   holds the right edge (`margin-left: auto`, the same edge the select and the ✕
+   now keep) and sits at body size.
+
+   14px is the values' own rung, which it does not compete with: the values are
+   navy inside bordered boxes, this is grey-80 on the tint, and the one orange
+   word is the only accent in the card. Hierarchy by ink and by frame, not by
+   shrinking a fact until it cannot be read. */
 .objm__meta {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxxs);
-  margin: 0;
+  margin: 0 0 0 auto;
   min-width: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   color: var(--sys-text-color-light);
 }
 
@@ -410,6 +442,14 @@
    size belongs to the loader, not to this modal. */
 .objm__meta {
   min-height: 22px;
+}
+
+/* While Archie reads, the line is the beat itself — loader plus its sentence —
+   so it goes back to the left of the row, where the values will land. Held
+   against the right edge it would have read as a comment on numbers that are
+   not there yet. */
+.objm__meta--computing {
+  margin-left: 0;
 }
 
 .objm__meta--computing {
@@ -453,11 +493,14 @@
   color: var(--ref-color-grey-40);
 }
 
-/* 88px: the widest value a measure carries is seven characters ("+14,800") at
-   14px, plus the DS input's own 12px of padding each side. */
+/* 112px: the widest value a measure carries is seven characters ("+14,800") at
+   14px plus the DS input's own 12px of padding each side — 88px was that floor,
+   and it read as a cramped box once the row had a 460px column to sit in. The
+   two fields stay a FIXED width rather than flexing, so the arrow between them
+   lands on the same x in every card. */
 .objm__from,
 .objm__target {
-  width: 88px;
+  width: 112px;
 }
 
 /* Tabular numerals are the ONE property on these inputs: same font, same size,
@@ -639,19 +682,17 @@
    in the card's own supporting line, where the scope was already printed as
    text.
 
-   Sized to its content, like the objective sentence's window select and for the
-   same reason — the DS ships `.ap-select` at `width: 100%`, and a control
-   stretched across a card reads as the card's subject rather than as one fact
-   in a line of them. */
+   ⚠️ FULL WIDTH of its column — the DS's own default for `.ap-select`, which
+   an earlier pass overrode to `fit-content` on the argument that a stretched
+   control reads as the card's subject. That was true while the card was one
+   row of facts; in a labelled form it left a 229px trigger in a 460px column
+   and ~230px of dead white on every row, which is what made everything in here
+   look adrift. The control column now has a right edge, shared by the select,
+   the row above it and the ✕ — and a menu as wide as its trigger shows a
+   profile's handle without eliding it. */
 .objm__scope {
-  width: fit-content;
-  max-width: 100%;
-  flex: 0 1 auto;
+  width: 100%;
   min-width: 0;
-}
-
-.objm__scope > .ap-select-trigger {
-  width: auto;
 }
 
 /* The trigger shrinks to the CURRENT value, so the menu has to size to its own
