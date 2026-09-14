@@ -81,7 +81,14 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  font-size: var(--sys-text-style-body-size);
+  /* The connectives are LABELS — `caption` grey-80, one rung under the values
+     they introduce. At body size they weighed exactly what the input's own text
+     weighs, which is the whole reason this modal read as one size throughout:
+     seven different roles all sitting at 14px. The controls keep the DS's own
+     14 (they are the data), so the row now has a label/value relationship
+     instead of two peers. */
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
 }
 
@@ -94,12 +101,13 @@
   min-width: 0;
 }
 
+/* `Grow` is the same kind of word as `over a`, so it gets the same treatment —
+   it was 14 BOLD NAVY beside a 14 regular grey `over a`, two spellings of one
+   role. Both inherit the sentence's caption/grey-80 now; the dialog's 24px
+   title is what anchors the top of the modal, not this word. */
 .objm__titleword {
   flex: 0 0 auto;
-  font-size: var(--sys-text-style-body-size);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--sys-text-color-default);
+  white-space: nowrap;
 }
 
 /* The grid's second column gives the field its width; nothing to flex. */
@@ -169,21 +177,32 @@
    shape every section title on /insights wears. It is also what replaced the
    caption in the filled state: a number says "there are two of these" without
    spending two lines of 12px on it. */
+/* h3 (16/700), the rung between the dialog's h1 title and the h4 name of a
+   measure. It was body-bold — the SAME 14/700 as the card names it heads, so a
+   section and its items read as peers. The DS ladder has h0/h1/h2/h3/h4 and
+   this modal was using two of them; the whole hierarchy is now
+   24 → 16 → 14 bold → 14 regular → 12, every step a token. */
 .objm__seclabel {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-body-size);
-  font-weight: var(--sys-text-style-body-bold-weight);
+  font-size: var(--sys-text-style-h3-size);
+  line-height: var(--sys-text-style-h3-line-height);
+  font-weight: var(--sys-text-style-h3-weight);
   color: var(--sys-text-color-default);
 }
 
 /* Was a bordered inset with three colour-coded verdicts — a legend with more
    weight than the section it explained. It is helper text; it reads as one. */
+/* Help text is PROSE, not a label: body size, grey-80, capped at a reading
+   measure. A sentence set at 12px is a sentence nobody reads — the distinction
+   from the labels (12) is size, from the values (14 navy) is ink. Empty-state
+   only, so it never competes with a list of measures. */
 .objm__caption {
   margin: 0 0 var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+  max-width: 62ch;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   color: var(--sys-text-color-light);
 }
 
