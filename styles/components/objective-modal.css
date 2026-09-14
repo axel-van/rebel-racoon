@@ -38,12 +38,24 @@
   gap: var(--ref-spacing-md);
 }
 
-/* The form is short and its two selects sit up top, so let their DS dropdowns
-   float over the content (position:absolute) rather than push it down — an
-   overflow:auto here would clip the float and reintroduce the modal growth.
-   The catalogue, which can run tall, keeps its own scroll. */
+/* The form is short and its selects sit up top, so let their DS dropdowns float
+   over the content (position:absolute) rather than push it down — an
+   overflow:auto here would clip the float. Same for the measure CONFIGURATOR,
+   whose profiles menu floats too. */
 .objm__content {
   overflow: visible;
+}
+
+/* ⚠️ The CATALOGUE view is the exception, and it needs one: eighteen metrics in
+   two columns run past the dialog's `max-height: 88vh`, and with the box set to
+   `overflow: visible` the content simply SPILLED — the footer rendered below the
+   white dialog, on the backdrop. So that one view scrolls, which is safe there
+   because nothing in it floats (the search is inline, the rows are buttons).
+   `min-height: 0` is what lets a flex child shrink under its content and
+   actually scroll. The class is toggled in `paint()` from the flow's own view. */
+.objm__content--scroll {
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .objc__content {
@@ -369,19 +381,36 @@
   margin-bottom: var(--ref-spacing-md);
 }
 
-/* The family is an EYEBROW, not a header: 12px bold grey-80 over 14px navy
-   rows, so the metrics carry the weight — they are what the reader picks. It
-   used to be a 14px bold navy card header with a count and a chevron, which
-   made the eight families louder than the eighteen things inside them. */
+/* The family's header: an ICON, the name at body-bold grey-100, and a grey-20
+   rule under both.
+   ⚠️ It was a 12px grey-80 eyebrow with nothing around it, and the whole
+   catalogue floated: bold-vs-regular between two greys is not enough contrast
+   to say "this names those", and nothing bounded a family. Three devices now
+   separate the two levels — a mark, a rung (14 bold navy over 14 regular rows),
+   and a line that gives each block a roof. grey-20 is the house weight for a
+   limit, not the DS's own grey-10, which disappears between two white blocks.
+
+   `padding-inline: sm` is exactly `.ap-list-panel-item`'s own, so the header
+   starts on the same x as the metric names under it. */
 .objc__famname {
-  margin: 0 0 var(--ref-spacing-xxxs);
-  /* `sm`, exactly `.ap-list-panel-item`'s own inline padding, so the eyebrow
-     starts on the same x as the metric names under it. At `xxs` it sat 8px to
-     their left — the kind of miss that makes a tidy list look untidy. */
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  margin: 0 0 var(--ref-spacing-xxs);
+  padding-bottom: var(--ref-spacing-xxs);
   padding-inline: var(--ref-spacing-sm);
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
+  border-bottom: 1px solid var(--ref-color-grey-20);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
   font-weight: var(--sys-text-style-body-bold-weight);
+  color: var(--sys-text-color-default);
+}
+
+/* The mark sits a step back from the word — it marks the family, it doesn't
+   announce it. Never blue or orange: blue is interactive, orange is AI. */
+.objc__famname > i {
+  flex-shrink: 0;
+  font-size: var(--sys-icon-css-sm);
   color: var(--sys-text-color-light);
 }
 
@@ -413,20 +442,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* The chevron says the row OPENS a step (the scope + target configurator) — it
-   is not a one-click add. Grey at rest, blue with the row's own hover, so a
-   column of eighteen does not read as eighteen links. */
-.objc__rowgo {
-  flex-shrink: 0;
-  color: var(--sys-text-color-light);
-  font-size: var(--sys-icon-css-sm);
-  transition: color var(--ref-animation-short) var(--app-ease-out);
-}
-
-.objc__row:hover .objc__rowgo {
-  color: var(--ref-color-electric-blue-100);
 }
 
 /* Not-yet-available metrics — muted, not clickable, with the proxy Archie uses

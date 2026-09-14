@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1150";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1150";
-import { getContexts } from "../contexts-store.js?v=1150";
-import { getActivePlaybookId } from "../active-playbook.js?v=1150";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1150";
+import { escapeHtml as esc } from "../utils.js?v=1155";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1155";
+import { getContexts } from "../contexts-store.js?v=1155";
+import { getActivePlaybookId } from "../active-playbook.js?v=1155";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1155";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -34,7 +34,7 @@ import {
   scopedBaselineFor,
   scopeLabel,
   WINDOWS,
-} from "../objective-measures.js?v=1150";
+} from "../objective-measures.js?v=1155";
 
 const MODAL_ID = "objectiveModal";
 
@@ -165,6 +165,9 @@ export function close() {
 
 function paint(opts = {}) {
   if (!draft) return;
+  // Only the metric CATALOGUE scrolls — see `.objm__content--scroll`. Every
+  // other view holds a floating DS dropdown that a scroll box would clip.
+  bodyEl.classList.toggle("objm__content--scroll", !!catalogFlow && catalogFlow.state.view === "catalog");
   if (catalogFlow) {
     const sel = searchSelectorFor(opts);
     if (sel) {

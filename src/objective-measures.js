@@ -36,8 +36,8 @@
 // on the Insights side, while this catalogue parks them. Insights marks those
 // cards "via proxy" by resolving the label here — one story, two surfaces.
 
-import { NETWORK_LABEL, getConnectedProfiles } from "./social-profiles.js?v=1150";
-import { getContextById } from "./contexts-store.js?v=1150";
+import { NETWORK_LABEL, getConnectedProfiles } from "./social-profiles.js?v=1155";
+import { getContextById } from "./contexts-store.js?v=1155";
 
 // The connected profiles are GLOBAL (one demo account), but an objective
 // belongs to a brand — a Noba Fashion objective read on tiles named
@@ -109,15 +109,33 @@ export function metricTypeLabel(metricId) {
 
 // The 8 catalogue families, for the measure picker and the catalog panel —
 // every metric above appears in exactly one family.
+// `icon` is the family's mark in the catalogue — every name checked against
+// `ds/ap-icons.css`, because an `ap-icon-*` that doesn't exist paints NOTHING
+// and fails silently (there is no `ap-icon-eye`: the pair is `eye-on`/`eye-off`).
 export const FAMILIES = [
-  { id: "awareness", label: "Awareness", metricIds: ["reach", "impressions", "mentions", "profileVisits"] },
-  { id: "growth", label: "Audience growth", metricIds: ["followersNet"] },
-  { id: "engagement", label: "Engagement", metricIds: ["engagementRate", "comments", "savesShares"] },
-  { id: "video", label: "Video", metricIds: ["videoViews", "videoCompletion"] },
-  { id: "care", label: "Reputation & care", metricIds: ["sentiment", "responseTime", "reviews"] },
-  { id: "traffic", label: "Traffic", metricIds: ["clicks"] },
-  { id: "paid", label: "Paid", metricIds: ["paidReach"] },
-  { id: "conversion", label: "Conversion", metricIds: ["demoSignups", "attributedRevenue", "attributedSignups"] },
+  {
+    id: "awareness",
+    label: "Awareness",
+    icon: "ap-icon-megaphone",
+    metricIds: ["reach", "impressions", "mentions", "profileVisits"],
+  },
+  { id: "growth", label: "Audience growth", icon: "ap-icon-multiple-users", metricIds: ["followersNet"] },
+  {
+    id: "engagement",
+    label: "Engagement",
+    icon: "ap-icon-heart",
+    metricIds: ["engagementRate", "comments", "savesShares"],
+  },
+  { id: "video", label: "Video", icon: "ap-icon-video", metricIds: ["videoViews", "videoCompletion"] },
+  { id: "care", label: "Reputation & care", icon: "ap-icon-star", metricIds: ["sentiment", "responseTime", "reviews"] },
+  { id: "traffic", label: "Traffic", icon: "ap-icon-link", metricIds: ["clicks"] },
+  { id: "paid", label: "Paid", icon: "ap-icon-dollar-sign", metricIds: ["paidReach"] },
+  {
+    id: "conversion",
+    label: "Conversion",
+    icon: "ap-icon-target",
+    metricIds: ["demoSignups", "attributedRevenue", "attributedSignups"],
+  },
 ];
 
 // The objective's window — platform's two kinds, exactly: ROLLING (reads on
@@ -669,6 +687,7 @@ export function catalogEntries() {
   return FAMILIES.map((f) => ({
     familyId: f.id,
     familyLabel: f.label,
+    familyIcon: f.icon,
     metrics: f.metricIds.map((id) => {
       const m = METRICS[id];
       return {

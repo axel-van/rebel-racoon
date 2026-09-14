@@ -13,22 +13,22 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=1150";
-import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1150";
-import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1150";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1150";
-import * as rightPanel from "./components/right-panel.js?v=1150";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1150";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1150";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=1150";
-import { connectors as connectorMocks } from "./mocks.js?v=1150";
+import * as inlineQuestion from "./inline-question.js?v=1155";
+import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1155";
+import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1155";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1155";
+import * as rightPanel from "./components/right-panel.js?v=1155";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1155";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1155";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=1155";
+import { connectors as connectorMocks } from "./mocks.js?v=1155";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
-} from "./social-profiles.js?v=1150";
-import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1150";
-import { isFlagOn } from "./feature-flags.js?v=1150";
+} from "./social-profiles.js?v=1155";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1155";
+import { isFlagOn } from "./feature-flags.js?v=1155";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>

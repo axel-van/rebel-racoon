@@ -14,14 +14,14 @@
 // the design's own "the panel slides"), and `open()` wraps the same flow in a
 // standalone body-level dialog for the Playbook block's edit mode.
 
-import { escapeHtml as esc } from "../utils.js?v=1150";
+import { escapeHtml as esc } from "../utils.js?v=1155";
 import {
   NETWORK_LABEL,
   getConnectedProfiles,
   renderProfileTag,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1150";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1150";
+} from "../social-profiles.js?v=1155";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1155";
 import {
   catalogEntries,
   metricLabel,
@@ -30,7 +30,7 @@ import {
   proposeTargetFrom,
   isRateMetric,
   isAdditiveMetric,
-} from "../objective-measures.js?v=1150";
+} from "../objective-measures.js?v=1155";
 
 const COMPUTE_MS = 900;
 
@@ -153,16 +153,21 @@ export function createCatalogFlow({ contextId, targetLabel, confirmLabel, onAdd,
                   </span>
                 </div>`;
             }
+            // No trailing chevron: sixteen of them sat 150px to the right of
+            // their own names, a second column of glyphs with nothing between.
+            // `.ap-list-panel-item` already ships the hover (blue-10) that says
+            // the row is a control, and every row in a picker is one.
             return `
               <button type="button" class="ap-list-panel-item objc__row" data-objc-pick="${m.id}">
                 <span class="objc__row-name">${esc(m.label)}</span>
-                <i class="ap-icon-chevron-right objc__rowgo" aria-hidden="true"></i>
               </button>`;
           })
           .join("");
         return `
           <section class="objc__fam">
-            <h4 class="objc__famname">${esc(family.familyLabel)}</h4>
+            <h4 class="objc__famname">
+              <i class="${esc(family.familyIcon || "ap-icon-chart-screen")}" aria-hidden="true"></i>${esc(family.familyLabel)}
+            </h4>
             <div class="objc__famrows">${rows}</div>
           </section>`;
       })
