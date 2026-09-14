@@ -237,35 +237,40 @@
   container-type: inline-size;
 }
 
-/* TWO ROWS, and the second one is a CONTROL row — that is the whole shape:
-       Reach                          [14,800] → [20,000]   ✕
-       [Facebook · all 7 profiles ▾]  Suggested · +35% · +173/day
+/* TWO COLUMNS — and that is the whole fix. Every zone belongs to one of them:
 
-   ⚠️ Read the history before touching it. It was two rows once before, at 86px,
-   with the supporting text SCATTERED — the scope under the name, the suggestion
-   under the fields, a hundred and seventy pixels of nothing between them — and
-   it was folded to one 66px row with both on a single grey line. What brings the
-   second row back is not that text: it is that the scope STOPPED BEING TEXT. It
-   was only adjustable through the pencil → the metric catalogue → a "Change
-   measure" configurator, so the card displayed an answer you could not change
-   where you read it. The select is that answer now, on the line the text held,
-   with the derived hints after it — one row of facts, one row of what you can
-   do about them.
+       │ WHAT is measured            │ WHAT IT SHOULD REACH   │  ✕
+       │ Reach                       │ [14,800] → [20,000]    │
+       │ [Every connected profile ▾] │ Suggested · +35% · +173/day
+       │ (Same as objective) (Rolling 30 days)
 
-   `auto` on the last two columns so the fields and the buttons keep their
-   intrinsic width and the name absorbs the slack — which is also what lines the
-   fields up from card to card, whatever a metric is called. */
+   ⚠️ The version before this one put the scope select and the derived hints on
+   one flex row UNDER the name and the fields. Every row then had its own column
+   structure — the name started at the padding edge, the fields 316px in, the
+   select back at the padding edge, the hints 186px in wherever the select
+   happened to end — so nothing lined up with anything and the card read as
+   three unrelated strips. "Rien n'est plus aligné."
+
+   Two left edges now, and the hints land under the fields they are ABOUT rather
+   than beside the select they have nothing to do with. Alignment is what says
+   which things belong together, which is exactly what this card needed once it
+   grew from one row to three.
+
+   `auto` on the figure column so it sizes to the wider of the fields and their
+   hint, and the identity column absorbs the slack — which is also what lines
+   the fields up from card to card, whatever a metric is called. */
 .objm__card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "name body verbs"
-    "foot foot foot";
+    "name  body verbs"
+    "scope hint ."
+    "win   win  win";
   align-items: center;
-  /* Two rows of 36px controls is the card's floor, so the padding pays for the
-     rest: `xs` all round and the tightest row gap the scale has. 102px, against
-     72 for the row that only DISPLAYED the scope — the price of the select, and
-     the reason nothing else was allowed onto the second row. */
+  /* Rows of 36px controls are the card's floor, so the padding pays for the
+     rest: `xs` all round, and the row gap is the tightest the scale has because
+     the two rows of a column are ONE statement (a measure and where it reads)
+     — the gap that has to be bigger is the one BETWEEN cards, which is `xs`. */
   gap: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs);
   border: 1px solid var(--app-border-soft);
@@ -273,16 +278,17 @@
   background: var(--app-surface);
 }
 
-/* The control row: the scope select, then the hints it drives. `baseline`
-   alignment would hang the 36px trigger off the 16px text's baseline, so the
-   row centres and the text's own line box does the rest. */
-.objm__cardfoot {
-  grid-area: foot;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+.objm__cardscope {
+  grid-area: scope;
   min-width: 0;
+}
+
+.objm__meta {
+  grid-area: hint;
+}
+
+.objm__winover {
+  grid-area: win;
 }
 
 /* ── Just added ───────────────────────────────────────────────────────────
@@ -318,13 +324,19 @@
 
 /* Below ~470px of card the figures drop under the identity — a `48 → 60` run
    cannot compress, and the verbs must stay reachable. */
+/* Below ~470px of card the two columns cannot hold: a `14,800 → 20,000` pair
+   does not compress and the scope trigger needs its own line. So they stack
+   into ONE column — every zone on the same left edge, which is the same rule
+   the wide card follows with two. */
 @container (max-width: 470px) {
   .objm__card {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "name verbs"
-      "body body"
-      "foot foot";
+      "name  verbs"
+      "body  body"
+      "scope scope"
+      "hint  hint"
+      "win   win";
   }
 
   .objm__cardbody {
@@ -685,5 +697,6 @@
 .objm__winover {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
 }

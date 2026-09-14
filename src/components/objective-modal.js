@@ -21,12 +21,12 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1177";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1177";
-import { getContexts } from "../contexts-store.js?v=1177";
-import { getActivePlaybookId } from "../active-playbook.js?v=1177";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1177";
-import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1177";
+import { escapeHtml as esc } from "../utils.js?v=1178";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1178";
+import { getContexts } from "../contexts-store.js?v=1178";
+import { getActivePlaybookId } from "../active-playbook.js?v=1178";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1178";
+import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1178";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopedBaselineFor,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1177";
+} from "../objective-measures.js?v=1178";
 
 const MODAL_ID = "objectiveModal";
 
@@ -432,6 +432,8 @@ function renderMeasureCard(entry, i) {
          </div>`
       : "";
 
+  // TWO COLUMNS, and every zone sits in one of them — see the stylesheet for
+  // why the card is a grid of areas rather than rows of flex.
   return `
     <div class="objm__card${entry.fresh ? " objm__card--fresh" : ""}">
       <span class="objm__cardname">${esc(name)}</span>
@@ -439,11 +441,9 @@ function renderMeasureCard(entry, i) {
       <div class="objm__cardverbs">
         <button type="button" class="ap-icon-button transparent" data-objm-remove="${i}" aria-label="Remove ${esc(name)}"><i class="ap-icon-close"></i></button>
       </div>
-      <div class="objm__cardfoot">
-        ${scopeField}
-        ${meta ? `<p class="objm__meta${computing ? " objm__meta--computing" : ""}">${meta}</p>` : ""}
-        ${winOverride}
-      </div>
+      <div class="objm__cardscope">${scopeField}</div>
+      <p class="objm__meta${computing ? " objm__meta--computing" : ""}">${meta}</p>
+      ${winOverride}
     </div>`;
 }
 
