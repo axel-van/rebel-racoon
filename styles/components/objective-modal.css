@@ -161,14 +161,12 @@
   white-space: nowrap;
 }
 
-/* The DS dropdown floats (position:absolute); left:0/right:0 already match the
-   trigger, min-width guards against a trigger narrower than its own options. A
-   long list (every Playbook) scrolls inside the popover rather than running off
-   the short modal. */
+/* The DS dropdown floats (position:absolute) with left:0/right:0, so it already
+   matches its trigger; min-width only guards a trigger narrower than its own
+   options. No height cap of ours: `.ap-select-options` ships one (280px) and an
+   invented 264 under it was a number with no author. */
 .objm__select .ap-select-dropdown {
   min-width: 100%;
-  max-height: 264px;
-  overflow-y: auto;
 }
 
 /* As wide as a date and its picker glyph, no wider: it sits in the sentence
@@ -184,7 +182,9 @@
 .objm__section {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  /* 16: one step above the 12 between cards, so the heading and the Add button
+     read as the section's own chrome rather than as two more list items. */
+  gap: var(--ref-spacing-sm);
 }
 
 /* The section's head, with the count in the app's own `.ap-counter` — the same
@@ -216,7 +216,9 @@
    from the labels (12) is size, from the values (14 navy) is ink. Empty-state
    only, so it never competes with a list of measures. */
 .objm__caption {
-  margin: 0 0 var(--ref-spacing-xxs);
+  /* No margin of its own — the section's `gap` separates every child of it, and
+     a margin on top of that made an off-scale 20px (8 + 12). */
+  margin: 0;
   max-width: 62ch;
   font-size: var(--sys-text-style-body-size);
   line-height: var(--sys-text-style-body-line-height);
@@ -269,11 +271,15 @@
   grid-template-areas: "name name verbs";
   grid-auto-flow: row;
   align-items: center;
-  /* `xxxs` between the rows of one card, `xs` between cards (`.objm__measures`):
-     the rows are one statement about one measure, and the gap that separates
-     has to beat the gap that groups. */
-  gap: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs);
+  /* `.ap-card`'s OWN metrics — 16 of padding, and the label→control gap the
+     dialog's other label/control grid uses (`.objm__sentence`), so one dialog
+     keeps one rhythm. The row gap is the step under it: 8 between the rows of
+     one card, 12 between cards, 16 inside the section, 24 between the dialog's
+     blocks — each level of grouping one step of the scale wider than the level
+     it contains, which is the only way the nesting reads. 4px rows glued the
+     three 36px controls into a block. */
+  gap: var(--ref-spacing-xxs) var(--ref-spacing-sm);
+  padding: var(--ref-spacing-sm);
   /* grey-bg on the dialog's white, with grey-20 round it. The tint is not doing
      the separating — at #F9F9FA against #FFF it is a 2% step, which is why the
      hairline stays — it is doing the CONTRAST: the three controls in here are
@@ -283,7 +289,12 @@
      needs its edge stated once, and grey-20 is the step this house draws every
      limit with. */
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-md);
+  /* 8px — `.ap-card`'s radius (`--ref-border-radius-md`), and the DS's own
+     card-inside-a-form value (`--sys-settings-card-border-radius`). It was 4,
+     which is `--comp-input-border-radius`: the card had the same corner as the
+     three inputs inside it, so it read as one big field rather than as the
+     frame around them. An outer radius has to beat its children's. */
+  border-radius: var(--app-radius-lg);
   background: var(--app-bg);
 }
 
@@ -434,15 +445,12 @@
   color: var(--sys-text-color-light);
 }
 
-/* A spinner has no baseline to sit on — and the Archie mark that replaces every
-   `.ap-loader` in this app is 22px, not the DS's 16 (archie-loader.css). So the
-   supporting line RESERVES those 22px in both states: the card is the same
-   height while Archie reads and after he answers, which is the whole point of
-   putting the beat on the card. Reserved rather than overridden: the loader's
-   size belongs to the loader, not to this modal. */
-.objm__meta {
-  min-height: 22px;
-}
+/* ⚠️ No height reservation here any more. It held 22px — the Archie mark's
+   size, since it replaces every `.ap-loader` at 22 rather than the DS's 16 — so
+   the card would not jump when the loader gave way to the numbers. It cannot
+   jump now: the line shares its row with two 36px input groups, and no flex row
+   is shorter than its tallest child. An off-scale 22px that changes nothing is
+   worse than no rule. */
 
 /* While Archie reads, the line is the beat itself — loader plus its sentence —
    so it goes back to the left of the row, where the values will land. Held
@@ -493,14 +501,19 @@
   color: var(--ref-color-grey-40);
 }
 
-/* 112px: the widest value a measure carries is seven characters ("+14,800") at
-   14px plus the DS input's own 12px of padding each side — 88px was that floor,
-   and it read as a cramped box once the row had a 460px column to sit in. The
-   two fields stay a FIXED width rather than flexing, so the arrow between them
-   lands on the same x in every card. */
+/* 104px, and the number is arithmetic rather than taste: the row has to hold
+   two fields, the glyph between them and the hint that follows, inside a 438px
+   control column — 2×104 + 12 + 2 gaps of 8 leaves 190 for a hint that measures
+   182. At 112 it was four pixels short and the hint wrapped, which is what made
+   the card 184px tall for 158px of content. It still wraps gracefully for a
+   longer run (the hint keeps the right edge on its own line), but the common
+   case fits on one.
+
+   Fixed rather than flexing, so the glyph between the two fields lands on the
+   same x in every card. */
 .objm__from,
 .objm__target {
-  width: 112px;
+  width: 104px;
 }
 
 /* Tabular numerals are the ONE property on these inputs: same font, same size,
@@ -695,25 +708,11 @@
   min-width: 0;
 }
 
-/* The trigger shrinks to the CURRENT value, so the menu has to size to its own
-   widest row instead of inheriting that width — otherwise every profile longer
-   than the trigger ellipsises inside its own list. A FLOOR, not `max-content`,
-   which would size to the longest handle and wobble from network to network.
-
-   And a CEILING on the options: grouped by network the list is every connected
-   profile (40 rows and six group headers on the demo set), and the dialog clips
-   its own overflow for its rounded corners — so an uncapped menu is a list
-   whose bottom half cannot be reached. The scroll lives on the options, below
-   the search and the `Every connected profile` row, so both stay put while the
-   list moves. */
-.objm__scope .ap-select-dropdown {
-  min-width: 260px;
-}
-
-.objm__scope .ap-select-options {
-  max-height: 248px;
-  overflow-y: auto;
-}
+/* ⚠️ NO CAP AND NO FLOOR OF OURS — both were invented here and both are gone.
+   A 248px ceiling on the options, under the 280 `.ap-select-options` already
+   ships with its own scroll (40 rows and six group headers still reach their
+   bottom); and a 260px floor on the menu, which on a 247px card overflowed the
+   dialog by 13px to widen a menu the full-width trigger had already widened. */
 
 /* `.ap-select-option` is already a 40px flex row with its own gap, so a profile
    row only has to let the avatar tag take the remaining width. */
@@ -737,7 +736,10 @@
    never sits under the card competing with the measure's own supporting line. */
 .objm__scopenote {
   margin: 0;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm) var(--ref-spacing-xs);
+  /* `sm` inline is `.ap-select-option`'s own, so the note starts on the same x
+     as the rows it explains; `xxs` block, symmetric — the 8/16/12 it had was
+     three different steps for one box. */
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm);
   border-top: 1px solid var(--app-border);
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
@@ -749,7 +751,9 @@
 .objm__scopeone {
   display: flex;
   align-items: center;
-  min-height: var(--comp-button-height, 36px);
+  /* The input height, not the button's: this row stands in for the select it
+     replaces. Both are 36, but the fallback hid which one it meant. */
+  min-height: var(--comp-input-height);
 }
 
 /* The per-measure window override, only rendered against a FIXED objective
@@ -760,5 +764,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
-  min-height: var(--comp-button-height, 36px);
+  /* Matches the control rows above it, so the card's three rows share one
+     rhythm even though a chip is 24px tall. */
+  min-height: var(--comp-input-height);
 }

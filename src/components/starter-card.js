@@ -14,8 +14,8 @@
 // and its tones), free-standing rather than scoped under `.empty-chat`, which is
 // what lets the home render the same markup.
 
-import { chatStarters } from "../mocks.js?v=1184";
-import { escapeHtml } from "../utils.js?v=1184";
+import { chatStarters } from "../mocks.js?v=1187";
+import { escapeHtml } from "../utils.js?v=1187";
 
 /**
  * The starter cards' markup, ready to drop inside a `.starter-grid`.
