@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1159";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1159";
-import { getContexts } from "../contexts-store.js?v=1159";
-import { getActivePlaybookId } from "../active-playbook.js?v=1159";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1159";
+import { escapeHtml as esc } from "../utils.js?v=1160";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1160";
+import { getContexts } from "../contexts-store.js?v=1160";
+import { getActivePlaybookId } from "../active-playbook.js?v=1160";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1160";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -34,7 +34,7 @@ import {
   scopedBaselineFor,
   scopeLabel,
   WINDOWS,
-} from "../objective-measures.js?v=1159";
+} from "../objective-measures.js?v=1160";
 
 const MODAL_ID = "objectiveModal";
 
@@ -358,12 +358,17 @@ function renderMeasureCard(entry, i) {
   if (!rate && suggestedPct != null) deltas.push(`+${suggestedPct}%`);
   const pd = rate ? "" : perDay(baseline, target);
   if (pd) deltas.push(pd);
+  // ⚠️ `Suggested` is a WORD, not a filled tag. As an `.ap-tag tagOrange` it was
+  // the loudest thing on the card — a peach fill on the least important line,
+  // pulling the eye before the metric's own name. It keeps the AI orange
+  // (orange-150, the ink step, on white) because that is what this app's orange
+  // means, and loses the pill.
   const hint =
     showSuggested || deltas.length
-      ? `<div class="objm__cardhint">
-           ${showSuggested ? `<span class="ap-tag tagOrange mini">Suggested</span>` : ""}
+      ? `<p class="objm__cardhint">
+           ${showSuggested ? `<span class="objm__suggested">Suggested</span>` : ""}
            ${deltas.length ? `<span class="objm__hinttext">${deltas.join(" · ")}</span>` : ""}
-         </div>`
+         </p>`
       : "";
   return `
     <div class="objm__card">
@@ -428,6 +433,10 @@ function openCatalog(editIndex = null) {
     // step). Editing keeps the configurator: that is where a measure's scope
     // and its window override live.
     immediate: editIndex == null,
+    // What this objective already measures — those rows are shown as taken.
+    // The one being CHANGED is not: re-picking it is how you keep the metric
+    // and re-do its scope.
+    taken: draft.measures.filter((_, i) => i !== editIndex).map((e) => e.metricId),
     onAdd(entry) {
       catalogFlow?.dispose();
       catalogFlow = null;

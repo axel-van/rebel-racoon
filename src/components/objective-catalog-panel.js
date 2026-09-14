@@ -14,15 +14,15 @@
 // the design's own "the panel slides"), and `open()` wraps the same flow in a
 // standalone body-level dialog for the Playbook block's edit mode.
 
-import { escapeHtml as esc } from "../utils.js?v=1159";
+import { escapeHtml as esc } from "../utils.js?v=1160";
 import {
   NETWORK_LABEL,
   getConnectedProfiles,
   renderProfileTag,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1159";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1159";
-import { getContextById } from "../contexts-store.js?v=1159";
+} from "../social-profiles.js?v=1160";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1160";
+import { getContextById } from "../contexts-store.js?v=1160";
 import {
   catalogEntries,
   metricLabel,
@@ -31,7 +31,7 @@ import {
   proposeTargetFrom,
   isRateMetric,
   isAdditiveMetric,
-} from "../objective-measures.js?v=1159";
+} from "../objective-measures.js?v=1160";
 
 const COMPUTE_MS = 900;
 
@@ -45,6 +45,7 @@ export function createCatalogFlow({
   targetLabel,
   confirmLabel,
   immediate = false,
+  taken = [],
   onAdd,
   onBack,
   requestRender,
@@ -195,6 +196,18 @@ export function createCatalogFlow({
         if (!metrics.length) return "";
         const rows = metrics
           .map((m) => {
+            // ⚠️ Already on the objective — the row says so and cannot be
+            // picked. Adding is one click now (§ adding in one step), so
+            // nothing stands between a double-click and two identical measures;
+            // it took the configurator's three screens to make that unlikely
+            // before, never impossible.
+            if (taken.includes(m.id)) {
+              return `
+                <div class="objc__soon">
+                  <span class="objc__row-name">${esc(m.label)}</span>
+                  <span class="objc__soonwhy">Already measured</span>
+                </div>`;
+            }
             if (!m.available) {
               // A real metric the platform cannot serve yet: the name greyed, the
               // reason under it, and the proxy Archie would use instead as the

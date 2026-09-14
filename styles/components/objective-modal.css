@@ -317,14 +317,26 @@
 
 /* The derived line under the inputs: the Suggested tag (when Archie set the
    target) beside the deltas it works out to. A quiet row, never a second focus. */
+/* The derived line, under the fields it derives from and aligned with THEM —
+   `flex-end` put it adrift in the middle-right of the card. One quiet 12px
+   line, grey-80, with one orange word in it. */
 .objm__cardhint {
   grid-area: hint;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--ref-spacing-xs);
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs);
+  margin: 0;
   font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
+}
+
+/* Orange = this app's mark for what the AI produced, at the INK step
+   (orange-150) because it sits on white as text. Never the tag's fill: a pill
+   here outranked the metric's own name. */
+.objm__suggested {
+  color: var(--ref-color-orange-150);
 }
 
 .objm__hinttext {
