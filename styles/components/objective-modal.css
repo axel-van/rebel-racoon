@@ -201,18 +201,21 @@
   container-type: inline-size;
 }
 
-/* Identity | numbers | verbs on one row, and the derived line under the
-   numbers. `auto` on the last two columns so the fields and the buttons keep
-   their intrinsic width and the identity absorbs the slack — which also lines
-   the fields up from card to card. */
+/* Identity | figures | verbs, on ONE row.
+   ⚠️ It was two rows — identity + fields, then a derived line under the fields
+   — at 86px a card. The supporting text was SCATTERED: the scope under the
+   name, the suggestion under the fields, and a hundred and seventy pixels of
+   nothing between them. Both are 12px grey text about the same measure, so
+   they share one line under the name now, and the card is 60px.
+
+   `auto` on the last two columns so the fields and the buttons keep their
+   intrinsic width and the identity absorbs the slack — which is also what
+   lines the fields up from card to card, whatever a metric is called. */
 .objm__card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas:
-    "id fields verbs"
-    ". hint   .";
   align-items: center;
-  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-md);
@@ -227,8 +230,8 @@
    rather than becoming a second permanent state.
 
    `forwards` so the end state sticks until the class is dropped, and no
-   `border-width` change anywhere: the card must not move a pixel while it
-   settles. */
+   `border-width` anywhere in the keyframes: the card must not move a pixel
+   while it settles. */
 @keyframes objm-fresh {
   from {
     border-color: var(--ref-color-electric-blue-100);
@@ -250,112 +253,78 @@
   }
 }
 
-/* Below ~470px of card the numbers drop under the identity — a `from [x] to
-   [y]` run cannot compress, and the verbs must stay reachable. */
+/* Below ~470px of card the figures drop under the identity — a `48 → 60` run
+   cannot compress, and the verbs must stay reachable. */
 @container (max-width: 470px) {
   .objm__card {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "id     verbs"
-      "fields fields"
-      "hint   hint";
+  }
+
+  .objm__cardbody {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }
 
 .objm__cardverbs {
-  grid-area: verbs;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
 }
 
-/* Name + scope read as one label — "Reach · all networks", the same shape the
-   overview objective cards use. Baseline-aligned so the smaller scope sits on
-   the name's baseline, not floated to its centre. */
-/* Name OVER scope, the DS table cell's own two-line anatomy
-   (`.ap-table-cell-text-container`). Side by side it fitted "Reach · all
-   networks" and wrapped "Brand mentions · all networks", so two cards in the
-   same list came out 94px and 110px tall — an unevenness that reads as a bug.
-   Stacked, the column needs only the width of one word and every card is the
-   same height whatever its metric is called. */
+/* The identity: the name, then ONE supporting line under it. */
 .objm__id {
-  grid-area: id;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   min-width: 0;
 }
 
-/* body-BOLD (14), one step under the objective's own h2 name in the sentence
-   above. At h3 (16) a measure's label sat at the modal's second-highest rung,
-   which is why every line in here read as equally important. */
+/* body-BOLD (14) — the only bold thing in the card, which is what makes it the
+   card's subject without a bigger step. It was h3 (16), one rung under the
+   dialog's own title, which put a measure's label at the modal's second rung. */
 .objm__cardname {
+  max-width: 100%;
   font-size: var(--sys-text-style-body-size);
   font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-line-height);
   color: var(--sys-text-color-default);
-}
-
-.objm__scope {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* No middot any more: it separated an inline pair, and the pair is now two
-   lines. */
-
-.objm__cardbody {
-  grid-area: fields;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
-}
-
-/* Baseline is now an editable field (same shape as the target). 96px, not 110:
-   the widest value any measure carries is seven characters ("+14,800"), and the
-   extra 28px per card was space the identity could use. */
-.objm__from {
-  width: 96px;
-}
-
-/* Tabular numerals are the ONE property left on these inputs: same font, same
-   size, same weight as any DS input — only the digit advance is fixed, so two
-   stacked measures' figures line up instead of dancing as you type. The BOLD
-   they also carried is gone: a value in bold inside a bordered field is the
-   field restyled, and the card's own hierarchy (name, then figures, then the
-   derived line) does that work already. */
-.objm__from input {
-  width: 100%;
-  font-variant-numeric: tabular-nums;
-}
-
-.objm__target {
-  width: 96px;
-}
-
-.objm__target input {
-  width: 100%;
-  font-variant-numeric: tabular-nums;
-}
-
-/* The derived line under the inputs: the Suggested tag (when Archie set the
-   target) beside the deltas it works out to. A quiet row, never a second focus. */
-/* The derived line, under the fields it derives from and aligned with THEM —
-   `flex-end` put it adrift in the middle-right of the card. One quiet 12px
-   line, grey-80, with one orange word in it. */
-.objm__cardhint {
-  grid-area: hint;
+/* The supporting line: scope · Suggested · what the target is worth. One 12px
+   grey-80 run with a single orange word in it — the card's only accent. */
+.objm__meta {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
+  gap: var(--ref-spacing-xxxs);
   margin: 0;
+  min-width: 0;
   font-size: var(--sys-text-style-caption-size);
   line-height: var(--sys-text-style-caption-line-height);
   color: var(--sys-text-color-light);
+}
+
+/* A spinner has no baseline to sit on — and the Archie mark that replaces every
+   `.ap-loader` in this app is 22px, not the DS's 16 (archie-loader.css). So the
+   supporting line RESERVES those 22px in both states: the card is the same
+   height while Archie reads and after he answers, which is the whole point of
+   putting the beat on the card. Reserved rather than overridden: the loader's
+   size belongs to the loader, not to this modal. */
+.objm__meta {
+  min-height: 22px;
+}
+
+.objm__meta--computing {
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+}
+
+.objm__metadot {
+  color: var(--ref-color-grey-40);
 }
 
 /* Orange = this app's mark for what the AI produced, at the INK step
@@ -369,12 +338,38 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* While Archie reads the window: the loader on the line the suggestion will
-   take, so the card fills instead of growing. `align-items: center` because a
-   spinner has no baseline to sit on. */
-.objm__cardhint--computing {
+.objm__cardbody {
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-size);
+  color: var(--sys-text-color-light);
+}
+
+/* current → target: the glyph the index card and the fiche's table already use
+   for that pair, in place of two grey `from` / `to` words that cost 60px of the
+   row and read fussier than the mark that means exactly this. grey-40 as a
+   FILL, not as ink — it is a connector between two values, not a value. */
+.objm__arrow {
+  flex-shrink: 0;
+  color: var(--ref-color-grey-40);
+}
+
+/* 88px: the widest value a measure carries is seven characters ("+14,800") at
+   14px, plus the DS input's own 12px of padding each side. */
+.objm__from,
+.objm__target {
+  width: 88px;
+}
+
+/* Tabular numerals are the ONE property on these inputs: same font, same size,
+   same weight as any DS input — only the digit advance is fixed, so two stacked
+   measures' figures line up instead of dancing as you type. */
+.objm__from input,
+.objm__target input {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
 }
 
 .objm__spacer,

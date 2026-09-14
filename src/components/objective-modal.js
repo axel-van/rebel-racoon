@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1165";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1165";
-import { getContexts } from "../contexts-store.js?v=1165";
-import { getActivePlaybookId } from "../active-playbook.js?v=1165";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1165";
+import { escapeHtml as esc } from "../utils.js?v=1167";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1167";
+import { getContexts } from "../contexts-store.js?v=1167";
+import { getActivePlaybookId } from "../active-playbook.js?v=1167";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1167";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopeLabel,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1165";
+} from "../objective-measures.js?v=1167";
 
 const MODAL_ID = "objectiveModal";
 
@@ -321,26 +321,33 @@ function renderInlineSelect({ value, options, attr, placeholder = "" }) {
     </details>`;
 }
 
-// One measure, on a two-row GRID: the identity and the fields share the first
-// row — identity left, numbers right, the two verbs hard right — and the quiet
-// derived line sits under the numbers it derives from.
+// One measure, on ONE row: the identity, the two figures, the verbs.
 //
-// ⚠️ It was three stacked rows (identity / fields / hint), each full width, at
-// 16px of padding: ~110px per measure, with the right half of the identity row
-// empty and the right half of the hint row empty too. The grid puts the numbers
-// in that space, which is both denser AND better aligned — the `from`/`to`
-// fields now land on the same x from card to card, which they could not when
-// each card was a free-flowing flex row (a rate measure says `hold above … now
-// at …` and pushed its fields elsewhere).
+// ⚠️ It was two rows — identity + fields, then a derived line under the fields —
+// at 86px a card. Three things were wrong and they were the same thing: the
+// supporting text was SCATTERED. The scope sat under the name, the suggestion
+// under the fields, and between them ran a hundred and seventy pixels of
+// nothing. Both are 12px grey supporting text about the same measure, so they
+// are now ONE line under the name, where the eye already is:
 //
-// Hierarchy inside the card, top to bottom: the metric name at body-BOLD (14),
-// one clear step under the objective's own h2 name — it was h3 (16), which put
-// a measure's label one rung off the modal's hero; its scope at the caption
-// rung; the numbers bold with tabular figures because they are what you came to
-// change; the derived line at the caption rung, grey-80, never a second focus.
+//     Brand mentions                 [48] → [60]        ✎ ✕
+//     all networks · Suggested +25% · +1/day
 //
-// The metric TYPE isn't shown: it's 1:1 with the name (a Reach is always a
-// volume) and the from→to vs hold-above shape already says which.
+// 86px → 60px, one orphan line fewer, and the fields still land on the same x
+// from card to card (the grid's `auto` columns).
+//
+// `from`/`to` became the ARROW the rest of the app already uses for
+// current→target — the index card's `14,800 → 20,000`, the fiche's table.
+// Two grey words at 12px next to two 14px values were fussier than the glyph
+// that means exactly that, and they cost 60px of the row.
+//
+// Hierarchy, top to bottom: the name (14 bold navy, the only bold thing in the
+// card) → the values (14 regular, the only bordered things) → one grey line
+// with one orange word in it. Three levels, one accent — and it survives the
+// grayscale test, since nothing but the name is heavy.
+//
+// The metric TYPE isn't shown: it is 1:1 with the name (a Reach is always a
+// volume) and the `→` vs `hold above` shape already says which.
 function renderMeasureCard(entry, i) {
   const rate = isRateMetric(entry.metricId);
   const computing = !!entry.computing;
@@ -351,13 +358,14 @@ function renderMeasureCard(entry, i) {
   const suggestedPct = pctDelta(baseline, target);
   const scopeText = entry.scope?.network ? scopeLabel(entry.scope) : "all networks";
   const name = metricLabel(entry.metricId);
-  // While it computes, the SAME two fields render empty and disabled, with the
-  // loader on the line the suggestion will take. Same geometry throughout, so
-  // the card fills rather than jumping — and the empty boxes say where the
-  // numbers are about to land. `.ap-loader` is the Archie mark app-wide
-  // (archie-loader.css), which is what makes this read as "Archie is working".
+  // While it computes, the SAME fields render empty and disabled: same
+  // geometry throughout, so the card fills rather than jumping, and the empty
+  // boxes say where the numbers are about to land.
   const field = (kind, value, label) =>
     `<div class="ap-input-group objm__${kind}"><input type="text" data-objm-${kind === "from" ? "baseline" : "target"} data-objm-i="${i}" value="${computing ? "" : esc(value)}" aria-label="${label}"${computing ? " disabled" : ""} /></div>`;
+  // A rate has no from→to: its target is a bar to hold, so the words stay
+  // there — `45% → 38%` would read as a drop, which is the opposite of what a
+  // floor means.
   const body = rate
     ? `
       <span class="objm__word">hold above</span>
@@ -365,63 +373,45 @@ function renderMeasureCard(entry, i) {
       <span class="objm__word">now at</span>
       ${field("from", baseline, "Current value")}`
     : `
-      <span class="objm__word">from</span>
       ${field("from", baseline, "Current value")}
-      <span class="objm__word">to</span>
+      <span class="objm__arrow" aria-hidden="true">→</span>
       ${field("target", target, "Target")}`;
-  // Derived line under the inputs — kept out of the from→to run so the two
-  // numbers pair cleanly. The orange tag marks a target Archie proposed and the
-  // user hasn't touched (orange because it is AI provenance, the repo's own
-  // convention); `mini`, because this is the quietest line in the card and a
-  // full-size peach tag was the loudest thing in it. The deltas say what the
-  // target amounts to.
+
+  // The supporting line: the scope, then what the target is worth. `Suggested`
+  // marks a target Archie proposed and the reader hasn't touched — orange
+  // because that is this app's mark for the AI's own work, as INK and never a
+  // filled tag (a pill here outranked the metric's name).
   const showSuggested = !rate && !(entry.target == null && target === "") && !entry.targetEdited;
   const deltas = [];
   if (!rate && suggestedPct != null) deltas.push(`+${suggestedPct}%`);
   const pd = rate ? "" : perDay(baseline, target);
   if (pd) deltas.push(pd);
-  // ⚠️ `Suggested` is a WORD, not a filled tag. As an `.ap-tag tagOrange` it was
-  // the loudest thing on the card — a peach fill on the least important line,
-  // pulling the eye before the metric's own name. It keeps the AI orange
-  // (orange-150, the ink step, on white) because that is what this app's orange
-  // means, and loses the pill.
-  if (computing) {
-    return `
-      <div class="objm__card">
-        <span class="objm__id">
-          <span class="objm__cardname">${esc(name)}</span>
-          <span class="objm__scope">${esc(scopeText)}</span>
-        </span>
-        <div class="objm__cardbody">${body}</div>
-        <div class="objm__cardverbs">
-          <button type="button" class="ap-icon-button transparent" data-objm-remove="${i}" aria-label="Remove ${esc(name)}"><i class="ap-icon-close"></i></button>
-        </div>
-        <p class="objm__cardhint objm__cardhint--computing">
-          <span class="ap-loader blue size-16" aria-hidden="true"><svg><circle></circle><circle></circle></svg></span>
-          <span>Reading your last 30 days…</span>
-        </p>
-      </div>`;
-  }
+  const meta = computing
+    ? `<span class="ap-loader blue size-16" aria-hidden="true"><svg><circle></circle><circle></circle></svg></span>
+       <span>Reading your last 30 days…</span>`
+    : [
+        `<span>${esc(scopeText)}</span>`,
+        showSuggested ? `<span class="objm__suggested">Suggested</span>` : "",
+        deltas.length ? `<span class="objm__hinttext">${deltas.join(" · ")}</span>` : "",
+      ]
+        .filter(Boolean)
+        .join(`<span class="objm__metadot" aria-hidden="true">·</span>`);
 
-  const hint =
-    showSuggested || deltas.length
-      ? `<p class="objm__cardhint">
-           ${showSuggested ? `<span class="objm__suggested">Suggested</span>` : ""}
-           ${deltas.length ? `<span class="objm__hinttext">${deltas.join(" · ")}</span>` : ""}
-         </p>`
-      : "";
   return `
     <div class="objm__card${entry.fresh ? " objm__card--fresh" : ""}">
-      <span class="objm__id">
+      <div class="objm__id">
         <span class="objm__cardname">${esc(name)}</span>
-        <span class="objm__scope">${esc(scopeText)}</span>
-      </span>
+        <p class="objm__meta${computing ? " objm__meta--computing" : ""}">${meta}</p>
+      </div>
       <div class="objm__cardbody">${body}</div>
       <div class="objm__cardverbs">
-        <button type="button" class="ap-icon-button transparent" data-objm-edit="${i}" aria-label="Change ${esc(name)} metric or scope"><i class="ap-icon-pen"></i></button>
+        ${
+          computing
+            ? ""
+            : `<button type="button" class="ap-icon-button transparent" data-objm-edit="${i}" aria-label="Change ${esc(name)} metric or scope"><i class="ap-icon-pen"></i></button>`
+        }
         <button type="button" class="ap-icon-button transparent" data-objm-remove="${i}" aria-label="Remove ${esc(name)}"><i class="ap-icon-close"></i></button>
       </div>
-      ${hint}
     </div>`;
 }
 

@@ -14,15 +14,15 @@
 // the design's own "the panel slides"), and `open()` wraps the same flow in a
 // standalone body-level dialog for the Playbook block's edit mode.
 
-import { escapeHtml as esc } from "../utils.js?v=1165";
+import { escapeHtml as esc } from "../utils.js?v=1167";
 import {
   NETWORK_LABEL,
   getConnectedProfiles,
   renderProfileTag,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1165";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1165";
-import { getContextById } from "../contexts-store.js?v=1165";
+} from "../social-profiles.js?v=1167";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1167";
+import { getContextById } from "../contexts-store.js?v=1167";
 import {
   catalogEntries,
   metricLabel,
@@ -31,7 +31,7 @@ import {
   proposeTargetFrom,
   isRateMetric,
   isAdditiveMetric,
-} from "../objective-measures.js?v=1165";
+} from "../objective-measures.js?v=1167";
 
 const COMPUTE_MS = 900;
 
