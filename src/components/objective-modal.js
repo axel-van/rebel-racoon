@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1148";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1148";
-import { getContexts } from "../contexts-store.js?v=1148";
-import { getActivePlaybookId } from "../active-playbook.js?v=1148";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1148";
+import { escapeHtml as esc } from "../utils.js?v=1149";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1149";
+import { getContexts } from "../contexts-store.js?v=1149";
+import { getActivePlaybookId } from "../active-playbook.js?v=1149";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1149";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -34,7 +34,7 @@ import {
   scopedBaselineFor,
   scopeLabel,
   WINDOWS,
-} from "../objective-measures.js?v=1148";
+} from "../objective-measures.js?v=1149";
 
 const MODAL_ID = "objectiveModal";
 
@@ -253,6 +253,15 @@ function renderForm() {
     <div class="objm__section">
       <span class="objm__seclabel">Measured by${hasMeasures ? ` <span class="ap-counter normal grey">${draft.measures.length}</span>` : ""}</span>
       ${
+        // ⚠️ ONE CONTROL, in both states: the DS button. The empty state used to
+        // be a hand-built DASHED CARD with a bold title and a hint line — a
+        // component ADS does not ship, and one that looked like a radio card
+        // and a button without being either. (The app's dashed box means "you
+        // can drop a file here"; nothing can be dropped on this one.) So the
+        // action is `.ap-button stroked blue`, the same control the filled
+        // state already used, at the same weight in both — a single action
+        // should not change treatment because a list above it is empty.
+        //
         // ⚠️ The caption is EMPTY-STATE ONLY. "Its status … is read from these
         // measures" teaches what a measure is FOR, which is what a reader with
         // none needs; over a list of two it is two lines of 12px restating what
@@ -262,24 +271,12 @@ function renderForm() {
           ? ""
           : `<p class="objm__caption">Its status — on track, watch, or at risk — is read from these measures. Nothing else to set.</p>`
       }
-      ${
-        hasMeasures
-          ? // Once a measure exists the dashed card has done its job: a full-width
-            // dashed block under real cards competes with them. A compact button
-            // adds the next one.
-            `<div class="objm__measures">${draft.measures.map((entry, i) => renderMeasureCard(entry, i)).join("")}</div>
-             <div class="objm__addrow">
-               <button type="button" class="ap-button ghost blue" data-objm-add-measure>
-                 <i class="ap-icon-plus" aria-hidden="true"></i><span>Add a measure</span>
-               </button>
-             </div>`
-          : // Empty state — the dashed card IS the affordance, and it names what
-            // the catalogue holds so "measure" isn't an abstract word.
-            `<button type="button" class="objm__addcard" data-objm-add-measure>
-               <span class="objm__addcard-title"><i class="ap-icon-plus" aria-hidden="true"></i>Add a measure</span>
-               <span class="objm__addhint">reach · mentions · clicks · followers · rate…</span>
-             </button>`
-      }
+      ${hasMeasures ? `<div class="objm__measures">${draft.measures.map((entry, i) => renderMeasureCard(entry, i)).join("")}</div>` : ""}
+      <div class="objm__addrow">
+        <button type="button" class="ap-button stroked blue" data-objm-add-measure>
+          <i class="ap-icon-plus" aria-hidden="true"></i><span>Add a measure</span>
+        </button>
+      </div>
     </div>`;
 }
 

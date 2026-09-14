@@ -320,56 +320,15 @@
   flex: 1;
 }
 
-/* Empty state only. `background: none` matters — a bare <button> paints the
-   UA grey fill, which read as a disabled block behind the dashed border. */
-.objm__addcard {
-  display: flex;
-  align-items: baseline;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
-  border: 1.5px dashed var(--app-border);
-  border-radius: var(--app-radius-card);
-  background: none;
-  font-family: inherit;
-  font-size: var(--sys-text-style-body-size);
-  color: var(--sys-text-color-light);
-  cursor: pointer;
-  text-align: left;
-  transition:
-    border-color var(--ref-animation-short) var(--app-ease-out),
-    color var(--ref-animation-short) var(--app-ease-out);
-}
+/* ⚠️ Nothing here for the "Add a measure" affordance any more: it is a DS
+   `.ap-button stroked blue` in both states. What used to live here was a
+   hand-built dashed CARD — 1.5px dashed border, a bold title, a hint line, its
+   own hover and focus rules — a component ADS does not ship, and one that read
+   as a radio card and a button without being either. The dashed box is also
+   this app's "you can drop a file here" affordance, which this never was.
 
-.objm__addcard-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  color: var(--sys-text-color-default);
-}
-
-.objm__addcard-title > i {
-  font-size: var(--sys-icon-css-sm);
-}
-
-/* Card hover is a blue border — never an added shadow or a coloured edge. */
-.objm__addcard:hover {
-  border-color: var(--sys-border-color-active);
-}
-
-.objm__addcard:hover .objm__addcard-title {
-  color: var(--sys-border-color-active);
-}
-
-.objm__addcard:focus-visible {
-  outline: 2px solid var(--sys-border-color-active);
-  outline-offset: 2px;
-}
-
-.objm__addhint {
-  font-size: var(--sys-text-style-caption-size);
-  color: var(--sys-text-color-light);
-}
+   The row stays: it is what keeps the button auto-width (a button never spans
+   its container). */
 
 /* ── The catalogue (2c) ───────────────────────────────────────────────── */
 .objc__search > * {

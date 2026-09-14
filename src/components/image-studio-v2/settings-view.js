@@ -29,14 +29,14 @@
 // that thing (`.isv2-sheet-hint`). No second size and no bold — three bold labels
 // stacked in a 260px column would shout over the section title.
 
-import { escapeHtml } from "../../utils.js?v=1148";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1148";
-import { KEY } from "./context.js?v=1148";
-import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1148";
-import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1148";
-import * as imageStudio from "../../image-studio.js?v=1148";
-import { typeArt } from "./type-art.js?v=1148";
-import { styleArt } from "./style-art.js?v=1148";
+import { escapeHtml } from "../../utils.js?v=1149";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1149";
+import { KEY } from "./context.js?v=1149";
+import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1149";
+import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1149";
+import * as imageStudio from "../../image-studio.js?v=1149";
+import { typeArt } from "./type-art.js?v=1149";
+import { styleArt } from "./style-art.js?v=1149";
 
 // A thin rule between two clusters inside one row body. Shared with the
 // Add-image sheet (tools-view.js), which is where the class name comes from.
