@@ -21,10 +21,10 @@
 // dismissal is ours to wire: events.js takes Escape in capture, before the
 // studio's own document-level Escape-to-close sees it.
 
-import { escapeHtml } from "../../utils.js?v=1178";
-import { showToast } from "../toast.js?v=1178";
-import { KEY } from "./context.js?v=1178";
-import * as imageStudio from "../../image-studio.js?v=1178";
+import { escapeHtml } from "../../utils.js?v=1180";
+import { showToast } from "../toast.js?v=1180";
+import { KEY } from "./context.js?v=1180";
+import * as imageStudio from "../../image-studio.js?v=1180";
 
 // What each guarded setting is called in the sentence, so the dialog names the
 // thing the user just clicked rather than saying "a setting".

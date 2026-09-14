@@ -21,12 +21,12 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1178";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1178";
-import { getContexts } from "../contexts-store.js?v=1178";
-import { getActivePlaybookId } from "../active-playbook.js?v=1178";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1178";
-import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1178";
+import { escapeHtml as esc } from "../utils.js?v=1180";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1180";
+import { getContexts } from "../contexts-store.js?v=1180";
+import { getActivePlaybookId } from "../active-playbook.js?v=1180";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1180";
+import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1180";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopedBaselineFor,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1178";
+} from "../objective-measures.js?v=1180";
 
 const MODAL_ID = "objectiveModal";
 
@@ -374,12 +374,13 @@ function renderMeasureCard(entry, i) {
   // boxes say where the numbers are about to land.
   const field = (kind, value, label) =>
     `<div class="ap-input-group objm__${kind}"><input type="text" data-objm-${kind === "from" ? "baseline" : "target"} data-objm-i="${i}" value="${computing ? "" : esc(value)}" aria-label="${label}"${computing ? " disabled" : ""} /></div>`;
-  // A rate has no from→to: its target is a bar to hold, so the words stay
-  // there — `45% → 38%` would read as a drop, which is the opposite of what a
-  // floor means.
+  // A rate has no from→to: its target is a bar to hold, so `now at` stays a
+  // word between the two — `45% → 38%` would read as a drop, which is the
+  // opposite of what a floor means. The LEADING word of each shape ("grow
+  // from", "hold above") left the row and became its label, which is how the
+  // two variants end up sharing one grid instead of each arranging itself.
   const body = rate
     ? `
-      <span class="objm__word">hold above</span>
       ${field("target", target, "Target")}
       <span class="objm__word">now at</span>
       ${field("from", baseline, "Current value")}`
@@ -397,7 +398,7 @@ function renderMeasureCard(entry, i) {
   if (!rate && suggestedPct != null) deltas.push(`+${suggestedPct}%`);
   const pd = rate ? "" : perDay(baseline, target);
   if (pd) deltas.push(pd);
-  const meta = computing
+  const hintBody = computing
     ? `<span class="ap-loader blue size-16" aria-hidden="true"><svg><circle></circle><circle></circle></svg></span>
        <span>Reading your last 30 days…</span>`
     : [
@@ -406,6 +407,9 @@ function renderMeasureCard(entry, i) {
       ]
         .filter(Boolean)
         .join(`<span class="objm__metadot" aria-hidden="true">·</span>`);
+  // In the field's own row, after the values it is about — it says what THEY
+  // are worth, so it has no meaning anywhere else on the card.
+  const hint = hintBody ? `<p class="objm__meta${computing ? " objm__meta--computing" : ""}">${hintBody}</p>` : "";
 
   // ⚠️ THE SCOPE IS A CONTROL, on the line that used to print it as text.
   // Changing it meant the pencil → the metric catalogue → a "Change measure"
@@ -432,18 +436,29 @@ function renderMeasureCard(entry, i) {
          </div>`
       : "";
 
-  // TWO COLUMNS, and every zone sits in one of them — see the stylesheet for
-  // why the card is a grid of areas rather than rows of flex.
+  // ⚠️ A LABELLED FORM, not a row of boxes. The card holds three fields — the
+  // run, the profiles it reads, and an optional window — and until now NONE of
+  // them was named: two bare inputs told apart by an arrow, and a select whose
+  // only clue was the value inside it. So each field gets its label in a fixed
+  // first column, which is also what puts every control on ONE x (`--objm-flabel`
+  // in the stylesheet) — from field to field and from card to card.
+  //
+  // The labels speak the dialog's own sentence ("Grow <name> over a <window>"),
+  // so a measure reads as its continuation: "Reach — grow from 14,800 to
+  // 20,000, measured on every connected profile".
+  const rows = [
+    [rate ? "Hold above" : "Grow from", `<div class="objm__cardbody">${body}${hint}</div>`],
+    ["Measured on", `<div class="objm__cardscope">${scopeField}</div>`],
+  ];
+  if (winOverride) rows.push(["Window", winOverride]);
+
   return `
     <div class="objm__card${entry.fresh ? " objm__card--fresh" : ""}">
       <span class="objm__cardname">${esc(name)}</span>
-      <div class="objm__cardbody">${body}</div>
       <div class="objm__cardverbs">
         <button type="button" class="ap-icon-button transparent" data-objm-remove="${i}" aria-label="Remove ${esc(name)}"><i class="ap-icon-close"></i></button>
       </div>
-      <div class="objm__cardscope">${scopeField}</div>
-      <p class="objm__meta${computing ? " objm__meta--computing" : ""}">${meta}</p>
-      ${winOverride}
+      ${rows.map(([label, control]) => `<span class="objm__flabel">${label}</span>${control}`).join("")}
     </div>`;
 }
 

@@ -237,40 +237,41 @@
   container-type: inline-size;
 }
 
-/* TWO COLUMNS — and that is the whole fix. Every zone belongs to one of them:
+/* ── A LABELLED FORM, on ONE control edge ─────────────────────────────────
+       Reach                                                    ✕
+       Grow from    [14,800] → [20,000]   Suggested · +35% · +173/day
+       Measured on  [Every connected profile · 40 ▾]
+       Window       (Same as objective) (Rolling 30 days)
 
-       │ WHAT is measured            │ WHAT IT SHOULD REACH   │  ✕
-       │ Reach                       │ [14,800] → [20,000]    │
-       │ [Every connected profile ▾] │ Suggested · +35% · +173/day
-       │ (Same as objective) (Rolling 30 days)
+   ⚠️ Two arrangements failed here and both failed the same way, so read this
+   before drawing a third. The card held its zones in flex rows — name + fields,
+   then select + hints, then chips — and every row had its own column structure:
+   the name at the padding edge, the fields 316px in, the select back at the
+   padding edge, the hints wherever the select happened to end. Moving the hints
+   under the fields (two columns, two left edges) fixed the arithmetic and
+   changed nothing anyone could see, because the diagnosis was too small: the
+   card is a FORM WITH THREE FIELDS AND NO LABELS. Two bare inputs told apart by
+   an arrow, a select whose only clue was the value inside it, a chip pair with
+   nothing naming what it switched.
 
-   ⚠️ The version before this one put the scope select and the derived hints on
-   one flex row UNDER the name and the fields. Every row then had its own column
-   structure — the name started at the padding edge, the fields 316px in, the
-   select back at the padding edge, the hints 186px in wherever the select
-   happened to end — so nothing lined up with anything and the card read as
-   three unrelated strips. "Rien n'est plus aligné."
+   So: a fixed label column, and every control starting on the same x — field to
+   field and card to card, which no `auto` column can promise (a rate says "Hold
+   above", a volume "Grow from", and an auto column would move the controls of
+   every card that holds a rate). The labels are the sentence's own voice, so a
+   measure reads as its continuation: "Reach — grow from 14,800 to 20,000,
+   measured on every connected profile".
 
-   Two left edges now, and the hints land under the fields they are ABOUT rather
-   than beside the select they have nothing to do with. Alignment is what says
-   which things belong together, which is exactly what this card needed once it
-   grew from one row to three.
-
-   `auto` on the figure column so it sizes to the wider of the fields and their
-   hint, and the identity column absorbs the slack — which is also what lines
-   the fields up from card to card, whatever a metric is called. */
+   The name keeps the card's own left edge: it is the heading, not a field. */
 .objm__card {
+  --objm-flabel: 88px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas:
-    "name  body verbs"
-    "scope hint ."
-    "win   win  win";
+  grid-template-columns: var(--objm-flabel) minmax(0, 1fr) auto;
+  grid-template-areas: "name name verbs";
+  grid-auto-flow: row;
   align-items: center;
-  /* Rows of 36px controls are the card's floor, so the padding pays for the
-     rest: `xs` all round, and the row gap is the tightest the scale has because
-     the two rows of a column are ONE statement (a measure and where it reads)
-     — the gap that has to be bigger is the one BETWEEN cards, which is `xs`. */
+  /* `xxxs` between the rows of one card, `xs` between cards (`.objm__measures`):
+     the rows are one statement about one measure, and the gap that separates
+     has to beat the gap that groups. */
   gap: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs);
   border: 1px solid var(--app-border-soft);
@@ -278,17 +279,26 @@
   background: var(--app-surface);
 }
 
-.objm__cardscope {
-  grid-area: scope;
+/* Each label/control pair is two auto-placed children, so a row is added by
+   pushing to the `rows` array in the renderer and nothing here has to know how
+   many there are. The control spans to the card's right edge — the verbs column
+   only exists on the name row. */
+.objm__card > .objm__flabel {
+  grid-column: 1;
+}
+
+.objm__card > .objm__flabel + * {
+  grid-column: 2 / -1;
   min-width: 0;
 }
 
-.objm__meta {
-  grid-area: hint;
-}
-
-.objm__winover {
-  grid-area: win;
+/* The label rung of this dialog — 12/400 grey-80, the same treatment as the
+   sentence's `over a`. A field's label supports its value; it never competes
+   with it (the values are 14 navy in bordered boxes). */
+.objm__flabel {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
 }
 
 /* ── Just added ───────────────────────────────────────────────────────────
@@ -324,19 +334,19 @@
 
 /* Below ~470px of card the figures drop under the identity — a `48 → 60` run
    cannot compress, and the verbs must stay reachable. */
-/* Below ~470px of card the two columns cannot hold: a `14,800 → 20,000` pair
-   does not compress and the scope trigger needs its own line. So they stack
-   into ONE column — every zone on the same left edge, which is the same rule
-   the wide card follows with two. */
+/* Below ~470px of card the label column cannot hold: 88px of label leaves ~190
+   for a `14,800 → 20,000` pair that does not compress. So the label goes ABOVE
+   its control — every row full width, one left edge, which is the same rule the
+   wide card follows with two columns. */
 @container (max-width: 470px) {
   .objm__card {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "name  verbs"
-      "body  body"
-      "scope scope"
-      "hint  hint"
-      "win   win";
+    grid-template-areas: "name verbs";
+  }
+
+  .objm__card > .objm__flabel,
+  .objm__card > .objm__flabel + * {
+    grid-column: 1 / -1;
   }
 
   .objm__cardbody {
@@ -414,8 +424,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The control of the value row: the two fields, the glyph between them, and
+   the hint that says what the pair is worth. Placed by the label/control rule
+   above, like every other control in the card. */
 .objm__cardbody {
-  grid-area: body;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -699,4 +711,5 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--ref-spacing-xxs);
+  min-height: var(--comp-button-height, 36px);
 }
