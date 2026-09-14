@@ -16,7 +16,7 @@
 // thing this section owes the user, and seeing it is what catches a wrong or
 // stale logo before generating.
 
-import { escapeHtml } from "../../utils.js?v=1149";
+import { escapeHtml } from "../../utils.js?v=1150";
 
 // What the section is FOR, in the header's tooltip — the tiles show you which
 // image, never why the section exists or what picking one changes.

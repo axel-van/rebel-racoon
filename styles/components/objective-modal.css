@@ -75,12 +75,16 @@
   color: var(--sys-text-color-light);
 }
 
+/* The connective, at the size of the field it introduces — body, bold, so the
+   sentence reads as one line and not as a heading followed by a control.
+   ⚠️ It was at the h2 rung, to make `Grow <name>` a hero line. That only worked
+   while the input was restyled to match it; with a DS input at its own 14px, an
+   18px word beside it read as a mismatched heading. */
 .objm__titleword {
   flex: 0 0 auto;
-  font-family: var(--sys-text-style-h2-font-family);
-  font-size: var(--sys-text-style-h2-size);
-  font-weight: var(--sys-text-style-h2-weight);
-  line-height: var(--sys-text-style-h2-line-height);
+  font-size: var(--sys-text-style-body-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-line-height);
   color: var(--sys-text-color-default);
 }
 
@@ -91,17 +95,13 @@
   min-width: 0;
 }
 
-/* Size + weight only — the input keeps .ap-input-group's own line-height so the
-   field height doesn't balloon. */
+/* ⚠️ NOTHING but the width. The field used to carry the h2 size and weight —
+   "the name IS the objective, so `Grow [name]` is the hero line" — which made it
+   a RESTYLED input: a DS control that looks like no other DS control in the
+   product, and one whose placeholder then needed its own rule to undo the bold.
+   The dialog's own title carries the hierarchy; a form field is a form field. */
 .objm__name input {
   width: 100%;
-  font-size: var(--sys-text-style-h2-size);
-  font-weight: var(--sys-text-style-h2-weight);
-}
-
-/* The value is bold; the prompt for it is not — bold grey read as filled-in. */
-.objm__name input::placeholder {
-  font-weight: var(--sys-text-style-body-weight);
 }
 
 .objm__word {
@@ -283,10 +283,15 @@
   width: 96px;
 }
 
+/* Tabular numerals are the ONE property left on these inputs: same font, same
+   size, same weight as any DS input — only the digit advance is fixed, so two
+   stacked measures' figures line up instead of dancing as you type. The BOLD
+   they also carried is gone: a value in bold inside a bordered field is the
+   field restyled, and the card's own hierarchy (name, then figures, then the
+   derived line) does that work already. */
 .objm__from input {
   width: 100%;
   font-variant-numeric: tabular-nums;
-  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 .objm__target {
@@ -296,7 +301,6 @@
 .objm__target input {
   width: 100%;
   font-variant-numeric: tabular-nums;
-  font-weight: var(--sys-text-style-body-bold-weight);
 }
 
 /* The derived line under the inputs: the Suggested tag (when Archie set the
