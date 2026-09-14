@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1162";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1162";
-import { getContexts } from "../contexts-store.js?v=1162";
-import { getActivePlaybookId } from "../active-playbook.js?v=1162";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1162";
+import { escapeHtml as esc } from "../utils.js?v=1163";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1163";
+import { getContexts } from "../contexts-store.js?v=1163";
+import { getActivePlaybookId } from "../active-playbook.js?v=1163";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1163";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopeLabel,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1162";
+} from "../objective-measures.js?v=1163";
 
 const MODAL_ID = "objectiveModal";
 
@@ -254,14 +254,21 @@ function renderForm() {
           options: WINDOWS.map((w) => ({ value: w.id, label: w.label.toLowerCase() })),
           attr: "data-objm-window",
         })}
+        ${
+          // ⚠️ The date belongs to the CLAUSE, not to a block of its own. It was
+          // an `.ap-form-field` with its own "Ends on" label, stacked under the
+          // sentence — a second form language beside a sentence that had just
+          // announced the same thing, at a left edge that lined up with nothing
+          // else. Inside the clause it finishes the line the select starts
+          // ("over a window ending on 17/09/2026") and wraps with it rather
+          // than away from it. Native date input: documented deviation from
+          // `.ap-datepicker`, which the CSS-UI layer doesn't ship.
+          draft.window.type === "fixed"
+            ? `<div class="ap-input-group objm__date"><input type="date" data-objm-date value="${esc(draft.window.date || "")}" aria-label="Ends on" /></div>`
+            : ""
+        }
       </span>
     </div>
-    ${
-      draft.window.type === "fixed"
-        ? // Native date input — documented deviation from .ap-datepicker.
-          `<div class="ap-form-field objm__date"><label>Ends on</label><div class="ap-input-group"><input type="date" data-objm-date value="${esc(draft.window.date || "")}" /></div></div>`
-        : ""
-    }
     <div class="objm__section">
       <span class="objm__seclabel">Measured by${hasMeasures ? ` <span class="ap-counter normal grey">${draft.measures.length}</span>` : ""}</span>
       ${

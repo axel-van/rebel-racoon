@@ -157,8 +157,11 @@
   overflow-y: auto;
 }
 
+/* As wide as a date and its picker glyph, no wider: it sits in the sentence
+   now, and a 220px box after a 190px select pushed the clause onto its own
+   line for nothing. */
 .objm__date {
-  max-width: 220px;
+  width: 150px;
 }
 
 /* ── Measures ─────────────────────────────────────────────────────────── */

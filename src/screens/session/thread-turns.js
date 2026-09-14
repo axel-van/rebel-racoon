@@ -6,7 +6,7 @@
 // and returns an HTML string. No store reads, no DOM, no side effects: the
 // store-coupled turns (extraction / clip-extraction / source resolution) stay
 // in session.js and pass their resolved data in as arguments.
-import { escapeHtml, escapeAttr as escapeHtmlAttr } from "../../utils.js?v=1162";
+import { escapeHtml, escapeAttr as escapeHtmlAttr } from "../../utils.js?v=1163";
 
 // Chat-switch skeleton — shown for ~340ms inside .session__assistant-thread
 // when switching chats, then swapped for the real thread.

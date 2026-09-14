@@ -36,8 +36,8 @@
 // on the Insights side, while this catalogue parks them. Insights marks those
 // cards "via proxy" by resolving the label here — one story, two surfaces.
 
-import { NETWORK_LABEL, getConnectedProfiles } from "./social-profiles.js?v=1162";
-import { getContextById } from "./contexts-store.js?v=1162";
+import { NETWORK_LABEL, getConnectedProfiles } from "./social-profiles.js?v=1163";
+import { getContextById } from "./contexts-store.js?v=1163";
 
 // The connected profiles are GLOBAL (one demo account), but an objective
 // belongs to a brand — a Noba Fashion objective read on tiles named
@@ -141,9 +141,13 @@ export const FAMILIES = [
 // The objective's window — platform's two kinds, exactly: ROLLING (reads on
 // the trailing 30 days, no end) or FIXED (ends on a date). Default: rolling.
 // Defined on the objective, inherited by its measures, deviable per measure.
+// The two labels are written to finish the objective sentence — "over a …" —
+// because that select is their only consumer (objective-modal.js). "Ends on a
+// date" made the sentence read "over a ends on a date"; the date field that
+// follows it now completes the clause instead.
 export const WINDOWS = [
   { id: "rolling", label: "Rolling 30-day window" },
-  { id: "fixed", label: "Ends on a date" },
+  { id: "fixed", label: "Window ending on" },
 ];
 
 export const DEFAULT_WINDOW = { type: "rolling" };
