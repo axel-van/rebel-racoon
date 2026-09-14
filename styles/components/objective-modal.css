@@ -177,18 +177,21 @@
    shape every section title on /insights wears. It is also what replaced the
    caption in the filled state: a number says "there are two of these" without
    spending two lines of 12px on it. */
-/* h3 (16/700), the rung between the dialog's h1 title and the h4 name of a
-   measure. It was body-bold — the SAME 14/700 as the card names it heads, so a
-   section and its items read as peers. The DS ladder has h0/h1/h2/h3/h4 and
-   this modal was using two of them; the whole hierarchy is now
-   24 → 16 → 14 bold → 14 regular → 12, every step a token. */
+/* body-BOLD (14/700), one rung UNDER the measure names it heads — deliberately,
+   and it was 16 for one commit. A group label supports its items; it does not
+   compete with them. `Measured by` is chrome (it names a slot in a form), a
+   measure's name is the content, so when the cards took the h3 rung back this
+   had to give it up: two things at 16/700 in a 480px column read as peers, and
+   the reader has to work out which one is the subject. The counter chip beside
+   it carries the section's presence now — "there are two of these" — which is
+   what the word alone was spending a size step on. */
 .objm__seclabel {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  font-size: var(--sys-text-style-h3-size);
-  line-height: var(--sys-text-style-h3-line-height);
-  font-weight: var(--sys-text-style-h3-weight);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  font-weight: var(--sys-text-style-body-bold-weight);
   color: var(--sys-text-color-default);
 }
 
@@ -299,14 +302,18 @@
   min-width: 0;
 }
 
-/* body-BOLD (14) — the only bold thing in the card, which is what makes it the
-   card's subject without a bigger step. It was h3 (16), one rung under the
-   dialog's own title, which put a measure's label at the modal's second rung. */
+/* h3 (16/700) — the LOUDEST thing in the card, and the second rung of the whole
+   modal after the dialog's title. What is being measured is the card's subject:
+   at 14/700 it lost to the two bordered input boxes beside it, which carry a
+   border's worth of weight for values that only mean something once you know
+   what they count. 16 is also the app's own card-subject size (the index card's
+   objective name, the fiche's measure heading), so a measure is named at the
+   same rung wherever it appears. */
 .objm__cardname {
   max-width: 100%;
-  font-size: var(--sys-text-style-body-size);
-  font-weight: var(--sys-text-style-body-bold-weight);
-  line-height: var(--sys-text-style-body-line-height);
+  font-size: var(--sys-text-style-h3-size);
+  font-weight: var(--sys-text-style-h3-weight);
+  line-height: var(--sys-text-style-h3-line-height);
   color: var(--sys-text-color-default);
   overflow: hidden;
   text-overflow: ellipsis;
