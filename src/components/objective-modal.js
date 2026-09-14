@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1163";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1163";
-import { getContexts } from "../contexts-store.js?v=1163";
-import { getActivePlaybookId } from "../active-playbook.js?v=1163";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1163";
+import { escapeHtml as esc } from "../utils.js?v=1165";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1165";
+import { getContexts } from "../contexts-store.js?v=1165";
+import { getActivePlaybookId } from "../active-playbook.js?v=1165";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1165";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -35,7 +35,7 @@ import {
   scopeLabel,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1163";
+} from "../objective-measures.js?v=1165";
 
 const MODAL_ID = "objectiveModal";
 
@@ -234,21 +234,19 @@ function canSave() {
 // so a caller that passes nothing still produces a saveable draft.
 function renderForm() {
   const hasMeasures = draft.measures.length > 0;
-  // ONE sentence, one line: `Grow <name> over a <window>` (+ `for <Playbook>`
-  // when creating). It was two rows — the name on a hero line, the window on a
-  // quiet second one — and a sentence broken in half reads as neither a
-  // sentence nor a form. On one line the connectives do their job, the modal
-  // loses ~48px, and the name still dominates by being the only thing at the h2
-  // rung. The clauses wrap as units (`.objm__clause`), so a narrow dialog
-  // breaks the sentence between clauses and never inside one.
+  // The sentence, on a two-column GRID: `Grow` and `over a` in the first
+  // column, their controls in the second, so both rows start on the same two
+  // x's whatever they hold. The window's row carries its select and — only
+  // when the window has one — its date (§ the sentence, in the stylesheet, for
+  // why the shape must not depend on the content).
   return `
     <div class="objm__sentence">
       <span class="objm__titleword">Grow</span>
       <div class="ap-input-group objm__name">
         <input type="text" data-objm-name value="${esc(draft.name)}" placeholder="what this objective grows…" aria-label="Objective name" />
       </div>
-      <span class="objm__clause">
-        <span class="objm__word">over a</span>
+      <span class="objm__word">over a</span>
+      <div class="objm__windowrow">
         ${renderInlineSelect({
           value: draft.window.type,
           options: WINDOWS.map((w) => ({ value: w.id, label: w.label.toLowerCase() })),
@@ -267,7 +265,7 @@ function renderForm() {
             ? `<div class="ap-input-group objm__date"><input type="date" data-objm-date value="${esc(draft.window.date || "")}" aria-label="Ends on" /></div>`
             : ""
         }
-      </span>
+      </div>
     </div>
     <div class="objm__section">
       <span class="objm__seclabel">Measured by${hasMeasures ? ` <span class="ap-counter normal grey">${draft.measures.length}</span>` : ""}</span>
@@ -413,7 +411,7 @@ function renderMeasureCard(entry, i) {
          </p>`
       : "";
   return `
-    <div class="objm__card">
+    <div class="objm__card${entry.fresh ? " objm__card--fresh" : ""}">
       <span class="objm__id">
         <span class="objm__cardname">${esc(name)}</span>
         <span class="objm__scope">${esc(scopeText)}</span>
@@ -524,6 +522,7 @@ function openCatalog(editIndex = null) {
 // (objective-measures.js); the delay stands in for the round-trip a real
 // integration would make.
 const SETTLE_MS = 1400;
+const FRESH_MS = 2000;
 
 function settleMeasure(entryId) {
   settling.delete(entryId);
@@ -533,6 +532,22 @@ function settleMeasure(entryId) {
   const baseline = scopedBaselineFor(entry.metricId, draft.contextId, entry.scope);
   entry.target = proposeTargetFrom(entry.metricId, baseline, draft.contextId, entry.scope) || undefined;
   delete entry.computing;
+  // And it says so for two seconds: the card that just landed wears the blue
+  // until the eye has found it. A list of identical white cards gives a reader
+  // arriving from a full-dialog catalogue nothing to land on — the answer to
+  // "where did it go?" should not be "count them".
+  entry.fresh = true;
+  settling.set(
+    `fresh:${entryId}`,
+    window.setTimeout(() => {
+      settling.delete(`fresh:${entryId}`);
+      if (!draft) return;
+      const e = draft.measures.find((m) => m.id === entryId);
+      if (!e?.fresh) return;
+      delete e.fresh;
+      paint();
+    }, FRESH_MS),
+  );
   paint();
 }
 

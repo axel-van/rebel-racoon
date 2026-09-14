@@ -63,35 +63,37 @@
 }
 
 /* ── The sentence ─────────────────────────────────────────────────────────
-   `Grow [name] over a [window]`, on ONE line. The name IS the objective, so it
-   keeps the h2 rung and all the flexible width; the connectives and their
-   controls ride at body size beside it, which is what makes the row read as a
-   sentence rather than as a stack of fields.
+   TWO ROWS, always: the name on the first, the window on the second, their
+   connectives sharing a first column — so `Grow` and `over a` start on the same
+   x, and the two controls start on the same x under each other.
 
-   ⚠️ It was TWO rows — the name on a hero line, the window on a quiet second
-   one — on the argument that the window is a setting ON the name and should not
-   be prose the name is buried inside. Kept, but the argument does not need a
-   row of its own to hold: the window select is visibly a control, and the name
-   still dominates by being the only thing at h2. The second row cost ~48px and
-   left the first one half empty.
+   ⚠️ It was a WRAPPING flex line, so the layout depended on the content: one
+   row with a rolling window, two the moment "ends on a date" added a field —
+   the form re-organising itself under the reader. A sentence whose shape moves
+   is a sentence you re-read. The grid holds it still, and the conditional date
+   appears beside its select or simply doesn't.
 
-   The `for <Playbook>` clause that used to wrap here is GONE — the objective
-   belongs to the Playbook the page is scoped to (objective-modal.js
-   § renderForm) — so the sentence is two clauses and fits one line at 640px. */
+   ⚠️ It was two rows before that too, for the opposite reason: the name as a
+   hero line, the window demoted under it. Same shape, different argument —
+   this one is a stable grid, and both rows read at the same rung. */
 .objm__sentence {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--ref-spacing-xs) var(--ref-spacing-sm);
   font-size: var(--sys-text-style-body-size);
   color: var(--sys-text-color-light);
 }
 
-/* The connective, at the size of the field it introduces — body, bold, so the
-   sentence reads as one line and not as a heading followed by a control.
-   ⚠️ It was at the h2 rung, to make `Grow <name>` a hero line. That only worked
-   while the input was restyled to match it; with a DS input at its own 14px, an
-   18px word beside it read as a mismatched heading. */
+/* The window's own row: its select, and the date when the window has one. */
+.objm__windowrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xs);
+  min-width: 0;
+}
+
 .objm__titleword {
   flex: 0 0 auto;
   font-size: var(--sys-text-style-body-size);
@@ -100,10 +102,8 @@
   color: var(--sys-text-color-default);
 }
 
-/* A floor of 240px: below that the field cannot hold an objective's name, so
-   the clause after it wraps to the next line instead of squeezing it. */
+/* The grid's second column gives the field its width; nothing to flex. */
 .objm__name {
-  flex: 1 1 240px;
   min-width: 0;
 }
 
@@ -122,14 +122,6 @@
 
 /* A connective and the control it introduces wrap together — "for" left
    stranded at the end of a line while its select dropped to the next one. */
-.objm__clause {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xs);
-  min-width: 0;
-  max-width: 100%;
-}
-
 .objm__select {
   width: auto;
   max-width: 100%;
@@ -225,6 +217,37 @@
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-md);
   background: var(--app-surface);
+}
+
+/* ── Just added ───────────────────────────────────────────────────────────
+   The measure that just landed holds the blue border and a blue-05 wash for two
+   seconds, then fades to the resting card. Blue because this app's blue is the
+   interactive/selected colour and a fresh row IS the one the reader just acted
+   on — the temporal-marker case, not a decorative tint; it goes away on its own
+   rather than becoming a second permanent state.
+
+   `forwards` so the end state sticks until the class is dropped, and no
+   `border-width` change anywhere: the card must not move a pixel while it
+   settles. */
+@keyframes objm-fresh {
+  from {
+    border-color: var(--ref-color-electric-blue-100);
+    background: var(--ref-color-electric-blue-05);
+  }
+  to {
+    border-color: var(--app-border-soft);
+    background: var(--app-surface);
+  }
+}
+
+.objm__card--fresh {
+  animation: objm-fresh 2s var(--app-ease-standard) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .objm__card--fresh {
+    animation: none;
+  }
 }
 
 /* Below ~470px of card the numbers drop under the identity — a `from [x] to

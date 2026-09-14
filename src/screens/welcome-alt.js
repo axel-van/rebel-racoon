@@ -11,8 +11,8 @@
 // first screen — the profile pick is now question 2 of 3 inside the
 // chat, alongside URL (q1) and Documents (q3, skippable).
 
-import { navigate } from "../router.js?v=1163";
-import { setHandoff } from "../handoff.js?v=1163";
+import { navigate } from "../router.js?v=1165";
+import { setHandoff } from "../handoff.js?v=1165";
 
 // Mock URL — the brand site is supposed to be collected by an earlier
 // step that lives outside the prototype. We hardcode a believable value
