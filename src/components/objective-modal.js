@@ -21,11 +21,11 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1155";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1155";
-import { getContexts } from "../contexts-store.js?v=1155";
-import { getActivePlaybookId } from "../active-playbook.js?v=1155";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1155";
+import { escapeHtml as esc } from "../utils.js?v=1159";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1159";
+import { getContexts } from "../contexts-store.js?v=1159";
+import { getActivePlaybookId } from "../active-playbook.js?v=1159";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1159";
 import {
   resolveObjectives,
   materializeMeasureEntries,
@@ -34,7 +34,7 @@ import {
   scopedBaselineFor,
   scopeLabel,
   WINDOWS,
-} from "../objective-measures.js?v=1155";
+} from "../objective-measures.js?v=1159";
 
 const MODAL_ID = "objectiveModal";
 
@@ -423,6 +423,11 @@ function openCatalog(editIndex = null) {
     contextId: draft.contextId,
     targetLabel: draft.name.trim() || "this objective",
     confirmLabel: editIndex != null ? "Change measure" : "",
+    // Adding is ONE step — pick a metric and it lands on the form, scope and
+    // suggested target resolved (objective-catalog-panel.js § adding in one
+    // step). Editing keeps the configurator: that is where a measure's scope
+    // and its window override live.
+    immediate: editIndex == null,
     onAdd(entry) {
       catalogFlow?.dispose();
       catalogFlow = null;

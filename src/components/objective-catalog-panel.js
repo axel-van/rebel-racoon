@@ -14,14 +14,15 @@
 // the design's own "the panel slides"), and `open()` wraps the same flow in a
 // standalone body-level dialog for the Playbook block's edit mode.
 
-import { escapeHtml as esc } from "../utils.js?v=1155";
+import { escapeHtml as esc } from "../utils.js?v=1159";
 import {
   NETWORK_LABEL,
   getConnectedProfiles,
   renderProfileTag,
   PROFILE_SEARCH_THRESHOLD,
-} from "../social-profiles.js?v=1155";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1155";
+} from "../social-profiles.js?v=1159";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1159";
+import { getContextById } from "../contexts-store.js?v=1159";
 import {
   catalogEntries,
   metricLabel,
@@ -30,7 +31,7 @@ import {
   proposeTargetFrom,
   isRateMetric,
   isAdditiveMetric,
-} from "../objective-measures.js?v=1155";
+} from "../objective-measures.js?v=1159";
 
 const COMPUTE_MS = 900;
 
@@ -39,7 +40,15 @@ let flowSeq = 0;
 // ── The shared flow ──────────────────────────────────────────────────────────
 // state.view: "catalog" | "config". All interactions are click-driven except
 // the search input (the host wires input events to handleInput).
-export function createCatalogFlow({ contextId, targetLabel, confirmLabel, onAdd, onBack, requestRender }) {
+export function createCatalogFlow({
+  contextId,
+  targetLabel,
+  confirmLabel,
+  immediate = false,
+  onAdd,
+  onBack,
+  requestRender,
+}) {
   flowSeq += 1;
   const state = {
     view: "catalog",
@@ -90,14 +99,60 @@ export function createCatalogFlow({ contextId, targetLabel, confirmLabel, onAdd,
   function pickMetric(metricId) {
     state.view = "config";
     state.metricId = metricId;
-    // Default scope: first connected network as the shortcut (all its
-    // profiles) — "all networks" is a deliberate act, and locked unless the
+    // Default scope: the PLAYBOOK's own network when its fiche names a profile
+    // — the same answer the one-step add uses (`defaultScope`) — else the first
+    // connected network as the shortcut. This view always has a network set:
+    // "every connected profile" is a deliberate act here, and locked unless the
     // metric truly adds up.
-    const first = getConnectedProfiles()[0];
-    state.network = first ? first.platform : null;
+    state.network = defaultScope()?.network || getConnectedProfiles()[0]?.platform || null;
     state.profileIds = new Set(profilesFor(state.network).map((p) => p.id));
     state.windowMode = "inherit";
     recompute();
+  }
+
+  // ── Adding in ONE step ────────────────────────────────────────────────
+  //
+  // Picking a metric ADDS it, with a scope and Archie's suggested target
+  // already resolved — no configurator screen in between.
+  //
+  // ⚠️ That step used to be mandatory, and it asked three things the objective
+  // form asks again forty pixels later: the target (the card's own `from → to`
+  // fields), the scope (printed under the measure's name, and the pencil
+  // changes it) and a per-measure window override (an edge case, still on the
+  // pencil's path). Three screens to add one measure, two of them re-stating
+  // each other. The form is where a measure is READ, so it is where it should
+  // be adjusted; the catalogue's job is to answer WHICH metric.
+  //
+  // The 900ms "computing from your profiles…" beat goes with it: the baseline
+  // and the proposal are synchronous functions (objective-measures.js), and the
+  // wait was staged, not real.
+  //
+  // The default scope is the PLAYBOOK's own network — the profile the fiche is
+  // tied to — and every profile on it. A Playbook that names no profile gets NO
+  // scope, which the model reads as every network (`scope?.network` guards every
+  // read of it) and the card prints as "all networks".
+  //
+  // ⚠️ Not `getConnectedProfiles()[0]`, which is what the configurator opened
+  // on: it handed you Facebook for a LinkedIn brand. An arbitrary answer is
+  // fine while a screen asks you to confirm it, and a silent wrong one the
+  // moment nothing does — so the default is either MEANINGFUL (the Playbook's
+  // own profile) or WIDE (everything), never a coin toss between six networks.
+  function defaultScope() {
+    const ctx = getContextById(contextId);
+    const pinned = ctx?.selectedProfileId ? getConnectedProfiles().find((p) => p.id === ctx.selectedProfileId) : null;
+    return pinned?.platform ? { network: pinned.platform } : undefined;
+  }
+
+  function addNow(metricId) {
+    const scope = defaultScope();
+    const baseline = scopedBaselineFor(metricId, contextId, scope);
+    const target = proposeTargetFrom(metricId, baseline, contextId, scope);
+    onAdd({
+      id: `m-${flowSeq.toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      metricId,
+      scope,
+      target: target || undefined,
+    });
   }
 
   function computingLabel() {
@@ -470,12 +525,14 @@ export function createCatalogFlow({ contextId, targetLabel, confirmLabel, onAdd,
       }
       const pick = event.target.closest("[data-objc-pick]");
       if (pick) {
-        pickMetric(pick.dataset.objcPick);
+        if (immediate) addNow(pick.dataset.objcPick);
+        else pickMetric(pick.dataset.objcPick);
         return true;
       }
       const proxyPick = event.target.closest("[data-objc-proxy-pick]");
       if (proxyPick) {
-        pickMetric(proxyPick.dataset.objcProxyPick);
+        if (immediate) addNow(proxyPick.dataset.objcProxyPick);
+        else pickMetric(proxyPick.dataset.objcProxyPick);
         return true;
       }
       if (event.target.closest("[data-objc-back]")) {

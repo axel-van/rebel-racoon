@@ -19,23 +19,23 @@
 // Anything that patches the DOM instead of re-rendering lives in inline-text.js;
 // anything that writes to the draft lives in commit.js.
 
-import { KEY, ctx, state, autosize } from "./context.js?v=1155";
-import { useImage, commitSlideEdit, applyEditTool, runGenerate } from "./commit.js?v=1155";
+import { KEY, ctx, state, autosize } from "./context.js?v=1159";
+import { useImage, commitSlideEdit, applyEditTool, runGenerate } from "./commit.js?v=1159";
 import {
   focusEditingText,
   syncEditingText,
   restoreEditingCaret,
   previewOverlayInput,
   toggleTextEffect,
-} from "./inline-text.js?v=1155";
+} from "./inline-text.js?v=1159";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=1155";
-import * as imageStudio from "../../image-studio.js?v=1155";
+} from "./interactions.js?v=1159";
+import * as imageStudio from "../../image-studio.js?v=1159";
 
 function onClick(event, close) {
   const st = state();
