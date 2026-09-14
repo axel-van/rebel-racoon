@@ -21,21 +21,21 @@
 // Replaces objective-editor-modal (the field-stack editor): the sentence form
 // is the editor now. Body-level, modal-coordinator, closes on route change.
 
-import { escapeHtml as esc } from "../utils.js?v=1172";
-import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1172";
-import { getContexts } from "../contexts-store.js?v=1172";
-import { getActivePlaybookId } from "../active-playbook.js?v=1172";
-import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1172";
+import { escapeHtml as esc } from "../utils.js?v=1177";
+import { requestOpen, notifyClose } from "../modal-coordinator.js?v=1177";
+import { getContexts } from "../contexts-store.js?v=1177";
+import { getActivePlaybookId } from "../active-playbook.js?v=1177";
+import { createCatalogFlow, searchSelectorFor } from "./objective-catalog-panel.js?v=1177";
+import { renderScopeField, scopeFromClick } from "./measure-scope-field.js?v=1177";
 import {
   resolveObjectives,
   materializeMeasureEntries,
   metricLabel,
   isRateMetric,
   scopedBaselineFor,
-  scopeLabel,
   proposeTargetFrom,
   WINDOWS,
-} from "../objective-measures.js?v=1172";
+} from "../objective-measures.js?v=1177";
 
 const MODAL_ID = "objectiveModal";
 
@@ -55,7 +55,10 @@ let catalogFlow = null; // the embedded 2c/2d flow, when open
 // Measures waiting on Archie — one timer per card, cleared on close so a
 // dialog that goes away never repaints over a dead draft.
 const settling = new Map();
-let catalogEditIndex = null; // the measure being re-picked (null = adding a new one)
+// The scope menu on a measure card is a MULTI-select: every tick re-renders the
+// card, so a native <details> would snap shut on the first one. Which card's
+// menu is open — and what is typed in its search — is the dialog's own state.
+let scopeUi = { open: null, query: "" };
 
 const SHELL = `
 <div class="app-modal-backdrop objm__backdrop" id="objmBackdrop" hidden>
@@ -156,7 +159,7 @@ export function close() {
   clearSettling();
   catalogFlow?.dispose();
   catalogFlow = null;
-  catalogEditIndex = null;
+  scopeUi = { open: null, query: "" };
   draft = null;
   backdrop.hidden = true;
   bodyEl.innerHTML = "";
@@ -170,9 +173,6 @@ export function close() {
 
 function paint(opts = {}) {
   if (!draft) return;
-  // Only the metric CATALOGUE scrolls — see `.objm__content--scroll`. Every
-  // other view holds a floating DS dropdown that a scroll box would clip.
-  bodyEl.classList.toggle("objm__content--scroll", !!catalogFlow && catalogFlow.state.view === "catalog");
   if (catalogFlow) {
     const sel = searchSelectorFor(opts);
     if (sel) {
@@ -190,15 +190,27 @@ function paint(opts = {}) {
     const foot = catalogFlow.renderFooter();
     footLeftEl.innerHTML = foot.left;
     footEl.innerHTML = foot.right;
-    titleEl.textContent = catalogEditIndex != null ? "Change measure" : "Add a measure";
-    setSubtitle(catalogFlow.subtitle());
+    titleEl.textContent = "Add a measure";
+    setSubtitle("");
     return;
   }
   const nameInput = bodyEl.querySelector("[data-objm-name]");
   if (nameInput) draft.name = nameInput.value;
   titleEl.textContent = draft.mode === "create" ? "New objective" : "Adjust objective";
   setSubtitle("");
+  // Typing in the scope menu's search re-renders the form under the caret, so
+  // put it back where it was — the same treatment the catalogue's own search
+  // gets (`searchSelectorFor`).
+  const scopeSel = opts.preserveScopeSearch ? "[data-mscope-search]" : null;
+  const caret = scopeSel ? (bodyEl.querySelector(scopeSel)?.selectionStart ?? null) : null;
   bodyEl.innerHTML = renderForm();
+  if (scopeSel) {
+    const next = bodyEl.querySelector(scopeSel);
+    if (next) {
+      next.focus();
+      if (caret != null) next.setSelectionRange(caret, caret);
+    }
+  }
   footLeftEl.innerHTML = "";
   footEl.innerHTML = `
     <button type="button" class="ap-button ghost grey" data-objm-close><span>Cancel</span></button>
@@ -356,7 +368,6 @@ function renderMeasureCard(entry, i) {
   const baseline = entry.baseline ?? scopedBaselineFor(entry.metricId, draft.contextId, entry.scope);
   const target = entry.target || "";
   const suggestedPct = pctDelta(baseline, target);
-  const scopeText = entry.scope?.network ? scopeLabel(entry.scope) : "all networks";
   const name = metricLabel(entry.metricId);
   // While it computes, the SAME fields render empty and disabled: same
   // geometry throughout, so the card fills rather than jumping, and the empty
@@ -390,27 +401,48 @@ function renderMeasureCard(entry, i) {
     ? `<span class="ap-loader blue size-16" aria-hidden="true"><svg><circle></circle><circle></circle></svg></span>
        <span>Reading your last 30 days…</span>`
     : [
-        `<span>${esc(scopeText)}</span>`,
         showSuggested ? `<span class="objm__suggested">Suggested</span>` : "",
         deltas.length ? `<span class="objm__hinttext">${deltas.join(" · ")}</span>` : "",
       ]
         .filter(Boolean)
         .join(`<span class="objm__metadot" aria-hidden="true">·</span>`);
 
+  // ⚠️ THE SCOPE IS A CONTROL, on the line that used to print it as text.
+  // Changing it meant the pencil → the metric catalogue → a "Change measure"
+  // configurator → confirm: four steps behind a 24px glyph to answer a question
+  // the card was already showing the answer to. The select IS that answer now
+  // (measure-scope-field.js), so the pencil and the configurator are gone.
+  const scopeField = renderScopeField({
+    metricId: entry.metricId,
+    scope: entry.scope,
+    i,
+    open: scopeUi.open === i,
+    query: scopeUi.query,
+  });
+
+  // The per-measure window override — the configurator's third field — only
+  // when the objective's own window is FIXED. Against a rolling objective the
+  // two chips say the same thing, and a control whose options are synonyms is a
+  // control to leave out (§ the date input, same rule).
+  const winOverride =
+    draft.window.type === "fixed"
+      ? `<div class="objm__winover" role="group" aria-label="Window for ${esc(name)}">
+           <button type="button" class="ap-filter-chip" aria-pressed="${!entry.window}" data-objm-mwindow="inherit" data-objm-i="${i}"><span>Same as objective</span></button>
+           <button type="button" class="ap-filter-chip" aria-pressed="${!!entry.window}" data-objm-mwindow="rolling" data-objm-i="${i}"><span>Rolling 30 days</span></button>
+         </div>`
+      : "";
+
   return `
     <div class="objm__card${entry.fresh ? " objm__card--fresh" : ""}">
-      <div class="objm__id">
-        <span class="objm__cardname">${esc(name)}</span>
-        <p class="objm__meta${computing ? " objm__meta--computing" : ""}">${meta}</p>
-      </div>
+      <span class="objm__cardname">${esc(name)}</span>
       <div class="objm__cardbody">${body}</div>
       <div class="objm__cardverbs">
-        ${
-          computing
-            ? ""
-            : `<button type="button" class="ap-icon-button transparent" data-objm-edit="${i}" aria-label="Change ${esc(name)} metric or scope"><i class="ap-icon-pen"></i></button>`
-        }
         <button type="button" class="ap-icon-button transparent" data-objm-remove="${i}" aria-label="Remove ${esc(name)}"><i class="ap-icon-close"></i></button>
+      </div>
+      <div class="objm__cardfoot">
+        ${scopeField}
+        ${meta ? `<p class="objm__meta${computing ? " objm__meta--computing" : ""}">${meta}</p>` : ""}
+        ${winOverride}
       </div>
     </div>`;
 }
@@ -449,48 +481,29 @@ function seedFromName() {
   }
 }
 
-// editIndex null → add a new measure; a number → re-pick metric + scope for that
-// existing measure (the catalogue is the only place metric/scope are chosen, so
-// "edit" is re-run it and replace in place). The inline target input stays.
-function openCatalog(editIndex = null) {
-  catalogEditIndex = editIndex;
+// ⚠️ ADDING IS ALL THE CATALOGUE DOES. It used to have a second job — the
+// pencil re-opened it to "change" an existing measure, which meant re-picking
+// the metric to get at the scope behind it — and a second view, the
+// configurator, holding Profiles / Target / Window. Both are gone: the scope is
+// a select on the card (measure-scope-field.js), the target is the card's own
+// input, the window override is the card's chip pair, and swapping the metric
+// itself is `×` then `Add a measure` — two clicks, and neither of them pretends
+// that a different metric is the same measure.
+function openCatalog() {
   catalogFlow = createCatalogFlow({
     contextId: draft.contextId,
-    targetLabel: draft.name.trim() || "this objective",
-    confirmLabel: editIndex != null ? "Change measure" : "",
-    // Adding is ONE step — pick a metric and it lands on the form, scope and
-    // suggested target resolved (objective-catalog-panel.js § adding in one
-    // step). Editing keeps the configurator: that is where a measure's scope
-    // and its window override live.
-    immediate: editIndex == null,
-    // What this objective already measures — those rows are shown as taken.
-    // The one being CHANGED is not: re-picking it is how you keep the metric
-    // and re-do its scope.
-    taken: draft.measures.filter((_, i) => i !== editIndex).map((e) => e.metricId),
+    // What this objective already measures — those rows render as taken.
+    taken: draft.measures.map((e) => e.metricId),
     onAdd(entry) {
       catalogFlow?.dispose();
       catalogFlow = null;
-      catalogEditIndex = null;
-      if (editIndex != null && draft.measures[editIndex]) {
-        const prev = draft.measures[editIndex];
-        // Keep the row's id; swap metric + scope; keep the old target unless the
-        // catalogue set a new one.
-        draft.measures[editIndex] = {
-          ...prev,
-          metricId: entry.metricId,
-          scope: entry.scope,
-          target: entry.target ?? prev.target,
-        };
-      } else {
-        draft.measures.push(entry);
-      }
-      startSettling(draft.measures[editIndex != null ? editIndex : draft.measures.length - 1]);
+      draft.measures.push(entry);
+      startSettling(draft.measures[draft.measures.length - 1]);
       paint();
     },
     onBack() {
       catalogFlow?.dispose();
       catalogFlow = null;
-      catalogEditIndex = null;
       paint();
     },
     requestRender: (opts) => paint(opts),
@@ -601,11 +614,55 @@ function onClick(event) {
     return;
   }
 
-  // One open dropdown at a time.
+  // One open dropdown at a time. The scope menu's open state is TRACKED (it is
+  // a multi-select and survives the re-render each tick triggers), so a click
+  // outside it has to clear that too or the next paint would pop it back open.
   const inSelect = event.target.closest("[data-objm-select]");
   bodyEl.querySelectorAll("[data-objm-select][open]").forEach((d) => {
     if (d !== inSelect) d.removeAttribute("open");
   });
+  // Tracked, so the reset has to key off the SCOPE menu and not merely on
+  // "some select": clicking the sentence's window select strips the `open`
+  // attribute above, and with `scopeUi` still pointing at a card the next paint
+  // would put that menu straight back.
+  if (!event.target.closest("[data-mscope-i]") && scopeUi.open != null) scopeUi = { open: null, query: "" };
+
+  // The scope menu: driven from state, not from the native <details>, so a
+  // re-render puts it back the way the reader left it.
+  const scopeToggle = event.target.closest("[data-mscope-toggle]");
+  if (scopeToggle) {
+    event.preventDefault();
+    const idx = Number(scopeToggle.dataset.mscopeToggle);
+    scopeUi = scopeUi.open === idx ? { open: null, query: "" } : { open: idx, query: "" };
+    paint();
+    return;
+  }
+  const scopeHost = event.target.closest("[data-mscope-i]");
+  if (scopeHost) {
+    const entry = draft.measures[Number(scopeHost.dataset.mscopeI)];
+    const next = entry ? scopeFromClick(event, entry.scope) : null;
+    if (next) {
+      entry.scope = next.scope;
+      // Archie re-reads the window for the new scope — the same beat as a
+      // measure landing, because the same thing is happening: a number is being
+      // worked out. Not for a target the reader typed, which is theirs to keep;
+      // `settleMeasure` would overwrite it.
+      if (!entry.targetEdited) {
+        entry.baseline = undefined;
+        entry.computing = true;
+        startSettling(entry);
+      }
+      paint();
+      return;
+    }
+  }
+  const mwin = event.target.closest("[data-objm-mwindow]");
+  if (mwin) {
+    const entry = draft.measures[Number(mwin.dataset.objmI)];
+    if (entry) entry.window = mwin.dataset.objmMwindow === "rolling" ? { type: "rolling" } : undefined;
+    paint();
+    return;
+  }
 
   if (event.target.closest("[data-objm-close]")) {
     close();
@@ -620,12 +677,6 @@ function onClick(event) {
     draft.window =
       win.dataset.objmWindow === "fixed" ? { type: "fixed", date: draft.window.date } : { type: "rolling" };
     paint();
-    return;
-  }
-  const editM = event.target.closest("[data-objm-edit]");
-  if (editM) {
-    if (!draft.contextId) return;
-    openCatalog(Number(editM.dataset.objmEdit));
     return;
   }
   const remove = event.target.closest("[data-objm-remove]");
@@ -647,6 +698,11 @@ function onInput(event) {
     return;
   }
   const t = event.target;
+  if (t.matches("[data-mscope-search]")) {
+    scopeUi = { ...scopeUi, query: t.value };
+    paint({ preserveScopeSearch: true });
+    return;
+  }
   if (t.matches("[data-objm-name]")) {
     draft.name = t.value;
     // The sentence resolves live: once the name lands (debounced to the next

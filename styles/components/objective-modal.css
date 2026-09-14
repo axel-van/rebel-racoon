@@ -1,6 +1,5 @@
-/* Objective modal (sentence form, handoff 1e) + the metric catalogue /
-   measure configurator it embeds (2c/2d — also opened standalone from the
-   Playbook block's edit mode). DS .ap-dialog chrome throughout; values read
+/* Objective modal (sentence form, handoff 1e) + the metric catalogue it embeds
+   (2c — also opened standalone). DS .ap-dialog chrome throughout; values read
    in Averta with tabular numerals, never a mono face. */
 
 .objm__backdrop,
@@ -23,12 +22,40 @@
   box-shadow: var(--app-shadow-popover-lg);
 }
 
-/* The form modal lets its two select dropdowns float clear of the dialog box
-   (.ap-dialog clips to overflow:hidden for its rounded corners; the form has no
-   own scroll to contain, so it can open the clip). The catalogue keeps the DS
-   default — it scrolls and must stay clipped. */
+/* ── ⚠️ THE FORM SCROLLS ON ITS BACKDROP, NOT INSIDE ITSELF ────────────────
+   Every DS menu in this dialog is an absolutely-positioned child of its own
+   `<details>` rather than a portal, so ANY scroll box between it and the
+   viewport clips it — which is why the dialog opens the `.ap-dialog` clip
+   (`overflow: visible`) instead of scrolling its content.
+
+   That was free while the form was short. It stopped being free the moment a
+   measure card grew a control row: three measures against a fixed objective
+   window (3 × 134px) run the content past `max-height: 88vh` on a 700px-tall
+   window, and with nothing clipping and nothing scrolling the footer rendered
+   BELOW the white box, on the backdrop — Save unreachable, the same failure the
+   catalogue's `--scroll` fixed by scrolling instead.
+
+   So the scroll moves OUT, to the backdrop: no cap on the dialog, nothing
+   between a menu and the viewport, and a form taller than the window is
+   scrolled by the surface it floats on — header and footer with it, which for a
+   form is the right half to lose (a sticky footer over a clipped menu is not).
+   Scoped to `.objm`: the catalogue's own view rides along, and every other
+   dialog in the app keeps the centred, capped behaviour. */
 .objm {
   overflow: visible;
+  max-height: none;
+}
+
+.objm__backdrop {
+  display: block;
+  overflow-y: auto;
+}
+
+/* Centred while it fits, scrolled from the top once it does not — `auto`
+   margins on a block child in a scrolling box, which never cuts the top off the
+   way `align-items: center` in a flex scroller does. */
+.objm__backdrop > .objm {
+  margin: auto;
 }
 
 .objm__content,
@@ -38,24 +65,11 @@
   gap: var(--ref-spacing-md);
 }
 
-/* The form is short and its selects sit up top, so let their DS dropdowns float
-   over the content (position:absolute) rather than push it down — an
-   overflow:auto here would clip the float. Same for the measure CONFIGURATOR,
-   whose profiles menu floats too. */
+/* The content never scrolls on its own — the backdrop does (above). Every menu
+   in here floats over what follows it instead of pushing it down, and nothing
+   clips them. */
 .objm__content {
   overflow: visible;
-}
-
-/* ⚠️ The CATALOGUE view is the exception, and it needs one: eighteen metrics in
-   two columns run past the dialog's `max-height: 88vh`, and with the box set to
-   `overflow: visible` the content simply SPILLED — the footer rendered below the
-   white dialog, on the backdrop. So that one view scrolls, which is safe there
-   because nothing in it floats (the search is inline, the rows are buttons).
-   `min-height: 0` is what lets a flex child shrink under its content and
-   actually scroll. The class is toggled in `paint()` from the flow's own view. */
-.objm__content--scroll {
-  overflow-y: auto;
-  min-height: 0;
 }
 
 .objc__content {
@@ -223,25 +237,52 @@
   container-type: inline-size;
 }
 
-/* Identity | figures | verbs, on ONE row.
-   ⚠️ It was two rows — identity + fields, then a derived line under the fields
-   — at 86px a card. The supporting text was SCATTERED: the scope under the
-   name, the suggestion under the fields, and a hundred and seventy pixels of
-   nothing between them. Both are 12px grey text about the same measure, so
-   they share one line under the name now, and the card is 60px.
+/* TWO ROWS, and the second one is a CONTROL row — that is the whole shape:
+       Reach                          [14,800] → [20,000]   ✕
+       [Facebook · all 7 profiles ▾]  Suggested · +35% · +173/day
+
+   ⚠️ Read the history before touching it. It was two rows once before, at 86px,
+   with the supporting text SCATTERED — the scope under the name, the suggestion
+   under the fields, a hundred and seventy pixels of nothing between them — and
+   it was folded to one 66px row with both on a single grey line. What brings the
+   second row back is not that text: it is that the scope STOPPED BEING TEXT. It
+   was only adjustable through the pencil → the metric catalogue → a "Change
+   measure" configurator, so the card displayed an answer you could not change
+   where you read it. The select is that answer now, on the line the text held,
+   with the derived hints after it — one row of facts, one row of what you can
+   do about them.
 
    `auto` on the last two columns so the fields and the buttons keep their
-   intrinsic width and the identity absorbs the slack — which is also what
-   lines the fields up from card to card, whatever a metric is called. */
+   intrinsic width and the name absorbs the slack — which is also what lines the
+   fields up from card to card, whatever a metric is called. */
 .objm__card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "name body verbs"
+    "foot foot foot";
   align-items: center;
-  gap: var(--ref-spacing-xs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
+  /* Two rows of 36px controls is the card's floor, so the padding pays for the
+     rest: `xs` all round and the tightest row gap the scale has. 102px, against
+     72 for the row that only DISPLAYED the scope — the price of the select, and
+     the reason nothing else was allowed onto the second row. */
+  gap: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xs);
   border: 1px solid var(--app-border-soft);
   border-radius: var(--app-radius-md);
   background: var(--app-surface);
+}
+
+/* The control row: the scope select, then the hints it drives. `baseline`
+   alignment would hang the 36px trigger off the 16px text's baseline, so the
+   row centres and the text's own line box does the rest. */
+.objm__cardfoot {
+  grid-area: foot;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  min-width: 0;
 }
 
 /* ── Just added ───────────────────────────────────────────────────────────
@@ -280,26 +321,22 @@
 @container (max-width: 470px) {
   .objm__card {
     grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name verbs"
+      "body body"
+      "foot foot";
   }
 
   .objm__cardbody {
-    grid-column: 1 / -1;
     justify-content: flex-start;
   }
 }
 
 .objm__cardverbs {
+  grid-area: verbs;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxxs);
-}
-
-/* The identity: the name, then ONE supporting line under it. */
-.objm__id {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
 }
 
 /* h3 (16/700) — the LOUDEST thing in the card, and the second rung of the whole
@@ -310,6 +347,7 @@
    objective name, the fiche's measure heading), so a measure is named at the
    same rung wherever it appears. */
 .objm__cardname {
+  grid-area: name;
   max-width: 100%;
   font-size: var(--sys-text-style-h3-size);
   font-weight: var(--sys-text-style-h3-weight);
@@ -365,6 +403,7 @@
 }
 
 .objm__cardbody {
+  grid-area: body;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -560,190 +599,91 @@
   color: var(--sys-text-color-light);
 }
 
-/* ── The configurator (2d) ────────────────────────────────────────────── */
-/* A label column and a control column, on a 24px band so the label lines up
-   with the chip row next to it. Two groups — WHERE the measure reads, then
-   WHAT it reads to — parted by one rule, so four rows don't read as one list. */
-.objc__cfg {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-sm);
-}
+/* ── The measure's SCOPE, on the card ──────────────────────────────────────
+   ⚠️ This replaces a whole view. The configurator (screen 2d) held Profiles,
+   Target and Window in a `.objc__cfg` label/control form, reachable only by the
+   pencil on a measure card, which went through the metric catalogue to get
+   there. Its CSS is deleted, not repurposed: what is left is one select sitting
+   in the card's own supporting line, where the scope was already printed as
+   text.
 
-.objc__field {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: start;
-  gap: var(--ref-spacing-sm);
-}
-
-.objc__fieldlabel {
-  font-size: var(--sys-text-style-body-size);
-  line-height: 24px;
-  color: var(--sys-text-color-light);
-}
-
-.objc__fieldbody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
+   Sized to its content, like the objective sentence's window select and for the
+   same reason — the DS ships `.ap-select` at `width: 100%`, and a control
+   stretched across a card reads as the card's subject rather than as one fact
+   in a line of them. */
+.objm__scope {
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
-.objc__rule {
-  margin: 0;
-  border: 0;
-  border-top: 1px solid var(--app-border-soft);
-}
-
-.objc__chips {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xxs);
-  min-height: 24px;
-}
-
-/* ── Scope select ─────────────────────────────────────────────────────────
-   Scope is one choice among ~5, so it is a select rather than a chip row.
-   Sized to its content like the objective sentence's window select, not
-   stretched across the row (the DS ships .ap-select at width:100%). */
-.objc__select {
-  width: fit-content;
-  max-width: 100%;
-  align-self: flex-start;
-}
-
-.objc__select > .ap-select-trigger {
+.objm__scope > .ap-select-trigger {
   width: auto;
 }
 
-/* The trigger shrinks to the CURRENT value, so the dropdown must size to its
-   widest option instead of inheriting that width — otherwise every longer
-   network ellipsises inside its own menu. */
-.objc__select .ap-select-dropdown {
-  min-width: max-content;
-  max-height: 264px;
-  overflow-y: auto;
-}
+/* The trigger shrinks to the CURRENT value, so the menu has to size to its own
+   widest row instead of inheriting that width — otherwise every profile longer
+   than the trigger ellipsises inside its own list. A FLOOR, not `max-content`,
+   which would size to the longest handle and wobble from network to network.
 
-/* "All networks" when the metric can't be summed: an honest disabled option,
-   never a feature-lock tint — the caption underneath says why. */
-.objc__select .ap-select-option.disabled {
-  color: var(--sys-text-color-light);
-  pointer-events: none;
-}
-
-/* The config view is a short form, so its select dropdown floats clear of the
-   dialog instead of pushing the panel taller. Scoped with :has() because the
-   CATALOG view in the same dialog can run tall and must keep its scroll. */
-.objc:has(.objc__cfg),
-.objc__content:has(.objc__cfg) {
-  overflow: visible;
-}
-
-/* A profile is always the DS avatar + network badge + name (renderProfileTag),
-   never a bare string — same presentation as every other profile surface. */
-.objc__profile {
-  display: flex;
-  align-items: center;
-  min-height: 24px;
-  color: var(--sys-text-color-default);
-}
-
-/* Many profiles: a DS multi-select, because a brand can have 200 connected
-   profiles and 200 chips is not a control. Give the menu a comfortable width —
-   max-content would size to the longest handle and wobble per network.
-
-   ⚠️ And a CEILING, since the list stopped being one network's: grouped by
-   network it is every connected profile (40 rows and six group headers on the
-   demo set), and the dialog clips its own overflow for its rounded corners — so
-   an uncapped menu is a list whose bottom half cannot be reached. The scroll
-   lives on the options, below the search and the `Every connected profile`
-   row, so both stay put while the list moves. */
-.objc__profiles .ap-select-dropdown {
+   And a CEILING on the options: grouped by network the list is every connected
+   profile (40 rows and six group headers on the demo set), and the dialog clips
+   its own overflow for its rounded corners — so an uncapped menu is a list
+   whose bottom half cannot be reached. The scroll lives on the options, below
+   the search and the `Every connected profile` row, so both stay put while the
+   list moves. */
+.objm__scope .ap-select-dropdown {
   min-width: 260px;
 }
 
-.objc__profiles .ap-select-options {
-  max-height: 264px;
+.objm__scope .ap-select-options {
+  max-height: 248px;
   overflow-y: auto;
 }
 
-/* .ap-select-option is already a 40px flex row with its own gap, so a profile
+/* `.ap-select-option` is already a 40px flex row with its own gap, so a profile
    row only has to let the avatar tag take the remaining width. */
-.objc__profileopt .profile-tag,
-.objc__profileall > span:last-child {
+.objm__scopeopt .profile-tag,
+.objm__scopeall > span:last-child {
   flex: 1;
   min-width: 0;
 }
 
-.objc__static,
-.objc__computing {
+/* `Every connected profile` on a metric that cannot be summed: an honest
+   disabled option, never a feature-lock tint (purple + a padlock reads as
+   "upgrade to unlock", a promise this can never keep). grey-60 is the house's
+   disabled step. */
+.objm__scopeall.disabled {
+  color: var(--ref-color-grey-60);
+  pointer-events: none;
+}
+
+/* The reason the row above is disabled, at the FOOT OF THE MENU: it explains a
+   choice, so it is on screen exactly while the choice is being made, and it
+   never sits under the card competing with the measure's own supporting line. */
+.objm__scopenote {
+  margin: 0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-sm) var(--ref-spacing-xs);
+  border-top: 1px solid var(--app-border);
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--sys-text-color-light);
+}
+
+/* One connected profile is not a choice — the DS avatar + badge + name instead
+   of a select with a single row you cannot uncheck. */
+.objm__scopeone {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  min-height: var(--comp-button-height, 36px);
+}
+
+/* The per-measure window override, only rendered against a FIXED objective
+   window (objective-modal.js § the card). The same `.ap-filter-chip` pair the
+   app uses for a small always-visible set of options. */
+.objm__winover {
+  display: flex;
+  align-items: center;
   gap: var(--ref-spacing-xxs);
-  min-height: 24px;
-  margin: 0;
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
-  color: var(--sys-text-color-light);
-}
-
-.objc__static {
-  color: var(--sys-text-color-default);
-}
-
-.objc__computing {
-  font-size: var(--sys-text-style-caption-size);
-}
-
-/* ── What Archie computed ─────────────────────────────────────────────────
-   The target is what this view PRODUCES, so it is the view's figure and not a
-   line of prose: the DS's top rung on a grey-05 inset, the orange `Suggested`
-   tag beside it. Same device the objective's own report card uses for its
-   figures (insights-read.css § the synthesis box) — a tint plus one big numeral
-   is how this app says "this was computed for you".
-
-   ⚠️ It was `from 3,700 today to 4,300 Suggested · +16%` at body size: one 14px
-   line among three other 14px lines, with two bold numbers as the only sign
-   anything had been calculated. */
-.objc__proposal {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-xs) var(--ref-spacing-sm);
-  background: var(--app-surface-subtle);
-  border-radius: var(--ref-border-radius-md);
-}
-
-.objc__proposal-head {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--ref-spacing-xs);
-}
-
-.objc__proposal-figure {
-  font-size: var(--sys-text-style-h1-size);
-  line-height: var(--sys-text-style-h1-line-height);
-  font-weight: var(--sys-text-style-h1-weight);
-  color: var(--sys-text-color-default);
-  font-variant-numeric: tabular-nums;
-}
-
-.objc__proposal-sub {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--sys-text-color-light);
-}
-
-/* Helper text under the control it explains — not a bordered note beside it. */
-.objc__caption {
-  margin: 0;
-  font-size: var(--sys-text-style-caption-size);
-  line-height: var(--sys-text-style-caption-line-height);
-  color: var(--sys-text-color-light);
 }
