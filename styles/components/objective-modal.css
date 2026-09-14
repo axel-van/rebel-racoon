@@ -274,9 +274,17 @@
      has to beat the gap that groups. */
   gap: var(--ref-spacing-xxxs) var(--ref-spacing-xs);
   padding: var(--ref-spacing-xs);
-  border: 1px solid var(--app-border-soft);
+  /* grey-bg on the dialog's white, with grey-20 round it. The tint is not doing
+     the separating — at #F9F9FA against #FFF it is a 2% step, which is why the
+     hairline stays — it is doing the CONTRAST: the three controls in here are
+     white boxes, and on a white card they were outlines floating on the same
+     surface they sat on. A card that recedes is what makes its fields read as
+     fields. grey-20 rather than the grey-10 this used, because a filled surface
+     needs its edge stated once, and grey-20 is the step this house draws every
+     limit with. */
+  border: 1px solid var(--app-border);
   border-radius: var(--app-radius-md);
-  background: var(--app-surface);
+  background: var(--app-bg);
 }
 
 /* Each label/control pair is two auto-placed children, so a row is added by
@@ -317,8 +325,8 @@
     background: var(--ref-color-electric-blue-05);
   }
   to {
-    border-color: var(--app-border-soft);
-    background: var(--app-surface);
+    border-color: var(--app-border);
+    background: var(--app-bg);
   }
 }
 
