@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1187";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1187";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1188";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1188";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1187";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1187";
-import { showToast } from "./toast.js?v=1187";
-import { html, raw, escapeHtml } from "../utils.js?v=1187";
+} from "../playbook-access.js?v=1188";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1188";
+import { showToast } from "./toast.js?v=1188";
+import { html, raw, escapeHtml } from "../utils.js?v=1188";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -61,11 +61,6 @@ function fold(text) {
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "");
 }
-
-// Above this many rows a picker earns its search box — the same threshold
-// social-profiles.js uses for profile pickers, so every list in the app flips
-// at the same length.
-const MEMBER_SEARCH_THRESHOLD = 8;
 
 const HTML = `
 <div class="app-modal-backdrop share-playbook-modal__backdrop" id="sharePlaybookBackdrop" hidden></div>
@@ -111,7 +106,7 @@ function renderScopeCards(ctx) {
             <i class="ap-icon-lock-on" aria-hidden="true"></i>
             Just me
           </span>
-          <span>Nobody else in ${raw(org)} can see it or use it.</span>
+          <span class="share-playbook-modal__option-hint">Nobody else at ${raw(org)} can open it.</span>
         </div>
       </label>
 
@@ -122,12 +117,16 @@ function renderScopeCards(ctx) {
             <i class="ap-icon-user--plus" aria-hidden="true"></i>
             Specific people
           </span>
-          <span
-            >A fixed list you choose below — nobody else, and nobody who joins later. They can read it and write with
-            it. You stay the only one who can change it.</span
+          <span class="share-playbook-modal__option-hint"
+            >A <strong>fixed</strong> list you pick — nobody else, and nobody who joins later.</span
           >
         </div>
       </label>
+      <!-- The picker sits INSIDE the group, directly under the card it belongs
+           to: it used to render after the third card, so the one control in the
+           dialog hung under the wrong option and an indent was left to hint at
+           what proximity should have said. -->
+      ${raw(renderMemberPicker(ctx))}
 
       <label class="ap-radio-card card share-playbook-modal__option">
         <input
@@ -141,14 +140,28 @@ function renderScopeCards(ctx) {
             <i class="ap-icon-multiple-users" aria-hidden="true"></i>
             Everyone at ${raw(org)}
           </span>
-          <span
-            >${raw(orgReachLine(ctx))} They can read it and write with it. You stay the only one who can change
-            it.</span
-          >
+          <span class="share-playbook-modal__option-hint">${raw(orgReachLine(ctx))}</span>
         </div>
       </label>
+
+      ${raw(reachNote(ctx))}
     </div>
   `;
+}
+
+// What every share has in common, said ONCE under the group. ⚠️ It used to be
+// two sentences repeated verbatim inside both sharing cards — a third of the
+// dialog's words were a duplicate, which buried the fixed-vs-dynamic
+// distinction those cards exist to draw (doc §5.1). It was also WRONG on a
+// manager's screen: "you stay the only one who can change it" is a promise
+// about the OWNER, and a manager governing Sam's Playbook still can't edit a
+// word of it (canEdit is the owner, full stop).
+function reachNote(ctx) {
+  if (picked === "personal") return "";
+  const who = isMine(ctx) ? "you" : escapeHtml(ownerName(ctx));
+  return html`<p class="share-playbook-modal__reach-note">
+    Whoever it reaches can read it and write with it. Only ${raw(who)} can change what it says.
+  </p>`;
 }
 
 // The dynamic list, said accurately. A Playbook that publishes under a social
@@ -158,9 +171,9 @@ function renderScopeCards(ctx) {
 function orgReachLine(ctx) {
   const profile = tiedProfile(ctx);
   if (!profile) {
-    return `All ${ORG.memberCount} of them, and whoever joins next — the list follows the org.`;
+    return `All ${ORG.memberCount} today, and whoever joins next — the list <strong>follows</strong> the org.`;
   }
-  return `Everyone who can reach ${escapeHtml(profile.handle || profile.name || "this account")}, joiners included — the list follows the org.`;
+  return `Everyone who can reach ${escapeHtml(profile.handle || profile.name || "this account")}, joiners included — the list <strong>follows</strong> the org.`;
 }
 
 // Everyone the picker can offer: the org minus the owner, who holds it already.
@@ -219,13 +232,15 @@ function renderMemberPicker(ctx) {
     .join("");
   const visible = rows.filter((m) => !q || fold(m.name).includes(q)).length;
   // Open on arrival only while there is nobody to show in the trigger: that is
-  // the state where the reader has to open it anyway (and Save is disabled, so
-  // the panel covering the footer costs nothing). With a list already in the
-  // trigger it starts collapsed, and Save is never hidden behind it.
+  // the state where the reader has to open it anyway. ⚠️ The panel used to
+  // FLOAT — an absolutely-positioned popover that hung out of the dialog's own
+  // silhouette and covered the Cancel / Save footer. It now expands IN FLOW
+  // inside the dialog's scroller (see modals.css), so opening it pushes rather
+  // than hides, and nothing escapes the modal.
   return html`
     <div class="share-playbook-modal__field">
       <details class="ap-select share-playbook-modal__combo" ${raw(pickedMembers.size ? "" : "open")}>
-        <summary class="ap-select-trigger" title="Choose who gets this Playbook">
+        <summary class="ap-select-trigger" aria-label="Choose who gets this Playbook">
           <span class="ap-select-value" data-share-people-value>${raw(triggerContent(ctx))}</span>
           <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
         </summary>
@@ -321,32 +336,41 @@ function isDirty(ctx) {
 
 // Only shown when the reach SHRINKS — sharing more widely never costs anyone
 // anything. Say the consequence before it happens, not in a toast after.
+//
+// Two ranks, not one paragraph: WHO loses access is the fact the reader has to
+// weigh, and what survives is the reassurance under it. Flat, they read as four
+// lines of equal yellow and the name got lost in the middle of them.
 function renderConsequence(ctx) {
   const before = reachBefore(ctx);
   const after = reachAfter(ctx);
   // Going org-wide takes nothing away from anyone.
   if (after === null) return "";
-  let body = "";
+  const KEPT =
+    "Chats they started on this Playbook keep the drafts already written — those can still be saved and " +
+    "scheduled — but nothing new will generate. Playbooks they duplicated from it are their own and stay untouched.";
+  let lead = "";
+  let detail = KEPT;
   if (before === null) {
     // Leaving an org-wide share: the losers can't be named, so count the work.
     const chats = ctx.usedIn || 0;
     const who = chats === 1 ? "1 chat" : `${chats} chats`;
-    body = chats
-      ? `${who} across ${escapeHtml(ORG.name)} still run on this Playbook. They keep the drafts already written — they can save and schedule those — but they won't be able to generate anything new.`
-      : `Anyone in ${escapeHtml(ORG.name)} who opened it loses access. Playbooks they duplicated from it are their own and stay untouched.`;
+    lead = chats
+      ? `${who} across ${escapeHtml(ORG.name)} still run on this Playbook.`
+      : `Anyone at ${escapeHtml(ORG.name)} who opened it loses access.`;
   } else {
     const keep = new Set(after.map((m) => m.id));
     const losing = before.filter((m) => !keep.has(m.id));
     if (!losing.length) return "";
     const names = listNames(losing.map((m) => m.name));
-    body = `${names} ${losing.length === 1 ? "loses" : "lose"} access. Chats they started on this Playbook keep the drafts already written — they can save and schedule those — but they won't be able to generate anything new. Playbooks they duplicated from it are their own and stay untouched.`;
+    lead = `${names} ${losing.length === 1 ? "loses" : "lose"} access.`;
   }
   return html`
     <div class="ap-infobox warning share-playbook-modal__warn">
       <i class="ap-icon-warning" aria-hidden="true"></i>
       <div class="ap-infobox-content">
         <div class="ap-infobox-texts">
-          <span class="ap-infobox-message">${raw(body)}</span>
+          <span class="ap-infobox-title share-playbook-modal__warn-lead">${raw(lead)}</span>
+          <span class="ap-infobox-message share-playbook-modal__warn-detail">${raw(detail)}</span>
         </div>
       </div>
     </div>
@@ -363,6 +387,10 @@ function listNames(names) {
   return `${safe[0]}, ${safe[1]} and ${rest} ${rest === 1 ? "other" : "others"}`;
 }
 
+// Everything below the rule is about the OBJECT rather than the decision: who
+// it belongs to, how that changes hands, and what has already happened to it.
+// Three bold lines used to stack here at one weight — a pile, not a rank. Now:
+// a labelled fact, then two disclosures that look like the controls they are.
 function renderTransfer(ctx) {
   if (!canTransfer(ctx)) return "";
   const owner = getMember(ctx.ownerId);
@@ -388,38 +416,44 @@ function renderTransfer(ctx) {
       <span class="share-playbook-modal__owner-label">Owner</span>
       <span class="share-playbook-modal__owner-who">
         ${raw(avatar(owner))}
-        <span>${raw(owner ? escapeHtml(owner.name) : "a teammate")}${raw(isMine(ctx) ? " (you)" : "")}</span>
+        <span class="share-playbook-modal__owner-name">${raw(owner ? escapeHtml(owner.name) : "a teammate")}</span>
+        ${raw(isMine(ctx) ? `<span class="share-playbook-modal__owner-you">you</span>` : "")}
       </span>
     </div>
-    <details class="share-playbook-modal__handover">
-      <summary>Hand it over to someone else<i class="ap-icon-chevron-down" aria-hidden="true"></i></summary>
-      <div class="share-playbook-modal__handover-row">
-        <details class="ap-select share-playbook-modal__ownerselect">
-          <summary class="ap-select-trigger">
-            <span class="ap-select-value"
-              >${raw(
-                target ? escapeHtml(target.name) : `<span class="ap-select-placeholder">Choose a teammate…</span>`,
-              )}</span
-            >
-            <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-          </summary>
-          <div class="ap-select-dropdown" role="listbox" aria-label="New owner">
-            <div class="ap-select-options">${raw(options)}</div>
-          </div>
-        </details>
-        <button
-          type="button"
-          class="ap-button stroked grey share-playbook-modal__transfer"
-          data-share-transfer
-          ${raw(transferTo ? "" : "disabled")}
-        >
-          <i class="ap-icon-user--arrow-right" aria-hidden="true"></i>
-          <span>Transfer</span>
-        </button>
+    <details class="share-playbook-modal__fold share-playbook-modal__handover">
+      <summary class="share-playbook-modal__fold-summary">
+        <i class="ap-icon-user--arrow-right share-playbook-modal__fold-glyph" aria-hidden="true"></i>
+        <span class="share-playbook-modal__fold-label">Hand it over to someone else</span>
+        <i class="ap-icon-chevron-down share-playbook-modal__fold-chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="share-playbook-modal__fold-body">
+        <div class="share-playbook-modal__handover-row">
+          <details class="ap-select share-playbook-modal__ownerselect">
+            <summary class="ap-select-trigger">
+              <span class="ap-select-value"
+                >${raw(
+                  target ? escapeHtml(target.name) : `<span class="ap-select-placeholder">Choose a teammate…</span>`,
+                )}</span
+              >
+              <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+            </summary>
+            <div class="ap-select-dropdown share-playbook-modal__ownerdrop" role="listbox" aria-label="New owner">
+              <div class="ap-select-options">${raw(options)}</div>
+            </div>
+          </details>
+          <button
+            type="button"
+            class="ap-button stroked grey share-playbook-modal__transfer"
+            data-share-transfer
+            ${raw(transferTo ? "" : "disabled")}
+          >
+            <span>Transfer</span>
+          </button>
+        </div>
+        <p class="share-playbook-modal__handover-note">
+          They become the only person who can edit it${raw(isMine(ctx) ? " — including instead of you" : "")}.
+        </p>
       </div>
-      <p class="share-playbook-modal__handover-note">
-        They become the only person who can edit it${raw(isMine(ctx) ? " — including instead of you" : "")}.
-      </p>
     </details>
   `;
 }
@@ -438,11 +472,17 @@ function renderLog(ctx) {
     )
     .join("");
   return html`
-    <details class="share-playbook-modal__log">
-      <summary>Recent changes<i class="ap-icon-chevron-down" aria-hidden="true"></i></summary>
-      <ul class="share-playbook-modal__log-list">
-        ${raw(rows)}
-      </ul>
+    <details class="share-playbook-modal__fold share-playbook-modal__log">
+      <summary class="share-playbook-modal__fold-summary">
+        <i class="ap-icon-history share-playbook-modal__fold-glyph" aria-hidden="true"></i>
+        <span class="share-playbook-modal__fold-label">Recent changes</span>
+        <i class="ap-icon-chevron-down share-playbook-modal__fold-chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="share-playbook-modal__fold-body">
+        <ul class="share-playbook-modal__log-list">
+          ${raw(rows)}
+        </ul>
+      </div>
     </details>
   `;
 }
@@ -451,14 +491,16 @@ function renderBody() {
   const ctx = getContextById(activeId);
   if (!ctx) return;
   subtitleEl.textContent = ctx.name;
+  const gov = `${renderTransfer(ctx)}${renderLog(ctx)}`;
   contentEl.innerHTML = [
     renderScopeCards(ctx),
-    renderMemberPicker(ctx),
     // A slot rather than the infobox itself: ticking a person has to be able to
     // rewrite the warning without rebuilding the list the tick happened in.
+    // (`:empty` hides the slot, so an absent warning costs no gap.)
     `<div id="sharePlaybookWarn">${renderConsequence(ctx)}</div>`,
-    renderTransfer(ctx),
-    renderLog(ctx),
+    // The governance zone is one block behind one rule — emitted only when it
+    // has something in it, or the rule would draw under nothing.
+    gov ? `<div class="share-playbook-modal__gov">${gov}</div>` : "",
   ].join("");
   syncCommit(ctx);
 }

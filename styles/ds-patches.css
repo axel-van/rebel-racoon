@@ -721,3 +721,19 @@ button.ap-link {
   outline: 2px solid var(--ref-color-electric-blue-100);
   outline-offset: -2px;
 }
+
+/* ── .ap-radio-card-title — the ink the DS asks for ──────────────────────
+   A cascade bug in the shipped stylesheet, not a design change here. The DS
+   declares `.ap-radio-card-title { color: grey-100 }` (0-1-0) and, further up
+   the same file, `.ap-radio-card > div > span { color: grey-80 }` (0-1-2) —
+   which wins over every title, because a title IS one of those spans. The
+   result is a radio card whose NAME renders in the secondary ink, at the same
+   size and colour as the hint under it, so the two carry identical weight and
+   the card has no hierarchy at all.
+
+   Restated here at the same intent with enough specificity to land. Reaches
+   every radio card in the app (Share, Save drafts, Schedule) — all of them
+   were losing the same rank. Delete the day the DS reorders its own rules. */
+.ap-radio-card > div > span.ap-radio-card-title {
+  color: var(--ref-color-grey-100);
+}
