@@ -8,10 +8,10 @@
 // arbitration that was never written down; the doc has had three states all
 // along, so the picker is back.
 //
-// It also holds the two things that only make sense once a Playbook is shared:
-// who owns it (and handing that over), and the change log. Neither belongs on
-// the Playbook page itself — the fiche answers "who are you?", not "who touched
-// this?" (CONCEPTS.md §1).
+// It also holds the thing that only makes sense once a Playbook is shared:
+// who owns it, and handing that over. It doesn't belong on the Playbook page
+// itself — the fiche answers "who are you?", not "whose is this?"
+// (CONCEPTS.md §1).
 //
 // Public API:
 //   init()  — inject markup + bind once on app boot
@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1200";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1200";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1202";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1202";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1200";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1200";
-import { showToast } from "./toast.js?v=1200";
-import { html, raw, escapeHtml } from "../utils.js?v=1200";
+} from "../playbook-access.js?v=1202";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1202";
+import { showToast } from "./toast.js?v=1202";
+import { html, raw, escapeHtml } from "../utils.js?v=1202";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -489,40 +489,11 @@ function renderTransfer(ctx) {
   `;
 }
 
-function renderLog(ctx) {
-  const entries = Array.isArray(ctx.history) ? ctx.history.slice().reverse() : [];
-  if (!entries.length) return "";
-  const rows = entries
-    .map(
-      (e) =>
-        html`<li class="share-playbook-modal__log-row">
-          <span class="share-playbook-modal__log-who">${raw(escapeHtml(memberName(e.actorId)))}</span>
-          <span class="share-playbook-modal__log-what">${e.action}</span>
-          <span class="share-playbook-modal__log-when">${e.when}</span>
-        </li>`,
-    )
-    .join("");
-  return html`
-    <details class="share-playbook-modal__fold share-playbook-modal__log">
-      <summary>
-        <i class="ap-icon-history share-playbook-modal__fold-glyph" aria-hidden="true"></i>
-        <span class="share-playbook-modal__fold-label">Recent changes</span>
-        <i class="ap-icon-chevron-down share-playbook-modal__fold-chevron" aria-hidden="true"></i>
-      </summary>
-      <div class="share-playbook-modal__fold-body">
-        <ul class="share-playbook-modal__log-list">
-          ${raw(rows)}
-        </ul>
-      </div>
-    </details>
-  `;
-}
-
 function renderBody() {
   const ctx = getContextById(activeId);
   if (!ctx) return;
   subtitleEl.textContent = ctx.name;
-  const gov = `${renderTransfer(ctx)}${renderLog(ctx)}`;
+  const gov = renderTransfer(ctx);
   contentEl.innerHTML = [
     renderInvite(ctx),
     renderPeople(ctx),
@@ -532,7 +503,9 @@ function renderBody() {
     // (`:empty` hides the slot, so an absent warning costs no gap.)
     `<div id="sharePlaybookWarn">${renderConsequence(ctx)}</div>`,
     // The governance zone is one block behind one rule — emitted only when it
-    // has something in it, or the rule would draw under nothing.
+    // has something in it, or the rule would draw under nothing. ⚠️ It used to
+    // hold a "Recent changes" log too; that section was dropped (the store still
+    // records the trail, see contexts-store's appendHistory — nothing renders it).
     gov ? `<div class="share-playbook-modal__gov">${gov}</div>` : "",
   ].join("");
   syncCommit(ctx);

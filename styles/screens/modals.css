@@ -1487,41 +1487,6 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
-/* The change log — no diffs by design, so each row is who / what / when, on
-   three ranks of ink and with the dates in their own right-hand column. */
-.share-playbook-modal__log-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  max-height: 168px;
-  overflow-y: auto;
-}
-.share-playbook-modal__log-row {
-  display: flex;
-  gap: var(--ref-spacing-xxs);
-  padding: var(--ref-spacing-xxxs) 0;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-80);
-}
-.share-playbook-modal__log-row + .share-playbook-modal__log-row {
-  border-top: 1px solid var(--ref-color-grey-20);
-}
-.share-playbook-modal__log-who {
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-  white-space: nowrap;
-}
-.share-playbook-modal__log-what {
-  flex: 1 1 auto;
-}
-.share-playbook-modal__log-when {
-  color: var(--ref-color-grey-80);
-  white-space: nowrap;
-}
-
 /* ── The Topic dialog (picker + article) ───────────────────────────────────
    720, like the connectors dialog is 920: this one is PROSE. Past ~720 the
    measure decouples from the column and the analysis stops being readable.

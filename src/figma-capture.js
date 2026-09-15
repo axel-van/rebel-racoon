@@ -14,12 +14,12 @@
 // sequence: this is tooling, and it is the only reason those overlay modules
 // are imported twice in the app's graph.
 
-import * as addSourceModal from "./components/add-source-modal.js?v=1200";
-import * as bugReportModal from "./components/bug-report-modal.js?v=1200";
-import * as feedbackModal from "./components/feedback-modal.js?v=1200";
-import * as chatPickerModal from "./components/chat-picker-modal.js?v=1200";
-import * as searchModal from "./components/search-modal.js?v=1200";
-import { openDrafts, openIdeas, openSources, openContextBriefPanel } from "./components/right-panel.js?v=1200";
+import * as addSourceModal from "./components/add-source-modal.js?v=1202";
+import * as bugReportModal from "./components/bug-report-modal.js?v=1202";
+import * as feedbackModal from "./components/feedback-modal.js?v=1202";
+import * as chatPickerModal from "./components/chat-picker-modal.js?v=1202";
+import * as searchModal from "./components/search-modal.js?v=1202";
+import { openDrafts, openIdeas, openSources, openContextBriefPanel } from "./components/right-panel.js?v=1202";
 
 // Both are deferred: the screen has to mount before an overlay can sit on it.
 // The panel waits longer than the modal because a session screen seeds its
