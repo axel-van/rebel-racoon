@@ -1072,9 +1072,10 @@ body.has-modal {
 
 /* The DS Selection Dropdown panel, positioned as the .ap-select popover
    (fills the trigger width, keeps its DS shadow, scrolls internally).
-   ⚠️ The Share dialog's people picker used to share this rule and no longer
-   does — see § Share Playbook modal: its panel expands in flow instead, so it
-   can't hang out of a scrolling dialog and cover the footer. */
+   ⚠️ The Share dialog's people picker used to share this rule; it has no
+   popover at all any more (its list of who has access is rendered in the
+   dialog body) — see § Share Playbook modal. A floating panel in a SCROLLING
+   dialog ends up over the footer, so don't copy this rule into one. */
 .save-folder-modal__dropdown {
   position: absolute;
   top: 100%;
@@ -1098,8 +1099,7 @@ body.has-modal {
 .save-folder-modal__dropdown .ap-selection-dropdown-item {
   cursor: pointer;
 }
-.save-folder-modal__dropdown .ap-selection-dropdown-item > .ap-checkbox-container,
-.share-playbook-modal__dropdown .ap-selection-dropdown-item > .ap-checkbox-container {
+.save-folder-modal__dropdown .ap-selection-dropdown-item > .ap-checkbox-container {
   flex: 0 0 auto;
 }
 .save-folder-modal__folder-name {
@@ -1116,17 +1116,21 @@ body.has-modal {
 }
 
 /* ── Share Playbook modal ──────────────────────────────────────────────
-   One decision at the top (who can use this Playbook), the consequence of
-   changing it in the middle, and the facts about the object — who owns it,
-   what has happened to it — behind a rule at the bottom.
+   The shape Notion, Slite and Drive all converged on, and for the same
+   reason: the question a reader opens this dialog with is "who has this?",
+   not "which of three modes is this in?". So the answer is the first thing
+   on screen — a field to add somebody, then the list of who can open it,
+   then general access — and the three stored scopes are DERIVED from those
+   two controls rather than picked as modes.
 
-   ⚠️ The dialog used to run `overflow: visible` on its content so the two
-   `.ap-select` popovers could escape it. That meant the body could not
-   scroll, and it was measurable: with both disclosures open at 820px of
-   viewport the Cancel / Save footer sat 119px BELOW the screen, unreachable,
-   and the people panel floated outside the dialog's own silhouette on top of
-   it. Both dropdowns now expand IN FLOW and the content scrolls normally, so
-   the footer is always on screen and nothing escapes the modal. */
+   ⚠️ Two things this replaced, neither worth going back to:
+   • Three `.ap-radio-card` modes with the people picker folded behind the
+     middle one. Who actually had the Playbook was a click away, behind a
+     trigger, and adding somebody took four gestures.
+   • `overflow: visible` on the content, so those pickers' popovers could
+     escape the dialog. It meant the body could not scroll: with both
+     disclosures open at 820px of viewport the Cancel / Save footer sat
+     119px BELOW the screen, unreachable. Everything opens in flow now. */
 .share-playbook-modal {
   width: 560px;
   max-width: calc(100vw - 2 * var(--ref-spacing-lg));
@@ -1134,150 +1138,230 @@ body.has-modal {
 .share-playbook-modal .ap-dialog-content {
   display: flex;
   flex-direction: column;
-  /* The DS gap (24px) is the gap BETWEEN blocks; inside a block the rhythm is
-     8px. That difference is what makes the three cards read as one group. */
+  /* The DS gap (24px) is the gap BETWEEN blocks; inside one the rhythm is 8px
+     or less. That difference is what makes a section read as one thing. */
   gap: var(--ref-spacing-md);
   overflow-y: auto;
   min-height: 0;
 }
-/* The warning lives in a permanent slot so ticking a person can rewrite it
-   without rebuilding the picker — empty, it must not spend a 24px gap. */
+/* The warning lives in a permanent slot so general access can rewrite it
+   without rebuilding the lists — empty, it must not spend a 24px gap. */
 .share-playbook-modal .ap-dialog-content > div:empty {
   display: none;
 }
 
-/* ── The decision ─────────────────────────────────────────────────────── */
-
-.share-playbook-modal__options {
+.share-playbook-modal__section {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
 }
-
-/* The icon sits on the card title's baseline, at the DS's own small icon
-   size — the card already carries the type scale. */
-.share-playbook-modal__option .ap-radio-card-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-.share-playbook-modal__option .ap-radio-card-title > i {
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-60);
-}
-/* The title is the option's name and the hint is its footnote — they were
-   rendering at the same size AND the same ink, so the dialog's three most
-   important words carried no more weight than the prose under them. The DS
-   already asks for grey-100 on the title (ds-patches restores it); this drops
-   the hint to the secondary ink so the pair reads as a rank. */
-.share-playbook-modal__option-hint {
+/* A section label supports its list, it doesn't head a page: smallest size on
+   the scale, normal weight, secondary ink. Sentence case — never caps. */
+.share-playbook-modal__section-title {
+  margin: 0;
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-xs);
+  font-weight: var(--ref-font-weight-regular);
   color: var(--ref-color-grey-80);
 }
-.share-playbook-modal__option-hint > strong {
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
-}
-/* Selection, doubled without reflow: an inset ring over the DS's own blue
-   border reads as a 2px edge while the box model stays exactly 1px, so
-   picking a card never nudges the ones under it. */
-.share-playbook-modal__option:has(input:checked) {
-  box-shadow: inset 0 0 0 1px var(--ref-color-electric-blue-100);
-}
-.share-playbook-modal__option:has(input:checked) .ap-radio-card-title > i {
-  color: var(--ref-color-electric-blue-100);
-}
-
-/* What every share has in common, said once under the group. */
-.share-playbook-modal__reach-note {
-  margin: var(--ref-spacing-xxxs) 0 0;
+/* The footnote under a list or a select: what it means, one rank down. */
+.share-playbook-modal__note {
+  margin: 0;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-80);
 }
-
-/* ── The people picker (scope "members") ──────────────────────────────
-   Revealed by the middle card — and rendered directly UNDER it, inside the
-   radio group, so proximity says what an indent used to only hint at. 4px to
-   the card it belongs to against the group's own 8px: tighter than the gap
-   between options, which is the whole grammar of the block. */
-.share-playbook-modal__field {
-  margin-top: calc(-1 * var(--ref-spacing-xxxs));
+.share-playbook-modal__note > strong {
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
 }
-.share-playbook-modal__combo {
+
+/* ── The invite field ─────────────────────────────────────────────────
+   Top of the dialog, because adding somebody is why it gets opened. Its
+   suggestion list opens on focus and sits IN FLOW under the field: a floating
+   panel in a scrolling dialog ends up over the footer, which is the bug this
+   whole file's layout was rebuilt around. */
+.share-playbook-modal__invite {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.share-playbook-modal__invite:focus-within .share-playbook-modal__invite-field {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.share-playbook-modal__suggestions {
+  max-height: 208px;
+  overflow-y: auto;
+  padding: var(--ref-spacing-xxxs) 0;
+  border: 1px solid var(--comp-input-border-focused-color);
+  border-top: none;
+  border-bottom-left-radius: var(--comp-input-border-radius);
+  border-bottom-right-radius: var(--comp-input-border-radius);
+  background: var(--ref-color-white);
+}
+.share-playbook-modal__suggestions[hidden] {
+  display: none;
+}
+.share-playbook-modal__suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
   width: 100%;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  border: none;
+  background: transparent;
+  font-family: var(--ref-font-family);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-100);
+  text-align: left;
+  cursor: pointer;
+}
+.share-playbook-modal__suggestion:hover:not(:disabled) {
+  background: var(--ref-color-electric-blue-10);
+}
+.share-playbook-modal__suggestion:focus-visible {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: -2px;
+}
+/* Can't be added (no access to the Playbook's profile). The row STAYS, greyed
+   and with the reason — removing it would leave the owner hunting for a
+   colleague who is simply out of reach. grey-60 is the DS's disabled ink. */
+.share-playbook-modal__suggestion:disabled {
+  color: var(--ref-color-grey-60);
+  cursor: default;
+}
+.share-playbook-modal__suggestion.is-hidden {
+  display: none;
+}
+.share-playbook-modal__nomatch {
+  margin: 0;
+  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-80);
+}
+.share-playbook-modal__nomatch[hidden] {
+  display: none;
 }
 
-/* The trigger's two parts: the stack of faces, then the sentence. */
-.share-playbook-modal__combo > .ap-select-trigger > .ap-select-value {
+/* ── Who has access ───────────────────────────────────────────────────
+   Owner first, then whoever was invited. The role sits in its own right-hand
+   column so the names stay one scannable edge. */
+.share-playbook-modal__people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.share-playbook-modal__person {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
+  min-height: 36px;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-100);
+}
+.share-playbook-modal__person + .share-playbook-modal__person {
+  border-top: 1px solid var(--ref-color-grey-20);
+}
+.share-playbook-modal__person > .ap-avatar,
+.share-playbook-modal__suggestion > .ap-avatar,
+.share-playbook-modal__suggestion > .ap-tag {
+  flex: 0 0 auto;
+}
+/* Name and its "you" chip travel together and take the room; the role column
+   is pinned to the right edge. Two flex levels, because a chip that inherits
+   the name's `flex: 1` drifts across the row away from the name it labels. */
+.share-playbook-modal__row-main {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
 }
-.share-playbook-modal__combo[open] > .ap-select-trigger {
-  border-color: var(--ref-color-electric-blue-100);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-.share-playbook-modal__combo[open] > .ap-select-trigger > .ap-select-arrow {
-  transform: rotate(180deg);
-  color: var(--ref-color-electric-blue-100);
-}
-.share-playbook-modal__combo > .ap-select-trigger > .ap-select-arrow {
-  margin-left: auto;
-  transition: transform var(--ref-animation-short) ease;
-}
-.share-playbook-modal__people-label {
+.share-playbook-modal__row-name {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-/* In flow, not floating: the panel is a continuation of the trigger above it
-   (shared edge, no top radius, no shadow — it is inside the dialog, and an
-   elevation nested in an elevated surface reads as two planes where there is
-   one). It scrolls internally, so a twelve-person org cannot push the footer
-   anywhere. */
-.share-playbook-modal__dropdown {
-  position: static;
-  width: auto;
-  max-height: 220px;
-  border: 1px solid var(--ref-color-electric-blue-100);
-  border-top: none;
-  border-bottom-left-radius: var(--ref-border-radius-sm);
-  border-bottom-right-radius: var(--ref-border-radius-sm);
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  box-shadow: none;
+.share-playbook-modal__suggestion > .share-playbook-modal__row-name {
+  flex: 1 1 auto;
 }
-
-/* The DS item rule flexes every span with an ellipsis — pin the avatar and the
-   reason tag, let the name take the room (same fix as the folder rows). */
-.share-playbook-modal__member > .ap-avatar,
-.share-playbook-modal__member > .ap-tag {
+/* "you" was riding inside the name and inheriting its weight; a quiet chip
+   says the same thing without borrowing the name's emphasis. */
+.share-playbook-modal__you {
   flex: 0 0 auto;
+  padding: 0 var(--ref-spacing-xxxs);
+  border-radius: var(--ref-border-radius-sm);
+  background: var(--ref-color-grey-10);
+  font-size: var(--ref-font-size-xs);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-80);
 }
-.share-playbook-modal__member-name {
+.share-playbook-modal__role {
+  flex: 0 0 auto;
+  font-size: var(--ref-font-size-sm);
+  color: var(--ref-color-grey-80);
+}
+/* The remove button holds its slot at all times — a row that grows an extra
+   control on hover shifts the name under the pointer. It fades in instead,
+   and is always visible to the keyboard. */
+.share-playbook-modal__remove {
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity var(--ref-animation-short) ease;
+}
+.share-playbook-modal__person:hover .share-playbook-modal__remove,
+.share-playbook-modal__remove:focus-visible {
+  opacity: 1;
+}
+/* Owner and invited rows must line up: one has a role word where the other has
+   a role word plus a button, so the role column reserves the button's width. */
+.share-playbook-modal__person:first-child > .share-playbook-modal__role {
+  margin-right: var(--comp-icon-button-width);
+}
+
+/* ── General access ───────────────────────────────────────────────────
+   The fixed ⇄ dynamic seam (doc §5.1): the list above is a set of named faces
+   you can count, this is a rule that follows the org. */
+.share-playbook-modal__general {
+  width: 100%;
+}
+.share-playbook-modal__general-glyph {
+  flex: 0 0 auto;
+  font-size: var(--sys-icon-css-sm);
+  color: var(--ref-color-grey-80);
+}
+.share-playbook-modal__general > .ap-select-trigger > .ap-select-value {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-/* Can't be picked (no access to the Playbook's profile). The DS's own
-   `:disabled` rule only reaches a <button> item and `.locked` means
-   feature-locked (purple padlock, an upsell) — neither fits, so this is the
-   disabled ink, grey-60, on the row the DS draws. */
-.share-playbook-modal__member.is-disabled {
-  color: var(--ref-color-grey-60);
-  cursor: default;
-  pointer-events: none;
+.share-playbook-modal__general[open] > .ap-select-trigger {
+  border-color: var(--ref-color-electric-blue-100);
 }
-
-/* Search miss. */
-.share-playbook-modal__member.is-hidden {
-  display: none;
+.share-playbook-modal__general[open] > .ap-select-trigger > .ap-select-arrow {
+  transform: rotate(180deg);
+  color: var(--ref-color-electric-blue-100);
+}
+.share-playbook-modal__general > .ap-select-trigger > .ap-select-arrow {
+  transition: transform var(--ref-animation-short) ease;
+}
+/* In flow, like everything else that opens here. */
+.share-playbook-modal__generaldrop,
+.share-playbook-modal__ownerdrop {
+  position: static;
+  margin-top: var(--ref-spacing-xxxs);
+  border: 1px solid var(--ref-color-grey-20);
+  box-shadow: none;
 }
 
 /* ── The consequence ──────────────────────────────────────────────────
@@ -1289,57 +1373,22 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
-/* ── The object: who owns it, what happened to it ─────────────────────
+/* ── The object: how it changes hands, what happened to it ────────────
    Behind one rule, because it answers a different question from everything
    above it. ⚠️ This was three lines of identical bold sm — Owner, Hand it
-   over, Recent changes — stacked with nothing ranking them. */
+   over, Recent changes — stacked with nothing ranking them; Owner is a row of
+   the people list now. */
 .share-playbook-modal__gov {
   display: flex;
   flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  gap: var(--ref-spacing-xxs);
   padding-top: var(--ref-spacing-md);
   border-top: 1px solid var(--ref-color-grey-20);
 }
 
-.share-playbook-modal__owner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-}
-/* Label, then value: the label is the SMALLER half — it supports the name, it
-   doesn't compete with it. Ranked by size and weight rather than by a paler
-   grey: grey-80 is the app's floor for text ink (grey-60 is reserved for
-   disabled), and a 12px label below it would also miss 4.5:1. */
-.share-playbook-modal__owner-label {
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-xs);
-  color: var(--ref-color-grey-80);
-}
-.share-playbook-modal__owner-who {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-100);
-}
-.share-playbook-modal__owner-name {
-  font-weight: var(--ref-font-weight-bold);
-}
-/* "(you)" was riding inside the name and inheriting its weight; a tag says the
-   same thing without borrowing the name's emphasis. */
-.share-playbook-modal__owner-you {
-  padding: 0 var(--ref-spacing-xxxs);
-  border-radius: var(--ref-border-radius-sm);
-  background: var(--ref-color-grey-10);
-  font-size: var(--ref-font-size-xs);
-  line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-80);
-}
-
-/* The two rarer moves. Full-row disclosures with a leading glyph and the
-   chevron pushed to the far edge: a control the pointer can find, rather than
-   a bold word with a chevron stuck to it. */
+/* Full-row disclosures with a leading glyph and the chevron at the far edge:
+   a control the pointer can find, rather than a bold word with a chevron
+   stuck to it. */
 .share-playbook-modal__fold > summary {
   display: flex;
   align-items: center;
@@ -1393,13 +1442,6 @@ body.has-modal {
 .share-playbook-modal__ownerselect {
   flex: 1 1 auto;
   min-width: 0;
-}
-/* Same treatment as the people panel: in flow inside a scrolling dialog. */
-.share-playbook-modal__ownerdrop {
-  position: static;
-  margin-top: var(--ref-spacing-xxxs);
-  border: 1px solid var(--ref-color-grey-20);
-  box-shadow: none;
 }
 .share-playbook-modal__transfer {
   flex: 0 0 auto;

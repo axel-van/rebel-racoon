@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1188";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1188";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1195";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1195";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1188";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1188";
-import { showToast } from "./toast.js?v=1188";
-import { html, raw, escapeHtml } from "../utils.js?v=1188";
+} from "../playbook-access.js?v=1195";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1195";
+import { showToast } from "./toast.js?v=1195";
+import { html, raw, escapeHtml } from "../utils.js?v=1195";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -40,16 +40,15 @@ let backdrop, modal, subtitleEl, contentEl, saveBtn, cancelBtn, closeBtn;
 let initialized = false;
 let activeId = null;
 let pendingOnDone = null;
-// The scope currently picked in the radio group — read back on Save. Kept in a
-// variable rather than off the DOM so a re-render of the body can restore it.
-let picked = "personal";
-// Who is ticked in the people picker, for the "members" scope. A Set, seeded
-// from the Playbook on open and committed as an array.
-let pickedMembers = new Set();
-// The people-picker's search box. In module state for the same reason as the
-// rest: the body re-renders, and a query that vanished on every radio click
-// would be worse than no search at all.
-let memberQuery = "";
+// The two controls the scope is derived from (see `pickedScope`): who has been
+// invited by name, and whether general access is the whole org. Both in module
+// state rather than read off the DOM, because adding or removing somebody is a
+// structural change and the body is rebuilt around it.
+let invited = new Set();
+let orgAccess = false;
+// The invite field's query, kept for the same reason: a re-render must not
+// swallow what the reader was typing.
+let query = "";
 let transferTo = null;
 
 // Search has to ignore accents, or half this org is unreachable by typing:
@@ -95,110 +94,50 @@ function avatar(member) {
   >`;
 }
 
-function renderScopeCards(ctx) {
-  const org = `${escapeHtml(ORG.name)}`;
-  return html`
-    <div class="share-playbook-modal__options" role="radiogroup" aria-label="Who can use this Playbook">
-      <label class="ap-radio-card card share-playbook-modal__option">
-        <input type="radio" name="playbookScope" value="personal" ${raw(picked === "personal" ? "checked" : "")} />
-        <div>
-          <span class="ap-radio-card-title">
-            <i class="ap-icon-lock-on" aria-hidden="true"></i>
-            Just me
-          </span>
-          <span class="share-playbook-modal__option-hint">Nobody else at ${raw(org)} can open it.</span>
-        </div>
-      </label>
+// ── The two lists ─────────────────────────────────────────────────────
+// The shape Notion, Slite and Drive all landed on, and for the same reason:
+// the question a reader opens this dialog with is "who has this?", not "which
+// of three modes is this in?". So the answer is the first thing on screen —
+// a list of faces — and the scope stops being something you pick at all. It
+// is DERIVED from the two controls: a field that adds people, and a general-
+// access select underneath.
+//
+// ⚠️ This replaced three `.ap-radio-card` modes (Just me / Specific people /
+// Everyone at {org}) with a people picker folded behind the middle one. The
+// three stored scopes are untouched — the doc requires all three (§5.1) and
+// `pickedScope()` is the one place they are reconstituted:
+//   organization ← general access is the org
+//   members      ← invited list has somebody in it
+//   personal     ← neither
+// Nobody has to name a mode to reach one, which is the whole point.
 
-      <label class="ap-radio-card card share-playbook-modal__option">
-        <input type="radio" name="playbookScope" value="members" ${raw(picked === "members" ? "checked" : "")} />
-        <div>
-          <span class="ap-radio-card-title">
-            <i class="ap-icon-user--plus" aria-hidden="true"></i>
-            Specific people
-          </span>
-          <span class="share-playbook-modal__option-hint"
-            >A <strong>fixed</strong> list you pick — nobody else, and nobody who joins later.</span
-          >
-        </div>
-      </label>
-      <!-- The picker sits INSIDE the group, directly under the card it belongs
-           to: it used to render after the third card, so the one control in the
-           dialog hung under the wrong option and an indent was left to hint at
-           what proximity should have said. -->
-      ${raw(renderMemberPicker(ctx))}
-
-      <label class="ap-radio-card card share-playbook-modal__option">
-        <input
-          type="radio"
-          name="playbookScope"
-          value="organization"
-          ${raw(picked === "organization" ? "checked" : "")}
-        />
-        <div>
-          <span class="ap-radio-card-title">
-            <i class="ap-icon-multiple-users" aria-hidden="true"></i>
-            Everyone at ${raw(org)}
-          </span>
-          <span class="share-playbook-modal__option-hint">${raw(orgReachLine(ctx))}</span>
-        </div>
-      </label>
-
-      ${raw(reachNote(ctx))}
-    </div>
-  `;
-}
-
-// What every share has in common, said ONCE under the group. ⚠️ It used to be
-// two sentences repeated verbatim inside both sharing cards — a third of the
-// dialog's words were a duplicate, which buried the fixed-vs-dynamic
-// distinction those cards exist to draw (doc §5.1). It was also WRONG on a
-// manager's screen: "you stay the only one who can change it" is a promise
-// about the OWNER, and a manager governing Sam's Playbook still can't edit a
-// word of it (canEdit is the owner, full stop).
-function reachNote(ctx) {
-  if (picked === "personal") return "";
-  const who = isMine(ctx) ? "you" : escapeHtml(ownerName(ctx));
-  return html`<p class="share-playbook-modal__reach-note">
-    Whoever it reaches can read it and write with it. Only ${raw(who)} can change what it says.
-  </p>`;
-}
-
-// The dynamic list, said accurately. A Playbook that publishes under a social
-// profile doesn't reach the whole org — it reaches the part of it that can see
-// that profile, joiners included (doc §7). Promising "all 12" would be a lie
-// the picker below contradicts three rows down.
-function orgReachLine(ctx) {
-  const profile = tiedProfile(ctx);
-  if (!profile) {
-    return `All ${ORG.memberCount} today, and whoever joins next — the list <strong>follows</strong> the org.`;
-  }
-  return `Everyone who can reach ${escapeHtml(profile.handle || profile.name || "this account")}, joiners included — the list <strong>follows</strong> the org.`;
-}
-
-// Everyone the picker can offer: the org minus the owner, who holds it already.
+// Who the invite field can offer: the org, minus the owner (who holds it by
+// construction) and minus whoever is already on the list.
 function candidates(ctx) {
   return MEMBERS.filter((m) => m.id !== ctx.ownerId);
 }
 
-// The people picker, revealed by the middle card: the DS **Selection
-// Dropdown** behind an `.ap-select` trigger — the component the design system
-// ships for exactly this (search + checkable items + an empty state), and the
-// same composition the save-drafts dialog already uses for its folder picker.
-// One pattern for "pick from a list of things" in a modal, not two.
-//
-// ⚠️ It shipped for one commit as eleven full-width checkbox CARDS stacked in
-// the dialog body. That made the content ~250px taller than a 900px viewport
-// could hold — Save ended up under the fold — and it asked the reader to scan a
-// wall of rows to answer "who has this?", which is what the trigger now says in
-// one line. Don't go back to the flat list.
-function renderMemberPicker(ctx) {
-  if (picked !== "members") return "";
-  const rows = candidates(ctx);
-  const q = fold(memberQuery.trim());
+function suggestions(ctx) {
+  return candidates(ctx).filter((m) => !invited.has(m.id));
+}
+
+// The scope the two controls add up to. Never chosen directly.
+function pickedScope() {
+  if (orgAccess) return "organization";
+  return invited.size ? "members" : "personal";
+}
+
+// The invite field. Its suggestion list lives IN FLOW under it (same rule as
+// every other dropdown here — a floating panel in a scrolling dialog ends up
+// over the footer), and shows while the field holds focus, the way Notion's
+// does: adding somebody is the primary action, so it costs no click to start.
+function renderInvite(ctx) {
+  // Org-wide, there is nobody left to invite: everyone is already in.
+  if (orgAccess) return "";
+  const rows = suggestions(ctx);
+  const q = fold(query.trim());
   const list = rows
     .map((m) => {
-      const on = pickedMembers.has(m.id);
       const hidden = q && !fold(m.name).includes(q);
       // "Le destinataire ne peut pas être sélectionné" (doc §7): the row stays
       // in the list, disabled, and says WHY — dropping it would leave the owner
@@ -206,96 +145,193 @@ function renderMemberPicker(ctx) {
       // a sentence, so a row stays one line.
       const blocked = profileBlockFor(ctx, m.id);
       const account = blocked ? blocked.handle || blocked.name || "this account" : "";
-      return html`<label
-        class="ap-selection-dropdown-item share-playbook-modal__member${raw(blocked ? " is-disabled" : "")}${raw(
-          hidden ? " is-hidden" : "",
-        )}"
-        data-share-member-row="${fold(m.name)}"
+      return html`<button
+        type="button"
+        class="share-playbook-modal__suggestion${raw(blocked ? " is-disabled" : "")}${raw(hidden ? " is-hidden" : "")}"
+        data-share-add="${m.id}"
+        data-share-row="${fold(m.name)}"
+        ${raw(blocked ? "disabled" : "")}
       >
-        <span class="ap-checkbox-container">
-          <input
-            type="checkbox"
-            value="${m.id}"
-            data-share-member
-            ${raw(on ? "checked" : "")}
-            ${raw(blocked ? "disabled" : "")}
-          />
-          <i></i>
-        </span>
         ${raw(avatar(m))}
-        <span class="share-playbook-modal__member-name">${m.name}</span>
+        <span class="share-playbook-modal__row-name">${m.name}</span>
         ${raw(
           blocked ? html`<span class="ap-tag grey mini" data-tooltip="No access to ${account}">No access</span>` : "",
         )}
-      </label>`;
+      </button>`;
     })
     .join("");
   const visible = rows.filter((m) => !q || fold(m.name).includes(q)).length;
-  // Open on arrival only while there is nobody to show in the trigger: that is
-  // the state where the reader has to open it anyway. ⚠️ The panel used to
-  // FLOAT — an absolutely-positioned popover that hung out of the dialog's own
-  // silhouette and covered the Cancel / Save footer. It now expands IN FLOW
-  // inside the dialog's scroller (see modals.css), so opening it pushes rather
-  // than hides, and nothing escapes the modal.
   return html`
-    <div class="share-playbook-modal__field">
-      <details class="ap-select share-playbook-modal__combo" ${raw(pickedMembers.size ? "" : "open")}>
-        <summary class="ap-select-trigger" aria-label="Choose who gets this Playbook">
-          <span class="ap-select-value" data-share-people-value>${raw(triggerContent(ctx))}</span>
-          <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-        </summary>
-        <div class="ap-selection-dropdown share-playbook-modal__dropdown">
-          <div class="ap-selection-dropdown-search">
-            <i class="ap-icon-search" aria-hidden="true"></i>
-            <input
-              type="text"
-              value="${memberQuery}"
-              data-share-search
-              placeholder="Search ${escapeHtml(ORG.name)}…"
-              aria-label="Search teammates"
-              autocomplete="off"
-            />
-          </div>
-          <div class="ap-selection-dropdown-items" role="group" aria-label="People to share with">
-            ${raw(list)}
-            <!-- Always in the DOM, just hidden: typing filters rows in place
-                 instead of re-rendering, so there has to be a node to reveal. -->
-            <div class="ap-selection-dropdown-empty" data-share-nomatch ${raw(visible ? "hidden" : "")}>
-              Nobody at ${escapeHtml(ORG.name)} matches your search.
-            </div>
-          </div>
-        </div>
-      </details>
+    <div class="share-playbook-modal__invite">
+      <div class="ap-input-group share-playbook-modal__invite-field">
+        <i class="ap-icon-user--plus" aria-hidden="true"></i>
+        <input
+          type="text"
+          value="${query}"
+          data-share-search
+          placeholder="Add a teammate…"
+          aria-label="Add a teammate"
+          autocomplete="off"
+        />
+      </div>
+      <div class="share-playbook-modal__suggestions" data-share-suggestions hidden>
+        ${raw(list)}
+        <!-- Always in the DOM, just hidden: typing filters rows in place
+             instead of re-rendering, so there has to be a node to reveal. -->
+        <p class="share-playbook-modal__nomatch" data-share-nomatch ${raw(visible ? "hidden" : "")}>
+          ${raw(
+            rows.length
+              ? `Nobody at ${escapeHtml(ORG.name)} matches your search.`
+              : `Everyone at ${escapeHtml(ORG.name)} is already on the list.`,
+          )}
+        </p>
+      </div>
     </div>
   `;
 }
 
-// What the trigger says. Faces first (the DS avatar group, capped at three with
-// its own overflow bubble), then the names — two of them fit, past that a count
-// reads better than a truncated list.
-function triggerContent(ctx) {
-  const chosen = candidates(ctx).filter((m) => pickedMembers.has(m.id));
-  if (!chosen.length) return html`<span class="ap-select-placeholder">Choose who gets it…</span>`;
-  const shown = chosen.slice(0, 3);
-  const extra = chosen.length - shown.length;
-  // row-reverse on .ap-avatar-group means the LAST child sits leftmost, so the
-  // overflow bubble is emitted first to land at the end of the stack.
-  const faces = html`<span class="ap-avatar-group" aria-hidden="true"
-    >${raw(extra ? html`<span class="ap-avatar-group-overflow">+${extra}</span>` : "")}${raw(
-      shown
-        .slice()
-        .reverse()
-        .map((m) => avatar(m))
-        .join(""),
-    )}</span
-  >`;
-  const label =
-    chosen.length === 1
-      ? chosen[0].name
-      : chosen.length === 2
-        ? `${chosen[0].name} and ${chosen[1].name}`
-        : `${chosen.length} people`;
-  return html`${raw(faces)}<span class="share-playbook-modal__people-label">${label}</span>`;
+// "you", on whichever row is mine — the owner's when the Playbook is mine, a
+// recipient's when a manager is looking at a colleague's. A reader scanning a
+// list of twelve colleagues should never have to find themselves by name.
+function youChip(memberId) {
+  if (memberId !== CURRENT_USER.id) return "";
+  return `<span class="share-playbook-modal__you">you</span>`;
+}
+
+// Who has it, owner first. ⚠️ The owner used to be a separate labelled block
+// below the decision; it is a row of this list now, because "who can open
+// this" and "whose is it" are one answer with one shape, and two of them made
+// the reader join the halves themselves.
+function renderPeople(ctx) {
+  const owner = getMember(ctx.ownerId);
+  const named = candidates(ctx).filter((m) => invited.has(m.id));
+  const rows = [
+    html`<li class="share-playbook-modal__person">
+      ${raw(avatar(owner))}
+      <span class="share-playbook-modal__row-main">
+        <span class="share-playbook-modal__row-name">${raw(owner ? escapeHtml(owner.name) : "a teammate")}</span>
+        ${raw(youChip(ctx.ownerId))}
+      </span>
+      <span class="share-playbook-modal__role">Owner</span>
+    </li>`,
+    ...named.map(
+      (m) =>
+        html`<li class="share-playbook-modal__person">
+          ${raw(avatar(m))}
+          <span class="share-playbook-modal__row-main">
+            <span class="share-playbook-modal__row-name">${m.name}</span>
+            ${raw(youChip(m.id))}
+          </span>
+          <span class="share-playbook-modal__role">${raw(orgAccess ? "Invited" : "Can use")}</span>
+          ${raw(
+            orgAccess
+              ? ""
+              : html`<button
+                  type="button"
+                  class="ap-icon-button share-playbook-modal__remove"
+                  data-share-remove="${m.id}"
+                  aria-label="Remove ${m.name}"
+                  data-tooltip="Remove ${m.name}"
+                >
+                  <i class="ap-icon-close" aria-hidden="true"></i>
+                </button>`,
+          )}
+        </li>`,
+    ),
+  ].join("");
+  return html`
+    <section class="share-playbook-modal__section">
+      <h3 class="share-playbook-modal__section-title">People with access</h3>
+      <ul class="share-playbook-modal__people">
+        ${raw(rows)}
+      </ul>
+      ${raw(orgAccess ? "" : reachNote(ctx))}
+    </section>
+  `;
+}
+
+// What every share has in common — the single role a recipient gets. It sits
+// under whichever control DEFINES the reach: the people list while access is
+// invite-only, the general-access line once the whole org is in. Left under a
+// list of three while twelve can open it, "they" would name the wrong people.
+// ⚠️ It used to be
+// two sentences repeated verbatim inside both sharing cards — a third of the
+// dialog's words were a duplicate. It was also WRONG on a manager's screen:
+// "you stay the only one who can change it" is a promise about the OWNER, and
+// a manager governing Sam's Playbook still can't edit a word of it (canEdit is
+// the owner, full stop).
+function reachNote(ctx) {
+  if (pickedScope() === "personal") return "";
+  const who = isMine(ctx) ? "you" : escapeHtml(ownerName(ctx));
+  return html`<p class="share-playbook-modal__note">
+    They can read it and write with it. Only ${raw(who)} can change what it says.
+  </p>`;
+}
+
+// General access — the second half of the answer, and the only place the
+// FIXED ⇄ DYNAMIC difference has to be drawn (doc §5.1): the list above is a
+// fixed set of named faces you can count, this select is a rule that follows
+// the org.
+function renderGeneral(ctx) {
+  const options = [
+    {
+      value: "invited",
+      icon: "ap-icon-lock-on",
+      label: "Invited people only",
+      hint: `Nobody else at ${escapeHtml(ORG.name)} can open it.`,
+    },
+    {
+      value: "organization",
+      icon: "ap-icon-multiple-users",
+      label: `Everyone at ${escapeHtml(ORG.name)}`,
+      hint: orgReachLine(ctx),
+    },
+  ];
+  const current = options[orgAccess ? 1 : 0];
+  const list = options
+    .map((o) => {
+      const on = o === current;
+      return html`<div
+        class="ap-select-option${raw(on ? " selected" : "")}"
+        data-share-general="${o.value}"
+        role="option"
+        aria-selected="${on ? "true" : "false"}"
+      >
+        <i class="${o.icon} ap-select-option-icon" aria-hidden="true"></i>
+        <span class="ap-select-option-text">${raw(o.label)}</span>
+        ${raw(on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
+      </div>`;
+    })
+    .join("");
+  return html`
+    <section class="share-playbook-modal__section">
+      <h3 class="share-playbook-modal__section-title">General access</h3>
+      <details class="ap-select share-playbook-modal__general">
+        <summary class="ap-select-trigger">
+          <i class="${current.icon} share-playbook-modal__general-glyph" aria-hidden="true"></i>
+          <span class="ap-select-value">${raw(current.label)}</span>
+          <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
+        </summary>
+        <div class="ap-select-dropdown share-playbook-modal__generaldrop" role="listbox" aria-label="General access">
+          <div class="ap-select-options">${raw(list)}</div>
+        </div>
+      </details>
+      <p class="share-playbook-modal__note">${raw(current.hint)}</p>
+      ${raw(orgAccess ? reachNote(ctx) : "")}
+    </section>
+  `;
+}
+
+// The dynamic list, said accurately. A Playbook that publishes under a social
+// profile doesn't reach the whole org — it reaches the part of it that can see
+// that profile, joiners included (doc §7). Promising "all 12" would be a lie
+// the invite list contradicts a few rows above.
+function orgReachLine(ctx) {
+  const profile = tiedProfile(ctx);
+  if (!profile) {
+    return `All ${ORG.memberCount} today, and whoever joins next — the list <strong>follows</strong> the org.`;
+  }
+  return `Everyone who can reach ${escapeHtml(profile.handle || profile.name || "this account")}, joiners included — the list <strong>follows</strong> the org.`;
 }
 
 // Who it reaches TODAY: the stored list minus anyone the profile gate already
@@ -309,8 +345,9 @@ function currentRecipients(ctx) {
 // Who this Playbook reaches if the current pick commits. `null` for the org —
 // the list is dynamic, so it can't be enumerated.
 function reachAfter(ctx) {
-  if (picked === "organization") return null;
-  if (picked === "members") return candidates(ctx).filter((m) => pickedMembers.has(m.id));
+  const target = pickedScope();
+  if (target === "organization") return null;
+  if (target === "members") return candidates(ctx).filter((m) => invited.has(m.id));
   return [];
 }
 
@@ -326,12 +363,13 @@ function reachBefore(ctx) {
 
 // Has anything actually changed? The scope, or — within a named share — the
 // list. Without the second half, Save would stand down while the reader is
-// still ticking people.
+// still editing who is on it.
 function isDirty(ctx) {
-  if (picked !== ctx.scope) return true;
-  if (picked !== "members") return false;
+  const target = pickedScope();
+  if (target !== ctx.scope) return true;
+  if (target !== "members") return false;
   const before = currentRecipients(ctx);
-  return before.length !== pickedMembers.size || before.some((id) => !pickedMembers.has(id));
+  return before.length !== invited.size || before.some((id) => !invited.has(id));
 }
 
 // Only shown when the reach SHRINKS — sharing more widely never costs anyone
@@ -387,13 +425,13 @@ function listNames(names) {
   return `${safe[0]}, ${safe[1]} and ${rest} ${rest === 1 ? "other" : "others"}`;
 }
 
-// Everything below the rule is about the OBJECT rather than the decision: who
-// it belongs to, how that changes hands, and what has already happened to it.
-// Three bold lines used to stack here at one weight — a pile, not a rank. Now:
-// a labelled fact, then two disclosures that look like the controls they are.
+// Everything below the rule is about the OBJECT rather than its reach: how it
+// changes hands, and what has already happened to it. ⚠️ WHO owns it used to
+// be a labelled block here too — it is the first row of the people list now,
+// tagged `Owner`, because "who can open this" and "whose is it" are one answer
+// with one shape, and two of them made the reader join the halves themselves.
 function renderTransfer(ctx) {
   if (!canTransfer(ctx)) return "";
-  const owner = getMember(ctx.ownerId);
   const target = transferTo ? getMember(transferTo) : null;
   const candidates = MEMBERS.filter((m) => m.id !== ctx.ownerId);
   const options = candidates
@@ -412,16 +450,8 @@ function renderTransfer(ctx) {
     .join("");
 
   return html`
-    <div class="share-playbook-modal__owner">
-      <span class="share-playbook-modal__owner-label">Owner</span>
-      <span class="share-playbook-modal__owner-who">
-        ${raw(avatar(owner))}
-        <span class="share-playbook-modal__owner-name">${raw(owner ? escapeHtml(owner.name) : "a teammate")}</span>
-        ${raw(isMine(ctx) ? `<span class="share-playbook-modal__owner-you">you</span>` : "")}
-      </span>
-    </div>
     <details class="share-playbook-modal__fold share-playbook-modal__handover">
-      <summary class="share-playbook-modal__fold-summary">
+      <summary>
         <i class="ap-icon-user--arrow-right share-playbook-modal__fold-glyph" aria-hidden="true"></i>
         <span class="share-playbook-modal__fold-label">Hand it over to someone else</span>
         <i class="ap-icon-chevron-down share-playbook-modal__fold-chevron" aria-hidden="true"></i>
@@ -473,7 +503,7 @@ function renderLog(ctx) {
     .join("");
   return html`
     <details class="share-playbook-modal__fold share-playbook-modal__log">
-      <summary class="share-playbook-modal__fold-summary">
+      <summary>
         <i class="ap-icon-history share-playbook-modal__fold-glyph" aria-hidden="true"></i>
         <span class="share-playbook-modal__fold-label">Recent changes</span>
         <i class="ap-icon-chevron-down share-playbook-modal__fold-chevron" aria-hidden="true"></i>
@@ -493,9 +523,11 @@ function renderBody() {
   subtitleEl.textContent = ctx.name;
   const gov = `${renderTransfer(ctx)}${renderLog(ctx)}`;
   contentEl.innerHTML = [
-    renderScopeCards(ctx),
-    // A slot rather than the infobox itself: ticking a person has to be able to
-    // rewrite the warning without rebuilding the list the tick happened in.
+    renderInvite(ctx),
+    renderPeople(ctx),
+    renderGeneral(ctx),
+    // A slot rather than the infobox itself: general access has to be able to
+    // rewrite the warning without rebuilding anything around it.
     // (`:empty` hides the slot, so an absent warning costs no gap.)
     `<div id="sharePlaybookWarn">${renderConsequence(ctx)}</div>`,
     // The governance zone is one block behind one rule — emitted only when it
@@ -505,27 +537,39 @@ function renderBody() {
   syncCommit(ctx);
 }
 
+// Rebuild, then put the caret back where it was: adding or removing somebody
+// changes both lists at once, so it can't be a targeted patch — but a reader
+// mid-invite must not have the field yanked out from under them.
+function renderAndRefocus() {
+  renderBody();
+  const input = contentEl.querySelector("[data-share-search]");
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  openSuggestions(true);
+}
+
+function openSuggestions(open) {
+  const box = contentEl.querySelector("[data-share-suggestions]");
+  if (box) box.hidden = !open;
+}
+
 // Save's two facts — whether there's a change to commit, and what committing
-// will do. Split out of renderBody so ticking a person can refresh them without
-// re-rendering the picker under the reader's cursor (which would also take the
-// search query with it).
+// will do.
 function syncCommit(ctx) {
-  const n = pickedMembers.size;
+  const target = pickedScope();
+  const n = invited.size;
   // One meaningful action: Save commits the reach and nothing else, so it stands
   // down when the pick matches what's already true. Transfer has its own button
   // because it's a different decision, not a variant of this one.
-  saveBtn.disabled = !isDirty(ctx) || (picked === "members" && n === 0);
-  if (picked === "organization") saveBtn.textContent = "Share with the org";
-  else if (picked === "personal") saveBtn.textContent = "Make it private";
-  // A disabled button that says what's missing beats one that says "Share with
-  // 0 people" — unticking everyone is not a way to make a Playbook private.
-  else if (!n) saveBtn.textContent = "Pick who gets it";
+  const dirty = isDirty(ctx);
+  saveBtn.disabled = !dirty;
+  // The label names the CHANGE, not the state: standing down it must not offer
+  // "Share with 2 people" for a Playbook already shared with exactly those two
+  // — a disabled button describing what is already true reads as a failure.
+  if (!dirty) saveBtn.textContent = "Save";
+  else if (target === "organization") saveBtn.textContent = "Share with the org";
+  else if (target === "personal") saveBtn.textContent = "Make it private";
   else saveBtn.textContent = n === 1 ? "Share with 1 person" : `Share with ${n} people`;
-}
-
-function refreshPickerTrigger(ctx) {
-  const el = contentEl.querySelector("[data-share-people-value]");
-  if (el) el.innerHTML = triggerContent(ctx);
 }
 
 function refreshConsequence(ctx) {
@@ -535,16 +579,22 @@ function refreshConsequence(ctx) {
 
 // Live search over the rows already on screen — never a re-render, or the
 // caret would leave the field on the first keystroke.
-function filterMembers() {
-  const q = fold(memberQuery.trim());
+function filterSuggestions() {
+  const q = fold(query.trim());
   let visible = 0;
-  contentEl.querySelectorAll("[data-share-member-row]").forEach((row) => {
-    const match = !q || row.dataset.shareMemberRow.includes(q);
+  contentEl.querySelectorAll("[data-share-row]").forEach((row) => {
+    const match = !q || row.dataset.shareRow.includes(q);
     row.classList.toggle("is-hidden", !match);
     if (match) visible += 1;
   });
   const empty = contentEl.querySelector("[data-share-nomatch]");
   if (empty) empty.hidden = visible !== 0;
+}
+
+// The first row the query still shows — what Enter commits to, so typing a
+// name and pressing Enter adds it without reaching for the mouse.
+function firstMatch() {
+  return contentEl.querySelector("[data-share-add]:not(.is-hidden):not([disabled])");
 }
 
 function injectOnce() {
@@ -566,35 +616,73 @@ function injectOnce() {
   bindOverlayDismissal({ modal, backdrop, close });
   saveBtn.addEventListener("click", commitScope);
 
-  contentEl.addEventListener("change", (event) => {
-    const ctx = getContextById(activeId);
-    if (!ctx) return;
-    if (event.target.matches('input[name="playbookScope"]')) {
-      picked = event.target.value;
-      // A structural change — the picker appears or goes — so the whole body is
-      // rebuilt, and the focus put back on the card that caused it.
-      renderBody();
-      contentEl.querySelector('input[name="playbookScope"]:checked')?.focus({ preventScroll: true });
-      return;
-    }
-    if (event.target.matches("[data-share-member]")) {
-      if (event.target.checked) pickedMembers.add(event.target.value);
-      else pickedMembers.delete(event.target.value);
-      // Targeted, not a re-render: the dropdown stays open, the row keeps its
-      // focus, and the search query survives.
-      syncCommit(ctx);
-      refreshPickerTrigger(ctx);
-      refreshConsequence(ctx);
-    }
-  });
-
   contentEl.addEventListener("input", (event) => {
     if (!event.target.matches("[data-share-search]")) return;
-    memberQuery = event.target.value || "";
-    filterMembers();
+    query = event.target.value || "";
+    filterSuggestions();
+    openSuggestions(true);
+  });
+
+  // The suggestion list follows the field's focus, the way Notion's does: it
+  // opens on focus (adding somebody is why this dialog exists, so it costs no
+  // click to start) and closes when focus leaves the invite block entirely.
+  // `focusout` with a relatedTarget test, because the click that ADDS somebody
+  // moves focus to a row inside the same block.
+  contentEl.addEventListener("focusin", (event) => {
+    if (event.target.closest(".share-playbook-modal__invite")) openSuggestions(true);
+  });
+  contentEl.addEventListener("focusout", (event) => {
+    // Adding somebody rebuilds the body, which tears the focused input out of
+    // the DOM — the browser then fires a focusout for it, with a null
+    // relatedTarget, AFTER the new input has been focused. Its ancestors came
+    // away with it, so `.closest()` still matches; only "is this still in the
+    // document?" tells the two apart. Without this, every add bounced focus
+    // back to <body> and shut the suggestion list the reader was working in.
+    if (!contentEl.contains(event.target)) return;
+    const block = event.target.closest(".share-playbook-modal__invite");
+    if (!block) return;
+    if (event.relatedTarget && block.contains(event.relatedTarget)) return;
+    openSuggestions(false);
+  });
+
+  contentEl.addEventListener("keydown", (event) => {
+    if (!event.target.matches("[data-share-search]")) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const row = firstMatch();
+      if (row) addMember(row.dataset.shareAdd);
+      return;
+    }
+    // Escape closes the suggestions before it closes the dialog — the modal's
+    // own handler sits on `document` in the bubble phase, so stopping here is
+    // enough to let one Escape mean "never mind this list".
+    if (event.key === "Escape") {
+      const box = contentEl.querySelector("[data-share-suggestions]");
+      if (box && !box.hidden) {
+        event.stopPropagation();
+        openSuggestions(false);
+      }
+    }
   });
 
   contentEl.addEventListener("click", (event) => {
+    const add = event.target.closest("[data-share-add]");
+    if (add) {
+      addMember(add.dataset.shareAdd);
+      return;
+    }
+    const remove = event.target.closest("[data-share-remove]");
+    if (remove) {
+      invited.delete(remove.dataset.shareRemove);
+      renderBody();
+      return;
+    }
+    const general = event.target.closest("[data-share-general]");
+    if (general) {
+      orgAccess = general.dataset.shareGeneral === "organization";
+      renderBody();
+      return;
+    }
     const owner = event.target.closest("[data-share-owner]");
     if (owner) {
       transferTo = owner.dataset.shareOwner;
@@ -608,6 +696,16 @@ function injectOnce() {
   });
 
   initialized = true;
+}
+
+// Adding somebody clears the query, the way every picker of this shape does:
+// the next name you type starts from the whole org again, not from the letters
+// of the last one.
+function addMember(id) {
+  if (!id) return;
+  invited.add(id);
+  query = "";
+  renderAndRefocus();
 }
 
 export function init() {
@@ -624,12 +722,12 @@ function record(ctx, action) {
 function commitScope() {
   const ctx = getContextById(activeId);
   if (!ctx || !isDirty(ctx)) return;
-  const target = picked;
+  const target = pickedScope();
   const ids = candidates(ctx)
-    .filter((m) => pickedMembers.has(m.id))
+    .filter((m) => invited.has(m.id))
     .map((m) => m.id);
-  // An empty named share reaches nobody — that's "Just me" with extra steps,
-  // and Save is disabled on it. Belt and braces, since Enter can reach here.
+  // An empty named share reaches nobody — which `pickedScope()` already reads
+  // as "personal", so this can only be a bug if it ever fires.
   if (target === "members" && !ids.length) return;
 
   const named = ids.length === 1 ? memberName(ids[0]) : `${ids.length} people`;
@@ -683,12 +781,13 @@ export function open({ contextId, onDone = null } = {}) {
 
   activeId = contextId;
   pendingOnDone = onDone;
-  picked = ctx.scope === "members" || ctx.scope === "organization" ? ctx.scope : "personal";
+  orgAccess = ctx.scope === "organization";
   // Seeded from the Playbook whatever its scope is: a fiche pulled back to
-  // private still remembers the list, so picking "Specific people" again offers
-  // the same names rather than an empty slate.
-  pickedMembers = new Set(currentRecipients(ctx));
-  memberQuery = "";
+  // private still remembers the list, so pulling general access back to
+  // "Invited people only" offers the same names rather than an empty slate
+  // (doc §5.3 — both directions, no data loss).
+  invited = new Set(currentRecipients(ctx));
+  query = "";
   transferTo = null;
   renderBody();
 
@@ -698,8 +797,11 @@ export function open({ contextId, onDone = null } = {}) {
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("has-modal");
 
+  // No autofocus on the invite field: it would open its suggestion list over
+  // the rest of the dialog before the reader has read a word of it. The list
+  // of who has access is what this dialog is for — let it be seen first.
   setTimeout(() => {
-    contentEl.querySelector('input[name="playbookScope"]:checked')?.focus({ preventScroll: true });
+    modal.focus?.({ preventScroll: true });
   }, 0);
 }
 
@@ -713,7 +815,8 @@ function close() {
   activeId = null;
   pendingOnDone = null;
   transferTo = null;
-  pickedMembers = new Set();
-  memberQuery = "";
+  invited = new Set();
+  orgAccess = false;
+  query = "";
   notifyClose(MODAL_ID);
 }
