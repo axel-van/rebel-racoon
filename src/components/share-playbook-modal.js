@@ -288,22 +288,23 @@ function renderGeneral(ctx) {
     <section class="share-playbook-modal__section">
       <h3 class="share-playbook-modal__section-title">General access</h3>
       <label class="share-playbook-modal__general">
-        <span class="share-playbook-modal__general-head">
-          <i
-            class="${orgAccess ? "ap-icon-multiple-users" : "ap-icon-lock-on"} share-playbook-modal__general-glyph"
-            aria-hidden="true"
-          ></i>
-          <span class="share-playbook-modal__general-label">${raw(label)}</span>
-          <!-- The switch's own <i> is structural (the DS draws the track on it)
-               and must never carry an ap-icon class — that would mask it away.
-               The glyph above is a separate element for exactly that reason. -->
-          <span class="ap-toggle-container share-playbook-modal__general-switch">
-            <input type="checkbox" data-share-general ${raw(orgAccess ? "checked" : "")} aria-label="${label}" />
-            <i aria-hidden="true"></i>
-          </span>
+        <!-- A 24px disc, the avatar's own footprint: it is the org's face in a
+             list of faces, and it is what keeps every row's text on one column. -->
+        <span class="share-playbook-modal__orb" aria-hidden="true">
+          <i class="${orgAccess ? "ap-icon-multiple-users" : "ap-icon-lock-on"}"></i>
         </span>
-        <span class="share-playbook-modal__general-hint">${raw(hint)}</span>
+        <span class="share-playbook-modal__row-main">
+          <span class="share-playbook-modal__row-name">${raw(label)}</span>
+        </span>
+        <!-- The switch's own i is structural (the DS draws the track on it) and
+             must never carry an ap-icon class, which would mask it away. The
+             glyph above is a separate element for exactly that reason. -->
+        <span class="ap-toggle-container share-playbook-modal__general-switch">
+          <input type="checkbox" data-share-general ${raw(orgAccess ? "checked" : "")} aria-label="${label}" />
+          <i aria-hidden="true"></i>
+        </span>
       </label>
+      <p class="share-playbook-modal__note">${raw(hint)}</p>
       ${raw(orgAccess ? reachNote(ctx) : "")}
     </section>
   `;

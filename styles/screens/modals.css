@@ -1136,6 +1136,14 @@ body.has-modal {
 .share-playbook-modal {
   width: 560px;
   max-width: calc(100vw - 2 * var(--ref-spacing-lg));
+  /* TWO x positions in the whole dialog, and only two: section labels hang at
+     0, everything a row says starts at --share-indent. ⚠️ Before this the
+     avatar was 24px, the general-access glyph 16 and the disclosure glyph 16,
+     so three kinds of row started their text at three different x — which is
+     what made a dialog of five short lines read as floating debris. Every
+     leading graphic now occupies the SAME slot, whatever its own size. */
+  --share-gutter: 24px;
+  --share-indent: calc(var(--share-gutter) + var(--ref-spacing-xxs));
 }
 .share-playbook-modal .ap-dialog-content {
   display: flex;
@@ -1166,9 +1174,11 @@ body.has-modal {
   font-weight: var(--ref-font-weight-regular);
   color: var(--ref-color-grey-80);
 }
-/* The footnote under a list or a select: what it means, one rank down. */
+/* The footnote under a list: what it means, one rank down — and on the same
+   column as the rows it explains, never back at the label's edge. */
 .share-playbook-modal__note {
   margin: 0;
+  padding-left: var(--share-indent);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-80);
@@ -1258,11 +1268,16 @@ body.has-modal {
   display: flex;
   flex-direction: column;
 }
-.share-playbook-modal__person {
+/* One row height for every row in the dialog — people, general access, the
+   disclosure. Repeating the same 40px band is the whole of the vertical
+   rhythm; the hairlines between people rows just make it visible. */
+.share-playbook-modal__person,
+.share-playbook-modal__general,
+.share-playbook-modal__fold > summary {
   display: flex;
   align-items: center;
   gap: var(--ref-spacing-xxs);
-  min-height: 36px;
+  min-height: 40px;
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-100);
@@ -1272,8 +1287,27 @@ body.has-modal {
 }
 .share-playbook-modal__person > .ap-avatar,
 .share-playbook-modal__suggestion > .ap-avatar,
+.share-playbook-modal__orb,
+.share-playbook-modal__fold-glyph {
+  flex: 0 0 var(--share-gutter);
+}
 .share-playbook-modal__suggestion > .ap-tag {
   flex: 0 0 auto;
+}
+
+/* The org's face, at the avatar's own footprint so the column holds. */
+.share-playbook-modal__orb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--share-gutter);
+  height: var(--share-gutter);
+  border-radius: var(--app-radius-circle);
+  background: var(--ref-color-grey-10);
+  color: var(--ref-color-grey-80);
+}
+.share-playbook-modal__orb > i {
+  font-size: var(--sys-icon-css-sm);
 }
 /* Name and its "you" chip travel together and take the room; the role column
    is pinned to the right edge. Two flex levels, because a chip that inherits
@@ -1333,66 +1367,27 @@ body.has-modal {
    The fixed ⇄ dynamic seam (doc §5.1): the list above is a set of named faces
    you can count, this is a rule that follows the org.
 
-   ⚠️ It was an `.ap-select` of exactly TWO options, and clicking it pushed the
-   dialog open — a dropdown inside a scrolling container can't float (the
-   scroller clips it), so it had to expand in flow, which is not what a select
-   does. A binary choice needs no menu: one switch row, the shape
-   `/topics/settings` already gives every listening source. */
+   ⚠️ Two things it stopped being. It was an `.ap-select` of exactly TWO
+   options that PUSHED the dialog open — a dropdown inside a scrolling
+   container can't float, so it had to expand in flow, which is not what a
+   select does. Then it was a bordered card, and it was the ONLY container in
+   the dialog: one boxed block among loose lines is what makes the loose lines
+   look unplaced. It is a row now, on the same gutter and the same 40px band as
+   every people row, and the dialog has no boxes at all. */
 .share-playbook-modal__general {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxxs);
-  padding: var(--ref-spacing-xs);
-  border: 1px solid var(--ref-color-grey-20);
-  border-radius: var(--ref-border-radius-md);
   cursor: pointer;
-  transition: border-color 0.2s ease-in-out;
 }
-.share-playbook-modal__general:hover {
-  border-color: var(--ref-color-grey-40);
-}
-.share-playbook-modal__general:has(input:checked) {
-  border-color: var(--ref-color-electric-blue-100);
+.share-playbook-modal__general:has(input:checked) .share-playbook-modal__orb {
+  background: var(--ref-color-electric-blue-10);
+  color: var(--ref-color-electric-blue-100);
 }
 .share-playbook-modal__general:has(input:focus-visible) {
   outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 1px;
-}
-.share-playbook-modal__general-head {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
-}
-.share-playbook-modal__general-glyph {
-  flex: 0 0 auto;
-  font-size: var(--sys-icon-css-sm);
-  color: var(--ref-color-grey-80);
-}
-.share-playbook-modal__general:has(input:checked) .share-playbook-modal__general-glyph {
-  color: var(--ref-color-electric-blue-100);
-}
-.share-playbook-modal__general-label {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
+  outline-offset: 2px;
+  border-radius: var(--ref-border-radius-sm);
 }
 .share-playbook-modal__general-switch {
   flex: 0 0 auto;
-}
-/* The hint is the row's own consequence line, so it sits inside the box and
-   indents to the label's column — the glyph is not a bullet for it. */
-.share-playbook-modal__general-hint {
-  padding-left: calc(var(--sys-icon-css-sm) + var(--ref-spacing-xxs));
-  font-size: var(--ref-font-size-sm);
-  line-height: var(--ref-font-line-height-sm);
-  color: var(--ref-color-grey-80);
-}
-.share-playbook-modal__general-hint > strong {
-  font-weight: var(--ref-font-weight-bold);
-  color: var(--ref-color-grey-100);
 }
 
 /* ── The consequence ──────────────────────────────────────────────────
@@ -1421,12 +1416,9 @@ body.has-modal {
    a control the pointer can find, rather than a bold word with a chevron
    stuck to it. */
 .share-playbook-modal__fold > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--ref-spacing-xxs);
   cursor: pointer;
   list-style: none;
-  padding: var(--ref-spacing-xxs);
+  padding: 0 var(--ref-spacing-xxs);
   margin: 0 calc(-1 * var(--ref-spacing-xxs));
   border-radius: var(--ref-border-radius-sm);
   transition: background-color var(--ref-animation-short) ease;
@@ -1437,10 +1429,12 @@ body.has-modal {
 .share-playbook-modal__fold > summary:hover {
   background: var(--ref-color-grey-bg);
 }
+/* Sized like every other leading graphic: a 16px glyph centred in the 24px
+   gutter, so the disclosure's label lands on the same column as a name. */
 .share-playbook-modal__fold-glyph {
   font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-60);
-  flex: 0 0 auto;
+  text-align: center;
 }
 .share-playbook-modal__fold-label {
   flex: 1 1 auto;
@@ -1460,9 +1454,9 @@ body.has-modal {
 }
 .share-playbook-modal__fold-body {
   padding-top: var(--ref-spacing-xxs);
-  /* Aligned with the label above it, so the disclosure reads as one column
-     rather than two things that happen to be stacked. */
-  padding-left: calc(var(--sys-icon-css-sm) + var(--ref-spacing-xxs));
+  padding-bottom: var(--ref-spacing-xxs);
+  /* The same column as everything else says. */
+  padding-left: var(--share-indent);
 }
 
 .share-playbook-modal__handover-row {
@@ -1487,6 +1481,12 @@ body.has-modal {
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-80);
+}
+
+/* The suggestion rows carry avatars, so they hold the gutter on their own —
+   but their own list must not inherit the body's indent twice. */
+.share-playbook-modal__suggestion {
+  gap: var(--ref-spacing-xxs);
 }
 
 /* ── The Topic dialog (picker + article) ───────────────────────────────────
