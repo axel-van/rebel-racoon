@@ -20,13 +20,13 @@
 // faithful results; Reprompt is an honest preview (reseed). The committed url
 // rides back to the draft via attachImageToDraft (see the modal component).
 
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1212";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1213";
 // Layering note: the only import this engine takes from the view side, and a
 // deliberate one — canvas.js is pure, UI-agnostic (its own header says so) and
 // already shared by both studio versions. "Text in image" is mocked by baking the
 // words into the generated pixels with the very same flattener the Edit overlays
 // use, so there is nothing to duplicate here.
-import { compositeOverlays } from "./image-studio-canvas.js?v=1212";
+import { compositeOverlays } from "./image-studio-canvas.js?v=1213";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -375,17 +375,17 @@ export function start(
   // arrive OPEN, or the studio decided something behind a collapsed header. A
   // Playbook default is exactly that case, so it opens its own row.
   //
-  // Two `delete`s on the constructed Set rather than two more literals: the deletes
-  // say WHY a row opens (it arrived carrying a value) where a second list would only
-  // say which.
+  // A `delete` on the constructed Set rather than a second literal: the delete says
+  // WHY a row opens (it arrived carrying a value) where a second list would only say
+  // which.
   //
   // Guarded on the VALIDATED values, so a typo'd key in a seed or an analysis can
   // never open an empty section. `refMode` needs nothing: `refs` is pinned open and
   // never enters this Set, so a Playbook ref mode is on screen for free (refSummary
   // prints it, e.g. "Acme · Layout").
-  // "imageType" is the Type AND the words on the image — one card, one key.
-  const collapsedGroups = new Set(["branding", "imageType", "style", "format", "output"]);
-  if (pbImageType) collapsedGroups.delete("imageType");
+  // "imageType" is NOT in here: that card — the Type and the words on the image — is
+  // pinned open in the view, like `refs`, so it never enters this Set at all.
+  const collapsedGroups = new Set(["branding", "style", "format", "output"]);
   if (pbStyle) collapsedGroups.delete("style");
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
   const net = network === "twitter" ? "x" : network || null;
@@ -1257,14 +1257,9 @@ export function deriveNow(sessionId) {
   if (!s.renderTextSeeded) {
     if (!s.renderText) s.renderText = deriveRenderText(s);
     s.renderTextSeeded = true;
-    // The seed is the one moment the studio puts words into the image unasked, so
-    // the section holding them opens for it. Same rule the initial `collapsedGroups`
-    // follows — a section that has content in it arrives open, because the alternative
-    // is the studio quietly deciding to paint a headline and the only clue being a
-    // collapsed row. Once, at the seed: reopening it on every Regenerate would fight
-    // a user who deliberately closed it. The words share the Type's card, so the key
-    // is that card's.
-    s.collapsedGroups.delete("imageType");
+    // Nothing to open: the card holding those words is pinned. It used to un-collapse
+    // itself here, because the seed is the one moment the studio puts words into the
+    // image unasked and a collapsed row would have been the only clue.
   }
   writeBrief(s, derivePrompt(s));
 }

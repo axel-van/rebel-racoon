@@ -40,14 +40,14 @@
 // that thing (`.isv2-sheet-hint`). No second size and no bold — three bold labels
 // stacked in a 260px column would shout over the section title.
 
-import { escapeHtml } from "../../utils.js?v=1212";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1212";
-import { KEY } from "./context.js?v=1212";
-import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1212";
-import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1212";
-import * as imageStudio from "../../image-studio.js?v=1212";
-import { typeArt } from "./type-art.js?v=1212";
-import { styleArt } from "./style-art.js?v=1212";
+import { escapeHtml } from "../../utils.js?v=1213";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1213";
+import { KEY } from "./context.js?v=1213";
+import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1213";
+import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1213";
+import * as imageStudio from "../../image-studio.js?v=1213";
+import { typeArt } from "./type-art.js?v=1213";
+import { styleArt } from "./style-art.js?v=1213";
 
 // A thin rule between two clusters inside one row body. Shared with the
 // Add-image sheet (tools-view.js), which is where the class name comes from.
@@ -142,8 +142,14 @@ export function settingRowEntries(st) {
   // from, and what decides whether the words should be a headline, a figure or a
   // two-word concept (the placeholder and Suggest both follow it).
   //
-  // The header value stays the TYPE alone. It is the choice of the two that a
-  // collapsed row can state in a word; the text is in the field, and a summary
+  // PINNED open, like References — the two rows the reader answers on every visit. A
+  // section you re-open every time shouldn't be a section you have to open, and this
+  // one holds the question the whole card exists to ask (what is this image, and what
+  // does it say) plus a field you write in: collapsed, it hid a text area behind a
+  // header, and the Suggest button with it.
+  //
+  // The header value stays the TYPE alone, and with the body open it is a summary of
+  // what's below rather than a stand-in for it. The text is in the field; a value
   // reading "Infographic · 2 lines" would be counting rather than reporting.
   const typeLabel = st.imageTypeKey
     ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
@@ -153,7 +159,7 @@ export function settingRowEntries(st) {
     label: "Type & text",
     value: typeLabel,
     set: !!st.imageTypeKey,
-    open: isOpen("imageType"),
+    pinned: true,
     body: () => `${imageTypeBody(st)}${sheetDivider}${renderTextBlock(st)}`,
   });
 

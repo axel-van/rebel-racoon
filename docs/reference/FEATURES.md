@@ -351,7 +351,11 @@ deux mots. Une ligne dont les autres dépendent se place **au-dessus** d'elles �
 dépendance se lit à l'envers — et deux réglages qui ne se comprennent que l'un par l'autre tiennent
 dans une carte plutôt que dans une règle qu'il faut énoncer. Le pane compte donc **six lignes**, pas
 sept, et la valeur d'en-tête de la carte reste le **Type seul** : c'est le choix des deux qu'une ligne
-repliée sait dire en un mot.
+repliée sait dire en un mot. La carte est **épinglée ouverte** (`pinned`, comme References) — en-tête
+statique, pas de chevron, jamais dans `collapsedGroups` : c'est la question que la carte existe pour
+poser, plus un champ où l'on écrit, et repliée elle cachait une zone de texte et son bouton Suggest
+derrière un en-tête. Une section qu'on rouvre à chaque visite ne devrait pas être une section qu'on
+doit ouvrir.
 
 - **References** ([`references-view.js`](../../src/components/image-studio-v2/references-view.js)) —
   épinglée ouverte, en-tête sans chevron (une section qu'on rouvre à chaque visite ne devrait pas
