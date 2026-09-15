@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1199";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1199";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1200";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1200";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1199";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1199";
-import { showToast } from "./toast.js?v=1199";
-import { html, raw, escapeHtml } from "../utils.js?v=1199";
+} from "../playbook-access.js?v=1200";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1200";
+import { showToast } from "./toast.js?v=1200";
+import { html, raw, escapeHtml } from "../utils.js?v=1200";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -442,7 +442,7 @@ function renderTransfer(ctx) {
     <details class="share-playbook-modal__fold share-playbook-modal__handover">
       <summary>
         <i class="ap-icon-user--arrow-right share-playbook-modal__fold-glyph" aria-hidden="true"></i>
-        <span class="share-playbook-modal__fold-label">Hand it over to someone else</span>
+        <span class="share-playbook-modal__fold-label">Transfer ownership to another teammate</span>
         <i class="ap-icon-chevron-down share-playbook-modal__fold-chevron" aria-hidden="true"></i>
       </summary>
       <div class="share-playbook-modal__fold-body">
@@ -810,7 +810,9 @@ function commitTransfer() {
   const ctx = getContextById(activeId);
   if (!ctx || !transferTo || transferTo === ctx.ownerId) return;
   const to = getMember(transferTo);
-  record(ctx, `handed it over to ${to?.name || "a teammate"}`);
+  // The log says what the control said — a trail that renames the gesture is
+  // a trail you have to translate.
+  record(ctx, `transferred ownership to ${to?.name || "a teammate"}`);
   updateContext(ctx.id, { ownerId: transferTo });
   const fn = pendingOnDone;
   close();
