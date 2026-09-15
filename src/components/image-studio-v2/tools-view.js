@@ -11,9 +11,9 @@
 // stamp picker, tracked by `state.openPopover` along with the text toolbar's
 // popovers, which genuinely are one-at-a-time.
 
-import { escapeHtml } from "../../utils.js?v=1209";
-import { sheetDivider } from "./settings-view.js?v=1209";
-import * as imageStudio from "../../image-studio.js?v=1209";
+import { escapeHtml } from "../../utils.js?v=1211";
+import { sheetDivider } from "./settings-view.js?v=1211";
+import * as imageStudio from "../../image-studio.js?v=1211";
 
 // The floating palette — the manual tools, top-left over the canvas, where the
 // work is, in ghost-grey DS buttons. It sits at the stage's LEFT edge — the same

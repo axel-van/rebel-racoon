@@ -405,7 +405,16 @@ repliée sait dire en un mot.
   pour Infographic, concept de deux ou trois mots pour Illustration (`suggestionsFor` dans
   [`image-studio.js`](../../src/image-studio.js)). Une **liste**, pas une réponse : le bouton passe à
   `Try another` tant que le champ contient ce qu'on vient de lui donner, et repasse à `Suggest` à la
-  première frappe (patché en place par `onInput`, puisque taper ne re-rend pas la carte). Deux choses
+  première frappe (patché en place par `onInput`, puisque taper ne re-rend pas la carte).
+  **Écrire prend un beat de 2 s, porté par le bouton** (`renderTextLoading` → l'état `loading` du DS,
+  sa barre à la couleur du bouton, le libellé `Writing…`, et le champ `disabled` — ce qu'il contient
+  va être remplacé, donc taper dedans pendant ces deux secondes serait écrasé sans le dire). La phrase
+  sous le champ passe à `Reading your draft…`. `suggestionsFor` est pure : le beat est **mis en
+  scène**, comme les 4,2 s du generate et le loader du brief à l'ouverture, et pour la même raison —
+  demander des mots à Archie est une demande faite à Archie, et une réponse qui arrive avant que le
+  doigt ait quitté le bouton ne se lit pas comme une réponse. Le brief, lui, suit **sans beat**
+  (`settingChangedNow`) : l'attente a déjà eu lieu, et un second re-rendu 600 ms plus tard
+  reconstruirait le textarea sous quiconque édite la suggestion qui vient d'arriver. Deux choses
   disent la dépendance au Type sans l'expliquer : le **placeholder est un exemple DU type** (il devient
   `68% / never hear back` sur Infographic) et la phrase sous le champ nomme le type en jeu. Le seed
   automatique de `deriveNow` prend la **première candidate de la même liste**, donc la graine et le

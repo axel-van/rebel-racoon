@@ -20,13 +20,13 @@
 // faithful results; Reprompt is an honest preview (reseed). The committed url
 // rides back to the draft via attachImageToDraft (see the modal component).
 
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1209";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1211";
 // Layering note: the only import this engine takes from the view side, and a
 // deliberate one — canvas.js is pure, UI-agnostic (its own header says so) and
 // already shared by both studio versions. "Text in image" is mocked by baking the
 // words into the generated pixels with the very same flattener the Edit overlays
 // use, so there is nothing to duplicate here.
-import { compositeOverlays } from "./image-studio-canvas.js?v=1209";
+import { compositeOverlays } from "./image-studio-canvas.js?v=1211";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -471,6 +471,7 @@ export function start(
     // ours ("Try another") or something the user wrote ("Suggest").
     renderTextSuggestIndex: -1,
     suggestedRenderText: "",
+    renderTextLoading: false, // Suggest is writing — the button's own loading state
     briefTakenOver: false, // user hit "Edit the brief" — the words are theirs now
     briefStale: false, // a setting changed while taken over — brief no longer matches
     shotSig: null, // the inputs the shots on screen were made from (see previewStale)
@@ -1123,20 +1124,39 @@ function suggestionsFor(s) {
 // Press it again and you get the next candidate, not the same one: the index walks
 // the list and wraps. Marked `renderTextSeeded`, because the studio has now written
 // here on purpose — the unasked seed at generate time must not fire on top of it.
+//
+// It takes a BEAT, and the button says so (`renderTextLoading` → the DS loading state,
+// events are off while it runs). `suggestionsFor` is a pure function, so the two
+// seconds are staged — the same staging as the 4.2s generate and the brief's own
+// loader at open, and for the same reason: asking Archie for words is a request to
+// Archie, and an answer that lands before the finger leaves the button doesn't read as
+// one. It is also the only honest shape for the day a model writes these.
 export function suggestRenderText(sessionId) {
   const s = states.get(sessionId);
-  if (!s) return;
+  // Already writing: the timer reads state when it FIRES, so a second press would
+  // produce the same walk. Dropping it is right — same rule as runDerive.
+  if (!s || s.renderTextLoading) return;
+  s.renderTextLoading = true;
+  notify(sessionId);
+  s._suggestTimer = setTimeout(() => {
+    const cur = states.get(sessionId);
+    if (!cur) return; // the studio closed under it — exit(KEY) dropped the state
+    cur.renderTextLoading = false;
+    cur._suggestTimer = null;
+    writeSuggestion(cur, sessionId);
+  }, DERIVE_MS);
+}
+
+function writeSuggestion(s, sessionId) {
   const list = suggestionsFor(s);
   s.renderTextSuggestIndex = (s.renderTextSuggestIndex + 1) % list.length;
   s.renderText = list[s.renderTextSuggestIndex];
   s.suggestedRenderText = s.renderText;
   s.renderTextSeeded = true;
-  // The brief follows, but WITHOUT the beat — `settingChangedNow`, not
-  // `settingChanged`. The 600ms rewrite is theatre for an option the user changed and
-  // then waits on; here the thing they asked for is already in the field, so all the
-  // beat buys is a second full repaint ~600ms later that rebuilds the textarea under
-  // anyone who started editing the suggestion — the caret goes, and the pause reads
-  // as the studio loading something.
+  // The brief follows the words IMMEDIATELY — `settingChangedNow`, not
+  // `settingChanged`. The wait already happened, on the button; a second beat of 600ms
+  // would only add a repaint that rebuilds the textarea under anyone who started
+  // editing the suggestion the moment it landed, taking their caret with it.
   settingChangedNow(s, sessionId);
 }
 

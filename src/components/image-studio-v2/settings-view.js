@@ -40,14 +40,14 @@
 // that thing (`.isv2-sheet-hint`). No second size and no bold — three bold labels
 // stacked in a 260px column would shout over the section title.
 
-import { escapeHtml } from "../../utils.js?v=1209";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1209";
-import { KEY } from "./context.js?v=1209";
-import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1209";
-import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1209";
-import * as imageStudio from "../../image-studio.js?v=1209";
-import { typeArt } from "./type-art.js?v=1209";
-import { styleArt } from "./style-art.js?v=1209";
+import { escapeHtml } from "../../utils.js?v=1211";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1211";
+import { KEY } from "./context.js?v=1211";
+import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1211";
+import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1211";
+import * as imageStudio from "../../image-studio.js?v=1211";
+import { typeArt } from "./type-art.js?v=1211";
+import { styleArt } from "./style-art.js?v=1211";
 
 // A thin rule between two clusters inside one row body. Shared with the
 // Add-image sheet (tools-view.js), which is where the class name comes from.
@@ -310,6 +310,10 @@ export function suggestLabel(st) {
   return st.renderText && st.renderText === st.suggestedRenderText ? "Try another" : "Suggest";
 }
 
+// While it writes, the sentence stops explaining and reports. Archie in the first
+// person, present tense — the same voice as "Writing your brief…" in the other pane.
+const WRITING_HINT = `Reading your draft…`;
+
 function suggestRow(st) {
   const type = st.imageTypeKey ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey) : null;
   // "a visual hook", "an infographic" — the catalogue holds three labels and two of
@@ -318,10 +322,19 @@ function suggestRow(st) {
   const hint = type
     ? `I'll write these from your draft, in the shape ${article} ${type.label.toLowerCase()} asks for.`
     : `I'll write these from your draft. Pick a type above and I'll shape the words to it.`;
+  // Writing takes a beat, and the button carries it — the DS loading state, its bar in
+  // the button's own colour, and the sentence beside it saying what is being written.
+  // On the button rather than over the field because the button is what was pressed;
+  // a spinner in the field would claim the words are already being replaced when the
+  // ones on screen are still the last answer.
+  const busy = !!st.renderTextLoading;
+  const face = busy
+    ? `<span class="ap-loading-bar"></span><span>Writing…</span>`
+    : `<i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i><span>${suggestLabel(st)}</span>`;
   return `<div class="isv2-suggest">
-      <p class="isv2-sheet-hint">${escapeHtml(hint)}</p>
-      <button type="button" class="ap-button ghost blue" data-img-render-text-suggest>
-        <i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i><span>${suggestLabel(st)}</span>
+      <p class="isv2-sheet-hint">${escapeHtml(busy ? WRITING_HINT : hint)}</p>
+      <button type="button" class="ap-button ghost blue${busy ? " loading" : ""}" data-img-render-text-suggest${busy ? " disabled" : ""}>
+        ${face}
       </button>
     </div>`;
 }
@@ -335,12 +348,15 @@ function suggestRow(st) {
 // click into the field and be read out with it. The ⓘ rides in a span so it stays on
 // the label's line (the DS label is a column: its second row belongs to `<small>`).
 function renderTextBlock(st) {
+  // The field is disabled while Suggest writes: what it holds is about to be replaced,
+  // and words typed into those two seconds would be silently overwritten when the
+  // suggestion lands. Disabled says "not yours right now" where a live field lies.
   const text = st.renderText || "";
   const over = imageStudio.renderTextOverMessage(text);
   return `<div class="isv2-group">
       <div class="ap-textarea-field narrow isv2-textfield">
         <label for="isv2RenderText"><span>Text in image <i class="ap-icon-info isv2-acc-info" data-tooltip="${escapeHtml(RENDER_TEXT_TIP)}" aria-hidden="true"></i></span></label>
-        <textarea id="isv2RenderText" data-img-render-text rows="2" placeholder="${escapeHtml(renderTextExample(st))}">${escapeHtml(text)}</textarea>
+        <textarea id="isv2RenderText" data-img-render-text rows="2" placeholder="${escapeHtml(renderTextExample(st))}"${st.renderTextLoading ? " disabled" : ""}>${escapeHtml(text)}</textarea>
       </div>
       <p class="ap-form-message error" data-img-render-text-msg role="status"${over ? "" : ` style="display:none"`}>${escapeHtml(over)}</p>
       ${suggestRow(st)}
