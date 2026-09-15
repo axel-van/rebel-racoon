@@ -20,13 +20,13 @@
 // faithful results; Reprompt is an honest preview (reseed). The committed url
 // rides back to the draft via attachImageToDraft (see the modal component).
 
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1208";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1209";
 // Layering note: the only import this engine takes from the view side, and a
 // deliberate one — canvas.js is pure, UI-agnostic (its own header says so) and
 // already shared by both studio versions. "Text in image" is mocked by baking the
 // words into the generated pixels with the very same flattener the Edit overlays
 // use, so there is nothing to duplicate here.
-import { compositeOverlays } from "./image-studio-canvas.js?v=1208";
+import { compositeOverlays } from "./image-studio-canvas.js?v=1209";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -1131,8 +1131,13 @@ export function suggestRenderText(sessionId) {
   s.renderText = list[s.renderTextSuggestIndex];
   s.suggestedRenderText = s.renderText;
   s.renderTextSeeded = true;
-  // A first-class input like any other: committing it rewrites the brief.
-  settingChanged(sessionId);
+  // The brief follows, but WITHOUT the beat — `settingChangedNow`, not
+  // `settingChanged`. The 600ms rewrite is theatre for an option the user changed and
+  // then waits on; here the thing they asked for is already in the field, so all the
+  // beat buys is a second full repaint ~600ms later that rebuilds the textarea under
+  // anyone who started editing the suggestion — the caret goes, and the pause reads
+  // as the studio loading something.
+  settingChangedNow(s, sessionId);
 }
 
 // Compose a structured image brief FROM THE DRAFT — the hook becomes the
@@ -1250,6 +1255,15 @@ export function deriveNow(sessionId) {
 // change rewrites it. The one exception is a brief the user has taken over: we
 // don't clobber their words, we flag that the brief no longer matches the options
 // and let them rebuild on their terms.
+// The same rewrite as `settingChanged`, minus the loader and the timer: derivePrompt
+// is a pure function, so a beat only makes sense where the user is waiting for the
+// answer. Use it for a change whose result is already on screen.
+function settingChangedNow(s, sessionId) {
+  if (s.briefTakenOver) s.briefStale = true;
+  else writeBrief(s, derivePrompt(s));
+  notify(sessionId);
+}
+
 function settingChanged(sessionId) {
   const s = states.get(sessionId);
   if (!s) return;
