@@ -1626,11 +1626,16 @@ body.has-modal {
 /* Intercepts onboarding's Skip on the account step: reassures first, then asks
    why. Three stacked blocks — lead copy, the assurances, the question — so the
    rhythm is read-then-answer rather than a form with a preamble. */
-/* 640, not the 480–520 of its neighbours: the three guarantees read as a trio,
-   and three columns need ~170px each to keep a claim on one line. It also buys
-   the reason list a single line for its longest row. */
+/* 680, not the 480–520 of its neighbours, and the number is derived rather than
+   picked: the widest string in the trio measures 162px ("Your accounts stay
+   yours", and "Nothing publishes on its own." to the pixel), and three separate
+   blocks each pay their own 12px of side padding plus two 16px gutters between
+   them — 3 × (162 + 24) + 32 = 590, which needs 680 of dialog to leave any
+   slack at all. Anything narrower and the longest claim wraps while its two
+   neighbours don't, which is the ragged 1-2-2 this layout exists to avoid.
+   It also buys the reason list a single line for its longest row. */
 .skip-connect {
-  width: min(calc(100% - 32px), 640px);
+  width: min(calc(100% - 32px), 680px);
   flex-direction: column;
 }
 
@@ -1655,22 +1660,45 @@ body.has-modal {
    a claim plus its detail needs the rank that three equal paragraphs could not
    give it, and the stack had the same silhouette as the checkbox list below —
    two piles of text lines, so nothing said "read this, then answer that".
-   auto-fit drops to two columns and then one as the dialog narrows. */
+   ⚠️ Three columns or ONE, never auto-fit: two tiles plus an orphan third was
+   invisible while this was a band and is glaring now that the tiles are
+   separate shapes. The breakpoint is the same arithmetic as the width above —
+   the dialog only reaches its full 680 once the viewport clears 712 (it is
+   `100% - 32` below that), and under 680 a tile can no longer hold its claim
+   on one line, so that is exactly where the row becomes a column.
+   ⚠️ The fill and the padding belong to each ITEM, never to this container: one
+   grey rectangle holding three columns reads as a single banner, and the three
+   blocks only appear on a second look. White gutters between three filled
+   tiles is what says "three things" in one glance — separation by ground, not
+   by a divider, which would still be one band cut in three. */
 .skip-connect__assurances {
   margin: 0;
-  padding: var(--ref-spacing-sm);
+  padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--ref-spacing-sm);
-  background: var(--ref-color-grey-bg);
-  border-radius: var(--ref-border-radius-md);
 }
 
+@media (max-width: 711px) {
+  .skip-connect__assurances {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Not `.ap-card`: the DS card is white with a grey-10 hairline (the house rule
+   puts every border on grey-20) and gaps its children by 16px, which would air
+   out a three-line stack. Two overrides is no longer using the component, so
+   this is composed from the tokens instead — no border at all, since the fill
+   already bounds the tile and a second edge inside a bordered dialog is a line
+   for nothing. */
 .skip-connect__assurance {
   display: flex;
   flex-direction: column;
   gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs);
+  background: var(--ref-color-grey-bg);
+  border-radius: var(--ref-border-radius-md);
 }
 
 /* The glyph anchors the column, so it is a rank up from the marker it was at

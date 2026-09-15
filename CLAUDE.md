@@ -404,11 +404,16 @@ Two rules this rests on:
   Without it, backing out of the dialog leaves the flow with nothing on screen.
 - **The Skip is not silent.** Onboarding's Skip (the nothing-connected branch only) opens
   [`skip-connect-modal.js`](src/components/skip-connect-modal.js): the three guarantees first, as a
-  **trio** — bold claim + a ≤ 29-character detail, the width of one line in a 170px column — saying
-  nothing publishes without approval, Archie reads only what is already public, and the accounts live
-  in Agorapulse and not in Archie ([`CONCEPTS.md`](docs/reference/CONCEPTS.md) §6). A row, not a
-  stack: stacked, it had the same silhouette as the checkbox list below it, so nothing said "read
-  this, then answer that" — and three equal-weight paragraphs gave the claims no rank. Then a
+  **trio of three filled tiles** — bold claim + a one-line detail — saying nothing publishes without
+  approval, Archie reads only what is already public, and the accounts live in Agorapulse and not in
+  Archie ([`CONCEPTS.md`](docs/reference/CONCEPTS.md) §6). A row, not a stack: stacked, it had the
+  same silhouette as the checkbox list below it, so nothing said "read this, then answer that" — and
+  three equal-weight paragraphs gave the claims no rank. ⚠️ **Three separate tiles, not one filled
+  container**: a single grey rectangle holding three columns reads as one BANNER, and the three
+  blocks only appear on a second look — the fill and the padding belong to each item, so white
+  gutters do the separating. The dialog's 680px and the three-or-one column rule both fall out of one
+  measurement (the widest string is 162px); `auto-fit` is banned here because two tiles plus an
+  orphan third was invisible as a band and is glaring as separate shapes. Then a
   multi-select "Why not now?". ⚠️ **No margin-top anywhere in this dialog** — `.ap-dialog-content`
   gaps its children by `--ref-spacing-md` and every margin added a second one. ⚠️ **Answering is REQUIRED** here, unlike
   `topic-ignore-modal`'s optional reason: this is the only thing the step gets back, and the user
