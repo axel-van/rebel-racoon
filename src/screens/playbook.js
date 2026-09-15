@@ -17,9 +17,9 @@
 // `loader` cfg, run the (mock) analysis on a timer, then `updateContext` with
 // the section patch — the loader flips to ready and paints the fresh data.
 
-import { navigate } from "../router.js?v=1195";
-import { escapeHtml as esc } from "../utils.js?v=1195";
-import { renderTopbar } from "../components/topbar.js?v=1195";
+import { navigate } from "../router.js?v=1199";
+import { escapeHtml as esc } from "../utils.js?v=1199";
+import { renderTopbar } from "../components/topbar.js?v=1199";
 import {
   getContextById,
   getContexts,
@@ -27,15 +27,15 @@ import {
   deleteContext,
   duplicateContext,
   appendHistory,
-} from "../contexts-store.js?v=1195";
-import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1195";
-import { mount, snapshotEditable } from "../playbook-view.js?v=1195";
-import { open as openRenameModal } from "../components/rename-modal.js?v=1195";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=1195";
-import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=1195";
-import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1195";
-import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=1195";
-import { sectionPatchFromAnalysis } from "../context-builder.js?v=1195";
+} from "../contexts-store.js?v=1199";
+import { isWorkspaceMode, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1199";
+import { mount, snapshotEditable } from "../playbook-view.js?v=1199";
+import { open as openRenameModal } from "../components/rename-modal.js?v=1199";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=1199";
+import { open as openAnalyzeProfilesModal } from "../components/analyze-profiles-modal.js?v=1199";
+import { open as openFillDocumentModal } from "../components/fill-document-modal.js?v=1199";
+import { analyzeWebsite, analyzeDocument, analyzeSocialProfiles } from "../context-mock-analysis.js?v=1199";
+import { sectionPatchFromAnalysis } from "../context-builder.js?v=1199";
 import {
   canView,
   canEdit,
@@ -47,8 +47,8 @@ import {
   isMine,
   ownerOf,
   ownerName,
-} from "../playbook-access.js?v=1195";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=1195";
+} from "../playbook-access.js?v=1199";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=1199";
 
 const AUTOFILL_MS = 1500;
 
@@ -68,7 +68,7 @@ const STAGES = {
 };
 
 function toast(msg) {
-  import("../components/toast.js?v=1195").then(({ showToast }) => showToast(msg));
+  import("../components/toast.js?v=1199").then(({ showToast }) => showToast(msg));
 }
 
 function prettyUrl(url) {

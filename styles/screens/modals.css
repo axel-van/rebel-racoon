@@ -1329,39 +1329,68 @@ body.has-modal {
 
 /* ── General access ───────────────────────────────────────────────────
    The fixed ⇄ dynamic seam (doc §5.1): the list above is a set of named faces
-   you can count, this is a rule that follows the org. */
+   you can count, this is a rule that follows the org.
+
+   ⚠️ It was an `.ap-select` of exactly TWO options, and clicking it pushed the
+   dialog open — a dropdown inside a scrolling container can't float (the
+   scroller clips it), so it had to expand in flow, which is not what a select
+   does. A binary choice needs no menu: one switch row, the shape
+   `/topics/settings` already gives every listening source. */
 .share-playbook-modal__general {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+  padding: var(--ref-spacing-xs);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  cursor: pointer;
+  transition: border-color 0.2s ease-in-out;
+}
+.share-playbook-modal__general:hover {
+  border-color: var(--ref-color-grey-40);
+}
+.share-playbook-modal__general:has(input:checked) {
+  border-color: var(--ref-color-electric-blue-100);
+}
+.share-playbook-modal__general:has(input:focus-visible) {
+  outline: 2px solid var(--ref-color-electric-blue-100);
+  outline-offset: 1px;
+}
+.share-playbook-modal__general-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xxs);
 }
 .share-playbook-modal__general-glyph {
   flex: 0 0 auto;
   font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-80);
 }
-.share-playbook-modal__general > .ap-select-trigger > .ap-select-value {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.share-playbook-modal__general[open] > .ap-select-trigger {
-  border-color: var(--ref-color-electric-blue-100);
-}
-.share-playbook-modal__general[open] > .ap-select-trigger > .ap-select-arrow {
-  transform: rotate(180deg);
+.share-playbook-modal__general:has(input:checked) .share-playbook-modal__general-glyph {
   color: var(--ref-color-electric-blue-100);
 }
-.share-playbook-modal__general > .ap-select-trigger > .ap-select-arrow {
-  transition: transform var(--ref-animation-short) ease;
+.share-playbook-modal__general-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
 }
-/* In flow, like everything else that opens here. */
-.share-playbook-modal__generaldrop,
-.share-playbook-modal__ownerdrop {
-  position: static;
-  margin-top: var(--ref-spacing-xxxs);
-  border: 1px solid var(--ref-color-grey-20);
-  box-shadow: none;
+.share-playbook-modal__general-switch {
+  flex: 0 0 auto;
+}
+/* The hint is the row's own consequence line, so it sits inside the box and
+   indents to the label's column — the glyph is not a bullet for it. */
+.share-playbook-modal__general-hint {
+  padding-left: calc(var(--sys-icon-css-sm) + var(--ref-spacing-xxs));
+  font-size: var(--ref-font-size-sm);
+  line-height: var(--ref-font-line-height-sm);
+  color: var(--ref-color-grey-80);
+}
+.share-playbook-modal__general-hint > strong {
+  font-weight: var(--ref-font-weight-bold);
+  color: var(--ref-color-grey-100);
 }
 
 /* ── The consequence ──────────────────────────────────────────────────
@@ -1436,10 +1465,15 @@ body.has-modal {
 
 .share-playbook-modal__handover-row {
   display: flex;
-  align-items: center;
+  /* The picker grows downward when its list opens; the button stays on the
+     field's own line rather than centring against a panel. */
+  align-items: flex-start;
   gap: var(--ref-spacing-xxs);
 }
-.share-playbook-modal__ownerselect {
+/* The handover picker is the invite block again (same markup, same rules) —
+   one dialog, one way to name a colleague. It takes the row and Transfer holds
+   its own width. */
+.share-playbook-modal__ownerpick {
   flex: 1 1 auto;
   min-width: 0;
 }

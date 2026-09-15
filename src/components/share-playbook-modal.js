@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1195";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1195";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1199";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1199";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1195";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1195";
-import { showToast } from "./toast.js?v=1195";
-import { html, raw, escapeHtml } from "../utils.js?v=1195";
+} from "../playbook-access.js?v=1199";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1199";
+import { showToast } from "./toast.js?v=1199";
+import { html, raw, escapeHtml } from "../utils.js?v=1199";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -50,6 +50,10 @@ let orgAccess = false;
 // swallow what the reader was typing.
 let query = "";
 let transferTo = null;
+// The handover picker's own query. It doubles as the field's value once a
+// teammate is picked, so the field shows the choice instead of an empty box
+// next to an enabled Transfer button.
+let transferQuery = "";
 
 // Search has to ignore accents, or half this org is unreachable by typing:
 // "lea" would miss Léa Mercier and "ines" Inès Ferrand. Folded on both sides —
@@ -270,53 +274,36 @@ function reachNote(ctx) {
 
 // General access — the second half of the answer, and the only place the
 // FIXED ⇄ DYNAMIC difference has to be drawn (doc §5.1): the list above is a
-// fixed set of named faces you can count, this select is a rule that follows
-// the org.
+// fixed set of named faces you can count, this is a rule that follows the org.
+//
+// ⚠️ It was an `.ap-select` of exactly two options, and it PUSHED the dialog
+// open when you clicked it — a dropdown in a scrolling container can't float
+// (the scroller clips it), so it had to expand in flow, which is not what a
+// select does. A binary choice doesn't need a menu at all: it is one switch
+// row, the same shape `/topics/settings` gives every listening source.
 function renderGeneral(ctx) {
-  const options = [
-    {
-      value: "invited",
-      icon: "ap-icon-lock-on",
-      label: "Invited people only",
-      hint: `Nobody else at ${escapeHtml(ORG.name)} can open it.`,
-    },
-    {
-      value: "organization",
-      icon: "ap-icon-multiple-users",
-      label: `Everyone at ${escapeHtml(ORG.name)}`,
-      hint: orgReachLine(ctx),
-    },
-  ];
-  const current = options[orgAccess ? 1 : 0];
-  const list = options
-    .map((o) => {
-      const on = o === current;
-      return html`<div
-        class="ap-select-option${raw(on ? " selected" : "")}"
-        data-share-general="${o.value}"
-        role="option"
-        aria-selected="${on ? "true" : "false"}"
-      >
-        <i class="${o.icon} ap-select-option-icon" aria-hidden="true"></i>
-        <span class="ap-select-option-text">${raw(o.label)}</span>
-        ${raw(on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
-      </div>`;
-    })
-    .join("");
+  const label = `Everyone at ${escapeHtml(ORG.name)}`;
+  const hint = orgAccess ? orgReachLine(ctx) : `Nobody else at ${escapeHtml(ORG.name)} can open it.`;
   return html`
     <section class="share-playbook-modal__section">
       <h3 class="share-playbook-modal__section-title">General access</h3>
-      <details class="ap-select share-playbook-modal__general">
-        <summary class="ap-select-trigger">
-          <i class="${current.icon} share-playbook-modal__general-glyph" aria-hidden="true"></i>
-          <span class="ap-select-value">${raw(current.label)}</span>
-          <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-        </summary>
-        <div class="ap-select-dropdown share-playbook-modal__generaldrop" role="listbox" aria-label="General access">
-          <div class="ap-select-options">${raw(list)}</div>
-        </div>
-      </details>
-      <p class="share-playbook-modal__note">${raw(current.hint)}</p>
+      <label class="share-playbook-modal__general">
+        <span class="share-playbook-modal__general-head">
+          <i
+            class="${orgAccess ? "ap-icon-multiple-users" : "ap-icon-lock-on"} share-playbook-modal__general-glyph"
+            aria-hidden="true"
+          ></i>
+          <span class="share-playbook-modal__general-label">${raw(label)}</span>
+          <!-- The switch's own <i> is structural (the DS draws the track on it)
+               and must never carry an ap-icon class — that would mask it away.
+               The glyph above is a separate element for exactly that reason. -->
+          <span class="ap-toggle-container share-playbook-modal__general-switch">
+            <input type="checkbox" data-share-general ${raw(orgAccess ? "checked" : "")} aria-label="${label}" />
+            <i aria-hidden="true"></i>
+          </span>
+        </span>
+        <span class="share-playbook-modal__general-hint">${raw(hint)}</span>
+      </label>
       ${raw(orgAccess ? reachNote(ctx) : "")}
     </section>
   `;
@@ -432,22 +419,24 @@ function listNames(names) {
 // with one shape, and two of them made the reader join the halves themselves.
 function renderTransfer(ctx) {
   if (!canTransfer(ctx)) return "";
-  const target = transferTo ? getMember(transferTo) : null;
-  const candidates = MEMBERS.filter((m) => m.id !== ctx.ownerId);
-  const options = candidates
+  const rows = MEMBERS.filter((m) => m.id !== ctx.ownerId);
+  const q = fold(transferQuery.trim());
+  const list = rows
     .map((m) => {
-      const on = m.id === transferTo;
-      return html`<div
-        class="ap-select-option${raw(on ? " selected" : "")}"
+      const hidden = q && !fold(m.name).includes(q);
+      return html`<button
+        type="button"
+        class="share-playbook-modal__suggestion${raw(hidden ? " is-hidden" : "")}"
         data-share-owner="${m.id}"
-        role="option"
-        aria-selected="${on ? "true" : "false"}"
+        data-share-owner-row="${fold(m.name)}"
       >
-        <span class="ap-select-option-text">${m.name}${raw(m.id === CURRENT_USER.id ? " (you)" : "")}</span>
-        ${raw(on ? `<i class="ap-icon-check ap-select-option-check" aria-hidden="true"></i>` : "")}
-      </div>`;
+        ${raw(avatar(m))}
+        <span class="share-playbook-modal__row-name">${m.name}</span>
+        ${raw(youChip(m.id))}
+      </button>`;
     })
     .join("");
+  const visible = rows.filter((m) => !q || fold(m.name).includes(q)).length;
 
   return html`
     <details class="share-playbook-modal__fold share-playbook-modal__handover">
@@ -458,19 +447,31 @@ function renderTransfer(ctx) {
       </summary>
       <div class="share-playbook-modal__fold-body">
         <div class="share-playbook-modal__handover-row">
-          <details class="ap-select share-playbook-modal__ownerselect">
-            <summary class="ap-select-trigger">
-              <span class="ap-select-value"
-                >${raw(
-                  target ? escapeHtml(target.name) : `<span class="ap-select-placeholder">Choose a teammate…</span>`,
-                )}</span
-              >
-              <i class="ap-icon-chevron-down ap-select-arrow" aria-hidden="true"></i>
-            </summary>
-            <div class="ap-select-dropdown share-playbook-modal__ownerdrop" role="listbox" aria-label="New owner">
-              <div class="ap-select-options">${raw(options)}</div>
+          <!-- The SAME picker as the invite field above, not a second pattern:
+               one dialog, one way to name a colleague. It was a DS select of
+               eleven options which, being inside a scrolling dialog, had to
+               expand in flow - and a select that pushes the page is not a
+               select. (No backticks in a comment inside a template literal:
+               they close it, and node --check still passes.) -->
+          <div class="share-playbook-modal__invite share-playbook-modal__ownerpick">
+            <div class="ap-input-group share-playbook-modal__invite-field">
+              <i class="ap-icon-search" aria-hidden="true"></i>
+              <input
+                type="text"
+                value="${transferQuery}"
+                data-share-owner-search
+                placeholder="Choose a teammate…"
+                aria-label="New owner"
+                autocomplete="off"
+              />
             </div>
-          </details>
+            <div class="share-playbook-modal__suggestions" data-share-suggestions hidden>
+              ${raw(list)}
+              <p class="share-playbook-modal__nomatch" data-share-owner-nomatch ${raw(visible ? "hidden" : "")}>
+                Nobody at ${escapeHtml(ORG.name)} matches your search.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             class="ap-button stroked grey share-playbook-modal__transfer"
@@ -537,19 +538,19 @@ function renderBody() {
   syncCommit(ctx);
 }
 
-// Rebuild, then put the caret back where it was: adding or removing somebody
-// changes both lists at once, so it can't be a targeted patch — but a reader
-// mid-invite must not have the field yanked out from under them.
-function renderAndRefocus() {
-  renderBody();
-  const input = contentEl.querySelector("[data-share-search]");
-  if (!input) return;
-  input.focus({ preventScroll: true });
-  openSuggestions(true);
+// Both pickers — invite and handover — are the same block, so every helper
+// takes the element you are acting from and finds ITS panel. Global lookups
+// would have the second picker driving the first one's list.
+function blockOf(el) {
+  return el?.closest(".share-playbook-modal__invite") || null;
 }
 
-function openSuggestions(open) {
-  const box = contentEl.querySelector("[data-share-suggestions]");
+function suggestionsFor(el) {
+  return blockOf(el)?.querySelector("[data-share-suggestions]") || null;
+}
+
+function openSuggestions(el, open) {
+  const box = suggestionsFor(el);
   if (box) box.hidden = !open;
 }
 
@@ -579,22 +580,61 @@ function refreshConsequence(ctx) {
 
 // Live search over the rows already on screen — never a re-render, or the
 // caret would leave the field on the first keystroke.
-function filterSuggestions() {
-  const q = fold(query.trim());
+function filterSuggestions(el, rowSelector, emptySelector) {
+  const block = blockOf(el);
+  if (!block) return;
+  const q = fold((el.value || "").trim());
   let visible = 0;
-  contentEl.querySelectorAll("[data-share-row]").forEach((row) => {
-    const match = !q || row.dataset.shareRow.includes(q);
+  block.querySelectorAll(rowSelector).forEach((row) => {
+    const key = row.dataset.shareRow || row.dataset.shareOwnerRow || "";
+    const match = !q || key.includes(q);
     row.classList.toggle("is-hidden", !match);
     if (match) visible += 1;
   });
-  const empty = contentEl.querySelector("[data-share-nomatch]");
+  const empty = block.querySelector(emptySelector);
   if (empty) empty.hidden = visible !== 0;
 }
 
 // The first row the query still shows — what Enter commits to, so typing a
-// name and pressing Enter adds it without reaching for the mouse.
-function firstMatch() {
-  return contentEl.querySelector("[data-share-add]:not(.is-hidden):not([disabled])");
+// name and pressing Enter picks it without reaching for the mouse.
+function firstMatch(el, rowSelector) {
+  return blockOf(el)?.querySelector(`${rowSelector}:not(.is-hidden):not([disabled])`) || null;
+}
+
+// Adding somebody clears the query, the way every picker of this shape does:
+// the next name you type starts from the whole org again, not from the letters
+// of the last one.
+function addMember(id) {
+  if (!id) return;
+  invited.add(id);
+  query = "";
+  renderBody();
+  const input = contentEl.querySelector("[data-share-search]");
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  openSuggestions(input, true);
+}
+
+// Picking a new owner is a single choice, so it CLOSES its list and hands
+// focus to Transfer — the one thing left to do. The field then shows the name
+// rather than an empty box beside an enabled button.
+function pickNewOwner(id) {
+  const member = getMember(id);
+  if (!member) return;
+  transferTo = id;
+  transferQuery = member.name;
+  renderBody();
+  // renderBody() rebuilds the body, which would collapse the disclosure the
+  // click happened inside — reopen it so the Transfer button stays reachable.
+  contentEl.querySelector(".share-playbook-modal__handover")?.setAttribute("open", "");
+  contentEl.querySelector("[data-share-transfer]")?.focus({ preventScroll: true });
+}
+
+// Typing in the handover field un-picks, and the button has to follow without
+// a re-render taking the caret with it.
+function syncTransfer() {
+  const btn = contentEl.querySelector("[data-share-transfer]");
+  if (btn) btn.disabled = !transferTo;
 }
 
 function injectOnce() {
@@ -616,51 +656,76 @@ function injectOnce() {
   bindOverlayDismissal({ modal, backdrop, close });
   saveBtn.addEventListener("click", commitScope);
 
+  // General access is one switch, not a two-option menu — so it arrives here
+  // as a `change` on a checkbox. Structural: org-wide there is nobody left to
+  // invite, so the invite block goes and the role line moves. Rebuild.
+  contentEl.addEventListener("change", (event) => {
+    if (!event.target.matches("[data-share-general]")) return;
+    orgAccess = event.target.checked;
+    renderBody();
+  });
+
   contentEl.addEventListener("input", (event) => {
-    if (!event.target.matches("[data-share-search]")) return;
-    query = event.target.value || "";
-    filterSuggestions();
-    openSuggestions(true);
+    if (event.target.matches("[data-share-search]")) {
+      query = event.target.value || "";
+      filterSuggestions(event.target, "[data-share-row]", "[data-share-nomatch]");
+      openSuggestions(event.target, true);
+      return;
+    }
+    if (event.target.matches("[data-share-owner-search]")) {
+      transferQuery = event.target.value || "";
+      // Typing again un-picks: the field is showing a query now, not a choice,
+      // and an enabled Transfer button under it would commit the stale one.
+      transferTo = null;
+      syncTransfer();
+      filterSuggestions(event.target, "[data-share-owner-row]", "[data-share-owner-nomatch]");
+      openSuggestions(event.target, true);
+    }
   });
 
   // The suggestion list follows the field's focus, the way Notion's does: it
-  // opens on focus (adding somebody is why this dialog exists, so it costs no
-  // click to start) and closes when focus leaves the invite block entirely.
-  // `focusout` with a relatedTarget test, because the click that ADDS somebody
-  // moves focus to a row inside the same block.
+  // opens on focus (naming a colleague is why this dialog exists, so it costs
+  // no click to start) and closes when focus leaves that picker entirely.
+  // `focusout` with a relatedTarget test, because the click that PICKS moves
+  // focus to a row inside the same block.
   contentEl.addEventListener("focusin", (event) => {
-    if (event.target.closest(".share-playbook-modal__invite")) openSuggestions(true);
+    const field = event.target.closest(".share-playbook-modal__invite input");
+    if (field) openSuggestions(field, true);
   });
   contentEl.addEventListener("focusout", (event) => {
-    // Adding somebody rebuilds the body, which tears the focused input out of
+    // Picking somebody rebuilds the body, which tears the focused input out of
     // the DOM — the browser then fires a focusout for it, with a null
     // relatedTarget, AFTER the new input has been focused. Its ancestors came
     // away with it, so `.closest()` still matches; only "is this still in the
-    // document?" tells the two apart. Without this, every add bounced focus
+    // document?" tells the two apart. Without this, every pick bounced focus
     // back to <body> and shut the suggestion list the reader was working in.
     if (!contentEl.contains(event.target)) return;
-    const block = event.target.closest(".share-playbook-modal__invite");
+    const block = blockOf(event.target);
     if (!block) return;
     if (event.relatedTarget && block.contains(event.relatedTarget)) return;
-    openSuggestions(false);
+    openSuggestions(block, false);
   });
 
   contentEl.addEventListener("keydown", (event) => {
-    if (!event.target.matches("[data-share-search]")) return;
+    const invite = event.target.matches("[data-share-search]");
+    const handover = event.target.matches("[data-share-owner-search]");
+    if (!invite && !handover) return;
     if (event.key === "Enter") {
       event.preventDefault();
-      const row = firstMatch();
-      if (row) addMember(row.dataset.shareAdd);
+      const row = firstMatch(event.target, invite ? "[data-share-add]" : "[data-share-owner]");
+      if (!row) return;
+      if (invite) addMember(row.dataset.shareAdd);
+      else pickNewOwner(row.dataset.shareOwner);
       return;
     }
     // Escape closes the suggestions before it closes the dialog — the modal's
     // own handler sits on `document` in the bubble phase, so stopping here is
     // enough to let one Escape mean "never mind this list".
     if (event.key === "Escape") {
-      const box = contentEl.querySelector("[data-share-suggestions]");
+      const box = suggestionsFor(event.target);
       if (box && !box.hidden) {
         event.stopPropagation();
-        openSuggestions(false);
+        openSuggestions(event.target, false);
       }
     }
   });
@@ -677,35 +742,15 @@ function injectOnce() {
       renderBody();
       return;
     }
-    const general = event.target.closest("[data-share-general]");
-    if (general) {
-      orgAccess = general.dataset.shareGeneral === "organization";
-      renderBody();
-      return;
-    }
     const owner = event.target.closest("[data-share-owner]");
     if (owner) {
-      transferTo = owner.dataset.shareOwner;
-      renderBody();
-      // renderBody() rebuilds the body, which would collapse the disclosure the
-      // click happened inside — reopen it so the Transfer button stays reachable.
-      contentEl.querySelector(".share-playbook-modal__handover")?.setAttribute("open", "");
+      pickNewOwner(owner.dataset.shareOwner);
       return;
     }
     if (event.target.closest("[data-share-transfer]")) commitTransfer();
   });
 
   initialized = true;
-}
-
-// Adding somebody clears the query, the way every picker of this shape does:
-// the next name you type starts from the whole org again, not from the letters
-// of the last one.
-function addMember(id) {
-  if (!id) return;
-  invited.add(id);
-  query = "";
-  renderAndRefocus();
 }
 
 export function init() {
@@ -789,6 +834,7 @@ export function open({ contextId, onDone = null } = {}) {
   invited = new Set(currentRecipients(ctx));
   query = "";
   transferTo = null;
+  transferQuery = "";
   renderBody();
 
   backdrop.hidden = false;
@@ -815,6 +861,7 @@ function close() {
   activeId = null;
   pendingOnDone = null;
   transferTo = null;
+  transferQuery = "";
   invited = new Set();
   orgAccess = false;
   query = "";
