@@ -1626,8 +1626,11 @@ body.has-modal {
 /* Intercepts onboarding's Skip on the account step: reassures first, then asks
    why. Three stacked blocks — lead copy, the assurances, the question — so the
    rhythm is read-then-answer rather than a form with a preamble. */
+/* 640, not the 480–520 of its neighbours: the three guarantees read as a trio,
+   and three columns need ~170px each to keep a claim on one line. It also buys
+   the reason list a single line for its longest row. */
 .skip-connect {
-  width: min(calc(100% - 32px), 520px);
+  width: min(calc(100% - 32px), 640px);
   flex-direction: column;
 }
 
@@ -1648,42 +1651,67 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
-/* The "what it does / doesn't do" lines. A bounded grey-bg block, not three
-   loose paragraphs: it is one answer to one worry, and the frame is what says
-   so. No border — the fill already bounds it, and a second edge inside a
-   dialog that has its own is a line for nothing. */
+/* The three guarantees, as a TRIO rather than a stack. Two reasons it is a row:
+   a claim plus its detail needs the rank that three equal paragraphs could not
+   give it, and the stack had the same silhouette as the checkbox list below —
+   two piles of text lines, so nothing said "read this, then answer that".
+   auto-fit drops to two columns and then one as the dialog narrows. */
 .skip-connect__assurances {
-  margin: var(--ref-spacing-sm) 0 0;
+  margin: 0;
   padding: var(--ref-spacing-sm);
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xs);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--ref-spacing-sm);
   background: var(--ref-color-grey-bg);
   border-radius: var(--ref-border-radius-md);
 }
 
 .skip-connect__assurance {
   display: flex;
-  align-items: flex-start;
-  gap: var(--ref-spacing-xs);
-  font-size: var(--sys-text-style-body-size);
-  line-height: var(--sys-text-style-body-line-height);
+  flex-direction: column;
+  gap: var(--ref-spacing-xxxs);
+}
+
+/* The glyph anchors the column, so it is a rank up from the marker it was at
+   16px in grey-60 — but still grey-80, the top of the ink range rather than
+   a colour: nothing here is interactive and nothing here is AI. */
+.skip-connect__assurance > i {
+  font-size: var(--sys-icon-css-md);
+  color: var(--ref-color-grey-80);
+  margin-bottom: var(--ref-spacing-xxxs);
+}
+
+/* Rank by weight and size, never by a lighter grey: the claim is body-bold at
+   grey-100, the detail caption at grey-80. Both stay inside the ink range. */
+.skip-connect__claim {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.skip-connect__detail {
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
   color: var(--ref-color-grey-80);
 }
 
-/* The glyph is a marker, not a control: grey-60 keeps it quieter than the ink
-   beside it without dropping that ink below grey-80. */
-.skip-connect__assurance > i {
-  flex-shrink: 0;
-  color: var(--ref-color-grey-60);
-  font-size: var(--sys-icon-css-sm);
-  /* Optical: line the glyph up with the first line's cap height. */
-  margin-top: 1px;
-}
-
-.skip-connect__question {
-  margin-top: var(--ref-spacing-md);
+/* The question's own heading. `.ap-form-field > label` is body-regular at
+   grey-100 — the same size, weight and ink as the six answers under it, so the
+   question did not read as the question. Body-BOLD ranks it without reaching
+   for a heading style the dialog title already owns.
+   No margin-top anywhere in this dialog: .ap-dialog-content gaps its children
+   by --ref-spacing-md, and every margin added a second one (48px of air
+   before the infobox, 32 above the trio) — which is what made the vertical
+   rhythm look arbitrary. */
+/* Two classes, not one: the DS's own `.ap-form-field > label` is 0-1-1 and beats
+   a lone class, so a single `.skip-connect__label` silently stayed regular. */
+.skip-connect__question > .skip-connect__label {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  color: var(--ref-color-grey-100);
 }
 
 /* Sits under the label and above the boxes — it says the answer is required,
@@ -1723,5 +1751,5 @@ body.has-modal {
 }
 
 .skip-connect__note {
-  margin-top: var(--ref-spacing-md);
+  margin: 0;
 }

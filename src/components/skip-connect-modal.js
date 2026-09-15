@@ -37,24 +37,39 @@
 // The whole module only ever runs under `skipConnectProfiles`: it is reached
 // from the one Skip that flag creates, so it needs no flag test of its own.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1213";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1215";
 
 const MODAL_ID = "skip-connect";
 
-// What a connected account is for, and what it doesn't do. Three lines, because
-// the hesitation this dialog meets is almost always about publishing rights.
+// What a connected account is for, and what it doesn't do. Three, because the
+// hesitation this dialog meets is almost always about publishing rights.
+//
+// Each one is a CLAIM plus its detail, not a sentence: the three claims alone
+// (69 characters) carry the whole answer for someone who only scans, and the
+// captions are there for whoever reads on. The first pass was three two-line
+// paragraphs at one weight and one size — 260 characters with no rank, so the
+// reader had to read all of it to find out none of it was the question.
+//
+// Every detail is ≤ 29 characters, which is what holds ONE line in a 170px
+// column (33 wraps — measured, not guessed), so the three read as a tidy row
+// instead of 1-2-2. And each one ADDS a fact the claim doesn't state: what
+// never happens, what is read, where the accounts live. A caption that only
+// rephrases its claim is the padding this block was full of.
 const ASSURANCES = [
   {
     icon: "ap-icon-lock-on",
-    text: "Nothing publishes without your say-so. I write and schedule; you approve every draft.",
+    claim: "You approve every draft",
+    detail: "Nothing publishes on its own.",
   },
   {
     icon: "ap-icon-eye-on",
-    text: "I read what the account has already published, to learn what works on it.",
+    claim: "I learn from your posts",
+    detail: "Only what's already public.",
   },
   {
     icon: "ap-icon-user",
-    text: "The accounts belong to your Agorapulse account, not to Archie. Disconnect one and I lose access with it.",
+    claim: "Your accounts stay yours",
+    detail: "In Agorapulse, not in Archie.",
   },
 ];
 
@@ -93,20 +108,20 @@ const HTML = `
   </button>
   <div class="ap-dialog-content">
     <p class="skip-connect__lead">
-      A connected account is how I know what to write for — the network sets the format, the length,
-      and where a draft gets scheduled.
+      A connected account is what tells me the format, the length and where a draft gets scheduled.
     </p>
     <ul class="skip-connect__assurances">
       ${ASSURANCES.map(
         (a) => `
       <li class="skip-connect__assurance">
         <i class="${a.icon}" aria-hidden="true"></i>
-        <span>${a.text}</span>
+        <strong class="skip-connect__claim">${a.claim}</strong>
+        <span class="skip-connect__detail">${a.detail}</span>
       </li>`,
       ).join("")}
     </ul>
     <div class="ap-form-field skip-connect__question">
-      <label id="skipConnectReasonsLabel">Why not now?</label>
+      <label class="skip-connect__label" id="skipConnectReasonsLabel">Why not now?</label>
       <p class="skip-connect__hint">Tick everything that applies — at least one.</p>
       <div class="skip-connect__reasons" id="skipConnectReasons" role="group" aria-labelledby="skipConnectReasonsLabel">
         ${REASONS.map(
