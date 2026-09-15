@@ -20,13 +20,13 @@
 // faithful results; Reprompt is an honest preview (reseed). The committed url
 // rides back to the draft via attachImageToDraft (see the modal component).
 
-import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1202";
+import { FORMATS, formatsForNetwork, defaultFormatFor, NETWORK_FORMATS } from "./clip-formats.js?v=1208";
 // Layering note: the only import this engine takes from the view side, and a
 // deliberate one — canvas.js is pure, UI-agnostic (its own header says so) and
 // already shared by both studio versions. "Text in image" is mocked by baking the
 // words into the generated pixels with the very same flattener the Edit overlays
 // use, so there is nothing to duplicate here.
-import { compositeOverlays } from "./image-studio-canvas.js?v=1202";
+import { compositeOverlays } from "./image-studio-canvas.js?v=1208";
 
 const states = new Map(); // sessionId → state
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -383,7 +383,8 @@ export function start(
   // never open an empty section. `refMode` needs nothing: `refs` is pinned open and
   // never enters this Set, so a Playbook ref mode is on screen for free (refSummary
   // prints it, e.g. "Acme · Layout").
-  const collapsedGroups = new Set(["renderText", "branding", "imageType", "style", "format", "output"]);
+  // "imageType" is the Type AND the words on the image — one card, one key.
+  const collapsedGroups = new Set(["branding", "imageType", "style", "format", "output"]);
   if (pbImageType) collapsedGroups.delete("imageType");
   if (pbStyle) collapsedGroups.delete("style");
   // posts-store stores X as "twitter"; the format catalogue keys on "x".
@@ -463,6 +464,13 @@ export function start(
     // a generation — see setPane.
     pane: "options",
     renderTextSeeded: false, // "Text in image" pre-suggested once at open, never re-touched after
+    // Where the Suggest button is in the candidate list for the Type in play, and
+    // the text it last handed over. The index walks (so pressing again offers the
+    // NEXT one) and resets when the Type changes — a new Type is a new list. The
+    // text is what tells the button whether the field still holds a suggestion of
+    // ours ("Try another") or something the user wrote ("Suggest").
+    renderTextSuggestIndex: -1,
+    suggestedRenderText: "",
     briefTakenOver: false, // user hit "Edit the brief" — the words are theirs now
     briefStale: false, // a setting changed while taken over — brief no longer matches
     shotSig: null, // the inputs the shots on screen were made from (see previewStale)
@@ -688,6 +696,9 @@ function defer(s, sessionId, kind, payload) {
 
 function applyImageType(s, key) {
   s.imageTypeKey = s.imageTypeKey === key ? null : key;
+  // A new Type is a new list of suggestions — start it from the top rather than
+  // wherever the previous type's list had been walked to.
+  s.renderTextSuggestIndex = -1;
 }
 
 export function setImageType(sessionId, key) {
@@ -1000,17 +1011,19 @@ function sentencesOf(text) {
     .filter((s) => s.length > 12 && !/^#/.test(s));
 }
 
-// A headline for the artwork, derived from the draft the way the prompt is.
-//
-// The SHORTEST usable sentence wins, not the first: type baked into an image has
-// to read at a glance, and a draft's opening line is usually its longest. Broken
-// at a natural pause into two lines when there is one, because that is how a
-// headline is set — and the field takes one line per line break.
-function deriveRenderText(s) {
-  const parts = sentencesOf(s.postText || "").map((t) => t.replace(/[.!?]+$/, "").trim());
-  const pick = parts.filter((t) => t.length <= MAX_RENDER_TEXT).sort((a, b) => a.length - b.length)[0];
-  if (!pick) return "";
-  // Break on a dash / colon / comma, but only when both halves are worth a line.
+// The draft's sentences that could be set as type, SHORTEST FIRST — not first
+// first: type baked into an image has to read at a glance, and a draft's opening
+// line is usually its longest.
+function renderTextPool(s) {
+  return sentencesOf(s.postText || "")
+    .map((t) => t.replace(/[.!?]+$/, "").trim())
+    .filter((t) => t.length <= MAX_RENDER_TEXT)
+    .sort((a, b) => a.length - b.length);
+}
+
+// Set as a headline is: broken at a natural pause when there is one, because the
+// field takes one line per line break. Only when both halves are worth a line.
+function twoLines(pick) {
   const at = pick.search(/\s[—–]\s|:\s|,\s/);
   if (at > 8 && pick.length - at > 12) {
     const head = pick.slice(0, at).trim();
@@ -1021,6 +1034,105 @@ function deriveRenderText(s) {
     return `${head}\n${tail}`;
   }
   return pick;
+}
+
+// A headline for the artwork, derived from the draft the way the prompt is. This
+// is the UNASKED seed (deriveNow, once per studio): the first candidate the Type
+// in play would suggest, so the seed and the Suggest button can never disagree
+// about what a good headline for this image looks like.
+function deriveRenderText(s) {
+  return suggestionsFor(s)[0] || "";
+}
+
+// ── Suggesting the words, in the shape the TYPE asks for ─────────────────────
+//
+// The three types want three different kinds of type set into them, which is the
+// whole reason Suggest reads the Type rather than just the draft:
+//
+//   Visual hook   a headline — the draft's sharpest line, broken like one
+//   Infographic   a figure and what it counts, never a sentence
+//   Illustration  a concept in a breath: two or three words, no punctuation
+//
+// A LIST, not one answer, so pressing the button again offers the next one instead
+// of re-suggesting what the user just declined. Mock, like everything else the
+// studio "writes" — but every candidate traces back to a line of the draft.
+
+// Words that carry no weight on their own — a fragment must not end on one.
+const TRAILING_STOPWORDS =
+  /^(?:the|a|an|and|or|of|to|in|on|for|with|by|at|from|that|which|who|is|are|was|were|it|its|as|but|so)$/i;
+
+// A fragment must not START or END on a word that carries nothing — "and ship less"
+// and "Teams who" are both the seam of a sentence rather than a phrase.
+function trimFragment(words) {
+  const out = [...words];
+  while (out.length > 1 && TRAILING_STOPWORDS.test(out[out.length - 1])) out.pop();
+  while (out.length > 1 && TRAILING_STOPWORDS.test(out[0])) out.shift();
+  return out.join(" ").replace(/^[.,;:!?]+|[.,;:!?]+$/g, "");
+}
+
+// A figure and what it counts, pulled out of whichever sentences carry a number.
+//
+// `\b\d` on purpose: it matches a figure standing on its own and NOT the 2 inside
+// "Q2", which is how a first pass produced the memorable "2 / Your Q plan isn't".
+// The label is what FOLLOWS the figure — that is the clause the number belongs to —
+// and only falls back to what precedes it when the figure ends its sentence.
+function statLines(s) {
+  const out = [];
+  for (const line of sentencesOf(s.postText || "")) {
+    const m = line.match(/\b\d[\d.,]*\s?(?:%|x|×)?/);
+    if (!m) continue;
+    const after = line
+      .slice(m.index + m[0].length)
+      .split(/\s+/)
+      .filter(Boolean);
+    const before = line.slice(0, m.index).split(/\s+/).filter(Boolean);
+    const label = after.length >= 2 ? trimFragment(after.slice(0, 4)) : trimFragment(before.slice(-4));
+    if (label.length > 3) out.push(`${m[0].trim()}\n${label}`);
+  }
+  return out;
+}
+
+// Two or three words for a concept — taken off the END of a usable line, not the
+// front. A sentence's opening is its setup ("Teams who track…"); what it is ABOUT
+// tends to sit at the close ("…ship on cadence", "…a wish list").
+function conceptLines(s) {
+  return renderTextPool(s)
+    .map((t) => trimFragment(t.split(/\s+/).slice(-3)))
+    .filter((t) => t.length > 6);
+}
+
+// What a type suggests when the draft gives nothing to work with — an empty draft,
+// or one made entirely of hashtags. The button must always have something to hand
+// back: a control that sometimes silently does nothing is worse than no control.
+const SUGGEST_FALLBACKS = {
+  "visual-hook": ["The part\nnobody mentions", "Read this\nbefore you post", "One change,\nthree weeks"],
+  infographic: ["3 numbers\nthat matter", "Before\nafter", "What the data says"],
+  illustration: ["A better way", "Where it starts", "The long game"],
+};
+
+function suggestionsFor(s) {
+  const key = IMAGE_TYPES.some((o) => o.key === s.imageTypeKey) ? s.imageTypeKey : "visual-hook";
+  let list;
+  if (key === "infographic") list = [...statLines(s), ...renderTextPool(s).map(twoLines)];
+  else if (key === "illustration") list = conceptLines(s);
+  else list = renderTextPool(s).map(twoLines);
+  list = [...new Set(list.map((t) => t.trim()).filter(Boolean))].slice(0, 4);
+  return list.length ? list : SUGGEST_FALLBACKS[key];
+}
+
+// Press it again and you get the next candidate, not the same one: the index walks
+// the list and wraps. Marked `renderTextSeeded`, because the studio has now written
+// here on purpose — the unasked seed at generate time must not fire on top of it.
+export function suggestRenderText(sessionId) {
+  const s = states.get(sessionId);
+  if (!s) return;
+  const list = suggestionsFor(s);
+  s.renderTextSuggestIndex = (s.renderTextSuggestIndex + 1) % list.length;
+  s.renderText = list[s.renderTextSuggestIndex];
+  s.suggestedRenderText = s.renderText;
+  s.renderTextSeeded = true;
+  // A first-class input like any other: committing it rewrites the brief.
+  settingChanged(sessionId);
 }
 
 // Compose a structured image brief FROM THE DRAFT — the hook becomes the
@@ -1125,8 +1237,9 @@ export function deriveNow(sessionId) {
     // follows — a section that has content in it arrives open, because the alternative
     // is the studio quietly deciding to paint a headline and the only clue being a
     // collapsed row. Once, at the seed: reopening it on every Regenerate would fight
-    // a user who deliberately closed it.
-    s.collapsedGroups.delete("renderText");
+    // a user who deliberately closed it. The words share the Type's card, so the key
+    // is that card's.
+    s.collapsedGroups.delete("imageType");
   }
   writeBrief(s, derivePrompt(s));
 }

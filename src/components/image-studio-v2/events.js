@@ -19,23 +19,24 @@
 // Anything that patches the DOM instead of re-rendering lives in inline-text.js;
 // anything that writes to the draft lives in commit.js.
 
-import { KEY, ctx, state, autosize } from "./context.js?v=1202";
-import { useImage, commitSlideEdit, applyEditTool, runGenerate } from "./commit.js?v=1202";
+import { KEY, ctx, state, autosize } from "./context.js?v=1208";
+import { suggestLabel } from "./settings-view.js?v=1208";
+import { useImage, commitSlideEdit, applyEditTool, runGenerate } from "./commit.js?v=1208";
 import {
   focusEditingText,
   syncEditingText,
   restoreEditingCaret,
   previewOverlayInput,
   toggleTextEffect,
-} from "./inline-text.js?v=1202";
+} from "./inline-text.js?v=1208";
 import {
   openFilePicker,
   openLogoPicker,
   startOverlayGesture,
   startCropGesture,
   applyCropSelection,
-} from "./interactions.js?v=1202";
-import * as imageStudio from "../../image-studio.js?v=1202";
+} from "./interactions.js?v=1208";
+import * as imageStudio from "../../image-studio.js?v=1208";
 
 function onClick(event, close) {
   const st = state();
@@ -92,6 +93,9 @@ function onClick(event, close) {
   // ── The option rows ──
   const typeBtn = event.target.closest("[data-img-image-type]");
   if (typeBtn) return void imageStudio.setImageType(KEY, typeBtn.dataset.imgImageType);
+  // Suggest the words on the image. The Type picked in the same card decides their
+  // shape, so this reads state rather than taking an argument.
+  if (event.target.closest("[data-img-render-text-suggest]")) return void imageStudio.suggestRenderText(KEY);
   const styleBtn = event.target.closest("[data-img-style]");
   if (styleBtn) return void imageStudio.setStyle(KEY, styleBtn.dataset.imgStyle);
   const fmtBtn = event.target.closest("[data-img-format]");
@@ -254,6 +258,10 @@ function onInput(event) {
       msg.textContent = text;
       msg.style.display = text ? "" : "none";
     }
+    // The first keystroke makes the words the user's, so the button stops offering
+    // "another" of ours. Patched, not re-rendered, for the same reason as the message.
+    const label = ctx.modal.querySelector("[data-img-render-text-suggest] span");
+    if (label) label.textContent = suggestLabel(state());
     return;
   }
   if (event.target.matches("[data-img-edit-prompt]")) {
@@ -268,6 +276,11 @@ function onInput(event) {
 
 // The native colour picker commits on "change" — persist it as a swatch then.
 function onChange(event) {
+  // A field taken out by a re-render fires one last `change` on its way out, carrying
+  // the value it held BEFORE the render — and committing that undoes the render that
+  // just happened (Suggest writes a headline; the field it replaced answers "no,
+  // mine"). Nothing detached has anything left to commit.
+  if (!event.target.isConnected) return;
   const st = state();
   // Ticking it doesn't answer the question — the user still has to press one of
   // the two buttons. It just decides whether the NEXT one gets asked.
@@ -344,6 +357,24 @@ function onDrop(event) {
 }
 
 function onPointerDown(event) {
+  // ── The one-click rule for the options pane ──
+  //
+  // While "Text in image" has focus, pressing anything else in the pane must not blur
+  // it on the way: the blur commits the text, the commit re-derives the brief, and the
+  // re-render takes the control you are pressing out of the DOM between press and
+  // release — so the click lands on nothing and the first press appears to do nothing
+  // at all. Type a headline, then press Suggest, or the Infographic card right above
+  // it: without this, both need pressing twice.
+  //
+  // Cancelling the default pointerdown keeps focus where it is, so no blur, no commit,
+  // no re-render, and the click fires on a node that is still there. Nothing is lost
+  // by skipping that commit: every keystroke is already in state (onInput writes it
+  // silently), and whatever the click does re-derives from it.
+  if (event.target.closest(".isv2-opts") && !event.target.closest("[data-img-render-text]")) {
+    const field = ctx.modal.querySelector("[data-img-render-text]");
+    if (field && document.activeElement === field) event.preventDefault();
+  }
+
   const st0 = state();
   // Crop draw mode owns pointer gestures on the frame: a handle resizes, the box
   // moves, the dimmed area draws a fresh rectangle.

@@ -2,12 +2,11 @@
 //
 // ┌───────────────────────────────┬──────────────────────────────────┐
 // │ [ Options ] [ Advanced ]      │  PREVIEW      [Image | In feed]  │
-// │  References          Acme  ▾  │  ┌────────────────────────────┐  │
-// │  Text in image             ▾  │  │  the image, or its         │  │
+// │  Type & text          Any  ▾  │  ┌────────────────────────────┐  │
+// │  References          Acme  ▾  │  │  the image, or its         │  │
 // │  Branding            Acme  ▾  │  │  placeholder               │  │
-// │  Type                 Any  ▾  │  └────────────────────────────┘  │
-// │  Style     From references  ▾ │  ▪ ▪ ▪                           │
-// │  Format         1:1 · Square ▾│                                  │
+// │  Style     From references  ▾ │  └────────────────────────────┘  │
+// │  Format         1:1 · Square ▾│  ▪ ▪ ▪                           │
 // │  Output       2 variations  ▾ │                                  │
 // └───────────────────────────────┴──────────────────────────────────┘
 //
@@ -46,7 +45,7 @@
 //    400px of nothing between them — the pair stopped reading as a pair. A form is one
 //    of the few things that should be narrower than the space it has.
 //
-// 5. The DENSITY is the DS's, not the pinned panel's. These same seven rows run at 36px in
+// 5. The DENSITY is the DS's, not the pinned panel's. These same rows run at 36px in
 //    a 284px rail, where every pixel counts; in a 520px card that reads as a table. Under
 //    `.isv2-opts` a row takes `.ap-list-panel-item`'s geometry (40px, `xxs sm`) and a
 //    section body takes `.ap-accordion-content`'s padding and gap — the DS components for
@@ -57,9 +56,9 @@
 // and how it commits, what the preview shows in each of its four states — and this file
 // is the LAYOUT that hosts them.
 
-import { settingRowEntries } from "./settings-view.js?v=1202";
-import { briefBody, briefNote } from "./brief-blocks.js?v=1202";
-import { previewColumn } from "./preview-column.js?v=1202";
+import { settingRowEntries } from "./settings-view.js?v=1208";
+import { briefBody, briefNote } from "./brief-blocks.js?v=1208";
+import { previewColumn } from "./preview-column.js?v=1208";
 
 /** Is the brief reachable yet? It describes an image, so it needs one. */
 function briefReady(st) {
@@ -76,8 +75,9 @@ function paneTabs(st) {
   </div>`;
 }
 
-// The seven rows, verbatim from the settings panel — same sections, same state, same
-// data-* hooks — each now its OWN card.
+// The six rows, verbatim from the settings panel — same sections, same state, same
+// data-* hooks — each now its OWN card. Six and not seven since the words on the
+// image moved into the Type card, which is what decides their shape.
 //
 // This dropped the "What's in the image" / "How it's made" group headings and the two
 // bounded group-cards they sat over. FEATURES §7bis argued for those groups (the order

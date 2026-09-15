@@ -1783,6 +1783,14 @@
   font-size: 14px;
 }
 
+/* The ⓘ sits on the DS field label's own line, at the label's size rather than the
+   16px it takes in a section header — next to 12px words it was the loudest thing
+   in the row. */
+.isv2-textfield > label i {
+  font-size: 14px;
+  vertical-align: -2px;
+}
+
 /* ── Text in image ───────────────────────────────────────────────────────────
    A DS textarea field in a 284px panel: the DS supplies the frame, the states and
    the type, so all that's left here is the height (two lines, growing on drag)
@@ -1791,6 +1799,30 @@
 .isv2-textfield > textarea {
   min-height: 56px;
   resize: vertical;
+}
+
+/* The Suggest row — the sentence says what the words will be written FROM, the
+   button asks for them. Sentence left, control right: read the reason, then reach
+   the control, the same order every "Best for" hint sits in.
+
+   It WRAPS rather than squeezes: at the narrow end of the measure the hint is two
+   lines, and a button shrunk to fit beside it would lose its label before the
+   sentence lost a word. `align-items: center` keeps the pair on one baseline while
+   they still fit on one row; the button never stretches (CTAs stay auto-width). */
+.isv2-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xxs);
+}
+
+.isv2-suggest > .ap-button {
+  flex: 0 0 auto;
+}
+
+.isv2-suggest > .isv2-sheet-hint {
+  flex: 1 1 12ch;
 }
 
 .isv2-chip-group {

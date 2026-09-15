@@ -341,7 +341,17 @@ ligne Style reste **fermée et `disabled`** en affichant `From references` — `
 Playbook dès que le switch References tombe. Une fiche qui porte les deux ne se contredit pas : les
 références sont des **exemples**, le style est le repli quand on travaille sans.
 
-L'ordre dit un raisonnement : **ce qui va DANS l'image**, puis son **traitement**.
+L'ordre dit un raisonnement : **ce que l'image EST et DIT**, puis ce qui va dedans, puis son
+**traitement** — `Type & text` · References · Branding · Style · Format · Output.
+
+⚠️ **Type est monté en tête, et « Text in image » a fusionné avec lui dans une seule carte.** Le Type
+est la réponse contre laquelle tout le reste se lit (le brief y prend sa direction visuelle), et c'est
+lui qui décide de la **forme des mots** posés sur l'image : une accroche, un chiffre, ou un concept en
+deux mots. Une ligne dont les autres dépendent se place **au-dessus** d'elles — en dessous, la
+dépendance se lit à l'envers — et deux réglages qui ne se comprennent que l'un par l'autre tiennent
+dans une carte plutôt que dans une règle qu'il faut énoncer. Le pane compte donc **six lignes**, pas
+sept, et la valeur d'en-tête de la carte reste le **Type seul** : c'est le choix des deux qu'une ligne
+repliée sait dire en un mot.
 
 - **References** ([`references-view.js`](../../src/components/image-studio-v2/references-view.js)) —
   épinglée ouverte, en-tête sans chevron (une section qu'on rouvre à chaque visite ne devrait pas
@@ -386,6 +396,28 @@ L'ordre dit un raisonnement : **ce qui va DANS l'image**, puis son **traitement*
   petite — le champ prend donc ce qu'on écrit, le dit, et ce qu'on a écrit est cuit. La copie vit dans
   `renderTextOverMessage` (moteur) et non dans une vue, parce que le premier rendu et chaque frappe la
   demandent depuis deux modules et ne doivent pas la formuler autrement.
+  **Le label est le `<label>` du champ DS** (`.ap-textarea-field > label`), pas la légende maison
+  `.isv2-sheet-label` : ça nomme un input, et le DS livre déjà ça — bonne taille, bonne graisse, et un
+  `for` qui rend les mots cliquables et lus avec le champ. Le ⓘ voyage dans un `<span>` pour rester sur
+  la ligne du label (le label DS est une colonne : sa seconde rangée appartient à `<small>`).
+  **Un bouton `Suggest`** (ghost blue + `ap-icon-sparkles-mermaid`) écrit les mots depuis le draft,
+  **dans la forme que demande le Type choisi** — accroche pour Visual hook, chiffre + ce qu'il compte
+  pour Infographic, concept de deux ou trois mots pour Illustration (`suggestionsFor` dans
+  [`image-studio.js`](../../src/image-studio.js)). Une **liste**, pas une réponse : le bouton passe à
+  `Try another` tant que le champ contient ce qu'on vient de lui donner, et repasse à `Suggest` à la
+  première frappe (patché en place par `onInput`, puisque taper ne re-rend pas la carte). Deux choses
+  disent la dépendance au Type sans l'expliquer : le **placeholder est un exemple DU type** (il devient
+  `68% / never hear back` sur Infographic) et la phrase sous le champ nomme le type en jeu. Le seed
+  automatique de `deriveNow` prend la **première candidate de la même liste**, donc la graine et le
+  bouton ne peuvent pas être en désaccord sur ce qu'est une bonne accroche.
+  ⚠️ **La règle du clic unique** (`onPointerDown`, events.js) : tant que ce champ a le focus, un appui
+  ailleurs dans le pane **annule le `pointerdown` par défaut**. Sans ça le blur commit le texte, le
+  commit re-dérive le brief, et le re-rendu retire de la page le contrôle qu'on est en train d'appuyer
+  — le clic tombe dans le vide et il faut appuyer deux fois (taper une accroche puis cliquer
+  `Suggest`, ou la carte Infographic juste au-dessus). Rien n'est perdu : chaque frappe est déjà dans
+  le state (`setRenderTextSilent`). Même famille de bug côté `change` : un champ retiré par un
+  re-rendu tire un dernier `change` avec sa **valeur d'avant**, que `onChange` ignore désormais
+  (`event.target.isConnected`) — sinon il annulait le rendu qui venait d'avoir lieu.
 - **Branding** ([`branding-view.js`](../../src/components/image-studio-v2/branding-view.js)) — **deux
   interrupteurs, pas un** : _« Show my logo on the image »_ et _« Use brand colors »_. Le logo et la
   palette sont deux impositions différentes : beaucoup de posts veulent les couleurs de la marque sans
@@ -584,8 +616,8 @@ correspondant, à droite la colonne de preview (vide → generating → in-feed 
 le voile « la brief a changé depuis cette image »). **La mise en page ne change jamais** — ni au
 changement de pane, ni à l'arrivée de la première image.
 
-- **Options** = les **sept lignes** (References · Text in image · Branding · Type · Style ·
-  Format · Output), **une carte par option**. Elles ont d'abord vécu en
+- **Options** = les **six lignes** (Type & text · References · Branding · Style · Format · Output),
+  **une carte par option** — sept avant que « Text in image » ne rejoigne la carte du Type (§7). Elles ont d'abord vécu en
   **deux groupes bornés** coiffés de titres _« What's in the image »_ / _« How it's made »_ — l'idée
   était d'**énoncer** le raisonnement que l'ordre encode, là où le panneau de 284px ne pouvait que
   l'**impliquer par la séquence**. **L'utilisateur a tranché contre** : les titres se lisaient comme

@@ -1,13 +1,24 @@
-// Image Studio — the seven option rows, and the controls inside them.
+// Image Studio — the six option rows, and the controls inside them.
 //
 // They are the LEFT HALF of the generate stage (setup-stage.js hosts them, one card
 // each). This module owns what a row is and what its body holds; where the rows sit
 // is the stage's business. They used to be a 284px inspector pinned to the stage's
 // left edge beside a mostly-empty canvas — `git log -S isv2-panel` has it.
 //
-// Row order is "what goes IN the image" first, then treatment:
-//   References · Text in image · Branding   what the image is made of
-//   Type · Style · Format · Output          how it gets made
+// Row order is what the image IS and SAYS, then what else goes in it, then treatment:
+//   Type & text                what kind of image this is, and the words it carries
+//   References · Branding      what else goes into it
+//   Style · Format · Output    how it gets made
+//
+// Type LEADS because it is the answer the rows under it are read against: the
+// brief's visual direction comes from it, and the words on the image are written in
+// the shape it asks for. A row others depend on belongs above them — under them, the
+// dependency reads backwards.
+//
+// Those two share ONE card, which is the same argument taken one step further: the
+// Type decides whether the words should be a headline, a figure or a two-word
+// concept, so Suggest and the placeholder both change with it. Two cards apart, that
+// was a rule the reader had to be told; in one card it is simply what they see.
 //
 // Each row is a DS `.ap-accordion` — THE CLASS, NOT THE BEHAVIOUR. Sections are
 // independent: one you opened stays open, and opening a second doesn't shut the
@@ -29,14 +40,14 @@
 // that thing (`.isv2-sheet-hint`). No second size and no bold — three bold labels
 // stacked in a 260px column would shout over the section title.
 
-import { escapeHtml } from "../../utils.js?v=1202";
-import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1202";
-import { KEY } from "./context.js?v=1202";
-import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1202";
-import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1202";
-import * as imageStudio from "../../image-studio.js?v=1202";
-import { typeArt } from "./type-art.js?v=1202";
-import { styleArt } from "./style-art.js?v=1202";
+import { escapeHtml } from "../../utils.js?v=1208";
+import { NETWORK_LABEL, NETWORK_ICON_BY_PLATFORM } from "../../social-profiles.js?v=1208";
+import { KEY } from "./context.js?v=1208";
+import { REFS_TIP, refSummary, refsBody } from "./references-view.js?v=1208";
+import { BRANDING_TIP, brandingBody } from "./branding-view.js?v=1208";
+import * as imageStudio from "../../image-studio.js?v=1208";
+import { typeArt } from "./type-art.js?v=1208";
+import { styleArt } from "./style-art.js?v=1208";
 
 // A thin rule between two clusters inside one row body. Shared with the
 // Add-image sheet (tools-view.js), which is where the class name comes from.
@@ -112,18 +123,39 @@ function bestFor(network) {
   return `<p class="isv2-sheet-hint" aria-label="Best for ${escapeHtml(label)}">Best for ${glyph}</p>`;
 }
 
-// The seven rows, each tagged with its own name.
+// The six rows, each tagged with its own name.
 //
 // Returned as tagged entries (not one concatenated string) so the host can address a
 // row by `name` rather than by index: setup-stage renders each as its own card, and the
 // tag is what let the short-lived two-group layout pick rows out. The order is the
-// meaning — References / Text / Branding is what goes IN the image, Type / Style /
-// Format / Output is how it's made — carried by the sequence, never by a caption.
+// meaning — Type & text is what the image is and says, References / Branding what
+// else goes in, Style / Format / Output how it's made — by sequence, never a caption.
 export function settingRowEntries(st) {
   // Sections are independent: a Set of what's shut, not a single "which one is open".
   const isOpen = (id) => !st.collapsedGroups.has(id);
   const out = [];
   const row = (cfg) => out.push({ name: cfg.name, html: settingRow(cfg) });
+
+  // Type AND the words on the image, in one card — what this image is, and what it
+  // says. The first question, because everything below is answered against it: a
+  // distinct dimension from the style, the line the brief takes its visual direction
+  // from, and what decides whether the words should be a headline, a figure or a
+  // two-word concept (the placeholder and Suggest both follow it).
+  //
+  // The header value stays the TYPE alone. It is the choice of the two that a
+  // collapsed row can state in a word; the text is in the field, and a summary
+  // reading "Infographic · 2 lines" would be counting rather than reporting.
+  const typeLabel = st.imageTypeKey
+    ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
+    : "Any";
+  row({
+    name: "imageType",
+    label: "Type & text",
+    value: typeLabel,
+    set: !!st.imageTypeKey,
+    open: isOpen("imageType"),
+    body: () => `${imageTypeBody(st)}${sheetDivider}${renderTextBlock(st)}`,
+  });
 
   // ONE References section. Brand kit used to be its own row above this one, and
   // that was a distinction without a difference: both hold images the generator
@@ -144,20 +176,8 @@ export function settingRowEntries(st) {
     body: () => refsBody(st, picked),
   });
 
-  // Text in image — words the model paints into the artwork. It sits with the
-  // references because both answer "what goes IN the image"; type / style /
-  // format / output below are all treatment.
-  row({
-    name: "renderText",
-    label: "Text in image",
-    tip: RENDER_TEXT_TIP,
-    open: isOpen("renderText"),
-    body: () => renderTextBody(st),
-  });
-
-  // Branding — the Playbook's logo, stamped on the artwork. Third in the "what
-  // goes IN the image" run (references / words / mark) before the treatment
-  // settings below. Disabled rather than hidden when the Playbook has no mark: a
+  // Branding — the Playbook's logo, stamped on the artwork. Last of the "what goes
+  // IN the image" run (references / mark) before the treatment settings below. Disabled rather than hidden when the Playbook has no mark: a
   // missing section leaves you wondering whether the feature exists, a disabled
   // one tells you where to go and get it.
   const hasLogo = !!st.playbookLogo;
@@ -182,19 +202,6 @@ export function settingRowEntries(st) {
     disabled: !hasLogo && !hasColors,
     open: isOpen("branding"),
     body: () => brandingBody(st, branded, tinted),
-  });
-
-  // Image type — what the image is FOR. A distinct dimension from the style.
-  const typeLabel = st.imageTypeKey
-    ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey)?.label || "Any"
-    : "Any";
-  row({
-    name: "imageType",
-    label: "Type",
-    value: typeLabel,
-    set: !!st.imageTypeKey,
-    open: isOpen("imageType"),
-    body: () => imageTypeBody(st),
   });
 
   // Style preset — the aesthetic look. Mutually exclusive with references: when
@@ -241,10 +248,12 @@ export function settingRowEntries(st) {
   return out;
 }
 
-// Text in image — a plain DS textarea field, and nothing under it until something
-// is wrong. The permanent `54/90` counter was a meter for a limit you hit once in
-// twenty drafts, sitting in a panel that is short of room; now the field says
-// nothing while the text fits and raises a DS form message when it doesn't.
+// ── Text in image, inside the Type card ─────────────────────────────────────
+//
+// A plain DS textarea field, and nothing under it until something is wrong. The
+// permanent `54/90` counter was a meter for a limit you hit once in twenty drafts,
+// sitting in a panel that is short of room; now the field says nothing while the
+// text fits and raises a DS form message when it doesn't.
 //
 // The message node is always in the DOM, hidden inline, because typing must not
 // re-render the panel (the row would be rebuilt under the caret) — the input handler
@@ -252,26 +261,90 @@ export function settingRowEntries(st) {
 // `display: flex`, which beats the attribute.
 //
 // The line that used to sit beside the counter — naming the OTHER thing the user
-// might have meant, the movable text overlay in Edit — is now the header's info
-// tooltip. It was a permanent two-line footnote for a fact you need once, in a panel
-// that is short of room; the counter is the only thing here that changes as you
-// type, so it is the only thing that earns a standing line.
+// might have meant, the movable text overlay in Edit — is the ⓘ next to the label.
+// It was a permanent two-line footnote for a fact you need once, in a panel that is
+// short of room.
 //
 // Casualty worth knowing about: that sentence carried a live link into the Edit tab
-// (enabled only once an image existed). A title tooltip can't hold a link, so the
-// path is now the Edit tab in the modal header — one click either way.
+// (enabled only once an image existed). A tooltip can't hold a link, so the path is
+// now the Edit tab in the modal header — one click either way.
 const RENDER_TEXT_TIP = "For a text box you can move, use Add text in Edit.";
 
-// Two lines, so the placeholder teaches the line break as well as the length.
-const RENDER_TEXT_PLACEHOLDER = `Black Friday
-−50% on everything`;
+// The placeholder is an EXAMPLE OF THIS TYPE, not one specimen for all three.
+//
+// Two lines, so it teaches the line break as well as the length — and a different
+// pair per Type, because that is the cheapest possible way to say that the words and
+// the Type belong together: pick Infographic and the ghost text in the field turns
+// into a figure. The hint below says it in words; this says it by changing.
+const RENDER_TEXT_EXAMPLES = {
+  "visual-hook": `Black Friday\n−50% on everything`,
+  infographic: `68%\nnever hear back`,
+  illustration: `The long game`,
+};
 
-function renderTextBody(st) {
+function renderTextExample(st) {
+  return RENDER_TEXT_EXAMPLES[st.imageTypeKey] || RENDER_TEXT_EXAMPLES["visual-hook"];
+}
+
+// Suggest — Archie writes the words, and the type picked above decides their shape.
+//
+// The hint is the whole point of the pairing: a headline, a figure and a two-word
+// concept are three different answers, and which one you get is the Type's call — so
+// the control SAYS so, naming the Type in play rather than leaving the reader to
+// notice that pressing it after changing Type gives something else. With no Type
+// picked the same line turns into the reason to go pick one.
+//
+// Label flips to "Try another" once the field holds the last thing we handed over:
+// the list walks, so a second press is a second candidate, not a re-roll of the same
+// one. Back to "Suggest" the moment the user edits it — what is in the field is
+// theirs again, and offering "another" of someone else's words reads wrong.
+//
+// `ghost blue` + the mermaid sparkle: blue is this app's interactive colour, and a
+// ghost sits under the one filled control in this half (Generate) instead of arguing
+// with it — a bordered button beside a bordered field read as a second field.
+// Exported because typing is SILENT — the field must not re-render under the caret —
+// so the input handler patches this one word in place (events.js#onInput), the same
+// way it patches the over-limit message. One function, so the two paths can't word it
+// differently.
+export function suggestLabel(st) {
+  return st.renderText && st.renderText === st.suggestedRenderText ? "Try another" : "Suggest";
+}
+
+function suggestRow(st) {
+  const type = st.imageTypeKey ? imageStudio.IMAGE_TYPES.find((o) => o.key === st.imageTypeKey) : null;
+  // "a visual hook", "an infographic" — the catalogue holds three labels and two of
+  // them take "an", so the article is computed rather than written into the sentence.
+  const article = type && /^[aeiou]/i.test(type.label) ? "an" : "a";
+  const hint = type
+    ? `I'll write these from your draft, in the shape ${article} ${type.label.toLowerCase()} asks for.`
+    : `I'll write these from your draft. Pick a type above and I'll shape the words to it.`;
+  return `<div class="isv2-suggest">
+      <p class="isv2-sheet-hint">${escapeHtml(hint)}</p>
+      <button type="button" class="ap-button ghost blue" data-img-render-text-suggest>
+        <i class="ap-icon-sparkles-mermaid" aria-hidden="true"></i><span>${suggestLabel(st)}</span>
+      </button>
+    </div>`;
+}
+
+// The second half of the Type card. It carries its own label + ⓘ, which the row
+// header used to hold: sharing a card means the header names the card, not this.
+//
+// The label is the DS field's OWN `<label>` (`.ap-textarea-field > label`), not the
+// panel's `.isv2-sheet-label` caption: this names an input, and the DS already ships
+// that — with the right size, weight and colour, and a `for` that makes the words
+// click into the field and be read out with it. The ⓘ rides in a span so it stays on
+// the label's line (the DS label is a column: its second row belongs to `<small>`).
+function renderTextBlock(st) {
   const text = st.renderText || "";
-  return `<div class="ap-textarea-field narrow isv2-textfield">
-      <textarea data-img-render-text rows="2" placeholder="${escapeHtml(RENDER_TEXT_PLACEHOLDER)}" aria-label="Text to write into the image">${escapeHtml(text)}</textarea>
-    </div>
-    <p class="ap-form-message error" data-img-render-text-msg role="status"${imageStudio.renderTextOverMessage(text) ? "" : ` style="display:none"`}>${escapeHtml(imageStudio.renderTextOverMessage(text))}</p>`;
+  const over = imageStudio.renderTextOverMessage(text);
+  return `<div class="isv2-group">
+      <div class="ap-textarea-field narrow isv2-textfield">
+        <label for="isv2RenderText"><span>Text in image <i class="ap-icon-info isv2-acc-info" data-tooltip="${escapeHtml(RENDER_TEXT_TIP)}" aria-hidden="true"></i></span></label>
+        <textarea id="isv2RenderText" data-img-render-text rows="2" placeholder="${escapeHtml(renderTextExample(st))}">${escapeHtml(text)}</textarea>
+      </div>
+      <p class="ap-form-message error" data-img-render-text-msg role="status"${over ? "" : ` style="display:none"`}>${escapeHtml(over)}</p>
+      ${suggestRow(st)}
+    </div>`;
 }
 
 // ── The drawn option art ─────────────────────────────────────────────────────
