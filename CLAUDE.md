@@ -189,6 +189,7 @@ src/
     connectors-modal.js   connectors gallery + detail overlay (from composer Add / Sources panel / page)
     topic-picker-modal.js one dialog, two views — the picker's list, and the article
     topic-ignore-modal.js "Why did this Topic miss the mark?" — the reason, kept
+    skip-connect-modal.js "Skip connecting an account?" — reassures, then asks why
     topic-history-modal.js the Topic's two-sided trail: the scan's, then the reader's
     video-clips-modal.js, schedule-modal.js,
     bug-report-modal.js, feedback-modal.js, chat-picker-modal.js,
@@ -401,6 +402,21 @@ Two rules this rests on:
 - ⚠️ **The cards variant resolves by DESTROYING the picker** (`pick()` deletes the state before
   calling `onPick`). So the dialog must hand control back on cancel — `onDismiss` re-arms the grid.
   Without it, backing out of the dialog leaves the flow with nothing on screen.
+- **The Skip is not silent.** Onboarding's Skip (the nothing-connected branch only) opens
+  [`skip-connect-modal.js`](src/components/skip-connect-modal.js): three reassurance lines first —
+  nothing publishes without approval, Archie reads what the account already published, the accounts
+  belong to the Agorapulse account and not to Archie ([`CONCEPTS.md`](docs/reference/CONCEPTS.md) §6)
+  — then a multi-select "Why not now?". ⚠️ **Answering is REQUIRED** here, unlike
+  `topic-ignore-modal`'s optional reason: this is the only thing the step gets back, and the user
+  meets the dialog once. What keeps that honest is that LEAVING is free — Back, Esc, backdrop and X
+  all put the network grid back rather than skipping, so the gate sits on the skip and never on the
+  exit. Reasons land in `feedback-store` via `recordReasons` (key `skip:connect-profiles`), the one
+  store function that records an answer with no verdict. Skipping the _pick_ of an already-connected
+  profile is a different gesture and is NOT intercepted.
+- **A step that a dialog hands control back to is put BACK, not asked again.** `askAltProfile` takes
+  `{ announce }`, false from both `onDismiss` paths — without it the thread printed its own question
+  twice for one step (a pre-existing blemish on the connect dialog's cancel, doubled the day the skip
+  dialog became a second caller).
 - **`social-profiles.js` now holds state.** A module-level `Set` of connected ids, seeded once from
   the mocks (flag off) or empty (flag on), with `connectAccounts()` writing to it and a notifier so
   every surface agrees. `profileForNetwork()` goes through the SAME gate — otherwise the schedule
@@ -511,7 +527,7 @@ The **Admin** popover in the sidebar footer cog (`admin-menu.js`) is the prototy
 
 ### Module loading
 
-ES modules with a `?v=N` cache-busting suffix (`from "./assistant.js?v=1000"`). **One number for the whole app** — every module specifier in `src/` and every app stylesheet in `index.html` carries the same `?v=`. The browser caches a module by its exact URL, so a store named at two versions becomes two module instances with split state; a single shared number makes that impossible instead of merely discouraged.
+ES modules with a `?v=N` cache-busting suffix (`from "./assistant.js?v=1211"`). **One number for the whole app** — every module specifier in `src/` and every app stylesheet in `index.html` carries the same `?v=`. The browser caches a module by its exact URL, so a store named at two versions becomes two module instances with split state; a single shared number makes that impossible instead of merely discouraged.
 
 ```bash
 npm run bump            # N → N+1 across every file, in one pass — run it for ANY js/css change

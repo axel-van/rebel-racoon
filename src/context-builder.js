@@ -13,22 +13,25 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=1211";
-import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1211";
-import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1211";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1211";
-import * as rightPanel from "./components/right-panel.js?v=1211";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1211";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1211";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=1211";
-import { connectors as connectorMocks } from "./mocks.js?v=1211";
+import * as inlineQuestion from "./inline-question.js?v=1212";
+import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1212";
+import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1212";
+import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1212";
+import { showToast } from "./components/toast.js?v=1212";
+import { recordReasons } from "./feedback-store.js?v=1212";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1212";
+import * as rightPanel from "./components/right-panel.js?v=1212";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1212";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1212";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=1212";
+import { connectors as connectorMocks } from "./mocks.js?v=1212";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
-} from "./social-profiles.js?v=1211";
-import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1211";
-import { isFlagOn } from "./feature-flags.js?v=1211";
+} from "./social-profiles.js?v=1212";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1212";
+import { isFlagOn } from "./feature-flags.js?v=1212";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -402,6 +405,10 @@ function commitAltProfiles(sessionId, profiles) {
   postUserProfilesTurn(sessionId, profiles);
 }
 
+// The feedback-store key for the skip reasons. One key, not one per user: the
+// question is asked once, and a second answer replaces the first.
+const SKIP_CONNECT_TARGET = "skip:connect-profiles";
+
 // The account step. Under `skipConnectProfiles` it is a CHOICE rather than a
 // gate: optional either way, and shaped by what the user actually has.
 //   - nothing connected → offer to connect (the same rows and the same modal as
@@ -409,15 +416,22 @@ function commitAltProfiles(sessionId, profiles) {
 //   - something connected → the normal profile pick, plus a Skip.
 // Skipping leaves connectedSocials empty, which is a legitimate Playbook state:
 // the chat flows ask for an account when they need one.
-function askAltProfile(sessionId) {
+//
+// `announce` is false when a dialog this step opened hands control back (the
+// connect dialog cancelled, the skip dialog backed out): the step is being PUT
+// BACK, not asked again, and re-posting its line would leave the thread saying
+// the same sentence twice for one question.
+function askAltProfile(sessionId, { announce = true } = {}) {
   const optional = isFlagOn("skipConnectProfiles");
   const connectedProfiles = getConnectedProfiles();
 
   if (optional && connectedProfiles.length === 0) {
-    postAssistantMessage(
-      sessionId,
-      "Connect the account you'll publish from and I'll tune tone and format for it. Skip it and I'll ask when I write your first draft.",
-    );
+    if (announce) {
+      postAssistantMessage(
+        sessionId,
+        "Connect the account you'll publish from and I'll tune tone and format for it. Skip it and I'll ask when I write your first draft.",
+      );
+    }
     inlineQuestion.ask(sessionId, {
       title: "Connect an account (optional)",
       subtitle: "Nothing publishes yet — this only lets me write and schedule for it.",
@@ -441,20 +455,34 @@ function askAltProfile(sessionId) {
             askAltDocuments(sessionId);
           },
           // Backing out of the dialog puts the grid back, not a dead end.
-          onDismiss: () => askAltProfile(sessionId),
+          onDismiss: () => askAltProfile(sessionId, { announce: false }),
         });
       },
+      // Skipping is allowed, but not silent: the dialog reassures about what a
+      // connected account is used for, then asks why this one isn't. It is the
+      // only moment that question can be asked — later flows ask for an
+      // account, never for a reason. Backing out of it leaves the grid
+      // standing, exactly like backing out of the connect dialog.
       onSkip: () => {
-        inlineQuestion.exit(sessionId);
-        notify(sessionId);
-        askAltDocuments(sessionId);
+        openSkipConnectModal({
+          onSkip: (reasons, comment) => {
+            recordReasons(SKIP_CONNECT_TARGET, { reasons, comment }, { kind: "skip", step: "connect-profiles" });
+            showToast("Noted — I'll ask again when I write your first draft.");
+            inlineQuestion.exit(sessionId);
+            notify(sessionId);
+            askAltDocuments(sessionId);
+          },
+          onDismiss: () => askAltProfile(sessionId, { announce: false }),
+        });
       },
       onBack: () => askAltPrevious(sessionId, "profile"),
     });
     return;
   }
 
-  postAssistantMessage(sessionId, "Pick the profile to use for this Playbook. I'll tune tone and format for it.");
+  if (announce) {
+    postAssistantMessage(sessionId, "Pick the profile to use for this Playbook. I'll tune tone and format for it.");
+  }
   // Connected profiles + their picker presentation come from the shared
   // social-profiles helper so this onboarding step and the in-session
   // draft profile picker stay identical.

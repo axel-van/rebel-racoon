@@ -54,6 +54,7 @@ body.has-modal {
 .share-playbook-modal,
 .analyze-profiles-modal,
 .connect-account-modal,
+.skip-connect,
 .fill-document-modal,
 .search-modal,
 .shortcut-legend {
@@ -558,6 +559,7 @@ body.has-modal {
 .share-playbook-modal.open,
 .analyze-profiles-modal.open,
 .connect-account-modal.open,
+.skip-connect.open,
 .fill-document-modal.open,
 .search-modal.open,
 .shortcut-legend.open {
@@ -1619,3 +1621,107 @@ body.has-modal {
 /* The DS .ap-dialog-footer does the pinning by structure now (it is a sibling of
    the scroller), so the hand-rolled sticky footer with its four negative margins
    is gone. Nothing left to style. */
+
+/* ── Skip-connecting-an-account modal ──────────────────────── */
+/* Intercepts onboarding's Skip on the account step: reassures first, then asks
+   why. Three stacked blocks — lead copy, the assurances, the question — so the
+   rhythm is read-then-answer rather than a form with a preamble. */
+.skip-connect {
+  width: min(calc(100% - 32px), 520px);
+  flex-direction: column;
+}
+
+/* The DS content block neither scrolls nor shrinks, so in a dialog capped at
+   100vh - 48px it keeps its full height and pushes the footer past the bottom
+   edge, where .ap-dialog's own overflow:hidden clips it — measured at a 600px
+   viewport: Back / Skip landed 256px below the dialog, unreachable. Same fix
+   as the Share dialog above: let the content scroll and let it shrink. */
+.skip-connect .ap-dialog-content {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.skip-connect__lead {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* The "what it does / doesn't do" lines. A bounded grey-bg block, not three
+   loose paragraphs: it is one answer to one worry, and the frame is what says
+   so. No border — the fill already bounds it, and a second edge inside a
+   dialog that has its own is a line for nothing. */
+.skip-connect__assurances {
+  margin: var(--ref-spacing-sm) 0 0;
+  padding: var(--ref-spacing-sm);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  background: var(--ref-color-grey-bg);
+  border-radius: var(--ref-border-radius-md);
+}
+
+.skip-connect__assurance {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* The glyph is a marker, not a control: grey-60 keeps it quieter than the ink
+   beside it without dropping that ink below grey-80. */
+.skip-connect__assurance > i {
+  flex-shrink: 0;
+  color: var(--ref-color-grey-60);
+  font-size: var(--sys-icon-css-sm);
+  /* Optical: line the glyph up with the first line's cap height. */
+  margin-top: 1px;
+}
+
+.skip-connect__question {
+  margin-top: var(--ref-spacing-md);
+}
+
+/* Sits under the label and above the boxes — it says the answer is required,
+   which a disabled Skip alone would leave the reader to work out. */
+.skip-connect__hint {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.skip-connect__reasons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  margin-top: var(--ref-spacing-xs);
+}
+
+/* Plain DS checkbox rows, no card chrome: six bordered cards would weigh more
+   than the question does, and there is nothing per-row to frame. The DS's own
+   gap is drawn for a short label, so widen it and top-align for the ones that
+   wrap. */
+.skip-connect__reason {
+  align-items: flex-start;
+  gap: var(--ref-spacing-xs);
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.skip-connect__other {
+  margin-top: var(--ref-spacing-xs);
+}
+
+.skip-connect__other[hidden] {
+  display: none;
+}
+
+.skip-connect__note {
+  margin-top: var(--ref-spacing-md);
+}

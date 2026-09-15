@@ -1,20 +1,26 @@
-// feedback-store — central, in-memory record of the user's verdicts on the
-// things Archie generates (drafts, images, clips). One flat Map keyed by a
-// stable `targetId` string the caller mints per element:
+// feedback-store — central, in-memory record of what the user tells us: their
+// verdicts on the things Archie generates (drafts, images, clips), and their
+// reasons when a step asks for one. One flat Map keyed by a stable `targetId`
+// string the caller mints per element:
 //
 //   draft:<postId>          — a generated post draft
 //   image:<postId>:<seed>   — a generated image (seed so Regenerate = fresh target)
 //   clip:<clipId>           — an extracted video clip
+//   skip:connect-profiles   — why onboarding's account step was skipped
 //
 // Each record holds the thumb verdict plus the optional "what was off?"
-// detail collected on a thumbs-down (reason chips + free-text comment).
+// detail collected on a thumbs-down (reason chips + free-text comment). A
+// record written by `recordReasons` carries the same reasons + comment shape
+// with no verdict at all — it answers a question rather than rating a result,
+// so there is no thumb to hold. Those targetIds live in their own namespace
+// (`skip:`), so nothing that renders a thumb ever reads one.
 //
 // This is a prototype: there is no backend. We keep the votes in memory so
 // the UI can reflect them across re-renders, and `console.info` each one so
 // the "data we would collect" is visible in the dev console. No localStorage
 // persistence (matches the rest of the app's app-state policy).
 
-import { createNotifier } from "./store-utils.js?v=1211";
+import { createNotifier } from "./store-utils.js?v=1212";
 
 const feedbackByTarget = new Map(); // targetId → { verdict, reasons, comment, ts }
 const notifier = createNotifier("feedback");
@@ -61,6 +67,19 @@ export function recordDetail(targetId, { reasons = [], comment = "" } = {}, meta
   const record = { ...current, reasons: [...reasons], comment: comment.trim(), ts: stamp() };
   feedbackByTarget.set(targetId, record);
   log(targetId, record, { ...meta, detail: true });
+  notify();
+  return record;
+}
+
+// Record the reasons a user gave for a question the app asked — no verdict,
+// because nothing here was generated to rate. Same `reasons` + `comment` shape
+// as a thumbs-down detail, so the logged "data we would collect" reads the same
+// whichever way it was collected. Overwrites: the question is asked once.
+export function recordReasons(targetId, { reasons = [], comment = "" } = {}, meta = {}) {
+  if (!targetId) return null;
+  const record = { verdict: null, reasons: [...reasons], comment: comment.trim(), ts: stamp() };
+  feedbackByTarget.set(targetId, record);
+  log(targetId, record, meta);
   notify();
   return record;
 }
