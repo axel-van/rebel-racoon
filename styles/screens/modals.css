@@ -1118,44 +1118,48 @@ body.has-modal {
 }
 
 /* ── Share Playbook modal ──────────────────────────────────────────────
-   The shape Notion, Slite and Drive all converged on, and for the same
-   reason: the question a reader opens this dialog with is "who has this?",
-   not "which of three modes is this in?". So the answer is the first thing
-   on screen — a field to add somebody, then the list of who can open it,
-   then general access — and the three stored scopes are DERIVED from those
-   two controls rather than picked as modes.
+   The Notion / Slite / Drive shape: a field to add somebody, the list of who
+   can open it, then general access — and the three stored scopes DERIVED from
+   those two controls rather than picked as modes (see `pickedScope`).
 
-   ⚠️ Two things this replaced, neither worth going back to:
+   ⚠️ Three arrangements this replaced, none worth going back to:
    • Three `.ap-radio-card` modes with the people picker folded behind the
-     middle one. Who actually had the Playbook was a click away, behind a
-     trigger, and adding somebody took four gestures.
-   • `overflow: visible` on the content, so those pickers' popovers could
-     escape the dialog. It meant the body could not scroll: with both
-     disclosures open at 820px of viewport the Cancel / Save footer sat
-     119px BELOW the screen, unreachable. Everything opens in flow now. */
+     middle one. Who actually had the Playbook was a click away.
+   • `overflow: visible` on the content so `.ap-select` popovers could escape
+     the dialog. The body then could not scroll: with everything open at 820px
+     of viewport the Cancel / Save footer sat 119px BELOW the screen.
+   • A flat white body with no regions at all. Alignment alone was not
+     structure: two sections announced by a 12px grey word, every row on one
+     surface at one tone, and the hairlines between people read as stray
+     lines rather than a table. The ground is tinted now and each section sits
+     on its own white panel, which is what makes the regions visible at a
+     glance instead of having to be read. */
 .share-playbook-modal {
   width: 560px;
   max-width: calc(100vw - 2 * var(--ref-spacing-lg));
-  /* TWO x positions in the whole dialog, and only two: section labels hang at
-     0, everything a row says starts at --share-indent. ⚠️ Before this the
-     avatar was 24px, the general-access glyph 16 and the disclosure glyph 16,
-     so three kinds of row started their text at three different x — which is
-     what made a dialog of five short lines read as floating debris. Every
-     leading graphic now occupies the SAME slot, whatever its own size. */
+  /* The columns. A panel insets its rows by --share-pad, and inside a row every
+     leading graphic — avatar, orb, disclosure glyph — occupies the SAME
+     --share-gutter slot whatever its own size, so all row text lands on
+     --share-text. ⚠️ Before this the avatar was 24px and the glyphs 16, so
+     three kinds of row started their text at three different x. */
+  --share-pad: var(--ref-spacing-xs);
   --share-gutter: 24px;
-  --share-indent: calc(var(--share-gutter) + var(--ref-spacing-xxs));
+  --share-text: calc(var(--share-pad) + var(--share-gutter) + var(--ref-spacing-xxs));
 }
+
+/* The ground. Tinting it is what turns the panels into regions — on white they
+   would be three outlines on the same surface, which is the weakest kind of
+   container there is. */
 .share-playbook-modal .ap-dialog-content {
   display: flex;
   flex-direction: column;
-  /* The DS gap (24px) is the gap BETWEEN blocks; inside one the rhythm is 8px
-     or less. That difference is what makes a section read as one thing. */
-  gap: var(--ref-spacing-md);
+  gap: var(--ref-spacing-sm);
+  background: var(--ref-color-grey-bg);
   overflow-y: auto;
   min-height: 0;
 }
 /* The warning lives in a permanent slot so general access can rewrite it
-   without rebuilding the lists — empty, it must not spend a 24px gap. */
+   without rebuilding the lists — empty, it must not spend a gap. */
 .share-playbook-modal .ap-dialog-content > div:empty {
   display: none;
 }
@@ -1165,8 +1169,8 @@ body.has-modal {
   flex-direction: column;
   gap: var(--ref-spacing-xxs);
 }
-/* A section label supports its list, it doesn't head a page: smallest size on
-   the scale, normal weight, secondary ink. Sentence case — never caps. */
+/* With a panel drawing the region, the label is free to be genuinely secondary:
+   it names the region, it doesn't have to BE it. */
 .share-playbook-modal__section-title {
   margin: 0;
   font-size: var(--ref-font-size-xs);
@@ -1174,11 +1178,25 @@ body.has-modal {
   font-weight: var(--ref-font-weight-regular);
   color: var(--ref-color-grey-80);
 }
-/* The footnote under a list: what it means, one rank down — and on the same
-   column as the rows it explains, never back at the label's edge. */
+
+/* One panel shape for every region. Border only, never a shadow: the dialog is
+   already an elevated surface and an elevation nested in one reads as two
+   planes where there is one. */
+.share-playbook-modal__panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--ref-color-white);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--ref-border-radius-md);
+  overflow: hidden;
+}
+
+/* The footnote sits on the GROUND, under the panel it explains — not inside
+   it. In the panel it read as a fourth row; out here the tonal change says
+   "this is about the list, not in it" with no extra rule or tint, and the
+   label above / caption below bracket the panel at the same rank. */
 .share-playbook-modal__note {
   margin: 0;
-  padding-left: var(--share-indent);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-80);
@@ -1188,29 +1206,41 @@ body.has-modal {
   color: var(--ref-color-grey-100);
 }
 
-/* ── The invite field ─────────────────────────────────────────────────
-   Top of the dialog, because adding somebody is why it gets opened. Its
-   suggestion list opens on focus and sits IN FLOW under the field: a floating
-   panel in a scrolling dialog ends up over the footer, which is the bug this
-   whole file's layout was rebuilt around. */
+/* ── The invite field — the people panel's first row ──────────────────
+   Borderless, because a bordered field at the top of a bordered panel is two
+   outlines saying one thing. Its suggestion list opens IN FLOW under it, still
+   inside the panel: a floating panel in a scrolling dialog ends up over the
+   footer, which is the bug this layout was rebuilt around. */
 .share-playbook-modal__invite {
-  position: relative;
   display: flex;
   flex-direction: column;
+  border-bottom: 1px solid var(--ref-color-grey-20);
 }
-.share-playbook-modal__invite:focus-within .share-playbook-modal__invite-field {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+.share-playbook-modal__invite-field.ap-input-group {
+  height: 40px;
+  padding: 0 var(--share-pad);
+  gap: var(--ref-spacing-xxs);
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
+.share-playbook-modal__invite-field.ap-input-group > i {
+  width: var(--share-gutter);
+  text-align: center;
+}
+.share-playbook-modal__invite:focus-within {
+  border-bottom-color: var(--ref-color-electric-blue-100);
+}
+/* Recessed, not white: the candidate rows are part for part the people rows
+   below them, so with both on white the only thing separating "could have it"
+   from "has it" was one hairline among several. Tinting the band is the
+   combobox's own signal — a transient surface inside a solid one. */
 .share-playbook-modal__suggestions {
   max-height: 208px;
   overflow-y: auto;
   padding: var(--ref-spacing-xxxs) 0;
-  border: 1px solid var(--comp-input-border-focused-color);
-  border-top: none;
-  border-bottom-left-radius: var(--comp-input-border-radius);
-  border-bottom-right-radius: var(--comp-input-border-radius);
-  background: var(--ref-color-white);
+  border-top: 1px solid var(--ref-color-grey-20);
+  background: var(--ref-color-grey-bg);
 }
 .share-playbook-modal__suggestions[hidden] {
   display: none;
@@ -1220,7 +1250,8 @@ body.has-modal {
   align-items: center;
   gap: var(--ref-spacing-xxs);
   width: 100%;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  min-height: 40px;
+  padding: 0 var(--share-pad);
   border: none;
   background: transparent;
   font-family: var(--ref-font-family);
@@ -1249,7 +1280,7 @@ body.has-modal {
 }
 .share-playbook-modal__nomatch {
   margin: 0;
-  padding: var(--ref-spacing-xxs) var(--ref-spacing-xs);
+  padding: var(--ref-spacing-xxs) var(--share-pad);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-80);
@@ -1259,18 +1290,14 @@ body.has-modal {
 }
 
 /* ── Who has access ───────────────────────────────────────────────────
-   Owner first, then whoever was invited. The role sits in its own right-hand
-   column so the names stay one scannable edge. */
+   One row band, 40px, repeated by the people rows, general access and the
+   disclosure alike. Repeating the same band IS the vertical rhythm; the
+   hairlines only make it visible. */
 .share-playbook-modal__people {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
 }
-/* One row height for every row in the dialog — people, general access, the
-   disclosure. Repeating the same 40px band is the whole of the vertical
-   rhythm; the hairlines between people rows just make it visible. */
 .share-playbook-modal__person,
 .share-playbook-modal__general,
 .share-playbook-modal__fold > summary {
@@ -1278,6 +1305,7 @@ body.has-modal {
   align-items: center;
   gap: var(--ref-spacing-xxs);
   min-height: 40px;
+  padding: 0 var(--share-pad);
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-100);
@@ -1309,6 +1337,7 @@ body.has-modal {
 .share-playbook-modal__orb > i {
   font-size: var(--sys-icon-css-sm);
 }
+
 /* Name and its "you" chip travel together and take the room; the role column
    is pinned to the right edge. Two flex levels, because a chip that inherits
    the name's `flex: 1` drifts across the row away from the name it labels. */
@@ -1365,15 +1394,10 @@ body.has-modal {
 
 /* ── General access ───────────────────────────────────────────────────
    The fixed ⇄ dynamic seam (doc §5.1): the list above is a set of named faces
-   you can count, this is a rule that follows the org.
-
-   ⚠️ Two things it stopped being. It was an `.ap-select` of exactly TWO
-   options that PUSHED the dialog open — a dropdown inside a scrolling
-   container can't float, so it had to expand in flow, which is not what a
-   select does. Then it was a bordered card, and it was the ONLY container in
-   the dialog: one boxed block among loose lines is what makes the loose lines
-   look unplaced. It is a row now, on the same gutter and the same 40px band as
-   every people row, and the dialog has no boxes at all. */
+   you can count, this is a rule that follows the org. ⚠️ It was an `.ap-select`
+   of exactly TWO options that PUSHED the dialog open — a dropdown inside a
+   scrolling container can't float, so it had to expand in flow, which is not
+   what a select does. A binary choice needs no menu. */
 .share-playbook-modal__general {
   cursor: pointer;
 }
@@ -1383,8 +1407,7 @@ body.has-modal {
 }
 .share-playbook-modal__general:has(input:focus-visible) {
   outline: 2px solid var(--ref-color-electric-blue-100);
-  outline-offset: 2px;
-  border-radius: var(--ref-border-radius-sm);
+  outline-offset: -2px;
 }
 .share-playbook-modal__general-switch {
   flex: 0 0 auto;
@@ -1399,28 +1422,16 @@ body.has-modal {
   color: var(--ref-color-grey-80);
 }
 
-/* ── The object: how it changes hands, what happened to it ────────────
-   Behind one rule, because it answers a different question from everything
-   above it. ⚠️ This was three lines of identical bold sm — Owner, Hand it
-   over, Recent changes — stacked with nothing ranking them; Owner is a row of
-   the people list now. */
+/* ── The object: how it changes hands ─────────────────────────────────
+   Its own panel, one step further down the page than the two that answer
+   "who can open this" — a different question, so a different region. */
 .share-playbook-modal__gov {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ref-spacing-xxs);
-  padding-top: var(--ref-spacing-md);
-  border-top: 1px solid var(--ref-color-grey-20);
+  margin-top: var(--ref-spacing-xxs);
 }
 
-/* Full-row disclosures with a leading glyph and the chevron at the far edge:
-   a control the pointer can find, rather than a bold word with a chevron
-   stuck to it. */
 .share-playbook-modal__fold > summary {
   cursor: pointer;
   list-style: none;
-  padding: 0 var(--ref-spacing-xxs);
-  margin: 0 calc(-1 * var(--ref-spacing-xxs));
-  border-radius: var(--ref-border-radius-sm);
   transition: background-color var(--ref-animation-short) ease;
 }
 .share-playbook-modal__fold > summary::-webkit-details-marker {
@@ -1429,8 +1440,8 @@ body.has-modal {
 .share-playbook-modal__fold > summary:hover {
   background: var(--ref-color-grey-bg);
 }
-/* Sized like every other leading graphic: a 16px glyph centred in the 24px
-   gutter, so the disclosure's label lands on the same column as a name. */
+/* Sized like every other leading graphic: a 16px glyph centred in the gutter,
+   so the disclosure's label lands on the same column as a name. */
 .share-playbook-modal__fold-glyph {
   font-size: var(--sys-icon-css-sm);
   color: var(--ref-color-grey-60);
@@ -1449,14 +1460,14 @@ body.has-modal {
   color: var(--ref-color-grey-60);
   transition: transform var(--ref-animation-short) ease;
 }
+.share-playbook-modal__fold[open] > summary {
+  border-bottom: 1px solid var(--ref-color-grey-20);
+}
 .share-playbook-modal__fold[open] > summary > .share-playbook-modal__fold-chevron {
   transform: rotate(180deg);
 }
 .share-playbook-modal__fold-body {
-  padding-top: var(--ref-spacing-xxs);
-  padding-bottom: var(--ref-spacing-xxs);
-  /* The same column as everything else says. */
-  padding-left: var(--share-indent);
+  padding: var(--ref-spacing-xs) var(--share-pad) var(--ref-spacing-xs) var(--share-text);
 }
 
 .share-playbook-modal__handover-row {
@@ -1467,11 +1478,30 @@ body.has-modal {
   gap: var(--ref-spacing-xxs);
 }
 /* The handover picker is the invite block again (same markup, same rules) —
-   one dialog, one way to name a colleague. It takes the row and Transfer holds
-   its own width. */
+   one dialog, one way to name a colleague. Inside the disclosure it keeps a
+   field's own chrome, since there is no panel edge for it to borrow. */
 .share-playbook-modal__ownerpick {
   flex: 1 1 auto;
   min-width: 0;
+  border-bottom: none;
+}
+.share-playbook-modal__ownerpick .share-playbook-modal__invite-field.ap-input-group {
+  border: 1px solid var(--comp-input-border-default-color);
+  border-radius: var(--comp-input-border-radius);
+  background: var(--ref-color-white);
+}
+.share-playbook-modal__ownerpick:focus-within .share-playbook-modal__invite-field.ap-input-group {
+  border-color: var(--comp-input-border-focused-color);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.share-playbook-modal__ownerpick .share-playbook-modal__suggestions {
+  border: 1px solid var(--comp-input-border-focused-color);
+  border-top: none;
+  background: var(--ref-color-white);
+  border-bottom-left-radius: var(--comp-input-border-radius);
+  border-bottom-right-radius: var(--comp-input-border-radius);
+  background: var(--ref-color-white);
 }
 .share-playbook-modal__transfer {
   flex: 0 0 auto;
@@ -1481,12 +1511,6 @@ body.has-modal {
   font-size: var(--ref-font-size-sm);
   line-height: var(--ref-font-line-height-sm);
   color: var(--ref-color-grey-80);
-}
-
-/* The suggestion rows carry avatars, so they hold the gutter on their own —
-   but their own list must not inherit the body's indent twice. */
-.share-playbook-modal__suggestion {
-  gap: var(--ref-spacing-xxs);
 }
 
 /* ── The Topic dialog (picker + article) ───────────────────────────────────

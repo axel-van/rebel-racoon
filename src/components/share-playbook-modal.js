@@ -19,8 +19,8 @@
 //     • onDone() — fired after a committed change (scope or ownership), so the
 //       caller can repaint or bail out if it just handed away its own access.
 
-import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1217";
-import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1217";
+import { requestOpen, notifyClose, bindOverlayDismissal } from "../modal-coordinator.js?v=1220";
+import { getContextById, updateContext, appendHistory } from "../contexts-store.js?v=1220";
 import {
   canTransfer,
   isMine,
@@ -29,10 +29,10 @@ import {
   recipientsOf,
   tiedProfile,
   profileBlockFor,
-} from "../playbook-access.js?v=1217";
-import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1217";
-import { showToast } from "./toast.js?v=1217";
-import { html, raw, escapeHtml } from "../utils.js?v=1217";
+} from "../playbook-access.js?v=1220";
+import { MEMBERS, ORG, CURRENT_USER, getMember, memberName } from "../org.js?v=1220";
+import { showToast } from "./toast.js?v=1220";
+import { html, raw, escapeHtml } from "../utils.js?v=1220";
 
 const MODAL_ID = "sharePlaybook";
 
@@ -246,9 +246,12 @@ function renderPeople(ctx) {
   return html`
     <section class="share-playbook-modal__section">
       <h3 class="share-playbook-modal__section-title">People with access</h3>
-      <ul class="share-playbook-modal__people">
-        ${raw(rows)}
-      </ul>
+      <div class="share-playbook-modal__panel">
+        ${raw(renderInvite(ctx))}
+        <ul class="share-playbook-modal__people">
+          ${raw(rows)}
+        </ul>
+      </div>
       ${raw(orgAccess ? "" : reachNote(ctx))}
     </section>
   `;
@@ -287,23 +290,25 @@ function renderGeneral(ctx) {
   return html`
     <section class="share-playbook-modal__section">
       <h3 class="share-playbook-modal__section-title">General access</h3>
-      <label class="share-playbook-modal__general">
-        <!-- A 24px disc, the avatar's own footprint: it is the org's face in a
+      <div class="share-playbook-modal__panel">
+        <label class="share-playbook-modal__general">
+          <!-- A 24px disc, the avatar's own footprint: it is the org's face in a
              list of faces, and it is what keeps every row's text on one column. -->
-        <span class="share-playbook-modal__orb" aria-hidden="true">
-          <i class="${orgAccess ? "ap-icon-multiple-users" : "ap-icon-lock-on"}"></i>
-        </span>
-        <span class="share-playbook-modal__row-main">
-          <span class="share-playbook-modal__row-name">${raw(label)}</span>
-        </span>
-        <!-- The switch's own i is structural (the DS draws the track on it) and
+          <span class="share-playbook-modal__orb" aria-hidden="true">
+            <i class="${orgAccess ? "ap-icon-multiple-users" : "ap-icon-lock-on"}"></i>
+          </span>
+          <span class="share-playbook-modal__row-main">
+            <span class="share-playbook-modal__row-name">${raw(label)}</span>
+          </span>
+          <!-- The switch's own i is structural (the DS draws the track on it) and
              must never carry an ap-icon class, which would mask it away. The
              glyph above is a separate element for exactly that reason. -->
-        <span class="ap-toggle-container share-playbook-modal__general-switch">
-          <input type="checkbox" data-share-general ${raw(orgAccess ? "checked" : "")} aria-label="${label}" />
-          <i aria-hidden="true"></i>
-        </span>
-      </label>
+          <span class="ap-toggle-container share-playbook-modal__general-switch">
+            <input type="checkbox" data-share-general ${raw(orgAccess ? "checked" : "")} aria-label="${label}" />
+            <i aria-hidden="true"></i>
+          </span>
+        </label>
+      </div>
       <p class="share-playbook-modal__note">${raw(hint)}</p>
       ${raw(orgAccess ? reachNote(ctx) : "")}
     </section>
@@ -440,7 +445,7 @@ function renderTransfer(ctx) {
   const visible = rows.filter((m) => !q || fold(m.name).includes(q)).length;
 
   return html`
-    <details class="share-playbook-modal__fold share-playbook-modal__handover">
+    <details class="share-playbook-modal__panel share-playbook-modal__fold share-playbook-modal__handover">
       <summary>
         <i class="ap-icon-user--arrow-right share-playbook-modal__fold-glyph" aria-hidden="true"></i>
         <span class="share-playbook-modal__fold-label">Transfer ownership to another teammate</span>
@@ -496,7 +501,6 @@ function renderBody() {
   subtitleEl.textContent = ctx.name;
   const gov = renderTransfer(ctx);
   contentEl.innerHTML = [
-    renderInvite(ctx),
     renderPeople(ctx),
     renderGeneral(ctx),
     // A slot rather than the infobox itself: general access has to be able to

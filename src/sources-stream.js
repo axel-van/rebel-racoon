@@ -8,10 +8,10 @@
 // The state machine timers live here (not inside the modal) so uploads
 // continue in background after the user closes the modal.
 
-import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=1217";
-import { isNewUser } from "./user-mode.js?v=1217";
-import { createNotifier } from "./store-utils.js?v=1217";
-import { detectUrlService } from "./url-services.js?v=1217";
+import { sourcesBySession as seedByCsesssion } from "./mocks.js?v=1220";
+import { isNewUser } from "./user-mode.js?v=1220";
+import { createNotifier } from "./store-utils.js?v=1220";
+import { detectUrlService } from "./url-services.js?v=1220";
 
 // Canned extraction output attached to every Processed Video source.
 // Generic enough to plausibly come from any keynote / talk / demo video.
@@ -381,7 +381,7 @@ function transitionToDone(upload) {
   const isVideo = !!(src && src.kind === "Video");
   // The video "ready" ping names just the source (extraction defers to the
   // analyze choice); the non-video one appends the extraction summary.
-  import("./components/toast.js?v=1217").then(({ showToast }) => {
+  import("./components/toast.js?v=1220").then(({ showToast }) => {
     showToast(
       isVideo ? `${upload.name} ready` : `${upload.name} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
     );
@@ -695,7 +695,7 @@ export function completeScriptedSource(sourceId, { signal, signalColor, ideaCoun
   // Symmetric toast with transitionToDone — the chat is no longer
   // blocked during analysis, so the user may be mid-typing when the
   // source completes and miss the inline bubble flip.
-  import("./components/toast.js?v=1217").then(({ showToast }) => {
+  import("./components/toast.js?v=1220").then(({ showToast }) => {
     showToast(
       isVideo ? `${src.filename} ready` : `${src.filename} ready · ${formatExtractionSummary(ideaCount, clipCount)}`,
     );
