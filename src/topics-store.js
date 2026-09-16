@@ -49,9 +49,9 @@
 //   markUsed(id) / ignoreTopic(id, reason) / unignoreTopic(id)
 //   subscribe(fn)                      → unsubscribe
 
-import { topics as seed } from "./mocks.js?v=1222";
-import { isNewUser } from "./user-mode.js?v=1222";
-import { createNotifier } from "./store-utils.js?v=1222";
+import { topics as seed } from "./mocks.js?v=1224";
+import { isNewUser } from "./user-mode.js?v=1224";
+import { createNotifier } from "./store-utils.js?v=1224";
 import {
   DEFAULT_MARKED_IDS,
   MARKED_STATUS_IDS,
@@ -59,7 +59,7 @@ import {
   TOPIC_STATES,
   findTopicState,
   kindOf,
-} from "./topics-catalog.js?v=1222";
+} from "./topics-catalog.js?v=1224";
 
 const topics = isNewUser() ? [] : seed.map(cloneTopic);
 
