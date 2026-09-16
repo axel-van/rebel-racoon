@@ -7,7 +7,7 @@
   "componentsPage": {
     "node": "384:80",
     "name": "💠 Components",
-    "$comment": "Home of every reusable local component. Place a NEW component in the section matching its kind. ALWAYS reuse an existing component (match by name) before creating a duplicate.",
+    "$comment": "Home of every reusable local component. Place a NEW component in the section matching its kind. ALWAYS reuse an existing component (match by name) before creating a duplicate. Refreshed 2026-09-16 against the live page; the Modal — * entries listed before that date are NOT on this page and could not be resolved.",
     "sections": {
       "Chat components": "621:2029",
       "Components": "669:1232",
@@ -16,51 +16,63 @@
       "Overlays": "670:1234"
     },
     "knownComponents": {
-      "Sidebar": "592:424",
-      "Sidebar Row": "590:395",
-      "Sidebar Nav Item": "594:423",
-      "Topbar": "597:422",
-      "Conversation Status Card": "572:323",
-      "Composer Card": "576:346",
-      "Source Row": "574:332",
-      "Clip Card": "567:211",
-      "Idea Card": "568:380",
-      "Post Card": "622:1270",
       "Card — Why": "615:709",
-      "Chat — User Message": "586:369",
       "Chat — AI Message": "617:757",
-      "Chat — Source Intake": "587:394",
-      "Chat — Extraction Notice": "586:373",
       "Chat — Drafts Card": "588:375",
-      "Right Panel — Sources": "643:2653",
-      "Right Panel — Ideas": "643:2651",
-      "Right Panel — Drafts": "643:2652",
+      "Chat — Extraction Notice": "586:373",
+      "Chat — Source Intake": "587:394",
+      "Chat — User Message": "586:369",
+      "Clip Card": "567:211",
+      "Clip Card/Post Card": "622:1270",
+      "Clip Studio — Setup (mockup)": "924:52",
+      "Composer Card": "576:346",
+      "Connector Card": "1233:2255",
+      "Conversation Status Card": "572:323",
+      "Drafts — Network Bulk Bar": "1007:3335",
+      "Dropzone — Large": "1307:2211",
+      "Generation context": "1248:1964",
+      "Idea Card": "568:380",
+      "Modal — Add source (Upload)": "1275:2299",
+      "Modal — Confirm (delete)": "1267:2309",
+      "Modal — Feedback": "1269:2065",
+      "Modal — Image Studio": "1270:2111",
+      "Modal — Rename": "1268:2034",
+      "Modal — Report a bug": "1273:2188",
+      "Modal — Save drafts": "1272:2396",
+      "Modal — Schedule": "1274:2239",
+      "Modal — Video clips": "1275:3784",
       "Playbook Card": "699:1235",
+      "Post Card — LinkedIn draft": "1109:35",
       "Quickpicker": "870:1594",
-      "Quickpicker Option": "864:1486",
-      "Quickpicker Header": "869:1425",
       "Quickpicker Action bar": "869:1426",
+      "Quickpicker Header": "869:1425",
       "Quickpicker Lead": "887:1629",
+      "Quickpicker Option": "864:1486",
+      "Recap Panel": "814:1156",
+      "Recap Panel — Brand": "812:3058",
+      "Recap Panel — Voice & style": "812:1367",
+      "Right Panel — Drafts": "643:2652",
+      "Right Panel — Ideas": "643:2651",
+      "Right Panel — Sources": "643:2653",
+      "Schedule — Strategy": "908:35",
+      "Sidebar": "592:424",
+      "Sidebar Nav Item": "594:423",
+      "Sidebar Row": "590:395",
+      "Source Row": "574:332",
+      "Source Row — post-used-as-source": "1202:1656",
+      "Source Row — processing": "1201:1652",
+      "Starter Card": "1256:1964",
       "Top Post Card — carousel": "1169:1687",
       "Top Post Card — image": "1205:1666",
       "Top Post Card — text": "1206:1677",
-      "Connector Card": "1233:2255",
-      "Generation context": "1248:1964",
-      "Starter Card": "1256:1964",
-      "Modal — Confirm (delete)": "1267:2309",
-      "Modal — Rename": "1268:2034",
-      "Modal — Feedback": "1269:2065",
-      "Modal — Image Studio": "1270:2111",
-      "Modal — Save drafts": "1272:2396",
-      "Modal — Report a bug": "1273:2188",
-      "Modal — Schedule": "1274:2239",
-      "Modal — Add source (Upload)": "1275:2299",
-      "Modal — Video clips": "1275:3784",
+      "Top Post Echo": "1214:1720",
+      "Top-post Select Row": "1215:1745",
+      "Topbar": "597:422",
       "Workflow Step": "1286:2474",
-      "Dropzone — Large": "1307:2211"
+      "sidebar icon": "782:2040"
     }
   },
-  "framesComment": "The 4 maintained SCREEN frames the user assigned (2026-07-10). These are full 1440-wide screen assemblies on the Flows/Screens page — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Verified each node id against the live file.",
+  "framesComment": "The maintained SCREEN frames, all on the 'UI' page (0:1) as full 1440-wide assemblies — distinct from the mockups on the '💠 Components' page (e.g. the 'Session — Central thread' assembly 618:759 there is NOT the maintained session; 643:4812 is). Each is an assembly of component instances — sync by (re)instancing components per the isolation rules, never by editing raw layers. Node ids re-verified against the live file on 2026-09-16.",
   "frames": {
     "welcome-alt": {
       "node": "697:1858",
@@ -73,25 +85,25 @@
       "node": "703:1941",
       "name": "Playbooks",
       "route": "#/contexts",
-      "source": "src/screens/contexts.js",
+      "source": "src/screens/home.js",
       "styles": "styles/screens/contexts.css",
-      "note": "Playbooks LIST page (Sidebar + Topbar + Playbook Card instances + ghost 'Create a Playbook' card)."
+      "note": "Playbooks LIST page. Sidebar + Topbar + head (title/sub + DS Form - Search + 'Create a Playbook' primary blue) + a 3-COLUMN grid of 'Playbook Card' instances (344x244 native) + the ghost 'Create a Playbook' card. Rendered by home.js since the /contexts + /home merge."
     },
     "playbook": {
       "node": "812:2796",
       "name": "Playbook detail",
-      "route": "#/playbook/p1",
-      "source": "src/screens/playbook.js",
+      "route": "#/playbook/ctx-acme",
+      "source": "src/screens/playbook.js + src/playbook-view.js",
       "styles": "styles/screens/contexts.css",
-      "note": "Playbook DETAIL page (Sidebar + Topbar + rail + Recap Panel components)."
+      "note": "Playbook DETAIL page (Sidebar + Topbar + rail + Recap Panel components). Rail has FOUR sections (Audience & goals / Voice & style / Brand / Competitors — playbookCompetitors is baked ON). Audience & goals opens on a Language row. The monogram tile carries the brand logo SVG (assets/logos/brands/*.svg), with the initials as the app's fallback."
     },
     "session": {
       "node": "643:4812",
       "name": "Session",
-      "route": "#/session/s1",
+      "route": "#/session/s-acme-launch",
       "source": "src/screens/session.js",
       "styles": "styles/screens/session.css",
-      "note": "Main chat surface — largest screen. Also touches src/screens/session/*, chat.css."
+      "note": "Main chat surface — largest screen. Shown with the Sources right panel OPEN: thread column 570 + panel 610. Also touches src/screens/session/*, chat.css. The 'Chat — Drafts Card' turn is kept on purpose: the seeded chat no longer ends on one, but draft-flow produces it in this very chat."
     },
     "session-new-chat": {
       "node": "1259:1105",
@@ -99,15 +111,15 @@
       "route": "#/session/:id (empty hero)",
       "source": "src/screens/session.js",
       "styles": "styles/screens/session.css",
-      "note": "First-run empty hero (renderEmptyHero): Sidebar (Expanded) + Topbar (title 'New chat', Sources/Ideas/Drafts counters 0) + centered hero = Archie wordmark (brand SVG) + subtitle + Composer Card instance + 'Or jump into a workflow' label + starter-grid of 3 'Starter Card' instances (Batch/mermaid, Video clips/purple, Top posts/green). Starter Card is a LOCAL hand-built component (no DS 'workflow card') with Title/Subtitle/CTA text props + Art INSTANCE_SWAP; watermarks are V2 Icons."
+      "note": "First-run empty hero (renderEmptyHero), rendered with NO topbar — the app hides it on the solo hero. Sidebar (Expanded) + centered hero = Archie wordmark + subtitle + Composer Card (740 wide, 'Playbook chevron' ON because the select is enabled on a new chat) + hint + 'Jump into a workflow' label + starter-grid of 3 'Starter Card' instances (331x126 native, gap 12). Starter Card is a LOCAL hand-built component (no DS 'workflow card') with Title/Subtitle/CTA text props + Art INSTANCE_SWAP; watermarks are V2 Icons."
     },
     "top-posts-board": {
       "node": "1264:1240",
       "name": "Top Posts — Board",
-      "route": "#/session/:id (top-posts repurpose flow — winner board)",
+      "route": "#/session/:id — 'Use top performing posts' starter, after the account pick",
       "source": "src/top-posts-flow.js + src/components/top-post-card.js (renderTopPostsBoard)",
       "styles": "styles/screens/posts.css / session.css",
-      "note": "Winner-selection board rendered in the assistant thread: intro Chat — AI Message + toolbar (count + Period/Sort filters) + wrapping grid of Top Post Card instances (carousel/image/text formats, set 1169:1687 / 1205:1666 / 1206:1677). FLAG: the Period/Sort filters use DS stroked-grey Buttons with a chevron as a DS-clean stand-in for the app's custom .ap-select inline dropdown (no DS Figma equivalent)."
+      "note": "FULL-PAGE board (no longer an in-thread board): intro badge/title/sub + 3 'Workflow Step' instances + toolbar (count + Period/Sort as real DS 'Form - Select' instances) + a 3-col grid of Top Post Card instances (316x405 native). The Period/Sort stand-in Buttons were replaced on 2026-09-16. A separate ACCOUNT-PICKER stage precedes this board and has no frame yet."
     },
     "batch-studio": {
       "node": "1276:1644",
@@ -115,7 +127,7 @@
       "route": "#/session/batch-* (Batch from a source intake)",
       "source": "src/batch-studio.js + src/screens/session.js (renderBatchStudio)",
       "styles": "styles/screens/batch-studio.css",
-      "note": "Full-page 'Batch from a source' takeover: Sidebar + Topbar + centered column = 'Batch' AI badge + title/subtitle + big dropzone (Browse files) + 'Or add another way' (A link / Pasted text) + staged Source Row list + commit row (Playbook control + Start drafting). FLAG: dropzone + AI badge hand-built (no DS dropzone/AI-badge component); upload glyph is an imported SVG."
+      "note": "Full-page 'Batch from a source' takeover: Sidebar + Topbar + 1000px column = 'Batch' AI badge + title/sub + 3 'Workflow Step' instances + a bordered card holding a 'Dropzone — Large' instance and the 'Or add another way' row + a flex-end commit row (DS Form - Select + orange primary). FLAG: the AI badge is still hand-built (no DS AI-badge component)."
     },
     "clip-studio": {
       "node": "1280:1809",
@@ -131,7 +143,7 @@
       "route": "#/session/clip-studio-* (upload/config stage)",
       "source": "src/clip-studio.js + src/screens/session.js (renderClipStudio config)",
       "styles": "styles/screens/clip-studio.css",
-      "note": "Auto Clips upload/config stage: Sidebar + Topbar + centered column = 'Auto Clips' badge + title + subtitle + workflow (Add your video / I find the highlights / Post-ready clips) + main card [left: Analyzing video preview (dark, blue border, silhouette + archie loader glyph) + 'ff · Analyzing…' + Replace file + 'or paste a different link' + URL input + Import; right: Clip duration select (Auto) + Additional instructions + Surprise me link + textarea] + CTA (Playbook + Find clip ideas). Uses Workflow Step component. FLAG: video-preview illustration (silhouette + Analyzing pill) is hand-built with decorative literal colors (not DS tokens)."
+      "note": "Auto Clips setup, ANALYZING state. 1000px column: intro + 3 Workflow Steps + card [left: analyzing preview + filename row + 'or' + URL row (Form - Input + Import); right: Clip duration Form - Select + Additional instructions Form - Textarea] + flex-end commit row (Form - Select + 'Find clip ideas'). FLAG: the video-preview illustration is hand-built with decorative literal colours (not DS tokens)."
     },
     "clip-studio-setup-upload": {
       "node": "1310:2202",
@@ -139,7 +151,7 @@
       "route": "#/session/clip-studio-* (initial upload state, before a video is added)",
       "source": "src/clip-studio.js + src/screens/session.js (renderClipStudio config, leftPanel = dropzone branch)",
       "styles": "styles/screens/clip-studio.css",
-      "note": "Initial UPLOAD state of the Auto Clips setup (clip-studio--upload, before analysis). Cloned from 'Clip Studio — Setup' (1291:2136) which shows the ANALYZING state; only the left upload-area differs. Left column = 'Dropzone — Large' component instance (1307:2211) + 'or' divider + URL row (Form-Input 'Paste a YouTube or Google Drive URL' + Import button). Intro (Auto Clips badge/title/subtitle), 3 Workflow Step instances, right column (Clip duration select 'Auto' + Additional instructions/Surprise me/textarea) and CTA (Playbook + Find clip ideas) are shared with the analyzing frame."
+      "note": "Initial UPLOAD state of the Auto Clips setup. Same chassis as 'Clip Studio — Setup'; only the left column differs — a 'Dropzone — Large' instance (530x251) instead of the analyzing preview."
     },
     "connectors": {
       "node": "1228:3355",
@@ -147,7 +159,13 @@
       "route": "#/connectors",
       "source": "src/screens/connectors.js",
       "styles": "styles/screens/connectors.css",
-      "note": "Connectors gallery. Full assembly: Sidebar + Topbar (title 'Connectors') + hero (title/subtitle + DS Status count pill) + toolbar (DS Form-Search + DS Tag category chips) + 6 category groups of 'Connector Card' instances (set 1233:2255; State=Default/Connected). Logos use accent monogram tiles (code fallback), not brand SVGs. Detail/empty/mobile not built. Feature gated behind the `connectors` flag (OFF by default) in the app."
+      "note": "Connectors gallery. Full assembly: Sidebar + Topbar (title 'Connectors') + hero (title/subtitle + DS Status count pill) + toolbar (DS Form-Search + DS Tag category chips) + 6 category groups of 'Connector Card' instances (set 1233:2255; State=Default/Connected). Logos use accent monogram tiles (code fallback), not brand SVGs. Detail/empty/mobile not built. Feature gated behind the `connectors` flag (OFF by default) in the app. NOT synced on 2026-09-16: the `connectors` flag is OFF by default, so /connectors is unreachable in the flags-OFF app state the sync was run against."
+    }
+  },
+  "framesRemoved": {
+    "clip-studio (clips review)": {
+      "node": "1280:1809",
+      "$comment": "Listed in this manifest until 2026-09-16 but absent from the live file — the frame was deleted at some point. The clips-review stage of the Clip Studio has no frame."
     }
   }
 }

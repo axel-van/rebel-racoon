@@ -13,7 +13,7 @@
 // asks for the options first and writes the brief itself, so there is nothing left
 // for a prompt box to hold (setup-stage.js states the argument).
 
-import { escapeHtml } from "../../utils.js?v=1220";
+import { escapeHtml } from "../../utils.js?v=1222";
 
 export function composer(st) {
   return st.mode === "edit" ? editComposer(st) : "";
