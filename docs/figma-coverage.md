@@ -332,3 +332,24 @@ frame — pas en coordonnées de page. Poser `child.x = section.x + dx` envoie l
 Et une section ne se re-dimensionne **pas** toute seule autour de ses enfants via l'API — il faut
 `resizeWithoutConstraints()` explicitement. Séquence correcte : mesurer → `resize` → poser `x`/`y`
 de la section → poser les enfants en **relatif**.
+
+### Passe de vérification (2026-09-17)
+
+Audit structurel des 5 pages rangées — **25 sections, 146 blocs, 0 anomalie** : aucun enfant hors de
+sa section, aucun chevauchement (ni entre blocs, ni entre sections), aucune section vide, fond navy
+partout. Seuls nœuds hors section : les titres de board, voulus.
+
+Quatre défauts trouvés et corrigés au passage :
+
+- **`Studio Console` portait une variante morte** `Mode=Generate` : un composer de **brief en prose**
+  avec un bouton `Generate`. C'est encore l'arrangement supprimé. Supprimée ; le set est renommé
+  `Studio Console — Edit (Redraw)` et ne garde que le composer du mode Edit.
+- **`Studio Variation Thumb` portait un `Type=Add`** — une tuile « + » que la bande de vignettes n'a
+  pas (le « + » appartient aux références, et c'est un bouton). Supprimée.
+- **Les libellés posés directement dans une section étaient illisibles** — encre sombre sur le navy.
+  Passés en `#EDF0F5`, comme le demande la règle du board.
+- **Un chip gardait un gris 128,128,128** : `setBoundVariableForPaint` avait échoué en silence et
+  laissé la couleur d'amorçage. Balayage de tout le fichier sur ce motif → plus aucune occurrence.
+
+Les `description` des 5 `COMPONENT_SET` de l'Image Studio sont remplies, comme le demande
+`figma-authoring` §6 — celle du set principal rappelle que Generate n'a aucun champ de prompt.
