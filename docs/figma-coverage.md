@@ -274,3 +274,61 @@ endroit — la géométrie et l'état de sélection sont justes, le dessin ne l'
 - **On ne peut pas `appendChild` dans le sous-arbre d'une instance** : la ligne de provenance du
   `topic-picker-modal` ne pouvait pas accueillir sa `Tag` dans le header de la `Modale`, donc la
   pastille `Trending` est posée en tête du corps.
+
+## 2026-09-17 (2) — l'Image Studio refait, et le fichier rangé
+
+### L'Image Studio était la version SUPPRIMÉE du studio
+
+Le `COMPONENT_SET` « Image Studio » dessinait le brief en prose dans un composer bas avec les
+options épinglées dans un inspecteur de 284px. C'est exactement l'arrangement _classic_ que
+[`CLAUDE.md`](../CLAUDE.md) dit d'avoir **supprimé, pas mis derrière un flag** (`git log -S isv2-panel`).
+Les 3 variantes ont été refaites contre l'app qui tourne, et **2 variantes ajoutées** :
+
+| Variante              | Ce qu'elle montre                                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Generate - Empty`    | colonne d'options 584px (Options/Advanced, `Type & text` et `References` épinglés) + colonne Preview 796px avec le placeholder « Your image appears here » ; pied **`Generate` primary BLEU** + `sparkles-mermaid` |
+| `Generate - Results`  | l'image générée 561×561 avec son texte incrusté et le lockup Acme, la bande de 2 vignettes ; pied `Regenerate` (stroked grey, à gauche) + `Use this image` (primary orange)                                        |
+| `Generate - Advanced` | le brief dérivé dans la colonne de gauche — les 8 blocs et la note « I wrote this from your options… »                                                                                                             |
+| `Generate - In feed`  | le segment `In feed` : « How this looks on LinkedIn » + la vraie carte de post                                                                                                                                     |
+| `Edit`                | pleine largeur, la palette flottante (Crop / Add text / Add image), le composer « Describe a change and I'll redraw it… » + `Redraw`, la ligne de raccourcis, pied `Undo` / `Use this image`                       |
+
+Corrections de fond relevées en lisant l'app :
+
+- le CTA de génération est **bleu**, pas orange (c'est `Use this image` qui est orange) ;
+- le défaut est **`Visual hook`**, pas `Infographic` ; `Output` = **`2 variations`** ; `References` = **`Acme · Layout`** ;
+- il n'y a **aucun champ de prompt en prose** dans Generate.
+
+Supprimés parce qu'ils décrivaient l'arrangement mort : le `Settings panel` de 284px, la capture
+`CleanShot` posée sur le board, et la planche `Advanced (the brief)` que la variante remplace.
+
+Les images sont de vraies images (uploadées via `upload_assets` sur les nœuds cibles) —
+`figma.createImageAsync` n'existe pas dans ce sandbox de plugin.
+
+### Rangement du fichier
+
+D'après `/design-guidelines` → `figma-authoring.md` §6 : sections en **diagramme** (lignes, pas une
+colonne), fond navy `#293348`, numérotation continue `00`, `01`, …, **160px** entre colonnes et
+**240px** entre lignes, titre de board à 48px au-dessus de la première ligne.
+
+⚠️ **Les dropdowns ne sont plus regroupés entre eux.** Chaque popover est rangé avec la surface à
+laquelle il est accroché — c'est ce qui permet de comprendre d'où il sort :
+
+| Page               | Sections                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `💠 Components`    | `00 — App shell` (sidebar + topbar + **son menu ⋯, son Sort & group, le popover Admin, la recherche ⌘K**) · `01 — Chat & composer` (+ **menu Add, mention picker, chat dégradé**) · `02 — Quickpicker` (+ **la grille de réseaux**) · `03 — Cards & content objects` (+ **les 4 menus ⋯ de carte**) · `04 — Top Posts` · `05 — Playbook & Recap` · `06 — Right panel` (+ **le menu Rewrite**) · `07 — Modals & studios` · `08 — Screens` · `09 — Global & forms` (snackbars, tooltip, légende `?`, états vides, `ap-select` ouvert) |
+| `UI`               | `00 — Onboarding` · `01 — Chat` · `02 — Playbooks` · `03 — Studios` · `04 — Top Posts` · `05 — Connectors`                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `Image Generation` | `00 — Image Studio · les 5 états` · `01 — Sous-composants` · `02 — Détails & garde-fous`                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `Topic Feed`       | `00 — Topic Feed` · `01 — Feed settings` · `02 — Composants`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `Insights`         | `00 — Cockpit` · `01 — Mob · Index` · `02 — Mob · Side`                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+
+Pages laissées telles quelles, parce qu'elles ne sont pas la spec produit : `🥸 Archie UI
+Corrections` (annotations sur captures), `🚧 Tests`, `🔍 Inspiration`, `Page 9`.
+
+### ⚠️ Le piège de coordonnées qui a tout décalé
+
+**Les enfants d'une `SECTION` sont positionnés en RELATIF par rapport à la section**, comme dans une
+frame — pas en coordonnées de page. Poser `child.x = section.x + dx` envoie l'enfant à
+`2 × section.x + dx` et il sort du cadre : la section s'affiche vide et son contenu flotte à côté.
+Et une section ne se re-dimensionne **pas** toute seule autour de ses enfants via l'API — il faut
+`resizeWithoutConstraints()` explicitement. Séquence correcte : mesurer → `resize` → poser `x`/`y`
+de la section → poser les enfants en **relatif**.
