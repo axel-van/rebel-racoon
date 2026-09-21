@@ -353,3 +353,70 @@ Quatre défauts trouvés et corrigés au passage :
 
 Les `description` des 5 `COMPONENT_SET` de l'Image Studio sont remplies, comme le demande
 `figma-authoring` §6 — celle du set principal rappelle que Generate n'a aucun champ de prompt.
+
+## 2026-09-21 — les modales relues une par une contre l'app
+
+Chaque modale a été **ouverte dans l'app** et son DOM relevé (largeur, titre, sous-titre, pied,
+corps), puis comparée à sa frame. L'écart était large : des largeurs fausses partout, des
+sous-titres inventés, des pieds qui disaient encore « Main action », et quatre frames qui
+décrivaient un design mort.
+
+### Supprimées
+
+| Frame                           | Pourquoi                                                                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Generate image — Studio modal` | le studio supprimé : prompt en prose + selects _Visual style_ / _Mood_. Le `COMPONENT_SET` Image Studio le remplace. |
+| `Save drafts` (528)             | doublon périmé de `Save drafts — folder` (440), qui est la vraie                                                     |
+| `Clip Studio — Setup`           | fragment sans chrome ; l'écran complet vit déjà sur la page `UI`                                                     |
+| `Schedule — Strategy`           | fragment sans chrome, absorbé par la modale Schedule refaite                                                         |
+
+### Largeurs — presque toutes fausses
+
+`Upload a file` **640** (était 528) · `Add a URL` **640** · `Paste text` **640** (manquait) ·
+`Confirm` **440** (était 528) · `Rename` **440** · `Send feedback` **640** · `Report a bug` **560** ·
+`Connect a social account` / `Analyze social profiles` / `Fill from a document` **470** (étaient 480) ·
+`Topic — Ignore` **510** (était 520) · `Skip connecting` **666** (était 680) ·
+`Connectors` **902** (était 920) · `Schedule` **960** (était 528) · `Suggested clips` **976** (était 832).
+
+### Chrome et copie remis d'aplomb
+
+- **Le lead n'est pas un sous-titre.** Sur `connect-account`, `analyze-profiles` et `fill-document`,
+  la phrase d'introduction est la **première ligne du corps** ; ces trois modales n'ont pas de
+  `ap-dialog-subtitle` du tout. Corrigé.
+- **`Upload a file` et `Chat picker` n'ont aucun bouton de pied** — le pied ne se peuple qu'une fois
+  un fichier choisi. Les pieds inventés sont retirés.
+- **`Topic — Ignore`** : `Cancel` + `Ignore` **stroked grey** (pas un « Main action » orange), et la
+  note de fin « An ignored Topic stays off this list even if it starts trending… » manquait.
+- **`Skip connecting an account?`** : `Back` + `Skip` **primary bleu**, la ligne de clôture
+  « Skipping costs you nothing… » ajoutée, et les trois garanties repassées en **tuiles pleines** —
+  elles étaient dessinées en contour, ce que la doc du proto interdit explicitement.
+- **`Share this Playbook`** : l'état par défaut de l'app est **org-wide**, pas « Invited people
+  only ». Donc `Everyone at Agorapulse`, la note « All 12 today, and whoever joins next — the list
+  follows the org. », **pas de picker « Add teammates… »** (il disparaît en org-wide) et **pas de
+  bloc de transfert** (réservé au manager).
+- **`Topic history`** : il y a **5 entrées**, pas 4.
+- **`Send feedback`** : le lead manquait et la première option de _Feature area_ est `General`.
+- **`Report a bug`** : le bloc `Context` (Session + horodatage) manquait.
+- **`Add a URL`** : corps refait — champ, hint, et la rangée « Also works with » + logos.
+
+### `Schedule` refaite de zéro
+
+Ce n'était pas une modale à une colonne de 528 : c'est **960 de large, en deux colonnes** — à gauche
+les deux cartes radio (`Optimal times` / `Custom`), les 5 chips de cadence, le champ
+« Or describe your own strategy », `Starting from` + `Compute best times` et le repli
+`Review dates` ; à droite un **calendrier de 320px** avec les dates retenues en bleu. Pied :
+`Clear all dates` à gauche, `Cancel` + `Schedule 4 posts` à droite.
+
+### `Suggested clips` refaite
+
+976 de large, sous-titre `founder-keynote.mp4 · 5 clips worth posting · 24:18 of footage`,
+**5 clips** (il y en avait 2) avec leurs vrais titres et minutages, `Add clip` à gauche du pied et
+`Draft posts from 5 clips` à droite.
+
+### ⚠️ Un écart DS à remonter
+
+L'app utilise `.ap-button.primary.danger` — un **bouton rouge plein** (`#E81313`, libellé blanc) pour
+les actions destructives. La bibliothèque Figma **n'expose aucune variante `Primary / Red`** : la
+matrice s'arrête à `Stroked`, `Stroked with BG` et `Ghost` en rouge. La frame `Confirm — Delete
+source` utilise donc la variante DS la plus proche et le signale dans son nom, plutôt que de
+fabriquer un bouton qui n'existe pas dans le DS.
