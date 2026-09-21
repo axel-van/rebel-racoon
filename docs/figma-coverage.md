@@ -213,9 +213,7 @@ Les corps des 12 modales, puis tout le reste du backlog.
 | `Image Studio — Edit tools & popovers`        | la palette verticale (Crop / Add text / Add image), la feuille « Add an image » (2 marques Playbook + upload + 16 presets), la mini-barre de texte et ses **4 popovers** (Colour, Font, Outline, Shadow)                              |
 | `Image Studio — Brief guard`                  | (2026-09-16)                                                                                                                                                                                                                          |
 
-⚠️ **Non fait, volontairement** : les **9 dessins SVG** Type/Style (`type-art.js` / `style-art.js`).
-Les vignettes sont posées en aplats gris (clair) et navy (sombre) avec leur pastille radio au bon
-endroit — la géométrie et l'état de sélection sont justes, le dessin ne l'est pas.
+✅ **Les 9 dessins SVG sont dans le fichier depuis le 2026-09-21** — voir la section du même jour.
 
 **Insights** (page `Insights`) — 2 frames qui s'ajoutent au `Cockpit` :
 
@@ -420,3 +418,45 @@ les actions destructives. La bibliothèque Figma **n'expose aucune variante `Pri
 matrice s'arrête à `Stroked`, `Stroked with BG` et `Ghost` en rouge. La frame `Confirm — Delete
 source` utilise donc la variante DS la plus proche et le signale dans son nom, plutôt que de
 fabriquer un bouton qui n'existe pas dans le DS.
+
+## 2026-09-21 (2) — l'Image Studio dans le détail
+
+### Les 9 dessins sont de vrais vecteurs, pas des aplats
+
+`type-art.js` et `style-art.js` dessinent leurs 9 aperçus en SVG inline, mais les couleurs vivent
+dans le CSS (`.ta-*` → tokens `--ref-color-*`), donc le markup seul est incolore. La chaîne qui a
+marché :
+
+1. résoudre les 46 classes `.ta-*` en hex, en déroulant les `var()` contre `ds/desktop_variables.css` ;
+2. extraire les 9 gabarits SVG des deux fichiers source et y **inliner** les attributs de présentation ;
+3. les faire entrer dans Figma — `upload_assets` en `image/svg+xml` pour les premiers, puis
+   `figma.createNodeFromSvg()` pour le reste.
+
+Les 9 masters vivent dans `01 — Sous-composants`, et chaque vignette de Type (dans les 5 variantes)
+et de Style en porte un clone.
+
+⚠️ **Trois dessins sont légèrement plus propres que l'app** : `visual-hook`, `photoreal` et
+`hand-drawn` utilisent `feTurbulence` (grain), `feGaussianBlur` (profondeur de champ) et
+`feDisplacementMap` (le tremblé du trait). Figma ne rend aucun des trois, donc ils ont été retirés du
+SVG plutôt que de produire des aplats noirs. La composition et la palette sont exactes ; la texture
+manque.
+
+### Deux pièges de vecteur
+
+- **`frame.resize()` ne redimensionne pas les enfants** d'un nœud issu de `createNodeFromSvg` : le
+  dessin reste à sa taille native, ancré en haut à gauche, et on ne voit qu'un morceau. Il faut
+  `rescale(facteur)` — ou passer les `constraints` des enfants en `SCALE` avant de redimensionner.
+- **`createImageAsync` n'existe pas** dans ce bac à sable de plugin, mais `createNodeFromSvg` oui.
+
+### Le reste du détail, relevé sur l'app
+
+| Ce qui était grossier                                           | Ce que l'app fait                                                                                                                                          |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| des glyphes texte `ⓘ` `⌄` `✕` `✦`                               | de vraies instances V2 Icons — `info`, `chevron-up`, `close`, `sparkles-mermaid` (32 remplacées)                                                           |
+| les boutons portaient l'icône par défaut du DS                  | `sparkles-mermaid` sur _Suggest_ / _Generate_ / _Redraw_, `plus` sur _Add an image_, `refresh` sur _Regenerate_, `check` sur _Use this image_ (17 boutons) |
+| le cadre vide était blanc, bordure grey-20                      | **transparent**, `1px dashed` **grey-10**, radius 12                                                                                                       |
+| les 3 tuiles de référence en couleur, la retenue bordée de bleu | **toutes** bordées grey-10 — le bleu est sur la pastille radio, pas sur le cadre — et les non-retenues sont **désaturées + voile blanc à 60 %**            |
+| la rangée Style n'existait nulle part                           | une frame `Image Studio — Style (les 6 presets, rangée dépliée)` avec les 6 dessins                                                                        |
+
+Et deux valeurs par défaut fausses, déjà corrigées la veille mais confirmées ici : le type par défaut
+est **Visual hook** (pas Infographic) et `Output` vaut **2 variations** (pas Carousel · 4).
