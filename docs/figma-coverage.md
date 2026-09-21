@@ -460,3 +460,53 @@ manque.
 
 Et deux valeurs par défaut fausses, déjà corrigées la veille mais confirmées ici : le type par défaut
 est **Visual hook** (pas Infographic) et `Output` vaut **2 variations** (pas Carousel · 4).
+
+## 2026-09-21 (3) — les styles de texte, et la componentisation
+
+### ⚠️ 323 textes n'avaient AUCUN style publié
+
+La cause est bête et elle a couru sur toute la session : j'appelais
+`setTextStyleIdAsync` avec des **ids fabriqués** — `S:0f2b,372:185` pour H3, deux variantes
+inventées pour Caption-Bold — et le `.catch(() => {})` qui les entourait avalait l'échec en silence.
+Résultat : la taille était posée à la main, le style ne l'était pas, et rien ne le signalait.
+
+Les vrais ids, relevés en listant ce que le fichier utilise déjà :
+
+| Style              | Taille / interligne | id                    |
+| ------------------ | ------------------- | --------------------- |
+| H1 - Bold          | 24 / 32             | `S:ae6c903a…,372:183` |
+| H2 - Bold          | 18 / 24             | `S:1906a38b…,372:184` |
+| H3 - Bold          | 16 / 24             | `S:6415ebf1…,372:185` |
+| H4 - Bold          | 14 / 20             | `S:2acd687a…,372:186` |
+| Subtitle - Regular | 16 / 24             | `S:82f1efde…,372:187` |
+| Body - Bold        | 14 / 18             | `S:9bc48aba…,372:189` |
+| Body - Regular     | 14 / 18             | `S:ed3eae0f…,372:190` |
+| Caption - Bold     | 12 / 16             | `S:5e1d7ac3…,372:192` |
+| Caption - Regular  | 12 / 16             | `S:1c5b16de…,372:193` |
+
+**323 nœuds rebindés** — 133 sur `Image Generation`, 147 sur `💠 Components`, 56 sur `Insights`,
+par correspondance (taille, graisse, interligne). Restent volontairement libres, parce qu'ils sont
+hors de l'échelle publiée : les chiffres display de 38px d'Insights, le texte incrusté sur l'image
+générée (31–34px), le logotype « Acme » de 30px et les titres de board de 48px.
+
+**La leçon** : ne jamais entourer `setTextStyleIdAsync` d'un `catch` muet. Un id de style faux est
+exactement le même genre de panne silencieuse qu'un `--ref-color-*` inexistant.
+
+### Trois familles de composants, au lieu de frames recopiées
+
+| Composant                                                | Ce qu'il remplace                                                                                                                                                                     |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Studio Art / …` — **9 composants**                      | les 9 dessins, enfants en contraintes `SCALE` pour qu'une instance redimensionnée redimensionne le dessin                                                                             |
+| `Studio Option Card` — 4 variantes `Selected × Art tone` | **18 vignettes** d'option recopiées à la main. Props : `Label` (TEXT) et `Art` (INSTANCE_SWAP sur les 9). `Art tone=Dark` passe l'anneau du point en blanc, pour les dessins sombres. |
+| `Studio Chip (.ap-filter-chip)` — 2 variantes `Selected` | **41 chips** recopiées : les onglets Options/Advanced, les modes de référence, les formats, les compteurs de variations, le segment Image / In feed                                   |
+
+Les trois vivent dans `01 — Sous-composants`, avec leur `description` remplie. Le chip est un port de
+`ds-patches.css` — le DS Figma ne publie pas `.ap-filter-chip`, et c'est dit dans sa description.
+
+### Le piège de dimensionnement, encore
+
+`createComponent()` suivi de `resize(w, h)` **fige les deux axes** : mes cartes sont sorties à
+154×10 et mes chips à 10×24, donc superposées dans leurs rangées. Il faut reposer
+`layoutSizingVertical = 'HUG'` (carte) ou `layoutSizingHorizontal = 'HUG'` (chip) **après** le
+`resize`. Et un `COMPONENT_SET` ne se réajuste pas autour de ses variantes : il faut les positionner
+puis `resizeWithoutConstraints`.
