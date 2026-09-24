@@ -14,23 +14,23 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1228";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1229";
 import {
   analyzeWebsite,
   discoverCompetitors,
   competitorKey,
   discoverInfluencers,
   influencerKey,
-} from "./context-mock-analysis.js?v=1228";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1228";
-import { isFlagOn } from "./feature-flags.js?v=1228";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1228";
+} from "./context-mock-analysis.js?v=1229";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1229";
+import { isFlagOn } from "./feature-flags.js?v=1229";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1229";
 // The Default look row offers the SAME three catalogues the Image Studio renders, from
 // the one place they are declared — REF_MODES' own header makes the argument: the label,
 // the hint and the brief clause "drift the moment they live apart". No cycle: the engine
 // imports only clip-formats / image-studio-canvas / feature-flags, and its module body
 // builds consts, so importing it here costs nothing at load.
-import { IMAGE_TYPES, STYLE_PRESETS, REF_MODES } from "./image-studio.js?v=1228";
+import { IMAGE_TYPES, STYLE_PRESETS, REF_MODES } from "./image-studio.js?v=1229";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -1410,6 +1410,7 @@ const ROSTERS = {
     dismissedKey: "dismissedCompetitors",
     max: 12,
     idPrefix: "cmp",
+    networks: REF_NETWORKS,
     discover: discoverCompetitors,
     key: competitorKey,
     noun: "competitor",
@@ -1434,6 +1435,9 @@ const ROSTERS = {
     dismissedKey: "dismissedInfluencers",
     max: 12,
     idPrefix: "inf",
+    // No TikTok: an influencer profile is only worth adding on a network the
+    // listening follows creators on.
+    networks: REF_NETWORKS.filter((n) => n !== "tiktok"),
     discover: discoverInfluencers,
     key: influencerKey,
     noun: "influencer",
@@ -1770,10 +1774,15 @@ function renderRosterModal(data) {
     ? `<div class="recap__cmp-socialedit">
          ${socials
            .map((s, si) => {
-             const options = REF_NETWORKS.map(
-               (n) =>
-                 `<option value="${n}"${s.network === n ? " selected" : ""}>${esc(NETWORK_LABEL[n] || n)}</option>`,
-             ).join("");
+             // A profile saved on a network the roster no longer offers keeps its
+             // own option, so the select never shows a value it didn't store.
+             const nets = r.networks.includes(s.network) ? r.networks : [...r.networks, s.network];
+             const options = nets
+               .map(
+                 (n) =>
+                   `<option value="${n}"${s.network === n ? " selected" : ""}>${esc(NETWORK_LABEL[n] || n)}</option>`,
+               )
+               .join("");
              return `
              <div class="recap__cmp-socialrow">
                <select class="ap-native-select recap__cmp-socialnet" data-recap-cmp-social-network data-recap-cmp-index="${i}" data-recap-cmp-social-index="${si}" aria-label="Network">
@@ -2414,7 +2423,7 @@ function onClick(event) {
     const c = rosterList(data, rosterOf(cmpSocialAdd))[Number(cmpSocialAdd.dataset.recapCmpSocialAdd)];
     if (!c) return;
     if (!Array.isArray(c.socials)) c.socials = [];
-    c.socials.push({ network: REF_NETWORKS[0], url: "" });
+    c.socials.push({ network: rosterOf(cmpSocialAdd).networks[0], url: "" });
     repaint();
     const inputs = document.querySelectorAll("[data-recap-cmp-social-url]");
     inputs[inputs.length - 1]?.focus();
