@@ -280,6 +280,37 @@ export const contexts = [
         ],
       },
     ],
+    // Influencers — the creators this audience already follows. Ported from the
+    // fork, minus its `reach` follower counts: a count goes stale on its own,
+    // which fails the Playbook inclusion test (CONCEPTS.md §1, question 2).
+    influencers: [
+      {
+        id: "acme-inf-1",
+        name: "Lenny's Newsletter",
+        description: "Product and growth operators. Long-form, high-trust, sceptical of vendor content.",
+        socials: [{ network: "x", url: "https://x.com/lennysan" }],
+      },
+      {
+        id: "acme-inf-2",
+        name: "Elena Verna",
+        description: "Growth. Blunt, framework-led, will not post anything she hasn't pressure-tested.",
+        socials: [{ network: "x", url: "https://x.com/elenaverna" }],
+      },
+      {
+        id: "acme-inf-3",
+        name: "Dave Gerhardt",
+        description: "B2B marketing. Strong on positioning and plain language; audience overlaps ours heavily.",
+        socials: [{ network: "instagram", url: "https://instagram.com/davegerhardt" }],
+        suggested: true,
+      },
+      {
+        id: "acme-inf-4",
+        name: "Anthony Pierri",
+        description: "Homepage and positioning teardowns. Format travels; often quoted by our buyers.",
+        socials: [{ network: "x", url: "https://x.com/anthonypierri" }],
+        suggested: true,
+      },
+    ],
     ctaLinks: [
       { label: "30-day free trial", url: "acme.example.com/trial", checked: true, suggested: false },
       { label: "Book a demo", url: "acme.example.com/demo", checked: true, suggested: false },
@@ -488,6 +519,35 @@ export const contexts = [
       brief: null,
       brand: null,
     },
+    // Influencers — the creators this audience already follows. Ported from the
+    // fork, minus its `reach` follower counts: a count goes stale on its own,
+    // which fails the Playbook inclusion test (CONCEPTS.md §1, question 2).
+    influencers: [
+      {
+        id: "fv-inf-1",
+        name: "Jason Fried",
+        description: "The register this Playbook is aiming at: short, first-person, unhedged.",
+        socials: [{ network: "x", url: "https://x.com/jasonfried" }],
+      },
+      {
+        id: "fv-inf-2",
+        name: "Sahil Bloom",
+        description: "Structure and cadence worth studying, even where the subject matter diverges.",
+        socials: [{ network: "x", url: "https://x.com/SahilBloom" }],
+      },
+      {
+        id: "fv-inf-3",
+        name: "Anne-Laure Le Cunff",
+        description: "Research-backed and calm. Good model for citing a source without turning into a citation.",
+        socials: [{ network: "x", url: "https://x.com/anthilemoon" }],
+      },
+      {
+        id: "fv-inf-4",
+        name: "Arvid Kahl",
+        description: "Builds in public without performing it. Strong on the 'what I got wrong' pillar.",
+        socials: [{ network: "x", url: "https://x.com/arvidkahl" }],
+      },
+    ],
   },
   {
     id: "ctx-customer",
@@ -618,6 +678,35 @@ export const contexts = [
       brief: null,
       brand: null,
     },
+    // Influencers — the creators this audience already follows. Ported from the
+    // fork, minus its `reach` follower counts: a count goes stale on its own,
+    // which fails the Playbook inclusion test (CONCEPTS.md §1, question 2).
+    influencers: [
+      {
+        id: "cs-inf-1",
+        name: "Joel Klettke",
+        description: "Case-study specialist. Sets the bar for interviewing a customer without leading them.",
+        socials: [{ network: "x", url: "https://x.com/JoelKlettke" }],
+      },
+      {
+        id: "cs-inf-2",
+        name: "Katelyn Bourgoin",
+        description: "Buyer psychology. Useful on the 'why they nearly didn't' pillar specifically.",
+        socials: [{ network: "x", url: "https://x.com/KateBour" }],
+      },
+      {
+        id: "cs-inf-3",
+        name: "Emily Kramer",
+        description: "Marketing operator with a large practitioner audience; shares customer stories readily.",
+        socials: [{ network: "x", url: "https://x.com/emilykramer" }],
+      },
+      {
+        id: "cs-inf-4",
+        name: "Userlist",
+        description: "Small brand, disproportionate trust. Their customer posts get quoted in our niche.",
+        socials: [{ network: "instagram", url: "https://instagram.com/userlisthq" }],
+      },
+    ],
   },
   // A consumer brand, deliberately unlike the three B2B Playbooks above: it
   // gives the Topics feed a market where listening has something vivid to say
@@ -816,9 +905,10 @@ export const contexts = [
   // built from real website analyses and real 30-day listening scans; the Acme
   // and founder-voice Playbooks above are authored for this prototype.
   //
-  // Three fork fields are dropped on the way in: "topics" (the listening config,
-  // which lives in topic-feeds-store here - CONCEPTS.md section 1), plus
-  // "strategy" and "influencers", which have no surface in this repo.
+  // Two fork fields are dropped on the way in: "topics" (the listening config,
+  // which lives in topic-feeds-store here - CONCEPTS.md section 1) and
+  // "strategy", which has no surface in this repo. "influencers" came back
+  // later with the Playbook's Influencers section.
   {
     id: "ctx-alliance-bjj",
     name: "Alliance Jiu Jitsu Carlsbad",
@@ -1125,6 +1215,39 @@ export const contexts = [
             url: "https://instagram.com/point_carre",
           },
         ],
+      },
+    ],
+    // Influencers — the creators this audience already follows. Ported from the
+    // fork, minus its `reach` follower counts: a count goes stale on its own,
+    // which fails the Playbook inclusion test (CONCEPTS.md §1, question 2).
+    influencers: [
+      {
+        id: "noba-inf-1",
+        name: "Camille Dhont",
+        description:
+          "Belgian artist behind CAMILLE x JBC. The single biggest engagement driver in the scan — her collection posts ran 10–30× JBC's own baseline.",
+        socials: [{ network: "instagram", url: "https://instagram.com/camille_dhont" }],
+      },
+      {
+        id: "noba-inf-2",
+        name: "Astrid Coppens",
+        description:
+          "Astrid Black Label, sold through ZEB. A designer-founder rather than a paid creator — the model closest to how Noba could tell its own founder story.",
+        socials: [{ network: "instagram", url: "https://instagram.com/astridblacklabel" }],
+      },
+      {
+        id: "noba-inf-3",
+        name: "Ashley Galeyn",
+        description:
+          "JBC ambassador, used to carry seasonal colour and styling explainers. The format Noba would use for a fibre, not a trend.",
+        socials: [{ network: "instagram", url: "https://instagram.com/ashleygaleyn" }],
+      },
+      {
+        id: "noba-inf-4",
+        name: "Ellen Callebout",
+        description:
+          "Belgian accessories designer stocked by The Fashion Store, including behind-the-scenes on the FW shoot — the highest-engagement non-celebrity content in that account.",
+        socials: [{ network: "instagram", url: "https://instagram.com/ellencallebout" }],
       },
     ],
     ctaLinks: [

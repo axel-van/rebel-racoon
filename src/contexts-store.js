@@ -22,17 +22,17 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed, sharedContexts } from "./mocks.js?v=1224";
-import { isNewUser } from "./user-mode.js?v=1224";
-import { CURRENT_USER } from "./org.js?v=1224";
-import { isFlagOn } from "./feature-flags.js?v=1224";
-import { createNotifier } from "./store-utils.js?v=1224";
+import { contexts as seed, sharedContexts } from "./mocks.js?v=1225";
+import { isNewUser } from "./user-mode.js?v=1225";
+import { CURRENT_USER } from "./org.js?v=1225";
+import { isFlagOn } from "./feature-flags.js?v=1225";
+import { createNotifier } from "./store-utils.js?v=1225";
 import {
   normalizeLanguages,
   mirrorPrimaryToTopLevel,
   syncTopLevelToPrimary,
   cloneVoiceByLanguage,
-} from "./languages.js?v=1224";
+} from "./languages.js?v=1225";
 
 // Lives up here, away from normalizeBrandLogos where it belongs, because the
 // seed below calls that normalizer at module-init time — a `let` declared beside
@@ -75,15 +75,16 @@ function freshId() {
   return `ctx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-// Competitors carry a nested socials array, so a shallow copy isn't enough —
-// clone both levels and stamp an id on entries that arrive without one (the
-// mock analysis and the mocks seed them without).
-let competitorSeq = 0;
-function normalizeCompetitors(list) {
+// Competitors and influencers carry a nested socials array, so a shallow copy
+// isn't enough — clone both levels and stamp an id on entries that arrive
+// without one (the mock analysis and the mocks seed them without). One shape
+// for both lists: the Playbook view renders them with the same card.
+let rosterSeq = 0;
+function normalizeRoster(list, prefix) {
   if (!Array.isArray(list)) return [];
   return list.map((c) => ({
     ...c,
-    id: c.id || `cmp-${(competitorSeq += 1)}`,
+    id: c.id || `${prefix}-${(rosterSeq += 1)}`,
     name: c.name || "",
     description: c.description || "",
     websiteUrl: c.websiteUrl || "",
@@ -91,6 +92,9 @@ function normalizeCompetitors(list) {
     socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [],
   }));
 }
+
+const normalizeCompetitors = (list) => normalizeRoster(list, "cmp");
+const normalizeInfluencers = (list) => normalizeRoster(list, "inf");
 
 // Brand logos — a SET of marks with one resolved default.
 //
@@ -332,6 +336,10 @@ export function addContext(ctx = {}) {
     //   user rejected so discovery never re-proposes them.
     competitors: normalizeCompetitors(ctx.competitors),
     dismissedCompetitors: Array.isArray(ctx.dismissedCompetitors) ? ctx.dismissedCompetitors.slice() : [],
+    // — influencers — same shape and same pending/dismissed rules as competitors:
+    //   the creators this brand's audience already listens to.
+    influencers: normalizeInfluencers(ctx.influencers),
+    dismissedInfluencers: Array.isArray(ctx.dismissedInfluencers) ? ctx.dismissedInfluencers.slice() : [],
     // — ownership (owner + scope + change log; see normalizeOwnership) —
     ...normalizeOwnership(ctx),
     // — meta —
@@ -422,6 +430,9 @@ export function updateContext(id, patch) {
   if (patch.competitors !== undefined) c.competitors = normalizeCompetitors(patch.competitors);
   if (patch.dismissedCompetitors !== undefined)
     c.dismissedCompetitors = Array.isArray(patch.dismissedCompetitors) ? patch.dismissedCompetitors.slice() : [];
+  if (patch.influencers !== undefined) c.influencers = normalizeInfluencers(patch.influencers);
+  if (patch.dismissedInfluencers !== undefined)
+    c.dismissedInfluencers = Array.isArray(patch.dismissedInfluencers) ? patch.dismissedInfluencers.slice() : [];
   // — multilingual fields —
   if (patch.languages !== undefined)
     c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;

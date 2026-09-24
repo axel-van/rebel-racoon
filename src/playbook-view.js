@@ -14,17 +14,23 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1224";
-import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1224";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1224";
-import { isFlagOn } from "./feature-flags.js?v=1224";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1224";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1225";
+import {
+  analyzeWebsite,
+  discoverCompetitors,
+  competitorKey,
+  discoverInfluencers,
+  influencerKey,
+} from "./context-mock-analysis.js?v=1225";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1225";
+import { isFlagOn } from "./feature-flags.js?v=1225";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1225";
 // The Default look row offers the SAME three catalogues the Image Studio renders, from
 // the one place they are declared — REF_MODES' own header makes the argument: the label,
 // the hint and the brief clause "drift the moment they live apart". No cycle: the engine
 // imports only clip-formats / image-studio-canvas / feature-flags, and its module body
 // builds consts, so importing it here costs nothing at load.
-import { IMAGE_TYPES, STYLE_PRESETS, REF_MODES } from "./image-studio.js?v=1224";
+import { IMAGE_TYPES, STYLE_PRESETS, REF_MODES } from "./image-studio.js?v=1225";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -40,9 +46,10 @@ const LINE_FIELDS = [
   { key: "closingPatterns", label: "Closing patterns", placeholder: "A line that often ends a post…" },
 ];
 
-// Competitors is appended LAST on purpose: the panel renderers address the
-// first three positionally (SECTIONS[0..2]), and it reads as the least core
-// section — market context after audience, voice and brand.
+// Competitors and Influencers close the list on purpose: the panel renderers
+// address the first three positionally (SECTIONS[0..2]), and they read as the
+// least core sections — market context after audience, voice and brand. Who
+// you're up against first, then who your audience listens to.
 //
 // A Playbook is a FACT SHEET: every section answers "who are you?" — brand,
 // audience, voice, who you compete with. Operational config (which listening
@@ -55,6 +62,7 @@ const SECTIONS = [
   { id: "pbk-sec-voice", scope: "voice", icon: "ap-icon-quote", title: "Voice & style" },
   { id: "pbk-sec-brand", scope: "brand", icon: "ap-icon-image", title: "Brand" },
   { id: "pbk-sec-competitors", scope: "competitors", icon: "ap-icon-buildings", title: "Competitors" },
+  { id: "pbk-sec-influencers", scope: "influencers", icon: "ap-icon-user-love", title: "Influencers" },
 ];
 
 // The sections this Playbook shows — drives the rail nav and the panels.
@@ -121,18 +129,22 @@ const SECTION_HINTS = {
     q: "Who you're up against",
     a: "Archie scans your market and proposes competitors. Add the ones that matter — a dismissed suggestion won't come back.",
   },
+  influencers: {
+    q: "Who your audience listens to",
+    a: "I look for the creators your audience already follows and propose them. Add the ones that matter — a dismissed suggestion won't come back.",
+  },
 };
 
 const STAGE_MS = 2400;
 
 let mountTarget = null;
 let cfg = null;
-let editScope = null; // null (read) | "goals" | "voice" | "brand" | "competitors"
+let editScope = null; // null (read) | "goals" | "voice" | "brand" | "competitors" | "influencers"
 let refModalIndex = null; // open reference-image detail modal (index) or null
-let cmpModalIndex = null; // open competitor detail modal (index) or null
-let cmpScanning = false; // "Discover competitors" scan in flight
-let cmpScanTimer = null; // the scan's pending timeout
-let cmpScanFoundNone = false; // last scan returned nothing new (show the note)
+let rosterModal = null; // open competitor/influencer detail modal: { kind, index } or null
+let rosterScanning = null; // roster whose "Discover" scan is in flight ("competitors" | "influencers") or null
+let rosterScanTimer = null; // the scan's pending timeout
+let rosterFoundNone = null; // roster whose last scan returned nothing new (show the note) or null
 let refModalHost = null; // body-level portal node for the open detail modal
 let snapshot = null; // deep copy of editable fields, for Cancel
 let audienceCustom = false; // "Other…" picked in the Primary audience dropdown
@@ -173,9 +185,9 @@ export function mount(target, config) {
   editScope = null;
   snapshot = null;
   audienceCustom = false;
-  cmpModalIndex = null;
-  cmpScanning = false;
-  cmpScanFoundNone = false;
+  rosterModal = null;
+  rosterScanning = null;
+  rosterFoundNone = null;
 
   if (cfg.loader && !cfg.skipLoader) {
     phase = "loading";
@@ -204,7 +216,7 @@ export function mount(target, config) {
 
   return () => {
     stopLoading();
-    stopCompetitorScan();
+    stopRosterScan();
     detachScrollSpy();
     target.removeEventListener("click", onClickH);
     target.removeEventListener("input", onInputH);
@@ -216,7 +228,7 @@ export function mount(target, config) {
       refModalHost = null;
     }
     refModalIndex = null;
-    cmpModalIndex = null;
+    rosterModal = null;
     mountTarget = null;
     cfg = null;
     editScope = null;
@@ -456,6 +468,8 @@ export function snapshotEditable(d) {
       imageDefaults: d.imageDefaults || { imageType: "", style: "", refMode: "" },
       competitors: d.competitors || [],
       dismissedCompetitors: d.dismissedCompetitors || [],
+      influencers: d.influencers || [],
+      dismissedInfluencers: d.dismissedInfluencers || [],
     }),
   );
 }
@@ -1369,20 +1383,83 @@ function renderBrandPanel(data, edit) {
   `;
 }
 
-// ── Competitors ────────────────────────────────────────────────────────
+// ── Competitors + Influencers (the two rosters) ────────────────────────
 //
-// The market the brand is measured against. Archie pre-fills the list from the
-// website analysis (each entry flagged `suggested`) and can scan for more on
-// demand; the user prunes it and adds the ones Archie missed.
+// Two lists of people and brands OUTSIDE this one, with the same life cycle:
+// Archie pre-fills each from the website analysis (every entry flagged
+// `suggested`) and can scan for more on demand; the user prunes it and adds
+// the ones Archie missed. Competitors are who the brand is measured against,
+// influencers the creators its audience already listens to.
 //
-// A competitor's logo is never stored — it's resolved from its domain through a
+// One renderer, one set of handlers, driven by a ROSTERS entry — the two
+// sections differ in their words and their data keys, never in behaviour. A
+// second copy of this machinery is how "Add all" ends up working in one
+// section and not the other. The DOM hooks keep their `cmp` prefix; which
+// roster a hook acts on is read from the nearest [data-recap-roster].
+//
+// An entry's logo is never stored — it's resolved from its domain through a
 // favicon service at render time, with a monogram tile as the fallback (wired
 // by the capturing `error` listener in mount()).
 
-const MAX_COMPETITORS = 12;
-const CMP_SCAN_MS = 1600;
+const ROSTER_SCAN_MS = 1600;
 
-function competitorDomain(c) {
+const ROSTERS = {
+  competitors: {
+    scope: "competitors",
+    listKey: "competitors",
+    dismissedKey: "dismissedCompetitors",
+    max: 12,
+    idPrefix: "cmp",
+    discover: discoverCompetitors,
+    key: competitorKey,
+    noun: "competitor",
+    title: "Competitor",
+    untitled: "Untitled competitor",
+    namePlaceholder: "Competitor name",
+    sitePlaceholder: "https://competitor.com",
+    descPlaceholder: "How they position, who they win with, where you differ…",
+    ownGroup: "Your competitors",
+    pendingEmpty: "None added yet — pick from Archie's suggestions below.",
+    emptyEdit: "No competitors yet. Add the ones you know — Archie can find the rest.",
+    emptyRead: "No competitors yet — Archie can scan your market and suggest a few.",
+    scanning: "Scanning your market for competitors…",
+    noneFound: "No new competitors found. Add one by hand instead.",
+    discoverFirst: "Discover competitors",
+  },
+  // New copy is in the first person (CLAUDE.md: Archie never names itself);
+  // the Competitors strings above predate that rule and are left as they are.
+  influencers: {
+    scope: "influencers",
+    listKey: "influencers",
+    dismissedKey: "dismissedInfluencers",
+    max: 12,
+    idPrefix: "inf",
+    discover: discoverInfluencers,
+    key: influencerKey,
+    noun: "influencer",
+    title: "Influencer",
+    untitled: "Untitled influencer",
+    namePlaceholder: "Influencer name",
+    sitePlaceholder: "https://…",
+    descPlaceholder: "What they post about, who follows them, why they matter to your audience…",
+    ownGroup: "Your influencers",
+    pendingEmpty: "None added yet — pick from my suggestions below.",
+    emptyEdit: "No influencers yet. Add the ones you know — I can find the rest.",
+    emptyRead: "No influencers yet — I can suggest creators your audience already follows.",
+    scanning: "Looking for the creators your audience follows…",
+    noneFound: "No new influencers found. Add one by hand instead.",
+    discoverFirst: "Discover influencers",
+  },
+};
+
+// The roster a delegated hook belongs to. Every panel and modal root carries
+// data-recap-roster, so a hook with no roster around it is a bug — falling
+// back to competitors keeps it from writing into a list nobody asked for.
+function rosterOf(el) {
+  return ROSTERS[el?.closest?.("[data-recap-roster]")?.dataset.recapRoster] || ROSTERS.competitors;
+}
+
+function rosterDomain(c) {
   const raw = (c?.websiteUrl || "").trim();
   if (!raw) return "";
   try {
@@ -1392,70 +1469,70 @@ function competitorDomain(c) {
   }
 }
 
-function competitorLogoUrl(c) {
+function rosterLogoUrl(c) {
   if (c?.logo) return c.logo;
-  const domain = competitorDomain(c);
+  const domain = rosterDomain(c);
   return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64` : "";
 }
 
-// Deterministic monogram tint so a competitor keeps the same colour across
+// Deterministic monogram tint so an entry keeps the same colour across
 // repaints. Reuses the reference-image hash + HSL helpers rather than adding
 // a second bit of colour maths to this file.
-function competitorAccent(c) {
-  const key = (c?.name || competitorDomain(c) || "competitor").toLowerCase();
+function rosterAccent(c) {
+  const key = (c?.name || rosterDomain(c) || "roster").toLowerCase();
   const h = hashStr(key);
   return hslToHex(h % 360, 44 + ((h >> 5) % 26), 42);
 }
 
 // Monogram letter. A leading article is skipped so names like "The category
 // incumbent" / "The low-cost challenger" don't all read as the same "T".
-function competitorInitial(c) {
-  const source = (c?.name || competitorDomain(c) || "").trim().replace(/^(the|a|an)\s+/i, "");
+function rosterInitial(c) {
+  const source = (c?.name || rosterDomain(c) || "").trim().replace(/^(the|a|an)\s+/i, "");
   return (source.charAt(0) || "?").toUpperCase();
 }
 
-function competitorList(data) {
-  if (!Array.isArray(data.competitors)) data.competitors = [];
-  return data.competitors;
+function rosterList(data, r) {
+  if (!Array.isArray(data[r.listKey])) data[r.listKey] = [];
+  return data[r.listKey];
 }
 
-function dismissedList(data) {
-  if (!Array.isArray(data.dismissedCompetitors)) data.dismissedCompetitors = [];
-  return data.dismissedCompetitors;
+function dismissedList(data, r) {
+  if (!Array.isArray(data[r.dismissedKey])) data[r.dismissedKey] = [];
+  return data[r.dismissedKey];
 }
 
 // `suggested: true` is a PENDING proposal from Archie — it is NOT part of the
 // Playbook until the user accepts it. Anything that counts a Playbook's
-// competitors (the section's own grid, the /contexts card counter) must skip
+// entries (the section's own grid, the /contexts card counters) must skip
 // them; only the "Suggested by Archie" tray reads them.
-function pendingCompetitors(data) {
-  return competitorList(data).filter((c) => c.suggested);
+function pendingEntries(data, r) {
+  return rosterList(data, r).filter((c) => c.suggested);
 }
 
 // Logo tile — the remote favicon plus a monogram twin that onLoadError reveals
 // when the favicon can't load (domain with no icon, blocked request, offline).
-// A competitor with no website has nothing to resolve, so it renders monogram-only.
-function renderCompetitorLogo(c, size = 36) {
+// An entry with no website has nothing to resolve, so it renders monogram-only.
+function renderRosterLogo(c, size = 36) {
   const px = Number(size) || 36;
-  const url = competitorLogoUrl(c);
+  const url = rosterLogoUrl(c);
   const mono = `<span class="recap__cmp-logo recap__cmp-logo--mono${url ? " is-hidden" : ""}" style="--cmp-accent:${esc(
-    competitorAccent(c),
-  )};--cmp-logo-size:${px}px;" aria-hidden="true">${esc(competitorInitial(c))}</span>`;
+    rosterAccent(c),
+  )};--cmp-logo-size:${px}px;" aria-hidden="true">${esc(rosterInitial(c))}</span>`;
   if (!url) return mono;
   return `<img class="recap__cmp-logo" src="${esc(
     url,
   )}" alt="" width="${px}" height="${px}" loading="lazy" style="--cmp-logo-size:${px}px;" data-recap-cmp-logo />${mono}`;
 }
 
-// Read-only network badges for a competitor's social profiles. Rendered as
-// plain icons on the card (which is itself a button — no nested links) and as
-// real links in the modal.
-function competitorSocials(c) {
+// Read-only network badges for an entry's social profiles. Rendered as plain
+// icons on the card (which is itself a button — no nested links) and as real
+// links in the modal.
+function rosterSocials(c) {
   return (Array.isArray(c?.socials) ? c.socials : []).filter((s) => s && NETWORK_ICON_BY_PLATFORM[s.network]);
 }
 
-function renderCompetitorNetIcons(c) {
-  const socials = competitorSocials(c);
+function renderRosterNetIcons(c) {
+  const socials = rosterSocials(c);
   if (!socials.length) return "";
   return `<span class="recap__cmp-nets">${socials
     .map((s) => {
@@ -1465,8 +1542,8 @@ function renderCompetitorNetIcons(c) {
     .join("")}</span>`;
 }
 
-function renderCompetitorNetLinks(c) {
-  const socials = competitorSocials(c);
+function renderRosterNetLinks(c) {
+  const socials = rosterSocials(c);
   if (!socials.length) return `<span class="recap__cmpmodal-empty">No social profiles yet.</span>`;
   return `<span class="recap__cmp-netlinks">${socials
     .map((s) => {
@@ -1480,27 +1557,27 @@ function renderCompetitorNetLinks(c) {
     .join("")}</span>`;
 }
 
-// One competitor card. `i` is the index into the FULL competitors array (both
-// states share it) so the handlers stay index-addressed.
+// One card. `i` is the index into the FULL list (both states share it) so the
+// handlers stay index-addressed.
 //
 // A pending card reads as a proposal, not as a Playbook entry: dashed border,
 // recessed surface, and its own Add / Dismiss row. Those two buttons must be
 // SIBLINGS of the open-button (the card body is itself a <button>, so nesting
 // them would be invalid HTML), hence the flex-column card container.
-function renderCompetitorCard(c, i, { edit = false, pending = false } = {}) {
-  const domain = competitorDomain(c);
+function renderRosterCard(r, c, i, { edit = false, pending = false } = {}) {
+  const domain = rosterDomain(c);
   const desc = (c.description || "").trim();
-  const name = esc(c.name || "competitor");
-  const nets = renderCompetitorNetIcons(c);
+  const name = esc(c.name || r.noun);
+  const nets = renderRosterNetIcons(c);
   return `
     <div class="recap__cmpcard${pending ? " recap__cmpcard--suggested" : ""}">
       <button type="button" class="recap__cmpcard-open" data-recap-cmp-open="${i}" aria-label="${
         edit && !pending ? "Edit" : "View"
       } ${name} details">
         <span class="recap__cmpcard-head">
-          ${renderCompetitorLogo(c, 36)}
+          ${renderRosterLogo(c, 36)}
           <span class="recap__cmpcard-id">
-            <span class="recap__cmpcard-name">${esc(c.name || "Untitled competitor")}</span>
+            <span class="recap__cmpcard-name">${esc(c.name || r.untitled)}</span>
             ${domain ? `<span class="recap__cmpcard-domain">${esc(domain)}</span>` : ""}
           </span>
         </span>
@@ -1528,7 +1605,7 @@ function renderCompetitorCard(c, i, { edit = false, pending = false } = {}) {
 
 // Scan-in-flight state, scoped to this panel — the whole-Playbook staged loader
 // would be far too heavy for a single-section action.
-function renderCompetitorScan() {
+function renderRosterScan(r) {
   const skeletons = [0, 1, 2]
     .map(
       () => `
@@ -1542,14 +1619,14 @@ function renderCompetitorScan() {
   return `
     <p class="recap__cmp-scanning" role="status">
       <span class="archie-loader" aria-hidden="true"></span>
-      <span>Scanning your market for competitors…</span>
+      <span>${esc(r.scanning)}</span>
     </p>
     <div class="recap__cmpgrid">${skeletons}</div>`;
 }
 
-function renderCompetitorsPanel(data, edit) {
-  const section = SECTIONS[3];
-  const list = competitorList(data);
+function renderRosterPanel(data, r, edit) {
+  const section = SECTIONS.find((s) => s.scope === r.scope);
+  const list = rosterList(data, r);
   // Index into the full array, so accept/dismiss/remove stay index-addressed
   // while the two states render in separate groups.
   const indexed = list.map((c, i) => ({ c, i }));
@@ -1557,10 +1634,10 @@ function renderCompetitorsPanel(data, edit) {
   const pending = indexed.filter(({ c }) => c.suggested);
 
   const gridOf = (entries, opts) =>
-    `<div class="recap__cmpgrid">${entries.map(({ c, i }) => renderCompetitorCard(c, i, opts)).join("")}</div>`;
+    `<div class="recap__cmpgrid">${entries.map(({ c, i }) => renderRosterCard(r, c, i, opts)).join("")}</div>`;
 
   // Archie's proposals live in their own tray below the Playbook's own
-  // competitors — a pending suggestion is not a competitor of this brand yet.
+  // entries — a pending suggestion is not part of this brand yet.
   const pendingGroup = pending.length
     ? `<section class="recap__cmpgroup recap__cmpgroup--suggested">
          <header class="recap__cmpgroup-head">
@@ -1586,21 +1663,19 @@ function renderCompetitorsPanel(data, edit) {
   // has no label→value rows, so its content gets its own padded wrapper.
   let hint = "";
   let inner;
-  if (cmpScanning) {
-    inner = renderCompetitorScan();
+  if (rosterScanning === r.scope) {
+    inner = renderRosterScan(r);
   } else {
-    const activeEmpty = pending.length
-      ? `<p class="recap__cmp-empty">None added yet — pick from Archie's suggestions below.</p>`
-      : edit
-        ? `<p class="recap__cmp-empty">No competitors yet. Add the ones you know — Archie can find the rest.</p>`
-        : `<p class="recap__cmp-empty">No competitors yet — Archie can scan your market and suggest a few.</p>`;
+    const activeEmpty = `<p class="recap__cmp-empty">${esc(
+      pending.length ? r.pendingEmpty : edit ? r.emptyEdit : r.emptyRead,
+    )}</p>`;
     const activeGroup = active.length ? gridOf(active, { edit, pending: false }) : activeEmpty;
     // Only label the active group when a suggestions tray sits under it —
     // a lone grid needs no heading.
     const activeBlock = pending.length
       ? `<section class="recap__cmpgroup">
            <header class="recap__cmpgroup-head">
-             <span class="recap__cmpgroup-title"><span>Your competitors</span>
+             <span class="recap__cmpgroup-title"><span>${esc(r.ownGroup)}</span>
                <span class="ap-tag grey mini recap__cmpgroup-count">${active.length}</span>
              </span>
            </header>
@@ -1608,32 +1683,34 @@ function renderCompetitorsPanel(data, edit) {
          </section>`
       : activeGroup;
 
-    if (edit) hint = renderSectionHint(SECTION_HINTS.competitors);
+    if (edit) hint = renderSectionHint(SECTION_HINTS[r.scope]);
     inner = [
       activeBlock,
-      edit && list.length < MAX_COMPETITORS
+      edit && list.length < r.max
         ? `<button type="button" class="ap-button secondary blue recap__add-row" data-recap-cmp-add>
-             <i class="ap-icon-plus"></i><span>Add competitor</span>
+             <i class="ap-icon-plus"></i><span>Add ${esc(r.noun)}</span>
            </button>`
         : "",
       pendingGroup,
-      !edit && cmpScanFoundNone
-        ? `<p class="recap__cmp-note"><i class="ap-icon-info" aria-hidden="true"></i><span>No new competitors found. Add one by hand instead.</span></p>`
+      !edit && rosterFoundNone === r.scope
+        ? `<p class="recap__cmp-note"><i class="ap-icon-info" aria-hidden="true"></i><span>${esc(r.noneFound)}</span></p>`
         : "",
     ].join("");
   }
   const body = `${hint}<div class="recap__cmpsec">${inner}</div>`;
 
+  // One scan at a time across both rosters: the timer and the result slot are
+  // shared, and two skeleton panels at once would read as the page reloading.
   const discoverBtn =
-    !edit && !cmpScanning && canEditView()
+    !edit && !rosterScanning && canEditView()
       ? `<button type="button" class="ap-button ghost grey recap__panel-action" data-recap-cmp-discover>
            <i class="ap-icon-sparkles" aria-hidden="true"></i>
-           <span>${list.length ? "Discover more" : "Discover competitors"}</span>
+           <span>${esc(list.length ? "Discover more" : r.discoverFirst)}</span>
          </button>`
       : "";
 
   return `
-    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" ${
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" data-recap-roster="${r.scope}" ${
       edit ? "data-recap-editing-card" : ""
     }>
       ${renderPanelHead(section, edit, discoverBtn)}
@@ -1642,32 +1719,33 @@ function renderCompetitorsPanel(data, edit) {
   `;
 }
 
-// Per-competitor detail modal — the card stays a summary, everything editable
-// (name, website, description, social profiles) lives here. Editable while the
-// Competitors section is in edit scope, read-only otherwise; same rule as the
+// Per-entry detail modal — the card stays a summary, everything editable
+// (name, website, description, social profiles) lives here. Editable while its
+// section is in edit scope, read-only otherwise; same rule as the
 // reference-image modal.
-function renderCompetitorModal(data) {
-  if (cmpModalIndex == null) return "";
-  const list = competitorList(data);
-  const c = list[cmpModalIndex];
+function renderRosterModal(data) {
+  if (!rosterModal) return "";
+  const r = ROSTERS[rosterModal.kind];
+  const list = rosterList(data, r);
+  const c = list[rosterModal.index];
   if (!c) return "";
-  const i = cmpModalIndex;
-  const edit = editScope === "competitors";
-  const domain = competitorDomain(c);
+  const i = rosterModal.index;
+  const edit = editScope === r.scope;
+  const domain = rosterDomain(c);
 
   const nameBlock = edit
     ? `<div class="ap-input-group">
          <input type="text" data-recap-cmp-field="name" data-recap-cmp-index="${i}" value="${esc(
            c.name || "",
-         )}" placeholder="Competitor name" aria-label="Competitor name" />
+         )}" placeholder="${esc(r.namePlaceholder)}" aria-label="${esc(r.namePlaceholder)}" />
        </div>`
-    : `<p class="recap__cmpmodal-value">${esc(c.name || "Untitled competitor")}</p>`;
+    : `<p class="recap__cmpmodal-value">${esc(c.name || r.untitled)}</p>`;
 
   const siteBlock = edit
     ? `<div class="ap-input-group">
          <input type="text" data-recap-cmp-field="websiteUrl" data-recap-cmp-index="${i}" value="${esc(
            c.websiteUrl || "",
-         )}" placeholder="https://competitor.com" aria-label="Website" spellcheck="false" />
+         )}" placeholder="${esc(r.sitePlaceholder)}" aria-label="Website" spellcheck="false" />
        </div>`
     : domain
       ? `<a class="recap__cmpmodal-link" href="${esc(
@@ -1679,9 +1757,9 @@ function renderCompetitorModal(data) {
 
   const descBlock = edit
     ? `<div class="ap-textarea-field resizable">
-         <textarea data-recap-cmp-field="description" data-recap-cmp-index="${i}" rows="4" placeholder="How they position, who they win with, where you differ…" aria-label="Description">${esc(
-           c.description || "",
-         )}</textarea>
+         <textarea data-recap-cmp-field="description" data-recap-cmp-index="${i}" rows="4" placeholder="${esc(
+           r.descPlaceholder,
+         )}" aria-label="Description">${esc(c.description || "")}</textarea>
        </div>`
     : (c.description || "").trim()
       ? `<p class="recap__cmpmodal-note">${esc(c.description)}</p>`
@@ -1716,20 +1794,22 @@ function renderCompetitorModal(data) {
            <i class="ap-icon-plus"></i><span>Add profile</span>
          </button>
        </div>`
-    : renderCompetitorNetLinks(c);
+    : renderRosterNetLinks(c);
 
   const removeBtn = edit
-    ? `<button type="button" class="ap-button transparent grey" data-recap-cmp-remove="${i}"><i class="ap-icon-trash"></i><span>Remove competitor</span></button>`
+    ? `<button type="button" class="ap-button transparent grey" data-recap-cmp-remove="${i}"><i class="ap-icon-trash"></i><span>Remove ${esc(
+        r.noun,
+      )}</span></button>`
     : "";
 
   return `
-  <div class="app-modal-backdrop recap__cmpmodal-backdrop" data-recap-cmpmodal-backdrop>
-    <aside class="ap-dialog recap__cmpmodal" role="dialog" aria-modal="true" aria-label="Competitor">
-      <div class="ap-dialog-header"><span class="ap-dialog-title">Competitor</span></div>
+  <div class="app-modal-backdrop recap__cmpmodal-backdrop" data-recap-cmpmodal-backdrop data-recap-roster="${r.scope}">
+    <aside class="ap-dialog recap__cmpmodal" role="dialog" aria-modal="true" aria-label="${esc(r.title)}">
+      <div class="ap-dialog-header"><span class="ap-dialog-title">${esc(r.title)}</span></div>
       <button type="button" class="ap-dialog-close" data-recap-cmp-close aria-label="Close"><i class="ap-icon-close"></i></button>
       <div class="ap-dialog-content recap__cmpmodal-content">
         <div class="recap__cmpmodal-id">
-          ${renderCompetitorLogo(c, 48)}
+          ${renderRosterLogo(c, 48)}
           ${
             c.suggested
               ? `<span class="ap-tag grey mini recap__cmp-badge"><i class="ap-icon-sparkles" aria-hidden="true"></i><span>Suggested — not added yet</span></span>`
@@ -1777,7 +1857,7 @@ function renderCompetitorModal(data) {
 // standing in front of one is a worse identity than the real thing.
 //
 // Both are rendered and one is hidden — the same image + monogram-twin pattern
-// renderCompetitorLogo uses, so a logo that can't load (a data URL from a file
+// renderRosterLogo uses, so a logo that can't load (a data URL from a file
 // the browser then rejected) falls back to the initials instead of an empty box.
 // The swap is wired by onLoadError().
 function renderHeaderMark(data, accent, primary) {
@@ -1945,11 +2025,12 @@ function paint() {
         ${renderGoalsPanel(data, scope === "goals")}
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
-        ${renderCompetitorsPanel(data, scope === "competitors")}
+        ${renderRosterPanel(data, ROSTERS.competitors, scope === "competitors")}
+        ${renderRosterPanel(data, ROSTERS.influencers, scope === "influencers")}
       </div>
     </div>
     ${renderRefModal(data)}
-    ${renderCompetitorModal(data)}
+    ${renderRosterModal(data)}
   `;
 
   mountTarget.innerHTML = html`
@@ -1969,7 +2050,7 @@ function paint() {
 // backdrop from covering the viewport. Move whichever one is open onto <body>
 // (like the app's real modals) and bind the same delegated handlers so its
 // controls keep working. Only one can be open at a time — refModalIndex and
-// cmpModalIndex are mutually exclusive — so one host covers both.
+// rosterModal are mutually exclusive — so one host covers both.
 function portalModal() {
   if (refModalHost) {
     refModalHost.remove();
@@ -2042,43 +2123,43 @@ function onLoadError(event) {
   img.nextElementSibling?.classList.remove("is-hidden");
 }
 
-function stopCompetitorScan() {
-  if (cmpScanTimer) {
-    window.clearTimeout(cmpScanTimer);
-    cmpScanTimer = null;
+function stopRosterScan() {
+  if (rosterScanTimer) {
+    window.clearTimeout(rosterScanTimer);
+    rosterScanTimer = null;
   }
-  cmpScanning = false;
+  rosterScanning = null;
 }
 
-// Mock "scan the market" — shows the section-scoped skeleton, then merges only
-// the competitors that aren't already known (so a repeat scan is idempotent and
+// Mock "scan" — shows the section-scoped skeleton, then merges only the
+// entries that aren't already known (so a repeat scan is idempotent and
 // removing one brings just that one back).
-function startCompetitorScan() {
+function startRosterScan(r) {
   const data = cfg?.getData();
-  if (!data || cmpScanning) return;
-  stopCompetitorScan();
-  cmpScanning = true;
-  cmpScanFoundNone = false;
+  if (!data || rosterScanning) return;
+  stopRosterScan();
+  rosterScanning = r.scope;
+  rosterFoundNone = null;
   repaintPreservingScroll();
-  cmpScanTimer = window.setTimeout(() => {
-    cmpScanTimer = null;
-    cmpScanning = false;
+  rosterScanTimer = window.setTimeout(() => {
+    rosterScanTimer = null;
+    rosterScanning = null;
     const live = cfg?.getData();
     if (!live || !mountTarget) return;
-    const existing = competitorList(live);
+    const existing = rosterList(live, r);
     // Exclude what's already on the Playbook (accepted or still pending) AND
     // everything the user dismissed — Archie never re-proposes a rejection.
-    const found = discoverCompetitors(live.websiteUrl || live.sourceUrl || "", {
-      exclude: [...existing, ...dismissedList(live)],
+    const found = r.discover(live.websiteUrl || live.sourceUrl || "", {
+      exclude: [...existing, ...dismissedList(live, r)],
     });
-    const room = Math.max(0, MAX_COMPETITORS - existing.length);
+    const room = Math.max(0, r.max - existing.length);
     const added = found.slice(0, room).map((c) => ({ ...c, suggested: true }));
     added.forEach((c) => existing.push(c));
-    cmpScanFoundNone = added.length === 0;
+    rosterFoundNone = added.length === 0 ? r.scope : null;
     // Persist in library mode (no-op in onboarding, where the draft IS the data).
     if (added.length) cfg.commit?.();
     repaintPreservingScroll();
-  }, CMP_SCAN_MS);
+  }, ROSTER_SCAN_MS);
 }
 
 // ── Edit-mode mutations ──────────────────────────────────────────────────
@@ -2174,7 +2255,8 @@ function onClick(event) {
   const penBtn = event.target.closest("[data-recap-edit-card]");
   if (penBtn) {
     if (penBtn.dataset.recapEditCard === "brand") ensureBrand(data);
-    if (penBtn.dataset.recapEditCard === "competitors") competitorList(data);
+    const editRoster = ROSTERS[penBtn.dataset.recapEditCard];
+    if (editRoster) rosterList(data, editRoster);
     snapshot = snapshotEditable(data);
     editScope = penBtn.dataset.recapEditCard;
     audienceCustom = false;
@@ -2192,7 +2274,7 @@ function onClick(event) {
     snapshot = null;
     editScope = null;
     refModalIndex = null;
-    cmpModalIndex = null;
+    rosterModal = null;
     audienceCustom = false;
     repaint();
     return;
@@ -2214,51 +2296,54 @@ function onClick(event) {
         });
       });
     }
-    // Drop competitors left completely blank (an "Add competitor" row the user
-    // opened and abandoned) and social rows with no URL. `suggested` is kept:
-    // an unaccepted proposal stays pending across a Save rather than being
-    // silently adopted into the Playbook.
-    if (Array.isArray(data.competitors)) {
-      data.competitors = data.competitors.filter(
+    // Drop roster entries left completely blank (an "Add competitor" row the
+    // user opened and abandoned) and social rows with no URL. `suggested` is
+    // kept: an unaccepted proposal stays pending across a Save rather than
+    // being silently adopted into the Playbook.
+    Object.values(ROSTERS).forEach(({ listKey }) => {
+      if (!Array.isArray(data[listKey])) return;
+      data[listKey] = data[listKey].filter(
         (c) => (c.name || "").trim() || (c.websiteUrl || "").trim() || (c.description || "").trim(),
       );
-      data.competitors.forEach((c) => {
+      data[listKey].forEach((c) => {
         c.socials = (Array.isArray(c.socials) ? c.socials : []).filter((s) => (s.url || "").trim());
       });
-    }
+    });
     cfg.commit?.();
     snapshot = null;
     editScope = null;
     refModalIndex = null;
-    cmpModalIndex = null;
+    rosterModal = null;
     audienceCustom = false;
     repaint();
     return;
   }
 
-  // ── Competitors ──
+  // ── Competitors + Influencers ──
+  // Every hook below acts on the roster it sits in (rosterOf).
   if (event.target.closest("[data-recap-cmp-discover]")) {
-    startCompetitorScan();
+    startRosterScan(rosterOf(event.target));
     return;
   }
 
-  // Accept a proposal — it becomes one of the Playbook's own competitors.
+  // Accept a proposal — it becomes one of the Playbook's own entries.
   // Deliberately available in READ mode: adopting a suggestion shouldn't
   // require entering the section editor, that's the point of the tray.
   const cmpAccept = event.target.closest("[data-recap-cmp-accept]");
   if (cmpAccept) {
-    const c = competitorList(data)[Number(cmpAccept.dataset.recapCmpAccept)];
+    const c = rosterList(data, rosterOf(cmpAccept))[Number(cmpAccept.dataset.recapCmpAccept)];
     if (!c) return;
     delete c.suggested;
-    cmpModalIndex = null;
+    rosterModal = null;
     if (!editScope) cfg.commit?.(); // in edit mode the section's Save commits
     repaintPreservingScroll();
     return;
   }
 
-  if (event.target.closest("[data-recap-cmp-accept-all]")) {
-    pendingCompetitors(data).forEach((c) => delete c.suggested);
-    cmpModalIndex = null;
+  const cmpAcceptAll = event.target.closest("[data-recap-cmp-accept-all]");
+  if (cmpAcceptAll) {
+    pendingEntries(data, rosterOf(cmpAcceptAll)).forEach((c) => delete c.suggested);
+    rosterModal = null;
     if (!editScope) cfg.commit?.();
     repaintPreservingScroll();
     return;
@@ -2268,15 +2353,16 @@ function onClick(event) {
   // doesn't surface it again.
   const cmpDismiss = event.target.closest("[data-recap-cmp-dismiss]");
   if (cmpDismiss) {
-    const list = competitorList(data);
+    const r = rosterOf(cmpDismiss);
+    const list = rosterList(data, r);
     const idx = Number(cmpDismiss.dataset.recapCmpDismiss);
     const c = list[idx];
     if (!c) return;
-    const key = competitorKey(c);
-    const dismissed = dismissedList(data);
+    const key = r.key(c);
+    const dismissed = dismissedList(data, r);
     if (key && !dismissed.includes(key)) dismissed.push(key);
     list.splice(idx, 1);
-    cmpModalIndex = null; // indices shifted — the open modal no longer means anything
+    rosterModal = null; // indices shifted — the open modal no longer means anything
     if (!editScope) cfg.commit?.();
     repaintPreservingScroll();
     return;
@@ -2284,13 +2370,13 @@ function onClick(event) {
 
   const cmpOpen = event.target.closest("[data-recap-cmp-open]");
   if (cmpOpen) {
-    cmpModalIndex = Number(cmpOpen.dataset.recapCmpOpen);
+    rosterModal = { kind: rosterOf(cmpOpen).scope, index: Number(cmpOpen.dataset.recapCmpOpen) };
     repaint();
     return;
   }
 
   if (event.target.closest("[data-recap-cmp-close]") || event.target.matches?.("[data-recap-cmpmodal-backdrop]")) {
-    cmpModalIndex = null;
+    rosterModal = null;
     repaint();
     return;
   }
@@ -2298,24 +2384,26 @@ function onClick(event) {
   const cmpRemove = event.target.closest("[data-recap-cmp-remove]");
   if (cmpRemove) {
     const idx = Number(cmpRemove.dataset.recapCmpRemove);
-    const list = competitorList(data);
+    const list = rosterList(data, rosterOf(cmpRemove));
     if (idx >= 0 && idx < list.length) list.splice(idx, 1);
-    cmpModalIndex = null; // the open modal's index no longer means anything
+    rosterModal = null; // the open modal's index no longer means anything
     repaintPreservingScroll();
     return;
   }
 
-  if (event.target.closest("[data-recap-cmp-add]")) {
-    const list = competitorList(data);
-    if (list.length >= MAX_COMPETITORS) return;
+  const cmpAdd = event.target.closest("[data-recap-cmp-add]");
+  if (cmpAdd) {
+    const r = rosterOf(cmpAdd);
+    const list = rosterList(data, r);
+    if (list.length >= r.max) return;
     list.push({
-      id: `cmp-new-${list.length + 1}-${Date.now().toString(36)}`,
+      id: `${r.idPrefix}-new-${list.length + 1}-${Date.now().toString(36)}`,
       name: "",
       description: "",
       websiteUrl: "",
       socials: [],
     });
-    cmpModalIndex = list.length - 1; // open the blank card straight away
+    rosterModal = { kind: r.scope, index: list.length - 1 }; // open the blank card straight away
     repaint();
     mountTarget?.querySelector("[data-recap-cmp-field='name']")?.focus();
     return;
@@ -2323,7 +2411,7 @@ function onClick(event) {
 
   const cmpSocialAdd = event.target.closest("[data-recap-cmp-social-add]");
   if (cmpSocialAdd) {
-    const c = competitorList(data)[Number(cmpSocialAdd.dataset.recapCmpSocialAdd)];
+    const c = rosterList(data, rosterOf(cmpSocialAdd))[Number(cmpSocialAdd.dataset.recapCmpSocialAdd)];
     if (!c) return;
     if (!Array.isArray(c.socials)) c.socials = [];
     c.socials.push({ network: REF_NETWORKS[0], url: "" });
@@ -2335,7 +2423,7 @@ function onClick(event) {
 
   const cmpSocialRemove = event.target.closest("[data-recap-cmp-social-remove]");
   if (cmpSocialRemove) {
-    const c = competitorList(data)[Number(cmpSocialRemove.dataset.recapCmpIndex)];
+    const c = rosterList(data, rosterOf(cmpSocialRemove))[Number(cmpSocialRemove.dataset.recapCmpIndex)];
     const si = Number(cmpSocialRemove.dataset.recapCmpSocialIndex);
     if (c && Array.isArray(c.socials) && si >= 0 && si < c.socials.length) c.socials.splice(si, 1);
     repaint();
@@ -2637,10 +2725,10 @@ function onInput(event) {
       if (sw) sw.style.background = t.value;
     }
   } else if (t.matches("[data-recap-cmp-field]")) {
-    const c = data.competitors?.[Number(t.dataset.recapCmpIndex)];
+    const c = data[rosterOf(t).listKey]?.[Number(t.dataset.recapCmpIndex)];
     if (c) c[t.dataset.recapCmpField] = t.value;
   } else if (t.matches("[data-recap-cmp-social-url]")) {
-    const c = data.competitors?.[Number(t.dataset.recapCmpIndex)];
+    const c = data[rosterOf(t).listKey]?.[Number(t.dataset.recapCmpIndex)];
     const s = c?.socials?.[Number(t.dataset.recapCmpSocialIndex)];
     if (s) s.url = t.value;
   }
@@ -2721,10 +2809,10 @@ function onChange(event) {
     }
     return;
   }
-  // Competitor social row — the network select. No repaint: the row's own
+  // Roster social row — the network select. No repaint: the row's own
   // <select> already shows the new value, and repainting would steal focus.
   if (event.target.matches("[data-recap-cmp-social-network]")) {
-    const c = data.competitors?.[Number(event.target.dataset.recapCmpIndex)];
+    const c = data[rosterOf(event.target).listKey]?.[Number(event.target.dataset.recapCmpIndex)];
     const s = c?.socials?.[Number(event.target.dataset.recapCmpSocialIndex)];
     if (s) s.network = event.target.value;
     return;

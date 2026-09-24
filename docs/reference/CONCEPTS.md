@@ -18,7 +18,7 @@ C'est le `CLAUDE.md` d'une marque : le document qu'on donnerait à un rédacteur
 
 ### Ce qu'il contient
 
-Cinq familles, détaillées champ par champ dans [`FEATURES.md` §9](FEATURES.md#9-playbooks) :
+Six familles, détaillées champ par champ dans [`FEATURES.md` §9](FEATURES.md#9-playbooks) :
 
 | Famille              | Répond à                                                                                                  |
 | -------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -27,6 +27,7 @@ Cinq familles, détaillées champ par champ dans [`FEATURES.md` §9](FEATURES.md
 | **Voice & style**    | Comment ça sonne (hooks signature, closings, formatting, style visuel)                                    |
 | **Brand identity**   | À quoi ça ressemble (logos, couleurs, typo, personnalité, images de réf., **look par défaut des images**) |
 | **Competitors**      | Contre qui je me positionne                                                                               |
+| **Influencers**      | Qui mon audience écoute déjà (les créateurs qu'elle suit)                                                 |
 
 ### Le test d'inclusion
 
@@ -87,7 +88,7 @@ Un Playbook naît d'une **analyse** (le site, des posts, des documents) puis ne 
 - **Re-analyze website**, derrière une confirmation ;
 - ajout d'une proposition d'Archie que l'utilisateur accepte.
 
-**Aucune écriture silencieuse.** Archie ne réécrit pas la fiche parce qu'il a « appris » quelque chose au fil des chats. Le seul motif de proposition existant l'illustre : un competitor découvert arrive avec `suggested: true`, hors du Playbook, dans un bac séparé — il n'en fait partie qu'après un clic. C'est le patron à reprendre pour toute future suggestion : **proposer à côté, jamais écrire dedans**.
+**Aucune écriture silencieuse.** Archie ne réécrit pas la fiche parce qu'il a « appris » quelque chose au fil des chats. Le motif de proposition existant l'illustre : un competitor ou un influencer découvert arrive avec `suggested: true`, hors du Playbook, dans un bac séparé — il n'en fait partie qu'après un clic. C'est le patron à reprendre pour toute future suggestion : **proposer à côté, jamais écrire dedans**.
 
 Conséquence pour qui code : une feature qui aurait besoin de patcher un Playbook en arrière-plan doit passer par une proposition visible, ou ne pas toucher au Playbook.
 

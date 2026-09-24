@@ -13,25 +13,25 @@
 // tones, contentStyle, objective, contentAction, ctaLinks, language, color,
 // suggestions, editingId, onComplete }.
 
-import * as inlineQuestion from "./inline-question.js?v=1224";
-import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1224";
-import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1224";
-import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1224";
-import { showToast } from "./components/toast.js?v=1224";
-import { recordReasons } from "./feedback-store.js?v=1224";
-import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1224";
-import * as rightPanel from "./components/right-panel.js?v=1224";
-import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1224";
-import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1224";
-import { analyzeWebsite } from "./context-mock-analysis.js?v=1224";
-import { connectors as connectorMocks } from "./mocks.js?v=1224";
+import * as inlineQuestion from "./inline-question.js?v=1225";
+import { connectableNetworkCards, accountIdsForNetwork } from "./connect-profiles-flow.js?v=1225";
+import { open as openConnectAccountModal } from "./components/connect-account-modal.js?v=1225";
+import { open as openSkipConnectModal } from "./components/skip-connect-modal.js?v=1225";
+import { showToast } from "./components/toast.js?v=1225";
+import { recordReasons } from "./feedback-store.js?v=1225";
+import { postAssistantMessage, postUserTurn, postUserProfilesTurn } from "./assistant.js?v=1225";
+import * as rightPanel from "./components/right-panel.js?v=1225";
+import { addContext, updateContext, getContextById } from "./contexts-store.js?v=1225";
+import { isWorkspaceMode, setActivePlaybook } from "./active-playbook.js?v=1225";
+import { analyzeWebsite } from "./context-mock-analysis.js?v=1225";
+import { connectors as connectorMocks } from "./mocks.js?v=1225";
 import {
   getConnectedProfiles,
   buildConnectedProfileItems,
   PROFILE_SEARCH_THRESHOLD,
-} from "./social-profiles.js?v=1224";
-import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1224";
-import { isFlagOn } from "./feature-flags.js?v=1224";
+} from "./social-profiles.js?v=1225";
+import { cloneVoiceByLanguage, LANGUAGE_OPTIONS, DEFAULT_LANGUAGE } from "./languages.js?v=1225";
+import { isFlagOn } from "./feature-flags.js?v=1225";
 
 const drafts = new Map(); // sessionId → draft
 const subscribers = new Map(); // sessionId → Set<fn>
@@ -87,6 +87,10 @@ function emptyDraft(overrides = {}) {
     // ones so discovery never proposes them again.
     competitors: [],
     dismissedCompetitors: [],
+    // Influencers — same shape and the same pending → accepted contract as
+    // competitors, for the creators this brand's audience already follows.
+    influencers: [],
+    dismissedInfluencers: [],
     sourceType: null, // "website" | "documents" | "social"
     sourceUrl: "",
     sourceFile: null,
@@ -211,6 +215,12 @@ export function sectionPatchFromAnalysis(analysis) {
     // they arrive as PENDING proposals in the Competitors section rather than
     // as Playbook entries — the user accepts the ones that matter.
     competitors: (s.competitors || []).map((c) => ({
+      ...c,
+      socials: Array.isArray(c.socials) ? c.socials.map((x) => ({ ...x })) : [],
+      suggested: true,
+    })),
+    // Creators Archie found, on the same terms: pending until accepted.
+    influencers: (s.influencers || []).map((c) => ({
       ...c,
       socials: Array.isArray(c.socials) ? c.socials.map((x) => ({ ...x })) : [],
       suggested: true,
@@ -700,6 +710,10 @@ export function save(sessionId) {
       ? d.competitors.map((c) => ({ ...c, socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [] }))
       : [],
     dismissedCompetitors: Array.isArray(d.dismissedCompetitors) ? d.dismissedCompetitors.slice() : [],
+    influencers: Array.isArray(d.influencers)
+      ? d.influencers.map((c) => ({ ...c, socials: Array.isArray(c.socials) ? c.socials.map((s) => ({ ...s })) : [] }))
+      : [],
+    dismissedInfluencers: Array.isArray(d.dismissedInfluencers) ? d.dismissedInfluencers.slice() : [],
     updatedAt: "just now",
   };
 

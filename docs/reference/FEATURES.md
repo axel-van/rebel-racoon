@@ -850,7 +850,7 @@ Header **« Playbooks »** + _« N Playbooks · applied across N chats »_ + sea
 
 ⚠️ **Ce tableau est le troisième état de cet onglet** : grille de tuiles → liste de cards horizontales → tableau. La liste de cards était un tableau qui s'ignorait (largeurs fixes, hauteur de ligne uniforme, nombres alignés) ; seuls la bordure et le radius par ligne restaient « card ». Métrique : ~54px de ligne ici contre 40px (`small`) sur les Chats.
 
-Trois choses que la tuile porte et que la ligne ne porte pas : les **compteurs** (chats / audiences / competitors — trois nombres par ligne que personne ne lit pour choisir une marque), le **chip de voix** (une tuile a la place de caractériser ; une ligne a un nom et, juste dessous, la phrase de la marque qui le dit mieux) et les **dots de palette** (la vignette et le dot portent déjà l'identité visuelle). Ce que Claude Design a et qu'un Playbook n'a pas : **Published** (rien à publier) et l'**étoile favori** — la nôtre est le badge « défaut », en lecture seule, le flag `playbookDefault` ayant été supprimé (§14).
+Trois choses que la tuile porte et que la ligne ne porte pas : les **compteurs** (chats / audiences / competitors / influencers — des nombres par ligne que personne ne lit pour choisir une marque), le **chip de voix** (une tuile a la place de caractériser ; une ligne a un nom et, juste dessous, la phrase de la marque qui le dit mieux) et les **dots de palette** (la vignette et le dot portent déjà l'identité visuelle). Ce que Claude Design a et qu'un Playbook n'a pas : **Published** (rien à publier) et l'**étoile favori** — la nôtre est le badge « défaut », en lecture seule, le flag `playbookDefault` ayant été supprimé (§14).
 
 ⚠️ **Pas de ghost card** : `Create a Playbook` est le primaire de la barre d'outils juste au-dessus.
 
@@ -872,6 +872,7 @@ Sections éditables inline (une à la fois, Save/Cancel avec snapshot) :
 2. **Voice & style** — toggle **Guided ⇄ Write it yourself**. Guided = Signature hooks + Closing patterns + Formatting + **Emoji & casing** (le champ s'appelle toujours `visualStyle` en base ; il porte des conventions de **texte** — emoji, casse, hashtags — et son ancien libellé « Visual style » devenait un piège une fois « Default look » posé dans Brand. Libellé renommé, clé inchangée : la renommer serait du churn qu'aucun utilisateur ne voit). Switcher **par langue** (2+ langues, flag `multilingualPlaybook`) — voice **écrite nativement par langue, jamais traduite** (voir mémoire _multilingual-playbook-model_). Dropdown « Learn from… ».
 3. **Brand** — **Logo** (galerie + un défaut), Brand colors (hex swatches), Typography, Personality, Reference images, **Default look**.
 4. **Competitors** — voir ci-dessous.
+5. **Influencers** — même mécanique que Competitors, voir ci-dessous.
 
 **Les logos** sont la première ligne de Brand, parce que c'est la pièce la plus concrète de l'identité visuelle et la seule que le générateur d'images cuit dans les pixels.
 
@@ -966,6 +967,18 @@ Le marché contre lequel Archie positionne la marque. Champs sur le Playbook : `
 - **Édition** — pencil de section → remove par carte active + **« Add competitor »** (ouvre la modale sur une fiche vierge, donc directement active). Save élague les fiches restées entièrement vides et les lignes sociales sans URL ; `suggested` est **conservé** — une proposition non acceptée reste en attente au lieu d'être adoptée silencieusement.
 - **Toujours affichée** — la section, l'entrée de rail et le compteur `/contexts` sont permanents depuis que `playbookCompetitors` a été baké ON (cleanup 2026-09-04). Ce fut un flag OFF par défaut, comme `multilingualPlaybook` : sa branche OFF est supprimée.
 
+### Influencers
+
+Les créateurs que l'audience de la marque suit déjà. Champs sur le Playbook : `influencers` et `dismissedInfluencers`, **même forme** que `competitors` / `dismissedCompetitors` (`{ id, name, description, websiteUrl, socials, logo?, suggested? }`).
+
+**Un seul moteur pour les deux sections.** `ROSTERS` dans `playbook-view.js` déclare les deux listes (clés de données, clé de dédoublonnage, fonction de découverte, textes) et tout le reste — carte, bac « Suggested by Archie », Add all, Dismiss mémorisé, modale détail, découverte, élagage au Save — est partagé. Les hooks DOM gardent leur préfixe `cmp` ; la liste visée se lit sur le `[data-recap-roster]` le plus proche (le panneau, ou le backdrop de la modale une fois portée sur `<body>`). Une seule découverte à la fois sur les deux sections. Tout ce qui est écrit ci-dessus pour Competitors vaut ici, sauf :
+
+- **Dédoublonnage** par `influencerKey` : domaine, sinon **première URL de profil social**, sinon nom — un créateur se connaît par un profil bien plus souvent que par un site.
+- **Pré-remplissage** : `suggestions.influencers` de l'analyse (4 créateurs du social media marketing pour le mock Agorapulse, 3 archétypes placeholders pour le template générique), promus en `suggested: true` par `sectionPatchFromAnalysis` — exactement comme les competitors.
+- **Pas de `reach`.** Le fork portait un nombre d'abonnés par influenceur ; il est retiré au portage des seeds (Acme, Founder voice, Customer stories, Noba) : un compteur se périme tout seul, ce qui échoue à la question 2 du test d'inclusion ([`CONCEPTS.md`](CONCEPTS.md) §1).
+- Icône `ap-icon-user-love`, partagée avec la source d'écoute `influencer-posts` et le compteur `/contexts`.
+- Les nouveaux textes sont à la première personne (« I look for the creators… ») ; ceux de Competitors, antérieurs à la règle, disent encore « Archie ».
+
 ### Partage (flag `playbookSharing`, défaut OFF) — « §9bis »
 
 Le problème : dans une org multi-users, N personnes créent chacune leur Playbook pour la **même marque**, personne ne sait laquelle fait autorité, et le travail part avec celui qui quitte l'entreprise. Les seeds le mettent en scène : `Acme · Q2 marketing` (à moi) et `Acme · Developer relations` (à Sam Rivera) sont deux fiches pour Acme.
@@ -1038,6 +1051,7 @@ Le manager ne voit **que** les Playbooks partagés : une fiche personnelle non p
 
 - `analyzeWebsite(url)` : URL contenant « agorapulse » → mock Agorapulse détaillé (5 audiences, voiceProfile, hooks, couleurs #212E44/#FF6726, 5 CTA links, 5 competitors réels) ; sinon → template SaaS générique éditable (3 competitors placeholders).
 - `discoverCompetitors(url, { exclude })` : puise dans le même pool et ne renvoie que les inconnus.
+- `discoverInfluencers(url, { exclude })` / `influencerKey(c)` : le jumeau pour `suggestions.influencers`.
 - `analyzeSocialProfiles(ids)` / `analyzeDocument(file)` : voice/summary simulés.
 
 ---
@@ -1254,7 +1268,7 @@ CONFIG, pas contenu : le fichier ship avec l'app et doit exister en mode `new-al
 | id                      | Nom                   | `live` | `playbookAnchor` |
 | ----------------------- | --------------------- | ------ | ---------------- |
 | `competitor-posts`      | Competitors           | ✅     | `competitors`    |
-| `influencer-posts`      | Influencers           | —      | `null`           |
+| `influencer-posts`      | Influencers           | —      | `influencers`    |
 | `brand-website`         | Brand website         | —      | `null`           |
 | `brand-feedback`        | Brand feedbacks       | —      | `null`           |
 | `competitor-monitoring` | Competitor monitoring | —      | `competitors`    |
@@ -1524,7 +1538,7 @@ Ce n'est **pas** le retour de la page Settings agrégée retirée quatre fois ic
 - **Une carte, pas une ligne**, parce qu'une carte peut porter les options de sa source. **Brand website** est la première à le prouver : elle porte sa **liste de sites éditable**. Une ligne neuve est DOM-only jusqu'à contenir une URL — `normalizeFeed` jette les entrées vides, donc un aller-retour par le store supprimerait la ligne que le lecteur vient de demander.
 - **Une source pas encore live n'est plus une impasse.** Les sept cartes `Coming soon` portent un lien **« Need this source? »** qui ouvre le dialogue de feedback avec la source pour **sujet** : « Influencers isn't live yet. Tell me how you'd use it and it goes to the team building the next ones. » C'est la seule chose qu'un lecteur peut faire au sujet d'une source qu'il ne peut pas activer — sans ça, la carte est une impasse qui porte une étiquette.
   - ⚠️ **Pas un neuvième shell de modale.** `feedback-modal.js` accepte `open({ subject })`. Son select « Feature area » **est** un sélecteur de sujet : quand l'appelant connaît déjà le sujet, le dialogue y **répond** au lieu de le demander — champ masqué, valeur posée, titre et chapô qui nomment la source. `applySubject(null)` remet tout comme livré depuis un instantané pris à l'`init()` ; sans ce retour, le prochain « Send feedback » générique porterait le titre du dernier sujet.
-- **Chaque source lie vers ce qu'elle lit** : les sources pilotées par les concurrents portent un `.ap-link` vers la section du Playbook. Seulement sur les cartes qui ont un endroit où envoyer — le fork mettait une rangée à flèche sur les huit, dont cinq qui ne lisent rien que le Playbook détient. **Influencers ne pointe nulle part exprès** : ce repo n'a pas de section Influencers, et envoyer vers Competitors ferait dire à la carte qu'elle lit vos concurrents, ce qu'elle ne fait pas.
+- **Chaque source lie vers ce qu'elle lit** : les sources pilotées par les concurrents ou les influenceurs portent un `.ap-link` vers la section du Playbook qu'elles lisent. Seulement sur les cartes qui ont un endroit où envoyer — le fork mettait une rangée à flèche sur les huit, dont cinq qui ne lisent rien que le Playbook détient. **Influencers pointe vers la section Influencers** depuis qu'elle existe ; avant, elle ne pointait nulle part exprès, parce qu'envoyer vers Competitors aurait fait dire à la carte qu'elle lit vos concurrents.
 - **OFF = la carte perd son fond** et laisse voir la page à travers (badge en grayscale, texte atténué), donc la grille dit d'un coup d'œil ce qui est vivant. **La bordure est identique dans les deux états** : l'état d'une carte va dans son contenu, jamais sur son cadre.
 - **Commit direct**, aucune barre Save — un contrôle écrit via `updateFeed`, le store notifie, l'écran repaint, et le focus est **remis sur le switch** (sinon chaque bascule au clavier renvoie en haut de page). ⚠️ Le fork avait un footer **Cancel / Save changes** et des labels de section en **capitales** ; ni l'un ni l'autre ne revient.
 - **Dire que les autres diffèrent** — _« 3 other Playbooks listen to different sources »_, parce qu'un-à-la-fois invite au « je croyais avoir réglé ça partout ».

@@ -1,21 +1,21 @@
-import { html, raw, escapeText, escapeAttr } from "../utils.js?v=1224";
-import { renderTopbar } from "../components/topbar.js?v=1224";
+import { html, raw, escapeText, escapeAttr } from "../utils.js?v=1225";
+import { renderTopbar } from "../components/topbar.js?v=1225";
 import {
   getContexts,
   getContextById,
   subscribe as subscribeContexts,
   duplicateContext,
   deleteContext,
-} from "../contexts-store.js?v=1224";
-import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=1224";
-import { getSources, getIdeas } from "../library.js?v=1224";
-import { getPosts } from "../posts-store.js?v=1224";
-import { parseHashParams, setHashQuery } from "../url-state.js?v=1224";
-import { closePanel as closeRightPanel } from "../components/right-panel.js?v=1224";
-import { navigate, getPath } from "../router.js?v=1224";
-import { setHandoff } from "../handoff.js?v=1224";
-import { open as openConfirmModal } from "../components/confirm-modal.js?v=1224";
-import { renderEmptyState } from "../components/empty-state.js?v=1224";
+} from "../contexts-store.js?v=1225";
+import { getSessions, getSessionById, subscribe as subscribeSessions } from "../sessions-store.js?v=1225";
+import { getSources, getIdeas } from "../library.js?v=1225";
+import { getPosts } from "../posts-store.js?v=1225";
+import { parseHashParams, setHashQuery } from "../url-state.js?v=1225";
+import { closePanel as closeRightPanel } from "../components/right-panel.js?v=1225";
+import { navigate, getPath } from "../router.js?v=1225";
+import { setHandoff } from "../handoff.js?v=1225";
+import { open as openConfirmModal } from "../components/confirm-modal.js?v=1225";
+import { renderEmptyState } from "../components/empty-state.js?v=1225";
 import {
   visibleContexts,
   usableContexts,
@@ -25,15 +25,15 @@ import {
   canManageSharing,
   accessLabel,
   isMine,
-} from "../playbook-access.js?v=1224";
-import { isWorkspaceMode, getActivePlaybookId, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1224";
-import { open as openShareModal } from "../components/share-playbook-modal.js?v=1224";
-import { installMoreMenu } from "../components/more-menu.js?v=1224";
-import { renderStarterCards } from "../components/starter-card.js?v=1224";
-import { isFlagOn } from "../feature-flags.js?v=1224";
-import { getConnectedConnectors } from "../connectors-store.js?v=1224";
-import { renderConnectorLogo } from "../connectors-view.js?v=1224";
-import { ownerOf } from "../playbook-access.js?v=1224";
+} from "../playbook-access.js?v=1225";
+import { isWorkspaceMode, getActivePlaybookId, setActivePlaybook, catalogueRoute } from "../active-playbook.js?v=1225";
+import { open as openShareModal } from "../components/share-playbook-modal.js?v=1225";
+import { installMoreMenu } from "../components/more-menu.js?v=1225";
+import { renderStarterCards } from "../components/starter-card.js?v=1225";
+import { isFlagOn } from "../feature-flags.js?v=1225";
+import { getConnectedConnectors } from "../connectors-store.js?v=1225";
+import { renderConnectorLogo } from "../connectors-view.js?v=1225";
+import { ownerOf } from "../playbook-access.js?v=1225";
 
 // The account HOME — and the Playbooks catalogue it merged with.
 //
@@ -218,7 +218,7 @@ function renderTabBody() {
   if (visible.length === 0) return renderContextsEmpty(all, pageState);
   // On the home the Playbooks tab is a LIST of full-width rows, not a grid of
   // tiles. Two reasons, and the second is the one that matters: the numbers
-  // (chats, audiences, competitors) line up in a column you can read down —
+  // (chats, audiences, competitors, influencers) line up in a column you can read down —
   // a 3-up grid scatters them across nine positions — and a row is the shape
   // of the thing it now is, a door into a workspace, sitting beside the Chats
   // tab's own rows. Flag OFF the catalogue keeps its grid: it is a page for
@@ -854,6 +854,7 @@ function renderContextCard(ctx) {
   // `suggested` entries are still pending proposals from Archie, not
   // competitors of this brand yet — they must not inflate the count.
   const competitorCount = Array.isArray(ctx.competitors) ? ctx.competitors.filter((c) => !c.suggested).length : 0;
+  const influencerCount = Array.isArray(ctx.influencers) ? ctx.influencers.filter((c) => !c.suggested).length : 0;
   const usedIn = ctx.usedIn || 0;
   // Brand color preview — first website's primary / accent / link from
   // imageVoice, up to 3 dots. Matches the "people avatars" affordance
@@ -954,6 +955,14 @@ function renderContextCard(ctx) {
           ? `<span class="contexts-card__counter" title="${competitorCount} ${competitorCount === 1 ? "competitor" : "competitors"}">
               <i class="ap-icon-buildings"></i>
               <span>${competitorCount}</span>
+            </span>`
+          : ""
+      }
+      ${
+        influencerCount
+          ? `<span class="contexts-card__counter" title="${influencerCount} ${influencerCount === 1 ? "influencer" : "influencers"}">
+              <i class="ap-icon-user-love"></i>
+              <span>${influencerCount}</span>
             </span>`
           : ""
       }
@@ -1148,7 +1157,7 @@ function bind(root) {
       event.stopPropagation();
       const copy = duplicateContext(dupBtn.dataset.contextsDuplicate);
       if (copy) {
-        import("../components/toast.js?v=1224").then(({ showToast }) => showToast("Playbook duplicated"));
+        import("../components/toast.js?v=1225").then(({ showToast }) => showToast("Playbook duplicated"));
         navigate(`/playbook/${copy.id}`);
       }
       return;
@@ -1159,7 +1168,7 @@ function bind(root) {
       const ctx = getContexts().find((c) => c.id === delBtn.dataset.contextsDelete);
       if (!ctx) return;
       if (getContexts().length <= 1) {
-        import("../components/toast.js?v=1224").then(({ showToast }) =>
+        import("../components/toast.js?v=1225").then(({ showToast }) =>
           showToast("Can't delete the last Playbook — every chat needs one."),
         );
         return;
@@ -1174,7 +1183,7 @@ function bind(root) {
         danger: true,
         onConfirm: () => {
           deleteContext(ctx.id);
-          import("../components/toast.js?v=1224").then(({ showToast }) => showToast("Playbook deleted"));
+          import("../components/toast.js?v=1225").then(({ showToast }) => showToast("Playbook deleted"));
         },
       });
       return;

@@ -29,23 +29,23 @@
 // now does — and a row cannot without turning the list into a form. No save bar:
 // every control commits immediately through updateFeed.
 
-import { html, raw, escapeAttr } from "../utils.js?v=1224";
-import { navigate } from "../router.js?v=1224";
-import { parseHashParams } from "../url-state.js?v=1224";
-import { renderTopbar } from "../components/topbar.js?v=1224";
-import { renderEmptyState } from "../components/empty-state.js?v=1224";
-import { isFlagOn } from "../feature-flags.js?v=1224";
-import { getContextById, getDefaultContext } from "../contexts-store.js?v=1224";
+import { html, raw, escapeAttr } from "../utils.js?v=1225";
+import { navigate } from "../router.js?v=1225";
+import { parseHashParams } from "../url-state.js?v=1225";
+import { renderTopbar } from "../components/topbar.js?v=1225";
+import { renderEmptyState } from "../components/empty-state.js?v=1225";
+import { isFlagOn } from "../feature-flags.js?v=1225";
+import { getContextById, getDefaultContext } from "../contexts-store.js?v=1225";
 import {
   getActivePlaybook,
   isWorkspaceMode,
   catalogueRoute,
   subscribe as subscribeScope,
-} from "../active-playbook.js?v=1224";
-import { editableContexts, canEdit } from "../playbook-access.js?v=1224";
-import { getFeedForPlaybook, updateFeed, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=1224";
-import { TOPIC_SOURCES, CADENCES, findTopicSource, findCadence, isLiveSource } from "../topics-catalog.js?v=1224";
-import { open as openFeedback } from "../components/feedback-modal.js?v=1224";
+} from "../active-playbook.js?v=1225";
+import { editableContexts, canEdit } from "../playbook-access.js?v=1225";
+import { getFeedForPlaybook, updateFeed, subscribe as subscribeFeeds } from "../topic-feeds-store.js?v=1225";
+import { TOPIC_SOURCES, CADENCES, findTopicSource, findCadence, isLiveSource } from "../topics-catalog.js?v=1225";
+import { open as openFeedback } from "../components/feedback-modal.js?v=1225";
 
 // Above this many Playbooks the picker earns a search field. Below it, a search
 // box over four rows is just noise.
@@ -328,8 +328,8 @@ function renderCadenceSelect(feed, active) {
 function renderSourceCard(ctx, feed, source, on) {
   const live = isLiveSource(source.id);
 
-  // The competitor-driven sources depend on a section of the Playbook, so their
-  // note LINKS there rather than just naming it. One link per card at most, and
+  // The competitor- and influencer-driven sources depend on a section of the
+  // Playbook, so their note LINKS there rather than just naming it. One link per card at most, and
   // only on the cards that have somewhere to send you — the fork put an arrow row
   // on all eight, including the five that read nothing the Playbook holds.
   const anchor = source.playbookAnchor
@@ -337,7 +337,11 @@ function renderSourceCard(ctx, feed, source, on) {
         class="ap-link topics-src__note"
         href="#/playbook/${escapeAttr(ctx.id)}?section=${escapeAttr(source.playbookAnchor)}"
       >
-        <i class="ap-icon-buildings" aria-hidden="true"></i><span>Review this Playbook's ${source.playbookAnchor}</span>
+        <i
+          class="${source.playbookAnchor === "influencers" ? "ap-icon-user-love" : "ap-icon-buildings"}"
+          aria-hidden="true"
+        ></i
+        ><span>Review this Playbook's ${source.playbookAnchor}</span>
       </a>`
     : "";
 

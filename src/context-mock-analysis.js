@@ -160,6 +160,50 @@ const AGORAPULSE = {
         ],
       },
     ],
+    // Creators the brand's audience — social media managers — already follows.
+    // Same contract as competitors: every entry arrives as a PENDING proposal.
+    influencers: [
+      {
+        name: "Matt Navarra",
+        description:
+          "Social media industry news, first. When a platform ships a feature, social managers often hear it from him before the official post.",
+        websiteUrl: "https://mattnavarra.com",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/in/mattnavarra" },
+          { network: "x", url: "https://x.com/MattNavarra" },
+        ],
+      },
+      {
+        name: "Rachel Karten",
+        description:
+          "Writes Link in Bio, the newsletter social media managers read about their own craft. Strong on brand voice and on how social teams actually work.",
+        websiteUrl: "https://linkinbio.beehiiv.com",
+        socials: [
+          { network: "instagram", url: "https://instagram.com/rachelkarten" },
+          { network: "linkedin", url: "https://linkedin.com/in/rachelkarten" },
+        ],
+      },
+      {
+        name: "Jay Baer",
+        description:
+          "Customer experience and word of mouth. Reaches the marketing leads who sign off on tools, not only the people who use them.",
+        websiteUrl: "https://jaybaer.com",
+        socials: [
+          { network: "linkedin", url: "https://linkedin.com/in/jaybaer" },
+          { network: "youtube", url: "https://youtube.com/@jaybaer" },
+        ],
+      },
+      {
+        name: "Social Media Examiner",
+        description:
+          "The long-running how-to publication and podcast for social marketers. Tactics-first, with an audience that overlaps agencies heavily.",
+        websiteUrl: "https://socialmediaexaminer.com",
+        socials: [
+          { network: "facebook", url: "https://facebook.com/smexaminer" },
+          { network: "youtube", url: "https://youtube.com/@socialmediaexaminer" },
+        ],
+      },
+    ],
     imageVoice: {
       websites: [
         {
@@ -288,6 +332,31 @@ const GENERIC = {
         name: "The niche specialist",
         description:
           "Narrower than you but excellent at one job. Comes up whenever a prospect cares most about that one thing.",
+        websiteUrl: "",
+        socials: [],
+      },
+    ],
+    // Placeholder influencer set — archetypes, not people, for the same reason
+    // the competitor placeholders are: an unknown site gives nothing to name.
+    influencers: [
+      {
+        name: "The industry voice",
+        description:
+          "The person your buyers quote in meetings. Sets the vocabulary of your category — worth sounding fluent next to.",
+        websiteUrl: "",
+        socials: [],
+      },
+      {
+        name: "The practitioner creator",
+        description:
+          "Does the job your audience does and posts about it daily. Their formats already work for the people you want to reach.",
+        websiteUrl: "",
+        socials: [],
+      },
+      {
+        name: "The niche educator",
+        description:
+          "Teaches one topic your product touches, in depth. A natural partner for a collaboration or a guest post.",
         websiteUrl: "",
         socials: [],
       },
@@ -471,6 +540,43 @@ export function discoverCompetitors(url, { exclude = [] } = {}) {
     const key = competitorKey(c);
     if (!key || known.has(key)) return false;
     known.add(key); // guard against duplicates inside the pool itself
+    return true;
+  });
+}
+
+/**
+ * Identity of an influencer for dedupe purposes. A creator is known by a
+ * profile far more often than by a site, so the first social URL outranks the
+ * name when there's no website. Same contract as competitorKey.
+ */
+export function influencerKey(c) {
+  if (typeof c === "string") return c.trim().toLowerCase();
+  const profile = String(c?.socials?.[0]?.url || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\/(www\.)?/, "")
+    .replace(/\/+$/, "");
+  return (
+    deriveDomain(c?.websiteUrl || "") ||
+    profile ||
+    String(c?.name || "")
+      .trim()
+      .toLowerCase() ||
+    ""
+  );
+}
+
+/**
+ * Mock "influencer discovery" — discoverCompetitors' twin, over the brand's
+ * influencer pool. Idempotent for the same reason: only what isn't known yet.
+ */
+export function discoverInfluencers(url, { exclude = [] } = {}) {
+  const pool = clone(analyzeWebsite(url).suggestions.influencers || []);
+  const known = new Set((Array.isArray(exclude) ? exclude : []).map(influencerKey).filter(Boolean));
+  return pool.filter((c) => {
+    const key = influencerKey(c);
+    if (!key || known.has(key)) return false;
+    known.add(key);
     return true;
   });
 }
