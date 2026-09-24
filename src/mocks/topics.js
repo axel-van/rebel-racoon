@@ -2073,6 +2073,10 @@ export const topics = [
   // the handoff is silent: ages, post dates, engagement counts, profile URLs,
   // avatar tints and the history line.
   //
+  // All three are `kind: "ready"`, although the handoff tags two of them
+  // idea_for_later: its own deviation note says those articles were written
+  // anyway, so with a full article each they are shown as draftable.
+  //
   // ⚠️ AP-06 (Stelzner) sits under the Meta One Topic too, on purpose: the chain
   // matched it on the keyword "captions" and the article ignores it. A real feed
   // shows that false match, so this one does.
@@ -2180,7 +2184,7 @@ export const topics = [
     feedId: "topic-list-6",
     sourceId: "influencer-posts",
     ageLabel: "8d ago",
-    kind: "later",
+    kind: "ready",
     headline: "Automated end-to-end video reframing and editing with AI",
     summary:
       "One monitored account details testing an AI workflow using Codex to handle the full video editing pipeline from raw footage without manual editing software. The account highlights dynamic subject tracking and automated reframing, where the crop follows subject movement rather than staying static.",
@@ -2246,7 +2250,7 @@ export const topics = [
     feedId: "topic-list-6",
     sourceId: "influencer-posts",
     ageLabel: "2w ago",
-    kind: "later",
+    kind: "ready",
     headline: "False positives and bypasses in Instagram AI content labeling",
     summary:
       "One monitored account highlights inaccuracies in Instagram's automated AI detection system, reporting that authentic brand photography received forced AI labels while generated imagery with standard watermarks passed unlabeled. The account notes that social teams had to issue public clarifications after their organic images were incorrectly tagged.",

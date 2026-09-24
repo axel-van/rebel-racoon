@@ -20,7 +20,7 @@
 // the "data we would collect" is visible in the dev console. No localStorage
 // persistence (matches the rest of the app's app-state policy).
 
-import { createNotifier } from "./store-utils.js?v=1226";
+import { createNotifier } from "./store-utils.js?v=1227";
 
 const feedbackByTarget = new Map(); // targetId → { verdict, reasons, comment, ts }
 const notifier = createNotifier("feedback");
