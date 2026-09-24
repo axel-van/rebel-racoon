@@ -976,7 +976,7 @@ Les créateurs que l'audience de la marque suit déjà. Champs sur le Playbook :
 - **Dédoublonnage** par `influencerKey` : domaine, sinon **première URL de profil social**, sinon nom — un créateur se connaît par un profil bien plus souvent que par un site.
 - **Pré-remplissage** : `suggestions.influencers` de l'analyse (4 créateurs du social media marketing pour le mock Agorapulse, 3 archétypes placeholders pour le template générique), promus en `suggested: true` par `sectionPatchFromAnalysis` — exactement comme les competitors.
 - **Pas de `reach`.** Le fork portait un nombre d'abonnés par influenceur ; il est retiré au portage des seeds (Acme, Founder voice, Customer stories, Noba) : un compteur se périme tout seul, ce qui échoue à la question 2 du test d'inclusion ([`CONCEPTS.md`](CONCEPTS.md) §1).
-- Icône `ap-icon-user-love`, partagée avec le compteur `/contexts`. La source d'écoute `influencer-posts` porte, elle, `ap-icon-star` : l'étoile marque un Topic d'influenceur, le cœur-personne marque la liste de personnes.
+- Icône `ap-icon-star`, la même partout : section du Playbook, compteur `/contexts`, source d'écoute `influencer-posts` (cartes et article des Topics, carte de réglages). Un premier jet donnait `ap-icon-user-love` à la section et l'étoile aux Topics ; deux glyphes pour un même objet ne se reconnaissaient pas d'une surface à l'autre.
 - Les nouveaux textes sont à la première personne (« I look for the creators… ») ; ceux de Competitors, antérieurs à la règle, disent encore « Archie ».
 
 ### Partage (flag `playbookSharing`, défaut OFF) — « §9bis »

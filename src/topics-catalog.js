@@ -51,9 +51,8 @@ export const TOPIC_SOURCES = Object.freeze([
   {
     id: "influencer-posts",
     name: "Influencers",
-    // The star marks an influencer TOPIC wherever the source badge shows (card,
-    // article, settings). The Playbook's Influencers section keeps
-    // ap-icon-user-love: it names people, this names what they published.
+    // One glyph for influencers everywhere: the Topic cards, the article, the
+    // settings card, and the Playbook's Influencers section it reads.
     icon: "ap-icon-star",
     accent: "red",
     // Live since the Agorapulse feed carries influencer Topics (mocks/topics.js).
