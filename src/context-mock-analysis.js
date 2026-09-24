@@ -160,48 +160,30 @@ const AGORAPULSE = {
         ],
       },
     ],
-    // Creators the brand's audience — social media managers — already follows.
+    // Creators the brand's audience — social media managers — already follows:
+    // the three LinkedIn accounts behind the Agorapulse feed's influencer Topics.
     // Same contract as competitors: every entry arrives as a PENDING proposal.
     influencers: [
       {
         name: "Matt Navarra",
         description:
-          "Social media industry news, first. When a platform ships a feature, social managers often hear it from him before the official post.",
-        websiteUrl: "https://mattnavarra.com",
-        socials: [
-          { network: "linkedin", url: "https://linkedin.com/in/mattnavarra" },
-          { network: "x", url: "https://x.com/MattNavarra" },
-        ],
+          "Weekly round-ups of platform changes, in under three minutes — Meta One pricing, Snap Specs, the EU's under-13 proposal. Also calls out Instagram labelling real photos as AI while generated images pass.",
+        websiteUrl: "",
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/in/mattnavarra/" }],
       },
       {
-        name: "Rachel Karten",
+        name: "Annie-Mai Hodge",
         description:
-          "Writes Link in Bio, the newsletter social media managers read about their own craft. Strong on brand voice and on how social teams actually work.",
-        websiteUrl: "https://linkinbio.beehiiv.com",
-        socials: [
-          { network: "instagram", url: "https://instagram.com/rachelkarten" },
-          { network: "linkedin", url: "https://linkedin.com/in/rachelkarten" },
-        ],
+          "Weekly 'updates you need to know' posts for social media managers, often from what peers are reporting: Instagram caption links behind Meta One, Facebook pages capped at two link posts a month.",
+        websiteUrl: "",
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/in/anniemaihodge/" }],
       },
       {
-        name: "Jay Baer",
+        name: "Michael Stelzner",
         description:
-          "Customer experience and word of mouth. Reaches the marketing leads who sign off on tools, not only the people who use them.",
-        websiteUrl: "https://jaybaer.com",
-        socials: [
-          { network: "linkedin", url: "https://linkedin.com/in/jaybaer" },
-          { network: "youtube", url: "https://youtube.com/@jaybaer" },
-        ],
-      },
-      {
-        name: "Social Media Examiner",
-        description:
-          "The long-running how-to publication and podcast for social marketers. Tactics-first, with an audience that overlaps agencies heavily.",
-        websiteUrl: "https://socialmediaexaminer.com",
-        socials: [
-          { network: "facebook", url: "https://facebook.com/smexaminer" },
-          { network: "youtube", url: "https://youtube.com/@socialmediaexaminer" },
-        ],
+          "Hands-on AI production experiments, posted while building up Social Media Marketing World — recently, a raw video cut, captioned and reframed to vertical by Codex, with the crop following the speaker.",
+        websiteUrl: "",
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/in/stelzner/" }],
       },
     ],
     imageVoice: {

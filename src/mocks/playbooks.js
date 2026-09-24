@@ -1633,6 +1633,35 @@ export const contexts = [
         ],
       },
     ],
+    // Influencers — the three LinkedIn accounts behind the feed's influencer
+    // Topics (mocks/topics.js, 19 Aug → 23 Sep 2026). Descriptions say what each
+    // one posted in that window; the profile URLs are invented from the handles.
+    influencers: [
+      {
+        id: "agp-inf-1",
+        name: "Matt Navarra",
+        description:
+          "Weekly round-ups of platform changes, in under three minutes — Meta One pricing, Snap Specs, the EU's under-13 proposal. Also calls out Instagram labelling real photos as AI while generated images pass.",
+        websiteUrl: "",
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/in/mattnavarra/" }],
+      },
+      {
+        id: "agp-inf-2",
+        name: "Annie-Mai Hodge",
+        description:
+          "Weekly 'updates you need to know' posts for social media managers, often from what peers are reporting: Instagram caption links behind Meta One, Facebook pages capped at two link posts a month.",
+        websiteUrl: "",
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/in/anniemaihodge/" }],
+      },
+      {
+        id: "agp-inf-3",
+        name: "Michael Stelzner",
+        description:
+          "Hands-on AI production experiments, posted while building up Social Media Marketing World — recently, a raw video cut, captioned and reframed to vertical by Codex, with the crop following the speaker.",
+        websiteUrl: "",
+        socials: [{ network: "linkedin", url: "https://www.linkedin.com/in/stelzner/" }],
+      },
+    ],
     ctaLinks: [
       {
         label: "Start a free trial",

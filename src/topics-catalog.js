@@ -11,9 +11,10 @@
 //
 // `live` — false means the source is not built yet. Toggling it opens the
 // feedback modal and leaves the switch alone, rather than pretending it works.
-// Only competitor-posts is live, and that is load-bearing: the feed's default
-// source filter is derived from LIVE_SOURCE_IDS, so a Topic seeded on a
-// non-live source would be filtered out of its own feed on first paint.
+// Only competitor-posts and influencer-posts are live, and that is load-bearing:
+// the feed's default source filter is derived from LIVE_SOURCE_IDS, so a Topic
+// seeded on a non-live source would be filtered out of its own feed on first
+// paint.
 //
 // `playbookAnchor` — never an id — says which Playbook section a source reads,
 // so a card can offer "Review the Playbook's competitors" without hardcoding a
@@ -50,11 +51,13 @@ export const TOPIC_SOURCES = Object.freeze([
   {
     id: "influencer-posts",
     name: "Influencers",
-    // The Playbook's Influencers section wears the same glyph, so the source
-    // and the list it reads are recognisably one thing.
-    icon: "ap-icon-user-love",
+    // The star marks an influencer TOPIC wherever the source badge shows (card,
+    // article, settings). The Playbook's Influencers section keeps
+    // ap-icon-user-love: it names people, this names what they published.
+    icon: "ap-icon-star",
     accent: "red",
-    live: false,
+    // Live since the Agorapulse feed carries influencer Topics (mocks/topics.js).
+    live: true,
     // The Playbook's Influencers section — the list this source follows.
     playbookAnchor: "influencers",
     defaultEnabled: true,

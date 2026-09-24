@@ -71,7 +71,7 @@ export const topicFeeds = [
     id: "topic-list-6",
     name: "Competitor product moves",
     playbookId: "ctx-agorapulse",
-    sources: ["competitor-posts", "industry-trends", "brand-website"],
+    sources: ["competitor-posts", "influencer-posts", "industry-trends", "brand-website"],
     cadence: "monthly",
     websites: ["https://www.agorapulse.com/", "https://www.agorapulse.com/blog/"],
   },
@@ -2061,6 +2061,250 @@ export const topics = [
         status: "new",
         when: "6 days ago",
         note: "Surfaced from the 1–31 July competitor scan (aggregate noise flags).",
+      },
+    ],
+  },
+  // ── Agorapulse · influencer posts ─────────────────────────────────────────
+  // Three Topics from the influencer handoff (agorapulse-playbook-prototype-
+  // inputs.json, 24 Sep 2026): LinkedIn posts by Matt Navarra, Annie-Mai Hodge
+  // and Michael Stelzner, 19 Aug → 23 Sep 2026. Title, summary, relevance, why
+  // now, kind and both article halves are the handoff's, converted from markdown
+  // (headings → subheads, bullets → paragraphs, bold dropped). INVENTED because
+  // the handoff is silent: ages, post dates, engagement counts, profile URLs,
+  // avatar tints and the history line.
+  //
+  // ⚠️ AP-06 (Stelzner) sits under the Meta One Topic too, on purpose: the chain
+  // matched it on the keyword "captions" and the article ignores it. A real feed
+  // shows that false match, so this one does.
+  {
+    id: "inf-agp-1",
+    feedId: "topic-list-6",
+    sourceId: "influencer-posts",
+    ageLabel: "3d ago",
+    kind: "ready",
+    headline: "Meta One subscription tiers gating links and creator features",
+    summary:
+      "Two monitored accounts report on the global rollout of Meta One, noting tiered pricing reaching $499 per month for business users. One account observes that link-sharing capabilities—such as adding links to Instagram captions or publishing more than two link posts monthly on Facebook pages—are being restricted to paying subscribers.",
+    relevance:
+      "Social media managers and agency teams rely on outbound link posts to distribute client campaigns and drive measurable traffic, so gating basic publishing options behind subscriptions alters their daily workflow and software overhead.",
+    whyNow:
+      "Multiple accounts reported on Meta One's live global launch and link restrictions within the monitored window.",
+    isTrending: true,
+    article: {
+      title:
+        "Monitored accounts on Meta One subscription tiers gating links and creator features, August 19 to September 23, 2026",
+      subheads: [
+        "",
+        "Tiered pricing and distribution thresholds",
+        "",
+        "",
+        "For the brand",
+        "Paid distribution thresholds and organic referral measurement",
+        "Managing restricted outbound distribution",
+        "",
+        "Refocusing attribution frameworks",
+      ],
+      paragraphs: [
+        "Three monitored accounts addressed platform developments over the thirty-six-day window, with commentary concentrated on LinkedIn at low volume. Discussion focused on the arrival of paid membership packages and their impact on functional distribution.",
+        "One account highlighted the worldwide release of the subscription framework, noting that base access begins at $7.99 per month while the top commercial package demands at least $499 monthly.",
+        "Another account connected the program directly to distribution constraints. It stated that inclusion in the program grants the ability to place functional hyperlinks directly into post descriptions on Instagram. Concurrently, that same account pointed to accounts from practitioners encountering monthly caps of two link-bearing shares across standard pages on Facebook unless an active subscription is maintained.",
+        "The monitored posts reflect a shift toward attaching baseline marketing mechanics, specifically referral clicks, to recurring account charges rather than organic distribution channels.",
+        "Agorapulse positions itself as an operational hub helping marketing teams, agencies, and expanding brands save time, stay organised, and prove the tangible value of social media work through dedicated social ROI tracking.",
+        "Platform owners periodically adjust basic publishing allowances to encourage monetization, transforming standard outbound mechanics into paid features.",
+        "When basic referral methods face frequency caps or require dedicated profile billing, publishing strategies require structural reorganization. Restricting unpaid outbound posts forces teams to evaluate the exact commercial return of external traffic versus network-native engagement. Uncapped publishing historically allowed continuous testing of landing page conversion; strict allocation limits mean each outbound post must justify its slot against measurable conversion figures.",
+        "Monitored discussions show the platform testing distribution barriers, creating situations where regular company feeds risk losing outbound routing altogether unless accounts absorb monthly administrative fees. Marketing operations running across diverse profile rosters face compounding overhead if subscriptions are mandated profile by profile.",
+        "Restricting hyperlinked updates alters how teams prove business value. For years, external referral traffic functioned as the primary measurement for social campaign success. When link posts are constrained to low monthly counts, teams must separate channel operations into distinct goals: using organic updates strictly for audience retention while reserving limited external link slots for verified, high-converting revenue events. Treating external traffic as an expensive asset requires precise attribution models that demonstrate whether external visits justify both platform costs and administrative labor.",
+      ],
+    },
+    posts: [
+      {
+        id: "inf-ap-01-1",
+        network: "linkedin",
+        publishedOn: "21 Sep 2026",
+        author: {
+          name: "Matt Navarra",
+          handle: "@mattnavarra",
+          initials: "MN",
+          accent: "electric-blue",
+        },
+        text: "The BIGGEST social media updates of this week, in under 3 minutes 🔥\n\n- Meta One is now live globally, with consumer plans from $7.99 a month and a new Max tier for creators and businesses running at least $499 a month.\n- Snap Inc. launched $2,200 Specs AR glasses alongside Specs Intelligence, a new AI assistant, doubling down on cameras as a feature rather than a liability.\n- The European Commission has proposed banning social media access for under-13s, with full platform access reserved for over-18s.\n- TikTok rejected Meta's own ads asking it to join Meta's child safety settlement framework.\n- Meta is being sued over allegedly using Facebook and Instagram photos to illegally train its AI and facial recognition systems.\n- Multiple women told WIRED they felt \"super violated\" after discovering dates were recording them with Meta smart glasses.\n- A new startup called Noise wants to let anyone become a paid creator and get paid on results, no existing following required.\n...And more…",
+        likes: 412,
+        comments: 38,
+        reposts: 21,
+        url: "https://www.linkedin.com/in/mattnavarra/",
+      },
+      {
+        id: "inf-ap-04-1",
+        network: "linkedin",
+        publishedOn: "19 Sep 2026",
+        author: {
+          name: "Annie-Mai Hodge",
+          handle: "@anniemaihodge",
+          initials: "AH",
+          accent: "menthol",
+        },
+        text: "👋🎙️📌🗞️ Social media updates you NEED to know this week:\n\n→ Instagram is allowing users and brands to add links in their captions, finally… If they subscribe to Meta One.\n\n→ Some users are reporting (and I've heard it from many peers) that pages on Facebook are being limited to just two posts with links per month, unless they pay for the Meta One subscription.\n\n→ LinkedIn is testing a “Network” feed, to help users “stay connected to your network, i.e. the people you have explicitly connected or followed.”\n\n→ Threads advertisers will no longer need an Instagram account, and if they do have an Instagram account, they'll no longer need to have a matching username on both Threads and Instagram to run promotions.\n\n→ Adobe launches Premiere on Android for free.\n\n→ Instagram now notifies users when someone has unfollowed them. And this is the fake update for the folks who steal Annie-Mai's content.\n\n→ Adam Mosseri clarifies a few more things in last week's AMA over on Instagram: dele…",
+        likes: 286,
+        comments: 54,
+        reposts: 12,
+        url: "https://www.linkedin.com/in/anniemaihodge/",
+      },
+      {
+        id: "inf-ap-06-1",
+        network: "linkedin",
+        publishedOn: "16 Sep 2026",
+        author: {
+          name: "Michael Stelzner",
+          handle: "@stelzner",
+          initials: "MS",
+          accent: "orange",
+        },
+        text: "I handed a raw video to AI and said, ‘Get this down to two minutes.’ Then I watched what it did when she moved her head.\n\nWhile I'm trying to get Social Media Marketing World to 3,000, I keep running into moments like this one.\n\nDan was showing me that Codex can handle the whole video editing process. No Final Cut. No editing app of any kind. No MCP. You drag in the file and tell it what you want.\n\nSo I did. I asked it to find the most salient clips, make sure it included me (‘the old gray-haired guy’), John, and Jessica, crop it, and keep the person centered in the frame the whole time.\n\nIt worked for eight minutes. Captions? It'll do it. A title on top? It'll do it. Horizontal to vertical? Yep.\n\nBut here's the part neither of us saw coming. When she moved her head, the frame moved with her. Like a camera operator had been following her the entire time. We both expected it to crop once and let her wander out of frame. It didn't. Mind blown.…",
+        likes: 198,
+        comments: 27,
+        reposts: 6,
+        url: "https://www.linkedin.com/in/stelzner/",
+      },
+    ],
+    seedStatus: "new",
+    history: [
+      {
+        status: "new",
+        when: "3d ago",
+        note: "Surfaced from the 19 Aug – 23 Sep LinkedIn influencer scan.",
+      },
+    ],
+  },
+  {
+    id: "inf-agp-2",
+    feedId: "topic-list-6",
+    sourceId: "influencer-posts",
+    ageLabel: "8d ago",
+    kind: "later",
+    headline: "Automated end-to-end video reframing and editing with AI",
+    summary:
+      "One monitored account details testing an AI workflow using Codex to handle the full video editing pipeline from raw footage without manual editing software. The account highlights dynamic subject tracking and automated reframing, where the crop follows subject movement rather than staying static.",
+    relevance:
+      "Marketing teams producing short-form video spend significant production hours manually cropping, centering, and reframing clips across social formats.",
+    whyNow: "Shared as a hands-on production experiment during the current window.",
+    article: {
+      title: "Conversational prompt-driven video reframing and editing (2026-08-19 to 2026-09-23)",
+      subheads: [
+        "",
+        "",
+        "",
+        "",
+        "For the brand",
+        "Managing the output of autonomous production",
+        "Dynamic framing versus editorial composition",
+        "",
+        "Verification and schedule bottlenecks",
+        "",
+      ],
+      paragraphs: [
+        "One monitored account on LinkedIn reported testing conversational prompts to execute multi-step video editing workflows without conventional software.",
+        "The post describes feeding raw footage into a general-purpose model interface using plain instructions. The account claims the system parsed an eight-minute recording down to a specified target length, selected segments featuring specific named participants, added text overlays and subtitles, and converted horizontal footage into a vertical orientation.",
+        "The account highlighted continuous subject tracking as the unexpected capability. Rather than applying a static central crop where speakers drift beyond view, the system dynamically adjusted the crop window to track head movements throughout the sequence. The post frames this as bypassing specialized editing applications entirely through conversational instructions.",
+        "One item matched this subject during the period, falling into the low volume band on LinkedIn.",
+        "Agorapulse positions its platform around saving time, staying organised, and proving social media value for agencies and marketing teams. As generative systems lower the friction of post-production cutting, social teams face a practical bottleneck not in assembling short-form cuts, but in coordinating review cycles, scheduling distribution across formats, and measuring which variations generate business results.",
+        "Prompt-driven workflows allow marketers to bypass technical video suites for routine reframing and transcription. However, delegating cuts to autonomous pipelines introduces specific structural friction across multi-network publishing.",
+        "One monitored account describes software that automatically follows a speaker across a vertical frame. In practice, automated reframing relies on facial recognition or saliency bounding boxes to determine focal points. While this maintains face visibility across mobile ratios, it frequently misinterprets multi-subject scenes, shared graphics, or presentation slides where the visual context sits away from the speaker.",
+        "Marketing teams evaluating automated reframing must separate routine single-speaker tracking from deliberate visual pacing. When software tracks natural head movement continuously, it can introduce rapid lateral shifts that distract viewers. Teams using prompt-based reformatting still require manual quality checks to ensure crops do not cut off overlaid assets or introduce visual instability.",
+        "As the generation of platform-specific aspect ratios accelerates, the operational challenge moves from footage manipulation to quality assurance and rights verification. Conversational tools generate multiple cutdowns rapidly, but they do not manage approvals, multi-account calendar coordination, or direct performance attribution.",
+        "Handling an increased volume of vertical short-form assets requires structured governance: verifying speaker permissions, ensuring caption accuracy across industry-specific terminology, and scheduling delivery across separate channels. For agencies managing multiple brands, the primary operational safeguard remains a unified dashboard that links ingested creative assets to scheduled publishing queues and tracks incoming post performance.",
+      ],
+    },
+    posts: [
+      {
+        id: "inf-ap-06-2",
+        network: "linkedin",
+        publishedOn: "16 Sep 2026",
+        author: {
+          name: "Michael Stelzner",
+          handle: "@stelzner",
+          initials: "MS",
+          accent: "orange",
+        },
+        text: "I handed a raw video to AI and said, ‘Get this down to two minutes.’ Then I watched what it did when she moved her head.\n\nWhile I'm trying to get Social Media Marketing World to 3,000, I keep running into moments like this one.\n\nDan was showing me that Codex can handle the whole video editing process. No Final Cut. No editing app of any kind. No MCP. You drag in the file and tell it what you want.\n\nSo I did. I asked it to find the most salient clips, make sure it included me (‘the old gray-haired guy’), John, and Jessica, crop it, and keep the person centered in the frame the whole time.\n\nIt worked for eight minutes. Captions? It'll do it. A title on top? It'll do it. Horizontal to vertical? Yep.\n\nBut here's the part neither of us saw coming. When she moved her head, the frame moved with her. Like a camera operator had been following her the entire time. We both expected it to crop once and let her wander out of frame. It didn't. Mind blown.…",
+        likes: 198,
+        comments: 27,
+        reposts: 6,
+        url: "https://www.linkedin.com/in/stelzner/",
+      },
+    ],
+    seedStatus: "new",
+    history: [
+      {
+        status: "new",
+        when: "8d ago",
+        note: "Surfaced from the 19 Aug – 23 Sep LinkedIn influencer scan.",
+      },
+    ],
+  },
+  {
+    id: "inf-agp-3",
+    feedId: "topic-list-6",
+    sourceId: "influencer-posts",
+    ageLabel: "2w ago",
+    kind: "later",
+    headline: "False positives and bypasses in Instagram AI content labeling",
+    summary:
+      "One monitored account highlights inaccuracies in Instagram's automated AI detection system, reporting that authentic brand photography received forced AI labels while generated imagery with standard watermarks passed unlabeled. The account notes that social teams had to issue public clarifications after their organic images were incorrectly tagged.",
+    relevance:
+      "Social media managers risk brand credibility and audience confusion when native platform moderation tools mistakenly flag authentic production assets as artificial.",
+    whyNow: "Reported following a recent wave of enforcement and external media testing covered in the window.",
+    article: {
+      title:
+        "Social commentary on platform misclassification and evasion of synthetic media badges from August 19 to September 23, 2026",
+      subheads: [
+        "",
+        "",
+        "For the brand",
+        "Navigating automated synthetic attribution",
+        "Origin markers and post-production artifacts",
+        "Preserving asset lineage for audit defense",
+        "",
+        "",
+        "",
+        "",
+      ],
+      paragraphs: [
+        "A single monitored account addressed automated synthetic asset flags during this period, generating low volume on LinkedIn.",
+        "The post reports that authentic mobile photography received automated synthetic production notices, forcing brand representatives to publicly state that generative tools played no part in asset creation. Citing investigations conducted by an editorial outlet, the contributor notes that imagery created through third-party generative suites failed to prompt system notifications, even when bearing established metadata identifiers. According to the test cited, newly established publishing handles distributing machine-generated media in rapid succession escaped platform filters, with detection occurring consistently only when output originated from the platform provider's internal generative application.",
+        "Agorapulse serves social media managers and agencies who must maintain publishing accuracy and brand credibility, drawing on its mission of automated moderation, organized publishing, and time savings. When native automated filters misread genuine assets while synthetic media passes undetected, publishing workflows require clear asset tracking to protect brand reputation against erroneous moderation badges.",
+        "Automated asset labeling relies primarily on embedded metadata markers alongside image-analysis heuristics. When publishing workflows introduce subtle digital adjustments, platform algorithms frequently confuse routine edits with full generative generation, while actual synthetic assets stripped of structural flags evade notice entirely.",
+        "One monitored account highlights that genuine mobile snapshots have been tagged as computer-generated, while media built using standard commercial suites escaped tagging entirely despite embedded digital signatures. Metadata standards such as the Coalition for Content Provenance and Authenticity (C2PA) and invisible watermarking protocols like SynthID are designed to record an asset's lineage. In regular marketing production, routine tasks like cleaning backgrounds, applying corrective filters, or re-exporting files through certain compression software can inadvertently insert synthetic tags or scrub genuine provenance chains. When native systems scan these modified files, heuristic systems often misclassify routine editing adjustments as complete generative creation.",
+        "Because automated review operates asynchronously after publication, teams face public scrutiny before they can contest a classification error. Maintaining internal audit trails protects campaign integrity:",
+        "Archive raw capture records: Retaining camera raw files and source mobile assets provides timestamped documentation when audiences question an applied label.",
+        "Audit export pipelines: Some design applications embed synthetic lineage tags when generative fill is applied to minor portions of a background, triggering global asset warnings upon upload.",
+        "Separate native captures from generative elements: Storing digital mockups separately from standard studio assets keeps digital lineage distinct across client handoffs.",
+        "When moderation tools misinterpret production workflows, having documented file histories enables practitioners to address audience confusion quickly without slowing production schedules.",
+      ],
+    },
+    posts: [
+      {
+        id: "inf-ap-03-3",
+        network: "linkedin",
+        publishedOn: "9 Sep 2026",
+        author: {
+          name: "Matt Navarra",
+          handle: "@mattnavarra",
+          initials: "MN",
+          accent: "electric-blue",
+        },
+        text: "Instagram's AI detection system is flagging real photos as AI.\n\nMeanwhile, actual AI content is sailing straight through.\n\nA Halsey-owned brand, about-face beauty, had real iPhone photos hit with the \"AI Content\" label recently. Their social team had to publicly clarify that no AI was involved.\n\nThe Verge ran a test. They uploaded AI-generated images with Adobe Firefly, Google's Gemini, and Apple's own AI tools, all carrying real verification watermarks, C2PA and SynthID. Meta didn't flag any of it.\n\nThey even built a brand-new account and posted rapid-fire to look like an AI farm, on purpose. That didn't get caught either, despite Meta's own crackdown on fake AI accounts running at the same time.\n\nThe only thing that reliably triggered the label in all this testing was content made in Meta's own AI app. Impressive 👏\n\nJust weeks ago Instagram cracked down on unlabelled AI accounts, and now its own system starts labelling the wrong content entirely.…",
+        likes: 931,
+        comments: 112,
+        reposts: 64,
+        url: "https://www.linkedin.com/in/mattnavarra/",
+      },
+    ],
+    seedStatus: "new",
+    history: [
+      {
+        status: "new",
+        when: "2w ago",
+        note: "Surfaced from the 19 Aug – 23 Sep LinkedIn influencer scan.",
       },
     ],
   },

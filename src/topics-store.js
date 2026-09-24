@@ -49,9 +49,9 @@
 //   markUsed(id) / ignoreTopic(id, reason) / unignoreTopic(id)
 //   subscribe(fn)                      → unsubscribe
 
-import { topics as seed } from "./mocks.js?v=1225";
-import { isNewUser } from "./user-mode.js?v=1225";
-import { createNotifier } from "./store-utils.js?v=1225";
+import { topics as seed } from "./mocks.js?v=1226";
+import { isNewUser } from "./user-mode.js?v=1226";
+import { createNotifier } from "./store-utils.js?v=1226";
 import {
   DEFAULT_MARKED_IDS,
   MARKED_STATUS_IDS,
@@ -59,7 +59,7 @@ import {
   TOPIC_STATES,
   findTopicState,
   kindOf,
-} from "./topics-catalog.js?v=1225";
+} from "./topics-catalog.js?v=1226";
 
 const topics = isNewUser() ? [] : seed.map(cloneTopic);
 
@@ -173,7 +173,7 @@ function byRecency(a, b) {
   return ageMinutes(a.ageLabel) - ageMinutes(b.ageLabel);
 }
 
-// The LIVE sources, not every declared one. Seven of the eight in
+// The LIVE sources, not every declared one. Six of the eight in
 // topics-catalog.js are `live: false` — declared for the settings page, unable to
 // produce a Topic — and the Filters panel only offers the live ones. This has to
 // be the same set: "all sources" is what the panel can tick, so deriving it from

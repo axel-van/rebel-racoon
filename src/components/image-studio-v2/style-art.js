@@ -21,7 +21,7 @@
 //
 // Ids inside <defs> are namespaced per drawing (`isa-<style>-*`): two SVGs sharing a
 // gradient id would silently swap fills.
-import { escapeHtml } from "../../utils.js?v=1225";
+import { escapeHtml } from "../../utils.js?v=1226";
 
 const TECH_MINIMAL = `<svg class="isv2-option-art" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
   <defs>
