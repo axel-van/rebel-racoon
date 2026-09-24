@@ -88,7 +88,7 @@ Un Playbook naît d'une **analyse** (le site, des posts, des documents) puis ne 
 - **Re-analyze website**, derrière une confirmation ;
 - ajout d'une proposition d'Archie que l'utilisateur accepte.
 
-**Aucune écriture silencieuse.** Archie ne réécrit pas la fiche parce qu'il a « appris » quelque chose au fil des chats. Le motif de proposition existant l'illustre : un competitor ou un influencer découvert arrive avec `suggested: true`, hors du Playbook, dans un bac séparé — il n'en fait partie qu'après un clic. C'est le patron à reprendre pour toute future suggestion : **proposer à côté, jamais écrire dedans**.
+**Aucune écriture silencieuse.** Archie ne réécrit pas la fiche parce qu'il a « appris » quelque chose au fil des chats. Le seul motif de proposition existant l'illustre : un competitor découvert arrive avec `suggested: true`, hors du Playbook, dans un bac séparé — il n'en fait partie qu'après un clic. C'est le patron à reprendre pour toute future suggestion : **proposer à côté, jamais écrire dedans**.
 
 Conséquence pour qui code : une feature qui aurait besoin de patcher un Playbook en arrière-plan doit passer par une proposition visible, ou ne pas toucher au Playbook.
 

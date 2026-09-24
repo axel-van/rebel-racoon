@@ -22,17 +22,17 @@
 // chooses "Save as global". updateContext is used by the section-edit flow
 // when scope is "Update everywhere".
 
-import { contexts as seed, sharedContexts } from "./mocks.js?v=1229";
-import { isNewUser } from "./user-mode.js?v=1229";
-import { CURRENT_USER } from "./org.js?v=1229";
-import { isFlagOn } from "./feature-flags.js?v=1229";
-import { createNotifier } from "./store-utils.js?v=1229";
+import { contexts as seed, sharedContexts } from "./mocks.js?v=1232";
+import { isNewUser } from "./user-mode.js?v=1232";
+import { CURRENT_USER } from "./org.js?v=1232";
+import { isFlagOn } from "./feature-flags.js?v=1232";
+import { createNotifier } from "./store-utils.js?v=1232";
 import {
   normalizeLanguages,
   mirrorPrimaryToTopLevel,
   syncTopLevelToPrimary,
   cloneVoiceByLanguage,
-} from "./languages.js?v=1229";
+} from "./languages.js?v=1232";
 
 // Lives up here, away from normalizeBrandLogos where it belongs, because the
 // seed below calls that normalizer at module-init time — a `let` declared beside
@@ -336,10 +336,9 @@ export function addContext(ctx = {}) {
     //   user rejected so discovery never re-proposes them.
     competitors: normalizeCompetitors(ctx.competitors),
     dismissedCompetitors: Array.isArray(ctx.dismissedCompetitors) ? ctx.dismissedCompetitors.slice() : [],
-    // — influencers — same shape and same pending/dismissed rules as competitors:
-    //   the creators this brand's audience already listens to.
+    // — influencers — same shape as competitors, no pending state: the
+    //   creators this brand's audience already listens to.
     influencers: normalizeInfluencers(ctx.influencers),
-    dismissedInfluencers: Array.isArray(ctx.dismissedInfluencers) ? ctx.dismissedInfluencers.slice() : [],
     // — ownership (owner + scope + change log; see normalizeOwnership) —
     ...normalizeOwnership(ctx),
     // — meta —
@@ -431,8 +430,6 @@ export function updateContext(id, patch) {
   if (patch.dismissedCompetitors !== undefined)
     c.dismissedCompetitors = Array.isArray(patch.dismissedCompetitors) ? patch.dismissedCompetitors.slice() : [];
   if (patch.influencers !== undefined) c.influencers = normalizeInfluencers(patch.influencers);
-  if (patch.dismissedInfluencers !== undefined)
-    c.dismissedInfluencers = Array.isArray(patch.dismissedInfluencers) ? patch.dismissedInfluencers.slice() : [];
   // — multilingual fields —
   if (patch.languages !== undefined)
     c.languages = Array.isArray(patch.languages) ? patch.languages.slice() : patch.languages;

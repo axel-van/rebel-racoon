@@ -162,7 +162,7 @@ const AGORAPULSE = {
     ],
     // Creators the brand's audience — social media managers — already follows:
     // the three LinkedIn accounts behind the Agorapulse feed's influencer Topics.
-    // Same contract as competitors: every entry arrives as a PENDING proposal.
+    // Added to the new Playbook directly — Influencers has no suggestion tray.
     influencers: [
       {
         name: "Matt Navarra",
@@ -522,43 +522,6 @@ export function discoverCompetitors(url, { exclude = [] } = {}) {
     const key = competitorKey(c);
     if (!key || known.has(key)) return false;
     known.add(key); // guard against duplicates inside the pool itself
-    return true;
-  });
-}
-
-/**
- * Identity of an influencer for dedupe purposes. A creator is known by a
- * profile far more often than by a site, so the first social URL outranks the
- * name when there's no website. Same contract as competitorKey.
- */
-export function influencerKey(c) {
-  if (typeof c === "string") return c.trim().toLowerCase();
-  const profile = String(c?.socials?.[0]?.url || "")
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\/(www\.)?/, "")
-    .replace(/\/+$/, "");
-  return (
-    deriveDomain(c?.websiteUrl || "") ||
-    profile ||
-    String(c?.name || "")
-      .trim()
-      .toLowerCase() ||
-    ""
-  );
-}
-
-/**
- * Mock "influencer discovery" — discoverCompetitors' twin, over the brand's
- * influencer pool. Idempotent for the same reason: only what isn't known yet.
- */
-export function discoverInfluencers(url, { exclude = [] } = {}) {
-  const pool = clone(analyzeWebsite(url).suggestions.influencers || []);
-  const known = new Set((Array.isArray(exclude) ? exclude : []).map(influencerKey).filter(Boolean));
-  return pool.filter((c) => {
-    const key = influencerKey(c);
-    if (!key || known.has(key)) return false;
-    known.add(key);
     return true;
   });
 }

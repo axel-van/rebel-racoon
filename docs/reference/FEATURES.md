@@ -969,16 +969,18 @@ Le marché contre lequel Archie positionne la marque. Champs sur le Playbook : `
 
 ### Influencers
 
-Les créateurs que l'audience de la marque suit déjà. Champs sur le Playbook : `influencers` et `dismissedInfluencers`, **même forme** que `competitors` / `dismissedCompetitors` (`{ id, name, description, websiteUrl, socials, logo?, suggested? }`).
+Les créateurs que l'audience de la marque suit déjà. Champ sur le Playbook : `influencers: Array<{ id, name, description, websiteUrl, socials:[{network,url}] }>` — la forme de `competitors`, **sans état pending**.
 
-**Un seul moteur pour les deux sections.** `ROSTERS` dans `playbook-view.js` déclare les deux listes (clés de données, clé de dédoublonnage, fonction de découverte, textes) et tout le reste — carte, bac « Suggested by Archie », Add all, Dismiss mémorisé, modale détail, découverte, élagage au Save — est partagé. Les hooks DOM gardent leur préfixe `cmp` ; la liste visée se lit sur le `[data-recap-roster]` le plus proche (le panneau, ou le backdrop de la modale une fois portée sur `<body>`). Une seule découverte à la fois sur les deux sections. Tout ce qui est écrit ci-dessus pour Competitors vaut ici, sauf :
+**Calqué sur la section Competitors de la beta** (`app.beta.agorapulse.com/studio/…/playbook/…`, relevée le 24 Sep 2026), pas sur les Competitors de ce proto : une **liste**, sans bac « Suggested by Archie », sans Discover, sans modale détail. Rendu par `renderInfluencersPanel` dans `playbook-view.js` ; les helpers de données et les hooks name / website / remove sont partagés avec Competitors via `ROSTERS`.
 
-- **Réseaux** : la modale propose Facebook, Instagram, LinkedIn, X et YouTube — **pas TikTok** (`ROSTERS.influencers.networks`). Competitors garde les six. Un profil déjà enregistré sur un réseau retiré garde son option, pour que le select n'affiche jamais une valeur qu'il n'a pas stockée.
-- **Dédoublonnage** par `influencerKey` : domaine, sinon **première URL de profil social**, sinon nom — un créateur se connaît par un profil bien plus souvent que par un site.
-- **Pré-remplissage** : `suggestions.influencers` de l'analyse (4 créateurs du social media marketing pour le mock Agorapulse, 3 archétypes placeholders pour le template générique), promus en `suggested: true` par `sectionPatchFromAnalysis` — exactement comme les competitors.
-- **Pas de `reach`.** Le fork portait un nombre d'abonnés par influenceur ; il est retiré au portage des seeds (Acme, Founder voice, Customer stories, Noba) : un compteur se périme tout seul, ce qui échoue à la question 2 du test d'inclusion ([`CONCEPTS.md`](CONCEPTS.md) §1).
-- Icône `ap-icon-star`, la même partout : section du Playbook, compteur `/contexts`, source d'écoute `influencer-posts` (cartes et article des Topics, carte de réglages). Un premier jet donnait `ap-icon-user-love` à la section et l'étoile aux Topics ; deux glyphes pour un même objet ne se reconnaissaient pas d'une surface à l'autre.
-- Les nouveaux textes sont à la première personne (« I look for the creators… ») ; ceux de Competitors, antérieurs à la règle, disent encore « Archie ».
+- **Lecture** — une ligne pleine largeur par influenceur : nom, une rangée de vrais liens (`.ap-link standalone small` : site avec `ap-icon-web`, puis chaque profil avec l'icône et le nom de son réseau), description. Une ligne d'intro sous le header : « The creators your audience already follows, with their website and social profiles. »
+- **Ajout** — bouton **« Add an influencer »** dans le header, à côté du pencil, **en lecture** : ouvre un `.ap-dialog` (nom, site, puis **un champ fixe par réseau**) ; **Add influencer** (`primary blue`) reste désactivé tant que le nom est vide et commite aussitôt.
+- **Édition** — le pencil transforme chaque ligne en formulaire inline (nom, site, champs réseau fixes) avec un bouton poubelle (`.ap-icon-button stroked transparent`) ; header Cancel / Save changes, **Add masqué**, **description masquée** (non éditable, comme sur la beta). Save élague les profils vides.
+- **Création** — `sectionPatchFromAnalysis` verse `suggestions.influencers` **directement** dans la liste (la beta dit « …we found for your brand »).
+- **Réseaux** : Facebook, Instagram, LinkedIn, X et YouTube — **pas TikTok** (`ROSTERS.influencers.networks`). Competitors garde les six.
+- **Pas de `reach`.** Le fork portait un nombre d'abonnés par influenceur ; retiré au portage des seeds (Acme, Founder voice, Customer stories, Noba) : un compteur se périme tout seul, ce qui échoue à la question 2 du test d'inclusion ([`CONCEPTS.md`](CONCEPTS.md) §1).
+- Icône `ap-icon-star`, la même partout : section du Playbook, compteur `/contexts`, source d'écoute `influencer-posts` (cartes et article des Topics, carte de réglages).
+- ⚠️ Une première version reprenait **toute** la mécanique Competitors du proto (bac de suggestions, Add all, Dismiss mémorisé, Discover, modale détail, `dismissedInfluencers`, `discoverInfluencers`). Elle a été remplacée par le comportement de la beta, sur demande — `git log -S discoverInfluencers`.
 
 ### Partage (flag `playbookSharing`, défaut OFF) — « §9bis »
 
@@ -1052,7 +1054,7 @@ Le manager ne voit **que** les Playbooks partagés : une fiche personnelle non p
 
 - `analyzeWebsite(url)` : URL contenant « agorapulse » → mock Agorapulse détaillé (5 audiences, voiceProfile, hooks, couleurs #212E44/#FF6726, 5 CTA links, 5 competitors réels) ; sinon → template SaaS générique éditable (3 competitors placeholders).
 - `discoverCompetitors(url, { exclude })` : puise dans le même pool et ne renvoie que les inconnus.
-- `discoverInfluencers(url, { exclude })` / `influencerKey(c)` : le jumeau pour `suggestions.influencers`.
+- `suggestions.influencers` : trois comptes LinkedIn (Matt Navarra, Annie-Mai Hodge, Michael Stelzner) pour le mock Agorapulse, trois archétypes pour le template générique — versés directement dans la liste.
 - `analyzeSocialProfiles(ids)` / `analyzeDocument(file)` : voice/summary simulés.
 
 ---

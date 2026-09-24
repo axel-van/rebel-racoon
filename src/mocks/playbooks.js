@@ -301,14 +301,12 @@ export const contexts = [
         name: "Dave Gerhardt",
         description: "B2B marketing. Strong on positioning and plain language; audience overlaps ours heavily.",
         socials: [{ network: "instagram", url: "https://instagram.com/davegerhardt" }],
-        suggested: true,
       },
       {
         id: "acme-inf-4",
         name: "Anthony Pierri",
         description: "Homepage and positioning teardowns. Format travels; often quoted by our buyers.",
         socials: [{ network: "x", url: "https://x.com/anthonypierri" }],
-        suggested: true,
       },
     ],
     ctaLinks: [

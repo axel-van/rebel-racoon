@@ -14,23 +14,17 @@
 // via `cfg`; the edit state (editScope / snapshot) lives module-local and
 // is safe because only one route renders at a time.
 
-import { html, raw, escapeHtml as esc } from "./utils.js?v=1229";
-import {
-  analyzeWebsite,
-  discoverCompetitors,
-  competitorKey,
-  discoverInfluencers,
-  influencerKey,
-} from "./context-mock-analysis.js?v=1229";
-import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1229";
-import { isFlagOn } from "./feature-flags.js?v=1229";
-import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1229";
+import { html, raw, escapeHtml as esc } from "./utils.js?v=1232";
+import { analyzeWebsite, discoverCompetitors, competitorKey } from "./context-mock-analysis.js?v=1232";
+import { LANGUAGE_OPTIONS, emptyVoiceEntry } from "./languages.js?v=1232";
+import { isFlagOn } from "./feature-flags.js?v=1232";
+import { NETWORK_ICON_BY_PLATFORM, NETWORK_LABEL } from "./social-profiles.js?v=1232";
 // The Default look row offers the SAME three catalogues the Image Studio renders, from
 // the one place they are declared — REF_MODES' own header makes the argument: the label,
 // the hint and the brief clause "drift the moment they live apart". No cycle: the engine
 // imports only clip-formats / image-studio-canvas / feature-flags, and its module body
 // builds consts, so importing it here costs nothing at load.
-import { IMAGE_TYPES, STYLE_PRESETS, REF_MODES } from "./image-studio.js?v=1229";
+import { IMAGE_TYPES, STYLE_PRESETS, REF_MODES } from "./image-studio.js?v=1232";
 
 // Audience & goals — chip fields (multi-value), in display order.
 const GOAL_FIELDS = [
@@ -129,10 +123,6 @@ const SECTION_HINTS = {
     q: "Who you're up against",
     a: "Archie scans your market and proposes competitors. Add the ones that matter — a dismissed suggestion won't come back.",
   },
-  influencers: {
-    q: "Who your audience listens to",
-    a: "I look for the creators your audience already follows and propose them. Add the ones that matter — a dismissed suggestion won't come back.",
-  },
 };
 
 const STAGE_MS = 2400;
@@ -142,9 +132,10 @@ let cfg = null;
 let editScope = null; // null (read) | "goals" | "voice" | "brand" | "competitors" | "influencers"
 let refModalIndex = null; // open reference-image detail modal (index) or null
 let rosterModal = null; // open competitor/influencer detail modal: { kind, index } or null
-let rosterScanning = null; // roster whose "Discover" scan is in flight ("competitors" | "influencers") or null
+let rosterScanning = null; // roster whose "Discover" scan is in flight ("competitors") or null — Influencers has no Discover
 let rosterScanTimer = null; // the scan's pending timeout
 let rosterFoundNone = null; // roster whose last scan returned nothing new (show the note) or null
+let infAdd = null; // the "Add an influencer" dialog's draft ({ name, websiteUrl, socials }), or null
 let refModalHost = null; // body-level portal node for the open detail modal
 let snapshot = null; // deep copy of editable fields, for Cancel
 let audienceCustom = false; // "Other…" picked in the Primary audience dropdown
@@ -188,6 +179,7 @@ export function mount(target, config) {
   rosterModal = null;
   rosterScanning = null;
   rosterFoundNone = null;
+  infAdd = null;
 
   if (cfg.loader && !cfg.skipLoader) {
     phase = "loading";
@@ -469,7 +461,6 @@ export function snapshotEditable(d) {
       competitors: d.competitors || [],
       dismissedCompetitors: d.dismissedCompetitors || [],
       influencers: d.influencers || [],
-      dismissedInfluencers: d.dismissedInfluencers || [],
     }),
   );
 }
@@ -1391,11 +1382,11 @@ function renderBrandPanel(data, edit) {
 // the ones Archie missed. Competitors are who the brand is measured against,
 // influencers the creators its audience already listens to.
 //
-// One renderer, one set of handlers, driven by a ROSTERS entry — the two
-// sections differ in their words and their data keys, never in behaviour. A
-// second copy of this machinery is how "Add all" ends up working in one
-// section and not the other. The DOM hooks keep their `cmp` prefix; which
-// roster a hook acts on is read from the nearest [data-recap-roster].
+// Competitors render through the card grid below; Influencers through the
+// beta's list shape (renderInfluencersPanel, after this block). They share the
+// data helpers and the name / website / remove / social hooks, which keep
+// their `cmp` prefix; which roster a hook acts on is read from the nearest
+// [data-recap-roster].
 //
 // An entry's logo is never stored — it's resolved from its domain through a
 // favicon service at render time, with a monogram tile as the fallback (wired
@@ -1427,32 +1418,20 @@ const ROSTERS = {
     noneFound: "No new competitors found. Add one by hand instead.",
     discoverFirst: "Discover competitors",
   },
-  // New copy is in the first person (CLAUDE.md: Archie never names itself);
-  // the Competitors strings above predate that rule and are left as they are.
+  // Influencers keep only what the beta's list shape reads (renderInfluencersPanel):
+  // no suggestions, so no discover / key / tray copy.
   influencers: {
     scope: "influencers",
     listKey: "influencers",
-    dismissedKey: "dismissedInfluencers",
     max: 12,
     idPrefix: "inf",
     // No TikTok: an influencer profile is only worth adding on a network the
     // listening follows creators on.
     networks: REF_NETWORKS.filter((n) => n !== "tiktok"),
-    discover: discoverInfluencers,
-    key: influencerKey,
     noun: "influencer",
-    title: "Influencer",
     untitled: "Untitled influencer",
     namePlaceholder: "Influencer name",
     sitePlaceholder: "https://…",
-    descPlaceholder: "What they post about, who follows them, why they matter to your audience…",
-    ownGroup: "Your influencers",
-    pendingEmpty: "None added yet — pick from my suggestions below.",
-    emptyEdit: "No influencers yet. Add the ones you know — I can find the rest.",
-    emptyRead: "No influencers yet — I can suggest creators your audience already follows.",
-    scanning: "Looking for the creators your audience follows…",
-    noneFound: "No new influencers found. Add one by hand instead.",
-    discoverFirst: "Discover influencers",
   },
 };
 
@@ -1859,6 +1838,201 @@ function renderRosterModal(data) {
   </div>`;
 }
 
+// ── Influencers (the beta's list shape) ────────────────────────────────
+//
+// Copied from the Competitors section as it ships on app.beta.agorapulse.com,
+// not from this prototype's Competitors: a plain LIST, no suggestion tray, no
+// Discover, no detail dialog.
+//   • read — one full-width row per influencer: name, a line of real links
+//     (website, then each profile with its network's icon and name), the
+//     description. The header carries "Add an influencer" beside the pencil.
+//   • add  — a dialog: name, website, then ONE fixed field per network.
+//     Works from read mode and commits on the spot, like the beta.
+//   • edit — the pencil turns every row into its own inline form (name,
+//     website, the fixed network fields) with a trash button; the description
+//     isn't editable and hides, exactly as it does there.
+// What the analysis finds at creation lands in the list directly: the beta's
+// line is "…we found for your brand", not "…we suggest".
+
+const INF_INTRO = "The creators your audience already follows, with their website and social profiles.";
+
+function influencerSocialUrl(c, network) {
+  return (Array.isArray(c?.socials) ? c.socials : []).find((s) => s?.network === network)?.url || "";
+}
+
+function renderInfluencerLinks(c, r) {
+  const domain = rosterDomain(c);
+  const links = [];
+  if (domain) {
+    links.push(
+      `<a class="ap-link standalone small recap__inf-link" href="${esc(
+        c.websiteUrl.startsWith("http") ? c.websiteUrl : `https://${c.websiteUrl}`,
+      )}" target="_blank" rel="noopener noreferrer"><i class="ap-icon-web" aria-hidden="true"></i><span>${esc(
+        domain,
+      )}</span></a>`,
+    );
+  }
+  rosterSocials(c)
+    .filter((s) => (s.url || "").trim() && r.networks.includes(s.network))
+    .forEach((s) => {
+      links.push(
+        `<a class="ap-link standalone small recap__inf-link" href="${esc(
+          s.url,
+        )}" target="_blank" rel="noopener noreferrer"><i class="${
+          NETWORK_ICON_BY_PLATFORM[s.network]
+        }" aria-hidden="true"></i><span>${esc(NETWORK_LABEL[s.network] || s.network)}</span></a>`,
+      );
+    });
+  return links.length ? `<span class="recap__inf-links">${links.join("")}</span>` : "";
+}
+
+// One fixed URL field per network, icon outside the input — the same row in
+// the add dialog and in the inline editor. `attrs` says which of the two.
+function renderInfluencerSocialFields(r, valueOf, attrs) {
+  return r.networks
+    .map((n) => {
+      const label = NETWORK_LABEL[n] || n;
+      return `
+      <div class="recap__inf-field">
+        <i class="${NETWORK_ICON_BY_PLATFORM[n]}" aria-hidden="true"></i>
+        <div class="ap-input-group">
+          <input type="url" ${attrs(n)} value="${esc(valueOf(n))}" placeholder="${esc(
+            label,
+          )} URL" aria-label="${esc(label)} URL" spellcheck="false" />
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+function renderInfluencerEditRow(r, c, i) {
+  return `
+    <div class="recap__inf-edit">
+      <div class="recap__inf-edit-head">
+        <span class="recap__inf-name">${esc(c.name || r.untitled)}</span>
+        <button type="button" class="ap-icon-button stroked transparent" data-recap-cmp-remove="${i}" aria-label="Remove this ${esc(
+          r.noun,
+        )}" title="Remove this ${esc(r.noun)}"><i class="ap-icon-trash"></i></button>
+      </div>
+      <div class="ap-input-group">
+        <input type="text" data-recap-cmp-field="name" data-recap-cmp-index="${i}" value="${esc(
+          c.name || "",
+        )}" placeholder="${esc(r.namePlaceholder)}" aria-label="${esc(r.namePlaceholder)}" />
+      </div>
+      <div class="recap__inf-field">
+        <i class="ap-icon-web" aria-hidden="true"></i>
+        <div class="ap-input-group">
+          <input type="url" data-recap-cmp-field="websiteUrl" data-recap-cmp-index="${i}" value="${esc(
+            c.websiteUrl || "",
+          )}" placeholder="${esc(r.sitePlaceholder)}" aria-label="Website" spellcheck="false" />
+        </div>
+      </div>
+      <span class="recap__inf-label">Social profiles</span>
+      ${renderInfluencerSocialFields(
+        r,
+        (n) => influencerSocialUrl(c, n),
+        (n) => `data-recap-inf-social="${n}" data-recap-cmp-index="${i}"`,
+      )}
+    </div>`;
+}
+
+function renderInfluencersPanel(data, edit) {
+  const r = ROSTERS.influencers;
+  const section = SECTIONS.find((s) => s.scope === r.scope);
+  const list = rosterList(data, r);
+
+  let rows;
+  if (!list.length) {
+    rows = `<p class="recap__cmp-empty">No influencers yet.</p>`;
+  } else if (edit) {
+    rows = list.map((c, i) => renderInfluencerEditRow(r, c, i)).join("");
+  } else {
+    rows = `<ul class="recap__inf-list">${list
+      .map((c) => {
+        const desc = (c.description || "").trim();
+        return `
+        <li class="recap__inf-row">
+          <span class="recap__inf-name">${esc(c.name || r.untitled)}</span>
+          ${renderInfluencerLinks(c, r)}
+          ${desc ? `<p class="recap__inf-desc">${esc(desc)}</p>` : ""}
+        </li>`;
+      })
+      .join("")}</ul>`;
+  }
+
+  // The beta hides Add while the section is being edited — Save/Cancel own
+  // the header then.
+  const addBtn =
+    !edit && canEditView() && list.length < r.max
+      ? `<button type="button" class="ap-button ghost grey recap__panel-action" data-recap-infadd-open>
+           <i class="ap-icon-plus" aria-hidden="true"></i><span>Add an influencer</span>
+         </button>`
+      : "";
+
+  return `
+    <section class="recap__panel ${edit ? "is-editing" : ""}" id="${section.id}" data-recap-roster="${r.scope}" ${
+      edit ? "data-recap-editing-card" : ""
+    }>
+      ${renderPanelHead(section, edit, addBtn)}
+      <div class="recap__panel-body">
+        <div class="recap__infsec">
+          <p class="recap__inf-intro">${esc(INF_INTRO)}</p>
+          ${rows}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function emptyInfluencerDraft() {
+  return { name: "", websiteUrl: "", socials: {} };
+}
+
+// The add dialog. Rendered with the recap body and portalled to <body> like
+// the other detail modals (portalModal matches .recap__cmpmodal-backdrop).
+function renderInfluencerAddModal() {
+  if (!infAdd) return "";
+  const r = ROSTERS.influencers;
+  const ready = infAdd.name.trim().length > 0;
+  return `
+  <div class="app-modal-backdrop recap__cmpmodal-backdrop" data-recap-infadd-backdrop data-recap-roster="${r.scope}">
+    <aside class="ap-dialog recap__cmpmodal" role="dialog" aria-modal="true" aria-label="Add an influencer">
+      <div class="ap-dialog-header"><span class="ap-dialog-title">Add an influencer</span></div>
+      <button type="button" class="ap-dialog-close" data-recap-infadd-close aria-label="Close"><i class="ap-icon-close"></i></button>
+      <div class="ap-dialog-content recap__cmpmodal-content recap__infadd">
+        <p class="recap__inf-intro">Enter the influencer's name, website and social profiles.</p>
+        <div class="ap-input-group">
+          <input type="text" data-recap-infadd-field="name" value="${esc(infAdd.name)}" placeholder="${esc(
+            r.namePlaceholder,
+          )}" aria-label="${esc(r.namePlaceholder)}" />
+        </div>
+        <div class="recap__inf-field">
+          <i class="ap-icon-web" aria-hidden="true"></i>
+          <div class="ap-input-group">
+            <input type="url" data-recap-infadd-field="websiteUrl" value="${esc(infAdd.websiteUrl)}" placeholder="${esc(
+              r.sitePlaceholder,
+            )}" aria-label="Website" spellcheck="false" />
+          </div>
+        </div>
+        <span class="recap__inf-label">Social profiles</span>
+        ${renderInfluencerSocialFields(
+          r,
+          (n) => infAdd.socials[n] || "",
+          (n) => `data-recap-infadd-social="${n}"`,
+        )}
+      </div>
+      <div class="ap-dialog-footer">
+        <div class="ap-dialog-footer-right">
+          <button type="button" class="ap-button ghost grey" data-recap-infadd-close><span>Cancel</span></button>
+          <button type="button" class="ap-button primary blue" data-recap-infadd-submit${ready ? "" : " disabled"}>
+            <i class="ap-icon-plus" aria-hidden="true"></i><span>Add influencer</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>`;
+}
+
 // ── Header + rail ──────────────────────────────────────────────────────
 
 // The Playbook's mark: its logo when it has one, the initials monogram
@@ -2035,11 +2209,12 @@ function paint() {
         ${renderVoicePanel(data, scope === "voice")}
         ${renderBrandPanel(data, scope === "brand")}
         ${renderRosterPanel(data, ROSTERS.competitors, scope === "competitors")}
-        ${renderRosterPanel(data, ROSTERS.influencers, scope === "influencers")}
+        ${renderInfluencersPanel(data, scope === "influencers")}
       </div>
     </div>
     ${renderRefModal(data)}
     ${renderRosterModal(data)}
+    ${renderInfluencerAddModal()}
   `;
 
   mountTarget.innerHTML = html`
@@ -2233,6 +2408,8 @@ const WRITE_HOOKS = [
   "[data-recap-cmp-accept-all]",
   "[data-recap-cmp-dismiss]",
   "[data-recap-cmp-discover]",
+  "[data-recap-infadd-open]",
+  "[data-recap-infadd-submit]",
   "[data-recap-refimg-add]",
   "[data-recap-refimg-remove]",
   "[data-recap-learn]",
@@ -2284,6 +2461,7 @@ function onClick(event) {
     editScope = null;
     refModalIndex = null;
     rosterModal = null;
+    infAdd = null;
     audienceCustom = false;
     repaint();
     return;
@@ -2323,8 +2501,42 @@ function onClick(event) {
     editScope = null;
     refModalIndex = null;
     rosterModal = null;
+    infAdd = null;
     audienceCustom = false;
     repaint();
+    return;
+  }
+
+  // ── Add an influencer (dialog, from read mode) ──
+  if (event.target.closest("[data-recap-infadd-open]")) {
+    infAdd = emptyInfluencerDraft();
+    repaintPreservingScroll(); // the page stays on the section behind the dialog
+    document.querySelector("[data-recap-infadd-field='name']")?.focus();
+    return;
+  }
+  if (event.target.closest("[data-recap-infadd-close]") || event.target.matches?.("[data-recap-infadd-backdrop]")) {
+    infAdd = null;
+    repaintPreservingScroll();
+    return;
+  }
+  if (event.target.closest("[data-recap-infadd-submit]")) {
+    if (!infAdd || !infAdd.name.trim()) return;
+    const r = ROSTERS.influencers;
+    const list = rosterList(data, r);
+    if (list.length < r.max) {
+      list.push({
+        id: `${r.idPrefix}-new-${list.length + 1}-${Date.now().toString(36)}`,
+        name: infAdd.name.trim(),
+        description: "",
+        websiteUrl: infAdd.websiteUrl.trim(),
+        socials: r.networks
+          .map((network) => ({ network, url: (infAdd.socials[network] || "").trim() }))
+          .filter((x) => x.url),
+      });
+      cfg.commit?.();
+    }
+    infAdd = null;
+    repaintPreservingScroll();
     return;
   }
 
@@ -2695,6 +2907,16 @@ function onClick(event) {
 // Text edits mutate the live data object WITHOUT a repaint so inputs keep
 // focus mid-type.
 function onInput(event) {
+  // The add dialog lives in READ mode, so it answers before the edit guard.
+  // No repaint: that would steal the caret — only the submit's state follows.
+  const addField = event.target.closest?.("[data-recap-infadd-field], [data-recap-infadd-social]");
+  if (addField && infAdd) {
+    if (addField.dataset.recapInfaddField) infAdd[addField.dataset.recapInfaddField] = addField.value;
+    else infAdd.socials[addField.dataset.recapInfaddSocial] = addField.value;
+    const submit = document.querySelector("[data-recap-infadd-submit]");
+    if (submit) submit.disabled = !infAdd.name.trim();
+    return;
+  }
   if (!editScope) return;
   const data = cfg.getData();
   if (!data) return;
@@ -2736,6 +2958,16 @@ function onInput(event) {
   } else if (t.matches("[data-recap-cmp-field]")) {
     const c = data[rosterOf(t).listKey]?.[Number(t.dataset.recapCmpIndex)];
     if (c) c[t.dataset.recapCmpField] = t.value;
+  } else if (t.matches("[data-recap-inf-social]")) {
+    // One fixed field per network: write that network's profile, creating it
+    // on first keystroke. Empty ones are pruned on Save.
+    const c = data[rosterOf(t).listKey]?.[Number(t.dataset.recapCmpIndex)];
+    if (c) {
+      if (!Array.isArray(c.socials)) c.socials = [];
+      let s = c.socials.find((x) => x.network === t.dataset.recapInfSocial);
+      if (!s) c.socials.push((s = { network: t.dataset.recapInfSocial, url: "" }));
+      s.url = t.value;
+    }
   } else if (t.matches("[data-recap-cmp-social-url]")) {
     const c = data[rosterOf(t).listKey]?.[Number(t.dataset.recapCmpIndex)];
     const s = c?.socials?.[Number(t.dataset.recapCmpSocialIndex)];

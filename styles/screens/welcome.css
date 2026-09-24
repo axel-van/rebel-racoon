@@ -2221,3 +2221,107 @@ button.recap__logotile:hover {
     align-self: start;
   }
 }
+
+/* ── Influencers: the beta's list shape ───────────────────────────────────
+   Not the Competitors card grid: full-width rows (name, a line of links, the
+   description), an add dialog, and inline per-row forms in edit mode — the
+   Competitors section as it ships on app.beta.agorapulse.com. */
+.recap__infsec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  padding: var(--ref-spacing-md) var(--ref-spacing-lg);
+}
+
+.recap__inf-intro {
+  margin: 0;
+  font-size: var(--sys-text-style-caption-size);
+  line-height: var(--sys-text-style-caption-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.recap__inf-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recap__inf-row,
+.recap__inf-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ref-spacing-xs);
+  padding: var(--ref-spacing-sm) var(--ref-spacing-md);
+  border: 1px solid var(--ref-color-grey-20);
+  border-radius: var(--app-radius-md);
+}
+
+.recap__inf-name {
+  font-size: var(--sys-text-style-body-bold-size);
+  font-weight: var(--sys-text-style-body-bold-weight);
+  line-height: var(--sys-text-style-body-bold-line-height);
+  color: var(--ref-color-grey-100);
+}
+
+.recap__inf-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ref-spacing-xs) var(--ref-spacing-md);
+}
+
+.recap__inf-desc {
+  margin: 0;
+  font-size: var(--sys-text-style-body-size);
+  line-height: var(--sys-text-style-body-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+.recap__inf-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ref-spacing-xs);
+}
+
+/* Sentence case, not the uppercase recap__refedit-flabel: the house language
+   has no uppercase labels. */
+.recap__inf-label {
+  margin-top: var(--ref-spacing-xxs);
+  font-size: var(--sys-text-style-caption-bold-size);
+  font-weight: var(--sys-text-style-caption-bold-weight);
+  line-height: var(--sys-text-style-caption-bold-line-height);
+  color: var(--ref-color-grey-80);
+}
+
+/* Icon outside the field — website globe, then one row per network. */
+.recap__inf-field {
+  display: flex;
+  align-items: center;
+  gap: var(--ref-spacing-xs);
+}
+
+.recap__inf-field > i {
+  flex-shrink: 0;
+  font-size: var(--sys-icon-css-sm);
+}
+
+/* flex: 1 only on the row's field — on a column child it would zero the
+   height instead of filling the width. */
+.recap__inf-field .ap-input-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.recap__inf-edit > .ap-input-group,
+.recap__infadd > .ap-input-group {
+  width: 100%;
+  min-width: 0;
+}
+
+.recap__infadd {
+  gap: var(--ref-spacing-xs);
+}
